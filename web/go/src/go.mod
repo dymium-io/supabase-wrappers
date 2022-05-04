@@ -6,6 +6,7 @@ require (
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/andybalholm/brotli v1.0.0
 	github.com/aws/aws-sdk-go v1.35.18
+	github.com/coreos/go-oidc/v3 v3.1.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/disintegration/imaging v1.6.2
 	github.com/evanphx/json-patch v0.5.2 // indirect
@@ -59,6 +60,5 @@ require (
 	gopkg.in/antage/eventsource.v1 v1.0.0-20150318155416-803f4c5af225 // indirect
 
 )
-
 
 go 1.13

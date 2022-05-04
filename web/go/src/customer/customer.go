@@ -1,4 +1,4 @@
-package main
+package customer
 import (
 
 
@@ -9,14 +9,16 @@ import (
 	"os"
 	"strings"
 	"io"
-
 	"github.com/gorilla/mux"	
+	"dymium.com/dymium/common"
 )
 
-func customerHandlers(p *mux.Router) {
-	b := p // later
+func CustomerHandlers(p *mux.Router) {
+	host := os.Getenv("CUSTOMER_HOST")
+	b := p.Host(host).Subrouter()
+
 	commonheaders := func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", cachedirective)
+		w.Header().Set("Cache-Control", common.Cachedirective)
 		w.Header().Set("x-content-type-options", "nosniff")
 		w.Header().Set("strict-transport-security", "max-age=31536000")
 	}
@@ -26,7 +28,7 @@ func customerHandlers(p *mux.Router) {
 		filename := "./borrower/static" + r.URL.Path
 		if _, err := os.Stat(filename); errors.Is(err, os.ErrNotExist) {
 			// file does not exist
-			w.Header().Set("Cache-Control", nocache)
+			w.Header().Set("Cache-Control", common.Nocache)
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusNotFound)
 

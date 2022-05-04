@@ -1,4 +1,4 @@
-package main
+package common
 
 import (
 	_ "errors"
@@ -8,13 +8,13 @@ import (
 	"net/http"
 )
 
-const nocache = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"
-const cachedirective = "max-age=3600"
+const Nocache = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"
+const Cachedirective = "max-age=3600"
 
-func vanillaHandlers(p *mux.Router) {
+func VanillaHandlers(p *mux.Router) {
 
 	p.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", nocache)
+		w.Header().Set("Cache-Control", Nocache)
 		io.WriteString(w, "<html><body>OK</body></html>")
 	}).Methods("GET")
 

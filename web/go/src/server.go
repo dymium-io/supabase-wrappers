@@ -14,6 +14,11 @@ import (
 	"github.com/gorilla/mux"
 	cache "github.com/victorspringer/http-cache"
 	"github.com/victorspringer/http-cache/adapter/memory"
+
+	"dymium.com/dymium/customer"
+	"dymium.com/dymium/admin"
+	"dymium.com/dymium/common"
+	"dymium.com/dymium/authentication"
 )
 
 // this function extracts JWT from the request
@@ -36,7 +41,7 @@ func main() {
 	dbpassword := os.Getenv("DATABASE_PASSWORD")
 	dbport := os.Getenv("DATABASE_PORT")
 
-	databaseInit(dbhost, dbpassword, dbport)
+	authentication.DatabaseInit(dbhost, dbpassword, dbport)
 	p := mux.NewRouter()
 
 	loggingMiddleware := func(next http.Handler) http.Handler {
@@ -68,7 +73,7 @@ func main() {
 		log.Panicln(err)
 	}
 	p.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", nocache)
+		w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")
 
 		io.WriteString(w, "<html><body>OK</body></html>")
@@ -78,14 +83,14 @@ func main() {
 	os.Setenv("AWS_SECRET_ACCESS_KEY", os.Getenv("SES_SECRET"))
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 
-	authenticationHandlers(p)
-	//adminHandlers(p)
-	customerHandlers(p)
+	authentication.AuthenticationHandlers(p)
+	admin.AdminHandlers(p)
+	customer.CustomerHandlers(p)
 
 	_ = cacheClient.Middleware(CompressHandler(etag.Handler(p, false)))
 	cp := CompressHandler(etag.Handler(p, false))
 	if *ssl {
-		log.Fatal(http.ListenAndServeTLS(*selfAddr+":443", "server.crt", "server.key", cp))
+		log.Fatal(http.ListenAndServeTLS(*selfAddr+":443", "dymiumai.crt", "dymiumai.key", cp))
 	} else {
 		log.Fatal(http.ListenAndServe(*selfAddr+":80", cp))
 
