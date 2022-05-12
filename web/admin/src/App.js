@@ -3,6 +3,8 @@ import LandingPage from './LandingPage'
 import AuthenticatedApp from './app/AuthenticatedApp'
 import Error404 from "./Error404"
 import Logout from "./Logout"
+import Error from "./Error"
+import Invitation from "./Invitation"
 import Dashboard from "./app/Dashboard"
 import Customers from "./app/Customers"
 import "@fontsource/roboto";
@@ -26,7 +28,11 @@ function App() {
             <Route path="/app/dashboard" element={<Dashboard />} />
             <Route path="/app/customers" element={<Customers />} />
           </Route>
-          <Route exact path="/logout" element={<Logout/>} />
+          <Route exact path="/app/logout" element={<Logout/>} />
+          <Route path="/app/error" element={<Error />} />
+          {/*
+          <Route path="/login" element={<Invitation />} />
+         */}
           <Route path="*" element={<Error404 />} />
         </Routes>
       </BrowserRouter>

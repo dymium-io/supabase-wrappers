@@ -2,14 +2,10 @@ import React, { useEffect } from 'react';
 import { Outlet } from "react-router-dom";
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
-import Error404 from "../Error404"
+import Auth from '../Auth'
 import Menu from './Menu'
 import Sidebar from './Sidebar'
-const Auth = () => {
-    return (
-        ""
-    )
-}
+
 const HomePage = (props) => {
     debugger
     return (
