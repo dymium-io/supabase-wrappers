@@ -47,6 +47,7 @@ func main() {
 	loggingMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Do stuff here
+
 			if r.RequestURI != "/healthcheck" {
 				log.Printf("%s%s\n", r.Host, r.RequestURI)
 			}
@@ -83,15 +84,17 @@ func main() {
 	os.Setenv("AWS_SECRET_ACCESS_KEY", os.Getenv("SES_SECRET"))
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 
-	authentication.AuthenticationHandlers(p)
+	authentication.AuthenticationAdminHandlers(p)
 	admin.AdminHandlers(p)
 	customer.CustomerHandlers(p)
 
 	_ = cacheClient.Middleware(CompressHandler(etag.Handler(p, false)))
 	cp := CompressHandler(etag.Handler(p, false))
 	if *ssl {
+		log.Printf("Start listening on %s\n", *selfAddr+":443")
 		log.Fatal(http.ListenAndServeTLS(*selfAddr+":443", "dymiumai.crt", "dymiumai.key", cp))
 	} else {
+		log.Printf("Start listening on %s\n", *selfAddr+":80")
 		log.Fatal(http.ListenAndServe(*selfAddr+":80", cp))
 
 	}

@@ -32,7 +32,7 @@ func CustomerHandlers(p *mux.Router) {
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusNotFound)
 
-			io.WriteString(w, "<html><body>Zeitro Error 404, file not found</body></html>")
+			io.WriteString(w, "<html><body>Dymium Error 404, file not found</body></html>")
 		} else {
 			// file exists
 			if strings.HasPrefix(r.URL.Path, "/static") || strings.HasSuffix(r.URL.Path, ".png") || strings.HasSuffix(r.URL.Path, "*.gif") ||

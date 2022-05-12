@@ -33,7 +33,7 @@ func AdminHandlers(p *mux.Router) {
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusNotFound)
 
-			io.WriteString(w, "<html><body>Zeitro Error 404, file not found</body></html>")
+			io.WriteString(w, "<html><body>Dymium Error 404, file not found</body></html>")
 		} else {
 			// file exists
 			if strings.HasPrefix(r.URL.Path, "/static") || strings.HasSuffix(r.URL.Path, ".png") || strings.HasSuffix(r.URL.Path, "*.gif") ||
@@ -56,18 +56,18 @@ func AdminHandlers(p *mux.Router) {
 	b.HandleFunc("/{name:.*\\.jpg}", getImages)
 	b.HandleFunc("/{name:.*\\.ico}", getImages)
 
-	
 	b.HandleFunc("/api/getlogin", func(w http.ResponseWriter, r *http.Request) {
-		domain := os.Getenv("AUTH0_DOMAIN")
-		clientid := os.Getenv("AUTH0_CLIENT_ID")
-		redirecturl := os.Getenv("AUTH0_REDIRECT_URL")
-
+		domain := os.Getenv("AUTH0_ADMIN_DOMAIN")
+		clientid := os.Getenv("AUTH0_ADMIN_CLIENT_ID")
+		redirecturl := os.Getenv("AUTH0_ADMIN_REDIRECT_URL")
+		organization := os.Getenv("AUTH0_ADMIN_ORGANIZATION")
+				
 		t := struct {
 			LoginURL string
 		}{}
 
-		t.LoginURL = fmt.Sprintf("%sauthorize?response_type=code&client_id=%s&redirect_uri=%s",
-			domain, clientid, redirecturl)
+		t.LoginURL = fmt.Sprintf("%sauthorize?response_type=code&client_id=%s&redirect_uri=%s&organization=%s",
+			domain, clientid, redirecturl, organization)
 
 		js, err := json.Marshal(t)
 		if err != nil {
@@ -80,9 +80,9 @@ func AdminHandlers(p *mux.Router) {
 	}).Methods("GET")
 
 	b.HandleFunc("/api/getlogout", func(w http.ResponseWriter, r *http.Request) {
-		domain := os.Getenv("AUTH0_DOMAIN")
-		clientid := os.Getenv("AUTH0_CLIENT_ID")
-		returnurl := os.Getenv("AUTH0_RETURN_URL")
+		domain := os.Getenv("AUTH0_ADMIN_DOMAIN")
+		clientid := os.Getenv("AUTH0_ADMIN_CLIENT_ID")
+		returnurl := os.Getenv("AUTH0_ADMIN_RETURN_URL")
 
 		t := struct {
 			LogoutURL string
@@ -100,6 +100,21 @@ func AdminHandlers(p *mux.Router) {
 		w.Header().Set("Content-Type", "text/html")	
 		w.Write(js)
 	}).Methods("GET")
+
+
+	// For React to work properly, ensure that the URLs going into the React router return index.html
+	b.PathPrefix("/app/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		commonheaders(w, r)
+		http.ServeFile(w, r, "./admin/index.html")
+	})
+	b.PathPrefix("/services/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		commonheaders(w, r)
+		http.ServeFile(w, r, "./admin/index.html")
+	})
+	b.PathPrefix("/resources/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		commonheaders(w, r)
+		http.ServeFile(w, r, "./admin/index.html")
+	})
 
 	b.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("in /!\n")

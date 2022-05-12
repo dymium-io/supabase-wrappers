@@ -2,10 +2,10 @@
 
 set -e
 
-ARN="411064808315"
+ARN="564835066653"
 REPO="dymium"
 REMOTEREPO="webserver"
-REGION="us-west-1"
+REGION="us-west-2"
 
 tag="${1:-latest}"
 [ $tag = "latest" -o $tag = "prod" ] || {
@@ -14,7 +14,7 @@ tag="${1:-latest}"
     exit 1
 }
 
-export AWS_PROFILE=dymium
+export AWS_PROFILE=dymiumdev
 docker tag ${REPO}:latest ${ARN}.dkr.ecr.${REGION}.amazonaws.com/${REMOTEREPO}:${tag}
 
 aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin ${ARN}.dkr.ecr.${REGION}.amazonaws.com
