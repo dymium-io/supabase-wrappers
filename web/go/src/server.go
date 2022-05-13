@@ -85,6 +85,7 @@ func main() {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 
 	authentication.AuthenticationAdminHandlers(p)
+	authentication.AuthenticationPortalHandlers(p)
 	admin.AdminHandlers(p)
 	customer.CustomerHandlers(p)
 

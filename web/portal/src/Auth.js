@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import Modal from 'react-bootstrap/Modal'
 import Button from 'react-bootstrap/Button'
-import * as com from "./Common.js"
 
 const sessionTimeoutMin = 20
 
@@ -10,10 +9,11 @@ export default class Auth extends Component {
         super(props);
         this.state = {
             show: false,
-            lastActivity: 0,
+
             active: false,
         }
-        this.state.lastActivity = Date.now()/1000
+        
+        this.lastActivity = Date.now()/1000
         this.lastSessionUpdate = 0
         this.showtimer = null
         window.addEventListener("mousemove", this.onActivity, {passive: true} )
@@ -31,6 +31,9 @@ export default class Auth extends Component {
         window.document.addEventListener('reauthenticate', this.onReauthenticate);
 
     }
+    redirectPublicWebsite() {
+        return "/app/logout"
+    }
     onReauthenticate = (e) =>{
         console.log("Reauthentication requested on failed fetch!")
         this.revalidate()
@@ -42,20 +45,17 @@ export default class Auth extends Component {
         this.revalidate();
     }
     onActivity = (e) => {
-        console.log("in onActivity")
+        //console.log("in onActivity")
         let now = Date.now()/1000 
         if (now - this.lastSessionUpdate >= 30) {
      
             this.lastSessionUpdate =now            
 
-            // eslint-disable-next-line react/no-direct-mutation-state
             this.revalidate();
         }
-        // eslint-disable-next-line react/no-direct-mutation-state
-        this.state.lastActivity = now
-        clearTimeout(this.timeoutId)
 
-        // eslint-disable-next-line react/no-direct-mutation-state
+        this.lastActivity = now
+        clearTimeout(this.timeoutId)
         this.timeoutId = setTimeout(this.onTimeout, 1000*(sessionTimeoutMin*60 + 5))
 
     }
@@ -66,7 +66,7 @@ export default class Auth extends Component {
         this.lastSessionUpdate = Date.now()/1000                       
         if (token === null) {
             console.log("not authenticated");
-            window.location.href = com.redirectPublicWebsite();
+            window.location.href = this.redirectPublicWebsite();
             return;
         }
         fetch(window.location.origin + "/auth/refresh", {
@@ -92,7 +92,7 @@ export default class Auth extends Component {
                         console.log("Pop the message")
                         this.showtimer = setTimeout(t => { 
                             console.log("Don't wait until popup shows, close the view")
-                            window.location.href = com.redirectPublicWebsite()
+                            window.location.href = this.redirectPublicWebsite()
                         }, 30000)
                         if(window.location.pathname !== '/')
                             this.setState({ show: true })
@@ -130,10 +130,10 @@ export default class Auth extends Component {
         this.showtimer = null
         setTimeout(t => { 
             console.log("kill the popup from popup")
-            window.location.href = com.redirectPublicWebsite()
+            window.location.href = this.redirectPublicWebsite()
         }, 5000)
     }
-    handleClose = () => { this.setState({ show: true }); window.location.href = com.redirectPublicWebsite(); }
+    handleClose = () => { this.setState({ show: true }); window.location.href = this.redirectPublicWebsite(); }
     handleShow = () => this.setState({ show: false });
     render() {
         return (

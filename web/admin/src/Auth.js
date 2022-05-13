@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Modal from 'react-bootstrap/Modal'
 import Button from 'react-bootstrap/Button'
 
-const sessionTimeoutMin = 5 // change back to 20!!
+const sessionTimeoutMin = 20
 
 export default class Auth extends Component {
     constructor(props) {

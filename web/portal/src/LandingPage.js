@@ -25,7 +25,7 @@ function LandingPage() {
     )
       .catch(function (err) {
         console.log('Fetch Error :', err);
-      });    
+      });
   }
   useEffect(() => {
     fetchData()
@@ -42,19 +42,18 @@ function LandingPage() {
           <h1 style={{ marginTop: '0.7em', fontSize: '7em', fontWeight: '300' }} className="logoheader mb-4">Dymium</h1>
 
           <div className="mt-5">
+            {login !== "" &&
               <a
                 className=" dymium-button-link"
-                
-                href="/app/"
-                
-                /*
+             
                 href={login}
-                */
+      
                 rel="noopener noreferrer"
               >
                 Click to login!
               </a>
-            </div>
+            }
+          </div>
 
         </div>
       </div>
