@@ -46,7 +46,7 @@ var psqlInfo string
 var db *sql.DB
 
 const timeOut = 20
-var auth_admin_domain, auth_admin_client_id, auth_admin_client_secret, auth_admin_redirect string
+var auth_admin_domain, auth_admin_client_id, auth_admin_client_secret, auth_admin_redirect, auth_admin_organization string
 var auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_portal_redirect string
 var ctx context.Context
 var adminOIDCrovider *oidc.Provider 
@@ -81,6 +81,7 @@ func DatabaseInit(host string, password string, port string) {
 	auth_admin_client_id = os.Getenv("AUTH0_ADMIN_CLIENT_ID")
 	auth_admin_client_secret = os.Getenv("AUTH0_ADMIN_CLIENT_SECRET")
 	auth_admin_redirect = os.Getenv("AUTH0_ADMIN_REDIRECT_URL")
+	auth_admin_organization = os.Getenv("AUTH0_ADMIN_ORGANIZATION")
 
 	ctx = context.Background()
 	log.Printf("Create oidc provider: %s\n", auth_admin_domain)
@@ -356,9 +357,17 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 	}).Methods("GET")
 
 	p.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
-		newquery := fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&client_secret=%s", 
-			auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, auth_admin_client_secret)
+		org := r.URL.Query().Get("organization")
+		var newquery string
+		if org == "" {
+			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&organization=%s", 
+				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect),
+				auth_admin_organization)
+		} else {
+			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s", 
+				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect) )
 
+		}
 		log.Printf("In /auth/login: redirect to \n%s\n", newquery)
 		http.Redirect(w, r, newquery, http.StatusFound)
 	})
@@ -462,8 +471,8 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 	}).Methods("GET")
 
 	p.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
-		newquery := fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&client_secret=%s", 
-			auth_portal_domain, r.URL.RawQuery, auth_portal_client_id, auth_portal_client_secret)
+		newquery := fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s", 
+			auth_portal_domain, r.URL.RawQuery, auth_portal_client_id)
 
 		log.Printf("In /auth/login: redirect to \n%s\n", newquery)
 		http.Redirect(w, r, newquery, http.StatusFound)

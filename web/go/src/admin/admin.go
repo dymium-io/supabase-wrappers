@@ -60,14 +60,14 @@ func AdminHandlers(p *mux.Router) {
 		domain := os.Getenv("AUTH0_ADMIN_DOMAIN")
 		clientid := os.Getenv("AUTH0_ADMIN_CLIENT_ID")
 		redirecturl := os.Getenv("AUTH0_ADMIN_REDIRECT_URL")
-		organization := os.Getenv("AUTH0_ADMIN_ORGANIZATION")
+		//organization := os.Getenv("AUTH0_ADMIN_ORGANIZATION")
 				
 		t := struct {
 			LoginURL string
 		}{}
 
-		t.LoginURL = fmt.Sprintf("%sauthorize?response_type=code&client_id=%s&redirect_uri=%s&organization=%s",
-			domain, clientid, redirecturl, organization)
+		t.LoginURL = fmt.Sprintf("%sauthorize?response_type=code&client_id=%s&redirect_uri=%s",
+			domain, clientid, redirecturl)
 
 		js, err := json.Marshal(t)
 		if err != nil {
