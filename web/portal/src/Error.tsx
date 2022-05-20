@@ -21,7 +21,7 @@ export default function Error() {
         position: 'absolute', top: '0px', left: '0px',
         width: '100%', height: '100vh'
       }}>
-        <div id="loginbox" className="d-flex" style={{align: 'right', position: 'relative', 
+        <div id="loginbox" className="d-flex" style={{ position: 'relative', 
         marginLeft: 'auto', marginRight: 'auto', 
         alignItems: 'center',
         justifyContent: 'center'}}>

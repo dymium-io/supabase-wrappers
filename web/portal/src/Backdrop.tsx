@@ -129,7 +129,7 @@ function Backdrop() {
   }
   // animation
   function initAnimation() {
-    animate();
+    animate(0);
 
   }
   

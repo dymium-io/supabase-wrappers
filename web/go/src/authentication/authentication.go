@@ -22,7 +22,9 @@ import (
 	"golang.org/x/oauth2"
 	"time"
 	"errors"
+	"io"
 	_"golang.org/x/crypto/bcrypt"
+	"github.com/Jeffail/gabs"
 	"dymium.com/dymium/common"
 )
 
@@ -46,8 +48,9 @@ var psqlInfo string
 var db *sql.DB
 
 const timeOut = 20
-var auth_admin_domain, auth_admin_client_id, auth_admin_client_secret, auth_admin_redirect, auth_admin_organization string
-var auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_portal_redirect string
+var auth_admin_domain, auth_admin_client_id, auth_admin_client_secret, 
+	auth_admin_redirect, auth_admin_organization, auth_admin_audience string
+var auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_portal_redirect, auth_portal_audience string
 var ctx context.Context
 var adminOIDCrovider *oidc.Provider 
 var adminOauth2config oauth2.Config
@@ -82,27 +85,19 @@ func DatabaseInit(host string, password string, port string) {
 	auth_admin_client_secret = os.Getenv("AUTH0_ADMIN_CLIENT_SECRET")
 	auth_admin_redirect = os.Getenv("AUTH0_ADMIN_REDIRECT_URL")
 	auth_admin_organization = os.Getenv("AUTH0_ADMIN_ORGANIZATION")
+	auth_admin_audience = os.Getenv("AUTH0_ADMIN_AUDIENCE")
 
 	ctx = context.Background()
 	log.Printf("Create oidc provider: %s\n", auth_admin_domain)
-	adminOIDCrovider, err = oidc.NewProvider(ctx, auth_admin_domain)
-	if err != nil {
-		log.Printf("Error creating provider: %s\n", err.Error())
-	}
-	adminOauth2config = oauth2.Config{
-		ClientID:     auth_admin_client_id,
-		ClientSecret: auth_admin_client_secret,
-		Endpoint:     adminOIDCrovider.Endpoint(),
-		RedirectURL:  auth_admin_redirect,
-		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
-	}
 
 	auth_portal_domain = os.Getenv("AUTH0_PORTAL_DOMAIN")
 	auth_portal_client_id = os.Getenv("AUTH0_PORTAL_CLIENT_ID")
 	auth_portal_client_secret = os.Getenv("AUTH0_PORTAL_CLIENT_SECRET")
 	auth_portal_redirect = os.Getenv("AUTH0_PORTAL_REDIRECT_URL")
+	auth_portal_audience = os.Getenv("AUTH0_PORTAL_AUDIENCE")
 
 	portalOIDCrovider, err = oidc.NewProvider(ctx, auth_portal_domain)
+
 	if err != nil {
 		log.Printf("Error creating provider: %s\n", err.Error())
 	}
@@ -205,6 +200,7 @@ func generatePortalJWT() (string, error) {
 
 	return tokenString, err
 }
+
 func refreshPortalToken(token string) (string, error) {
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
 	claim := &claims{}
@@ -264,7 +260,58 @@ func generateError(w http.ResponseWriter, r *http.Request, header string, body s
 
 	return nil
 }
+func  getUserInfoFromToken(admin_domain, token string) ( []byte, error) {
+	urlStr := fmt.Sprintf("%suserinfo", admin_domain)
+	client := &http.Client{}
 
+	nr, err := http.NewRequest(http.MethodGet, urlStr, nil) // URL-encoded payload
+	if err != nil {
+		log.Printf("Error: %s\n", err.Error()) 
+		return []byte{}, err
+
+	}
+
+	nr.Header.Add("Authorization", "Bearer " + token)
+	
+	resp, err := client.Do(nr)
+
+	if err != nil {
+		log.Printf("Error: %s\n", err.Error()) 
+		return []byte{}, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)	
+	
+	return body, err
+}
+func getTokenFromCode(code, domain, client_id, client_secret, redirect string) ( []byte, error) {
+	// get the token
+	data := url.Values{}
+	data.Set("grant_type", "authorization_code")
+	data.Set("client_id", client_id)
+	data.Set("client_secret", client_secret)
+	data.Set("code", code)
+	data.Set("redirect_uri", redirect)
+	//data.Set("scope", "admin")
+	encodedData := data.Encode()
+
+	client := &http.Client{}
+	urlStr := fmt.Sprintf("%soauth/token", 
+	domain)
+	log.Printf("in get token: %s\n%s\n", urlStr, encodedData)
+	nr, err := http.NewRequest(http.MethodPost, urlStr, strings.NewReader(encodedData) ) // URL-encoded payload
+	if err != nil {
+		log.Printf("Error: %s\n", err.Error()) 
+		return []byte{}, err
+
+	}
+	nr.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	resp, _ := client.Do(nr)
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+
+	return body, err
+}
 func AuthenticationAdminHandlers(h *mux.Router) error {
 	host := os.Getenv("ADMIN_HOST")
 	p := h.Host(host).Subrouter()
@@ -304,37 +351,33 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 	Queries("error", "{error}").
     Queries("error_description", "{error_description}").Methods("GET")
 
-	
 	p.HandleFunc("/auth/redirect", func(w http.ResponseWriter, r *http.Request) {
-
-		oauth2Token, err := adminOauth2config.Exchange(ctx, r.URL.Query().Get("code"))
-		if err != nil {
-			log.Printf("Error in adminOauth2config.Exchange %s\n", err.Error()) 
-			generateError(w, r, "Failed to get exchange token", err.Error())		
+		code := r.URL.Query().Get("code")
+		if code == "" {
+			generateError(w, r, "Error: ", r.URL.Query().Get("error_description"))
 			return
+		} else {
+			log.Printf("Returned code: %s\n", code)
 		}
 
-		userInfo, err := adminOIDCrovider.UserInfo(ctx, oauth2.StaticTokenSource(oauth2Token))
-		if err != nil {
-			log.Printf("Error in adminOIDCrovider.UserInfo %s\n", err.Error()) 
+		body, err := getTokenFromCode(code, auth_admin_domain, auth_admin_client_id, auth_admin_client_secret, auth_admin_redirect)
 
-			generateError(w, r, "Failed to get userinfo", err.Error())	
-			return
-		}
-		log.Printf("User info: %s\n", userInfo)
-		resp := struct {
-			OAuth2Token *oauth2.Token
-			UserInfo    *oidc.UserInfo
-		}{oauth2Token, userInfo}
+		log.Printf("returned body: %s\n", string(body))
 
-		// use data later
-		_, err = json.MarshalIndent(resp, "", "    ")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		jsonParsed, err := gabs.ParseJSON(body)
+
+		value, ok := jsonParsed.Path("error").Data().(string)
+		if ok {
+			log.Printf("Error: %s\n", value) 
+			des, _ := jsonParsed.Path("error_description").Data().(string)
+			generateError(w, r, value, des)
 			return
+
 		}
-		
-// save 
+		access_token, ok := jsonParsed.Path("access_token").Data().(string)
+
+		info, err := getUserInfoFromToken(auth_admin_domain, access_token)
+		log.Printf("User info: %s\n", string(info))
 
 		token, err := generateAdminJWT()
 		if(err != nil){
@@ -360,12 +403,12 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		org := r.URL.Query().Get("organization")
 		var newquery string
 		if org == "" {
-			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&organization=%s", 
+			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&organization=%s&audience=%s&scope=%s", 
 				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect),
-				auth_admin_organization)
+				auth_admin_organization, url.QueryEscape(auth_admin_audience ),  url.QueryEscape("openid profile  email  groups permissions roles") )
 		} else {
-			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s", 
-				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect) )
+			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&audience=%s&scope=%s", 
+				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect), url.QueryEscape(auth_admin_audience ),  url.QueryEscape("openid profile email  groups permissions roles") )
 
 		}
 		log.Printf("In /auth/login: redirect to \n%s\n", newquery)
@@ -375,9 +418,6 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 
 	return nil
 }
-
-
-
 
 func AuthenticationPortalHandlers(h *mux.Router) error {
 	host := os.Getenv("CUSTOMER_HOST")
@@ -420,35 +460,32 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 
 	
 	p.HandleFunc("/auth/redirect", func(w http.ResponseWriter, r *http.Request) {
-
-		oauth2Token, err := portalOauth2config.Exchange(ctx, r.URL.Query().Get("code"))
-		if err != nil {
-			log.Printf("Error in adminOauth2config.Exchange %s\n", err.Error()) 
-			generateError(w, r, "Failed to get exchange token", err.Error())		
+		code := r.URL.Query().Get("code")
+		if code == "" {
+			generateError(w, r, "Error: ", r.URL.Query().Get("error_description"))
 			return
+		} else {
+			log.Printf("Returned code: %s\n", code)
 		}
 
-		userInfo, err := portalOIDCrovider.UserInfo(ctx, oauth2.StaticTokenSource(oauth2Token))
-		if err != nil {
-			log.Printf("Error in adminOIDCrovider.UserInfo %s\n", err.Error()) 
+		body, err := getTokenFromCode(code, auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_portal_redirect)
 
-			generateError(w, r, "Failed to get userinfo", err.Error())	
-			return
-		}
-		log.Printf("User info: %s\n", userInfo)
-		resp := struct {
-			OAuth2Token *oauth2.Token
-			UserInfo    *oidc.UserInfo
-		}{oauth2Token, userInfo}
+		log.Printf("returned body: %s\n", string(body))
 
-		// use data later
-		_, err = json.MarshalIndent(resp, "", "    ")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		jsonParsed, err := gabs.ParseJSON(body)
+
+		value, ok := jsonParsed.Path("error").Data().(string)
+		if ok {
+			log.Printf("Error: %s\n", value) 
+			des, _ := jsonParsed.Path("error_description").Data().(string)
+			generateError(w, r, value, des)
 			return
+
 		}
-		
-// save 
+		access_token, ok := jsonParsed.Path("access_token").Data().(string)
+
+		info, err := getUserInfoFromToken(auth_portal_domain, access_token)
+		log.Printf("User info: %s\n", string(info))
 
 		token, err := generatePortalJWT()
 		if(err != nil){
@@ -467,12 +504,11 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		</head>
 		<body>Callback arrived</body>
 		</html>`))
-		
 	}).Methods("GET")
 
 	p.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
-		newquery := fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s", 
-			auth_portal_domain, r.URL.RawQuery, auth_portal_client_id)
+		newquery := fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&scope=%s", 
+			auth_portal_domain, r.URL.RawQuery, auth_portal_client_id, url.QueryEscape(auth_portal_redirect), url.QueryEscape("openid profile email groups permissions roles"))
 
 		log.Printf("In /auth/login: redirect to \n%s\n", newquery)
 		http.Redirect(w, r, newquery, http.StatusFound)

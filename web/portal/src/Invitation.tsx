@@ -10,7 +10,6 @@ function useQuery() {
 
 function Invitation() {
   let query = useQuery();
-  let all = query.getAll();
 
   const [login, setLogin] = useState("");
 

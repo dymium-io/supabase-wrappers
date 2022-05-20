@@ -4,7 +4,7 @@ import (
 
 	"errors"
 	"fmt"
-	_ "log"
+	"log"
 	"net/http"
 	"os"
 	"net/url"
@@ -73,26 +73,22 @@ func CustomerHandlers(p *mux.Router) {
 		w.Write(js)
 	}).Methods("GET")
 
-	b.HandleFunc("/api/getlogout", func(w http.ResponseWriter, r *http.Request) {
+	b.HandleFunc("/api/logout", func(w http.ResponseWriter, r *http.Request) {
 		domain := os.Getenv("AUTH0_PORTAL_DOMAIN")
 		clientid := os.Getenv("AUTH0_PORTAL_CLIENT_ID")
 		returnurl := os.Getenv("AUTH0_PORTAL_RETURN_URL")
 
-		t := struct {
-			LogoutURL string
-		}{}
 
-		t.LogoutURL = fmt.Sprintf("%sv2/logout?returnTo=%s&client_id=%s",
+		logoutURL := fmt.Sprintf("%sv2/logout?returnTo=%s&client_id=%s",
 			domain, url.QueryEscape(returnurl), clientid)
+		log.Printf("%s\n", logoutURL)
 
-		js, err := json.Marshal(t)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+
 		w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")	
-		w.Write(js)
+		http.Redirect(w, r, logoutURL, 302)
+
+
 	}).Methods("GET")
 
 

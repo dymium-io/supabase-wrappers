@@ -2,6 +2,7 @@ module dymium.com/dymium
 
 require (
 	cloud.google.com/go v0.78.0 // indirect
+	github.com/Jeffail/gabs v1.4.0 // indirect
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/andybalholm/brotli v1.0.0

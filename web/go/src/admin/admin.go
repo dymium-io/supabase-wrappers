@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	_ "log"
+	"log"
 	"net/http"
 	"net/url"
-	"encoding/json"
+	_"encoding/json"
 	"os"
 	"strings"
 	"github.com/gorilla/mux"
@@ -56,49 +56,21 @@ func AdminHandlers(p *mux.Router) {
 	b.HandleFunc("/{name:.*\\.jpg}", getImages)
 	b.HandleFunc("/{name:.*\\.ico}", getImages)
 
-	b.HandleFunc("/api/getlogin", func(w http.ResponseWriter, r *http.Request) {
-		domain := os.Getenv("AUTH0_ADMIN_DOMAIN")
-		clientid := os.Getenv("AUTH0_ADMIN_CLIENT_ID")
-		redirecturl := os.Getenv("AUTH0_ADMIN_REDIRECT_URL")
-		//organization := os.Getenv("AUTH0_ADMIN_ORGANIZATION")
-				
-		t := struct {
-			LoginURL string
-		}{}
 
-		t.LoginURL = fmt.Sprintf("%sauthorize?response_type=code&client_id=%s&redirect_uri=%s",
-			domain, clientid, redirecturl)
-
-		js, err := json.Marshal(t)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Cache-Control", common.Nocache)
-		w.Header().Set("Content-Type", "text/html")	
-		w.Write(js)
-	}).Methods("GET")
-
-	b.HandleFunc("/api/getlogout", func(w http.ResponseWriter, r *http.Request) {
+	b.HandleFunc("/api/logout", func(w http.ResponseWriter, r *http.Request) {
 		domain := os.Getenv("AUTH0_ADMIN_DOMAIN")
 		clientid := os.Getenv("AUTH0_ADMIN_CLIENT_ID")
 		returnurl := os.Getenv("AUTH0_ADMIN_RETURN_URL")
 
-		t := struct {
-			LogoutURL string
-		}{}
-
-		t.LogoutURL = fmt.Sprintf("%sv2/logout?returnTo=%s&client_id=%s",
+		logoutURL := fmt.Sprintf("%sv2/logout?returnTo=%s&client_id=%s",
 			domain, url.QueryEscape(returnurl), clientid)
+		log.Printf("%s\n", logoutURL)
 
-		js, err := json.Marshal(t)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+
 		w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")	
-		w.Write(js)
+		http.Redirect(w, r, logoutURL, 302)
+
 	}).Methods("GET")
 
 

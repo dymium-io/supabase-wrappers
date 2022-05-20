@@ -2,8 +2,8 @@
 
 .sidenav {
     height: 100% !important;
-    width: 100%;
-    max-width: 170px;
+    
+    width: 160px;
     position: sticky;
     z-index: 1;
     top: 0;

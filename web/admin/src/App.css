@@ -101,3 +101,18 @@ body, #root  {
   background-color: #E36746;
   color: white;
 }
+
+.avatar
+{
+	border: 2px rgb(57, 79, 61);
+	border-radius: 50%;
+	height: 36px;
+	margin-top: 0px;
+	width: 36px;
+}
+#logout {
+  color: white
+}
+#logout:hover {
+  text-decoration: underline;
+}

@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.fdcb069c.css",
-    "main.js": "/static/js/main.e727ea53.js",
+    "main.css": "/static/css/main.6c9d6ee7.css",
+    "main.js": "/static/js/main.cf970dfc.js",
     "static/js/787.3ce4cc4d.chunk.js": "/static/js/787.3ce4cc4d.chunk.js",
     "static/media/fa-solid-900.ttf": "/static/media/fa-solid-900.e615bbcb258550973c16.ttf",
     "static/media/fa-brands-400.ttf": "/static/media/fa-brands-400.b823fc0dbb5a5f0c21bb.ttf",
@@ -20,12 +20,12 @@
     "static/media/fa-v4compatibility.woff2": "/static/media/fa-v4compatibility.afac89562a5301459069.woff2",
     "static/media/roboto-greek-ext-400-normal.woff2": "/static/media/roboto-greek-ext-400-normal.bb723e8458c9c653e505.woff2",
     "index.html": "/index.html",
-    "main.fdcb069c.css.map": "/static/css/main.fdcb069c.css.map",
-    "main.e727ea53.js.map": "/static/js/main.e727ea53.js.map",
+    "main.6c9d6ee7.css.map": "/static/css/main.6c9d6ee7.css.map",
+    "main.cf970dfc.js.map": "/static/js/main.cf970dfc.js.map",
     "787.3ce4cc4d.chunk.js.map": "/static/js/787.3ce4cc4d.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.fdcb069c.css",
-    "static/js/main.e727ea53.js"
+    "static/css/main.6c9d6ee7.css",
+    "static/js/main.cf970dfc.js"
   ]
 }
