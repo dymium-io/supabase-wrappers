@@ -15,10 +15,14 @@ function Menu() {
                     collapseOnSelect expand="lg" variant="light">
                     <Navbar.Brand className="text-left p-0 m-0 mr-2" >
 
-                        <Nav.Link className="px-0 py-0 m-0" href="/">
-                            <img src="/logo.png" style={{ width: '160px', height: 'auto' }} alt="logo" />
+                        <Nav.Link className="p-1 m-0" style={{width: '48px'}} href="/">
+                            <img src="/logo.svg" style={{width: '100%'}} alt="logo" />
                         </Nav.Link >
-
+                        </Navbar.Brand>
+                        <Navbar.Brand className="text-left p-0 m-0 mr-2" >
+                        <Nav.Link className="p-0 m-0 ms-1" style={{width: '140px'}} href="/">
+                            <img src="/brand.svg" style={{width: '100%'}} alt="logo" />
+                        </Nav.Link >
                     </Navbar.Brand>
 
                     <Navbar.Toggle aria-controls="responsive-navbar-nav" />

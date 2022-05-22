@@ -14,8 +14,8 @@ const AuthenticatedApp = () => {
             <Menu />
 
             <Row style={{height: '100vh'}}>
-                <Col xs="auto"><Sidebar/></Col>
-                <Col>
+                <Col xs="auto" className="pe-0"><Sidebar/></Col>
+                <Col className="p-0 spider">
                     <Outlet />
                 </Col>
 

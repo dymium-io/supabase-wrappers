@@ -1,6 +1,6 @@
 let appliedColors = `
 :root{
---primary-color: rgb(228, 108, 75);
+--primary-color: rgb(255, 158, 24);
 --primary-color-text: white;
 --primary-color-2: rgb(208, 125, 103); 
 --primary-color-2-text: #eee;

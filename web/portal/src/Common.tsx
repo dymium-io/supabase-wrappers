@@ -1,13 +1,13 @@
 let appliedColors = `
 :root{
---primary-color: rgb(228, 108, 75);
---primary-color-text: white;
---primary-color-2: rgb(208, 125, 103); 
+--primary-color: rgb(255, 158, 24);
+--primary-color-text: rgb(31, 31, 32);
+--primary-color-2: rgb(119, 74, 10);
 --primary-color-2-text: #eee;
 --primary-color-3: rgb(220, 158, 140); 
 --primary-color-3-text: black;
---primary-pale: rgb(245, 227, 223); 
---primary-pale-text: #222;
+--primary-pale: rgb(183, 114, 17);
+--primary-pale-text: #eeeeee;
 --secondary-color: rgb(6, 33, 76); 
 }
 `
