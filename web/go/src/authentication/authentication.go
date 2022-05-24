@@ -36,11 +36,13 @@ type authStatus struct {
 
 type claims struct {
 	Roles      []string `json:"roles"`
+	Picture    string `json:"picture"`
 	jwt.StandardClaims
 }
 
 type adminClaims struct {
 	Roles      []string `json:"roles"`
+	Picture    string `json:"picture"`
 	jwt.StandardClaims
 }
 
@@ -119,7 +121,7 @@ func tokenFromHTTPRequest(r *http.Request) string {
 	}
 	return tokenString
 }
-func generateAdminJWT() (string, error) {
+func generateAdminJWT(picture string) (string, error) {
 		// generate JWT right header
 		issueTime := time.Now()
 		expirationTime := issueTime.Add(timeOut * time.Minute)
@@ -127,6 +129,7 @@ func generateAdminJWT() (string, error) {
 		claim := &adminClaims{
 			// TODO
 			Roles: []string{},
+			Picture: picture,
 			StandardClaims: jwt.StandardClaims{
 				// In JWT, the expiry time is expressed as unix milliseconds
 				ExpiresAt: expirationTime.Unix(),
@@ -153,6 +156,7 @@ func refreshAdminToken(token string) (string, error) {
 		expirationTime := timeNow.Add(timeOut * time.Minute)
 		newclaim := &claims{
 			Roles: []string{},
+			Picture: claim.Picture,
 			StandardClaims: jwt.StandardClaims{
 				// In JWT, the expiry time is expressed as unix milliseconds
 				ExpiresAt: expirationTime.Unix(),
@@ -179,7 +183,7 @@ func refreshAdminToken(token string) (string, error) {
 	return "", errors.New("Token invalid or expired")
 }
 
-func generatePortalJWT() (string, error) {
+func generatePortalJWT(picture string) (string, error) {
 	// generate JWT right header
 	issueTime := time.Now()
 	expirationTime := issueTime.Add(timeOut * time.Minute)
@@ -187,6 +191,7 @@ func generatePortalJWT() (string, error) {
 	claim := &claims{
 		// TODO
 		Roles: []string{},
+		Picture: picture,
 		StandardClaims: jwt.StandardClaims{
 			// In JWT, the expiry time is expressed as unix milliseconds
 			ExpiresAt: expirationTime.Unix(),
@@ -197,7 +202,7 @@ func generatePortalJWT() (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 	// Create the JWT string
 	tokenString, err := token.SignedString(jwtKey)
-
+log.Printf("token: %s\n", tokenString)
 	return tokenString, err
 }
 
@@ -214,6 +219,7 @@ func refreshPortalToken(token string) (string, error) {
 		expirationTime := timeNow.Add(timeOut * time.Minute)
 		newclaim := &claims{
 			Roles: []string{},
+			Picture: claim.Picture,
 			StandardClaims: jwt.StandardClaims{
 				// In JWT, the expiry time is expressed as unix milliseconds
 				ExpiresAt: expirationTime.Unix(),
@@ -379,7 +385,10 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		info, err := getUserInfoFromToken(auth_admin_domain, access_token)
 		log.Printf("User info: %s\n", string(info))
 
-		token, err := generateAdminJWT()
+		jsonParsed, err = gabs.ParseJSON(info)
+
+		picture, ok := jsonParsed.Path("picture").Data().(string)
+		token, err := generateAdminJWT(picture)
 		if(err != nil){
 			log.Printf("Error: %s\n", err.Error() )
 		}
@@ -487,7 +496,12 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		info, err := getUserInfoFromToken(auth_portal_domain, access_token)
 		log.Printf("User info: %s\n", string(info))
 
-		token, err := generatePortalJWT()
+		jsonParsed, err = gabs.ParseJSON(info)
+
+		picture, ok := jsonParsed.Path("picture").Data().(string)
+		log.Printf("picture: %s, ok: %b\n", picture, ok)
+
+		token, err := generatePortalJWT(picture)
 		if(err != nil){
 			log.Printf("Error: %s\n", err.Error() )
 		}

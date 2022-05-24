@@ -7,6 +7,7 @@ import Error from "./Error"
 import Invitation from "./Invitation"
 import Dashboard from "./app/Dashboard"
 import Customers from "./app/Customers"
+import Connections from "./app/Connections"
 import "@fontsource/roboto";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -27,6 +28,7 @@ function App() {
           <Route path="/app/" element={<AuthenticatedApp />} >
             <Route path="/app/dashboard" element={<Dashboard />} />
             <Route path="/app/customers" element={<Customers />} />
+            <Route path="/app/connections" element={<Connections />} />            
           </Route>
           <Route  path="/app/logout" element={<Logout/>} />
           <Route path="/app/error" element={<Error />} />

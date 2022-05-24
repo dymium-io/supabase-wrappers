@@ -10,10 +10,11 @@ function LandingPage() {
         position: 'absolute', top: '0px', left: '0px',
         width: '100%', height: '100vh'
       }}>
-        <div id="loginbox">
-          <h1 style={{ marginTop: '0.7em', fontSize: '7em', fontWeight: '300' }} className="logoheader mb-4">Dymium</h1>
+          <img style={{position: 'relative', top: '50%',  marginTop: '-1.8em'}} className="text-center svgshadow" src="/brand.svg"></img>
 
-          <div className="mt-5">
+        <div id="loginbox">
+        
+          <div style={{marginTop: '11em'}}>
          
               <a
                 className=" dymium-button-link"
@@ -26,7 +27,7 @@ function LandingPage() {
               </a>
   
           </div>
-
+  
         </div>
       </div>
     </div>

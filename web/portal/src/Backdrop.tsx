@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 
 function Backdrop() {
-  let width, height, canvas, ctx, points, target, animateHeader = true, cs, sn;
+  let width, height, canvas, ctx, points, target, animateHeader = true;
+  //, cs, sn;
   let centerx, centery;
   // Similar to componentDidMount and componentDidUpdate:
   useEffect(() => {
@@ -26,28 +27,24 @@ function Backdrop() {
 
     // create points
     points = []
-    let angle = 3.14159 * 10 / 180
-    cs = Math.cos(angle)
-    sn = Math.sin(angle)
+    let angle = -3.14159 * 80 / 180
+    //cs = Math.cos(angle)
+    //sn = Math.sin(angle)
     let step = width / 18
+    let fac = 0.3
+    let cx = 260*fac
+    let cy = -57*fac
+    let rx=200*fac
+    let ry =300*fac
 
-    for (let i = 2; i <= 10; i++) {
-
-      let rad = Math.abs(step * i*i/6)
-      let xorig =  sn * step * i*i/6
-      let yorig =  cs * step * i*i/6
-
-      let drad = Math.random() * rad * 4
-      let dx = drad * sn
-      let dy = drad * cs
-
-      let p = {
-        originX: xorig, originY: yorig, originR: rad,
-        drad, dx, dy, alpha: 0.5
-      };
-
-      points.push(p);
+     let boost = 1
+    for(let i = 1; i < 8; i++) {     
+        let p = {cx: cx*boost, cy:cy*boost, rx:rx*boost, ry:ry*boost, factor: 1.0, alpha: 0.3}
+        points.push(p);
+        boost = boost * 1.45
+      
     }
+
     for(let i = 0; i < 50; i++) {
       shakeField()
     }
@@ -57,18 +54,18 @@ function Backdrop() {
 
     //if (!_this.active) return;
     ctx.strokeStyle = 'rgb(255, 255, 255, ' + p.alpha;
-    ctx.beginPath();
-    ctx.arc(centerx + p.originX + p.dx, centery + p.originY + p.dy, p.originR + p.drad, 0, 2 * Math.PI, false);
-    ctx.closePath();
-    ctx.stroke();
 
-    ctx.beginPath();
-    ctx.arc(centerx - p.originX - p.dx, centery - p.originY - p.dy, p.originR + p.drad, 0, 2 * Math.PI, false);
-    ctx.closePath();
-    ctx.stroke();
 
-    //ctx.fillStyle = 'rgba(156,217,249,' + _this.active + ')';
-    //ctx.fill();
+    ctx.closePath();
+    ctx.beginPath();
+    ctx.ellipse(centerx + p.cx*p.factor, centery + p.cy*p.factor, p.rx*p.factor, p.ry*p.factor, -Math.PI*37/90, 0, 2 * Math.PI);
+    ctx.stroke();    
+    ctx.closePath();
+    ctx.beginPath();
+    ctx.ellipse(centerx - p.cx*p.factor, centery - p.cy*p.factor, p.rx*p.factor, p.ry*p.factor, -Math.PI*37/90, 0, 2 * Math.PI);
+    ctx.stroke();    
+    ctx.closePath();
+
 
   }
 
@@ -98,26 +95,18 @@ function Backdrop() {
 
   function  shakeField() {
     function  mv(p) {
-      let dx, dy
+      let factor = 1  + (Math.random()  - 0.5)*2.0
 
-      let drad = Math.random() * p.originR * 4
-      dx = drad * sn
-      dy = drad * cs
+      factor = 0.003*factor + 0.997*p.factor
 
-      drad = 0.005*drad + 0.995*p.drad
+      let alpha =  0.3 + (Math.random() - 0.5) * 0.5
+      alpha = 0.05*alpha + 0.95*p.alpha
 
-
-      dx = 0.005*dx + 0.995*p.dx
-      dy = 0.005*dy + 0.995*p.dy
-
-      let alpha = Math.random() 
-      alpha = 0.1*alpha + 0.9*p.alpha
-
-      Object.assign(p,  { dx, dy, drad, alpha})
+      Object.assign(p,  { factor, alpha})
     }
     function avg(p0, p1) {
-      Object.assign(p1,  { dx: (p0.dx + p1.dx)/2, 
-        dy: (p0.dy + p1.dy)/2, drad: (p0.drad + p1.drad)/2, alpha: (p0.alpha + p1.alpha)/2})
+      Object.assign(p1,  { factor: (p0.factor*0.05 + 0.95*p1.factor), 
+        alpha: (p0.alpha + p1.alpha)/2})
 
     }
     for (let i in points) {
@@ -126,22 +115,46 @@ function Backdrop() {
      for(let i = 0; i < points.length - 1; i++) {
        avg(points[i], points[i+1])
      }
+     for(let i = 0; i < points.length - 1; i++) {
+      avg(points[i], points[i+1])
+    }
+    for(let i = 0; i < points.length - 1; i++) {
+      avg(points[i], points[i+1])
+    }
   }
-  // animation
-  function initAnimation() {
+
+  
+   // animation
+   function initAnimation() {
     animate(0);
 
   }
-  
   function animate(timestamp) {
     if (animateHeader) {
       ctx.clearRect(0, 0, width, height);
+      ctx.lineStyle = 'rgb(255, 255, 255, ' + points[0].alpha;
+
+      ctx.globalAlpha = points[0].alpha;
+      let dx = 373.6
+      let dy = 533.0
+      let l =  Math.sqrt(dx*dx + dy*dy)
+      let c = dx / l
+      let s = dy / l
+      ctx.lineWidth = 4;
+      
+      ctx.beginPath();
+      ctx.moveTo(centerx  -  2*l*c, centery -  2*l*s)
+      ctx.lineTo( centerx + 2*l*c, centery + 2*l*s, points[0].alpha)
+      ctx.stroke();    
+      ctx.closePath();
+
       for (let i in points) {
         draw(points[i]);
       }
     }
     shakeField()
     requestAnimationFrame(animate);
+     
   }
 
 

@@ -28,3 +28,21 @@ export function customizeStyleSheet() {
     cssInserted = true
     insertStyleSheet(appliedColors)
 }
+export function getTokenProperty(prop) {
+    let token = sessionStorage.getItem("Session")
+    if(token === "" || token === null)    
+        return undefined
+
+    let sp = token.split('.')
+    let claims = atob(sp[1])
+    let j = JSON.parse(claims)
+    return j[prop]
+}
+
+export const databaseTypes = {
+    postgres: "PostgresSQL",
+    mysql: "MySQL",
+    mariadb: "MariaDB",
+    sqlserver: "SQL Server",
+    oracle: "Oracle DB",
+}

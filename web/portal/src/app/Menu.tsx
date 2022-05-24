@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Navbar from 'react-bootstrap/Navbar'
 import Nav from 'react-bootstrap/Nav'
+import * as com from '../Common'
 
 
 
@@ -8,10 +9,14 @@ function Menu() {
 
     let [avatar, setAvatar] = useState('/avatar.png') // eslint-disable-line no-unused-vars
 
+    let picture = com.getTokenProperty("picture")
+    if(undefined !== picture && avatar != picture) {
+        setAvatar(picture)
+    }
         return (
             <div id="home" className="w-100 text-center deepestblue">
                 <Navbar id="navb"
-                    className="p-0 m-0"
+                    className="p-0 m-0 navbar-expand-sm"
                     collapseOnSelect expand="lg" variant="light">
                     <Navbar.Brand className="text-left p-0 m-0 mr-2" >
 
