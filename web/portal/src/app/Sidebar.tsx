@@ -13,18 +13,18 @@ export default function Sidebar() {
     return (
       <div className="sidenav h-100" id="sidebar">
         <Link className='hover-sidebar' 
-          to='/app/dashboard' > <i className="fas fa-tachometer-alt me-1 fa-fw"></i>Dashboard</Link >
+          to='/app/dashboard' > <i className="fas fa-tachometer-alt mr-1 fa-fw"></i>Dashboard</Link >
 
         <Link className='hover-sidebar' 
-          to='/app/connections' > <i className="fas fa-database me-1 fa-fw"></i>Connections</Link >
+          to='/app/connections' > <i className="fas fa-database mr-1 fa-fw"></i>Connections</Link >
 
         <Link className='hover-sidebar' 
-          to='/app/groups' > <i className="fas fa-users me-1 fa-fw"></i>Groups</Link >
+          to='/app/groups' > <i className="fas fa-users mr-1 fa-fw"></i>Groups</Link >
 
         <a className='hover-sidebar' 
                  href="/api/logout"
          > 
-                  <i className="fas fa-sign-out me-1 fa-fw" aria-hidden="true"></i>Logout</a >
+                  <i className="fas fa-sign-out mr-1 fa-fw" aria-hidden="true"></i>Logout</a >
 
       </div>
 

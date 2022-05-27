@@ -470,10 +470,10 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		if org == "" {
 			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&organization=%s&audience=%s&scope=%s", 
 				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect),
-				auth_admin_organization, url.QueryEscape(auth_admin_audience ),  url.QueryEscape("openid profile  email  groups permissions roles") )
+				auth_admin_organization, url.QueryEscape(auth_admin_audience ),  url.QueryEscape("groups") )
 		} else {
 			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&audience=%s&scope=%s", 
-				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect), url.QueryEscape(auth_admin_audience ),  url.QueryEscape("openid profile email  groups permissions roles") )
+				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect), url.QueryEscape(auth_admin_audience ),  url.QueryEscape("groups") )
 
 		}
 		log.Printf("In /auth/login: redirect to \n%s\n", newquery)

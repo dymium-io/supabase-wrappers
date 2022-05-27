@@ -5,6 +5,15 @@ import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
+import BootstrapTable from 'react-bootstrap-table-next';
+
+
+import paginationFactory from 'react-bootstrap-table2-paginator';
+
+import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit';
+/*
+const { SearchBar, ClearSearchButton } = Search;
+*/
 
 import {tooltip} from '../Components/Tooltip'
 import PasswordField from '../Components/PasswordField'
@@ -63,19 +72,19 @@ function AddConnection() {
     }
 
     return (
-        <div className=" text-start">
+        <div className=" text-left">
             <h5 > Create New Connection</h5>
             <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                 <Row>
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="dbtype" >
                             <Form.Label >Database type</Form.Label>
-                            <Form.Select required size="sm" value={dbtype}
+                            <Form.Control as="select"required size="sm" value={dbtype}
                             onChange={e=>setDBType(e.target.value)}
                             >
                                 <option value="">...</option>
                                 {databases}
-                            </Form.Select>
+                            </Form.Control>
                             <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                             <Form.Control.Feedback type="invalid" >
                                 Select DB type
@@ -88,9 +97,9 @@ function AddConnection() {
                             <div className="d-block">
                                The prefix is used to identify the target database from the SQL sent to the Dymium proxy server.
                                For example, instead of
-                               <div className='ms-2 my-1'>select * from mytable;</div>
+                               <div className='ml-2 my-1'>select * from mytable;</div>
                                you should use:
-                               <div className='ms-2 my-1'>select * from prefix_mytable;</div>
+                               <div className='ml-2 my-1'>select * from prefix_mytable;</div>
                             </div>
                             , 'auto', '', false)}</Form.Label>
                             <Form.Control size="sm" type="text" placeholder="alphanum, _$^!"
@@ -210,7 +219,50 @@ function AddConnection() {
     )
 }
 
-function EditConnections() {
+let columns = [
+    {
+        dataField: 'id',
+        text: 'id',
+        hidden: true,
+    }, 
+    {
+        dataField: 'credid',
+        text: 'credid',
+        hidden: true,
+    }, 
+    {
+        dataField: 'name',
+        text: 'Prefix:',
+        sort: true,
+    },
+    {
+        dataField: 'dbtype',
+        text: 'DB Type:',
+        sort: true
+    },
+    {
+        dataField: 'address',
+        text: 'Address:',
+        sort: true
+    },
+    {
+        dataField: 'port',
+        text: 'Port:',
+        sort: true
+    },   
+    {
+        dataField: 'usetls',
+        text: 'Use TLS',
+        sort: true
+    },       
+    {
+        dataField: 'description',
+        text: 'Description:',
+        sort: true
+    },    
+]
+function EditConnections(props) {
+    let [conns, setConns] = useState([])
     let getConnections = () => { 
        
         com.sendToServer("GET", "/api/getconnections", 
@@ -218,7 +270,23 @@ function EditConnections() {
             resp=> {
 
                 resp.json().then(js => {
-                    
+                    console.log(js)
+                    let cc
+                    cc = js.map(x => {
+                        return {
+                            id: x.id,
+                            credid: x.credid,
+                            name: x.name,
+                            dbname: x.dbname,
+                            address: x.address,
+                            port: x.port,
+                            description: x.description,
+                        
+                        }
+                    }
+                 
+                    )
+                    setConns(cc)
                 })
 
                 console.log("on success")
@@ -230,21 +298,31 @@ function EditConnections() {
                 console.log("on exception: "+error)
             }) 
     }
-    useInitialize(() => {
+    useEffect(() => {
         getConnections()
-    }) 
+    }, []) 
 
     return (
 
-        <div className=" text-start">
+        <div className=" text-left">
             <h5 >Edit Connections</h5>
-            
+
+                                <BootstrapTable id="scaledtable"
+                                    striped bootstrap4 bordered={false}
+                                    pagination={paginationFactory()}
+                                    keyField='prefix'
+                                    data={conns}
+                                    columns={columns}                                    
+                                    {...props.baseProps}
+                                />
+      
+
     </div>
     )
  }
 function Connections() {
     return (
-        <Tabs defaultActiveKey="add" id="connections" unmountOnExit={true} className="mb-3 text-start">
+        <Tabs defaultActiveKey="add" id="connections" unmountOnExit={true} className="mb-3 text-left">
             <Tab eventKey="add" title="Add Connection" className="mx-4">
                 <AddConnection />
             </Tab>

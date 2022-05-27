@@ -33,7 +33,7 @@ export const tooltip = (title, text, placement, cls, nocomma) => {
             <OverlayTrigger
                 trigger={['click' , 'hover' ]} rootClose
                 placement={placement} overlay={catchall(text)} >
-                <div className=" text-wrap">{title} <span className="text-nowrap">{last}<i className="ms-1 blue fas fa-question-circle text-newinfo"></i>{nocomma? '' : ':'}</span></div>
+                <div className=" text-wrap">{title} <span className="text-nowrap">{last}<i className="ml-1 blue fas fa-question-circle text-newinfo"></i>{nocomma? '' : ':'}</span></div>
             </OverlayTrigger>
         </div>)
 }

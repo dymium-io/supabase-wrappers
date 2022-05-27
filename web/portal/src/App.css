@@ -192,3 +192,11 @@ h5 {
 .blue {
   color: rgb(0, 151,206);  
 }
+.nav-tabs .nav-link {
+  background-color: #B1D7EB; 
+}
+
+.nav-tabs .nav-link.active {
+  background-color: #EAF2F8;
+  border-bottom-color: #EAF2F8;
+}
