@@ -1,18 +1,20 @@
 package customer
+
 import (
-
-
+	"dymium.com/dymium/authentication"
+	"dymium.com/dymium/common"
+	"dymium.com/dymium/types"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/mux"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"net/url"
-	"encoding/json"	
+	"os"
 	"strings"
-	"io"
-	"github.com/gorilla/mux"	
-	"dymium.com/dymium/common"
 )
 
 func CustomerHandlers(p *mux.Router) {
@@ -50,12 +52,76 @@ func CustomerHandlers(p *mux.Router) {
 		}
 	}
 
+	b.HandleFunc("/api/createnewconnection", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+		body, _ := ioutil.ReadAll(r.Body)
+		defer r.Body.Close()
+
+		var t types.Connection
+		err := json.Unmarshal(body, &t)
+
+		error = authentication.CreateNewConnection(schema, t)
+
+		js, err := json.Marshal(t)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("POST")
+
+	b.HandleFunc("/api/getconnections", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+
+		connections, error := authentication.GetConnections(schema)
+
+		js, err := json.Marshal(connections)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("GET")
+
 	b.HandleFunc("/api/getlogin", func(w http.ResponseWriter, r *http.Request) {
 		domain := os.Getenv("AUTH0_PORTAL_DOMAIN")
 		clientid := os.Getenv("AUTH0_PORTAL_CLIENT_ID")
 		redirecturl := os.Getenv("AUTH0_PORTAL_REDIRECT_URL")
 
-				
 		t := struct {
 			LoginURL string
 		}{}
@@ -69,7 +135,7 @@ func CustomerHandlers(p *mux.Router) {
 			return
 		}
 		w.Header().Set("Cache-Control", common.Nocache)
-		w.Header().Set("Content-Type", "text/html")	
+		w.Header().Set("Content-Type", "text/html")
 		w.Write(js)
 	}).Methods("GET")
 
@@ -78,19 +144,15 @@ func CustomerHandlers(p *mux.Router) {
 		clientid := os.Getenv("AUTH0_PORTAL_CLIENT_ID")
 		returnurl := os.Getenv("AUTH0_PORTAL_RETURN_URL")
 
-
 		logoutURL := fmt.Sprintf("%sv2/logout?returnTo=%s&client_id=%s",
 			domain, url.QueryEscape(returnurl), clientid)
 		log.Printf("%s\n", logoutURL)
 
-
 		w.Header().Set("Cache-Control", common.Nocache)
-		w.Header().Set("Content-Type", "text/html")	
+		w.Header().Set("Content-Type", "text/html")
 		http.Redirect(w, r, logoutURL, 302)
 
-
 	}).Methods("GET")
-
 
 	// For React to work properly, ensure that the URLs going into the React router return index.html
 	b.PathPrefix("/app/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -119,4 +181,3 @@ func CustomerHandlers(p *mux.Router) {
 		http.ServeFile(w, r, "./borrower/static/index.html")
 	}).Methods("GET")
 }
-

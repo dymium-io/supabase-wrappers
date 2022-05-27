@@ -26,25 +26,10 @@ import (
 	_"golang.org/x/crypto/bcrypt"
 	"github.com/Jeffail/gabs"
 	"dymium.com/dymium/common"
+	"dymium.com/dymium/types"
 )
 
-type authStatus struct {
-	Status string
-	Text   string
-	Token  string
-}
 
-type claims struct {
-	Roles      []string `json:"roles"`
-	Picture    string `json:"picture"`
-	jwt.StandardClaims
-}
-
-type adminClaims struct {
-	Roles      []string `json:"roles"`
-	Picture    string `json:"picture"`
-	jwt.StandardClaims
-}
 
 var psqlInfo string
 var db *sql.DB
@@ -111,22 +96,13 @@ func DatabaseInit(host string, password string, port string) {
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 	}	
 }
-// this function extracts JWT from the request
-func tokenFromHTTPRequest(r *http.Request) string {
-	reqToken := r.Header.Get("Authorization")
-	var tokenString string
-	splitToken := strings.Split(reqToken, "Bearer ")
-	if len(splitToken) > 1 {
-		tokenString = splitToken[1]
-	}
-	return tokenString
-}
+
 func generateAdminJWT(picture string) (string, error) {
 		// generate JWT right header
 		issueTime := time.Now()
 		expirationTime := issueTime.Add(timeOut * time.Minute)
 		
-		claim := &adminClaims{
+		claim := &types.AdminClaims{
 			// TODO
 			Roles: []string{},
 			Picture: picture,
@@ -145,7 +121,7 @@ func generateAdminJWT(picture string) (string, error) {
 }
 func refreshAdminToken(token string) (string, error) {
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
-	claim := &claims{}
+	claim := &types.Claims{}
 
 	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -154,7 +130,7 @@ func refreshAdminToken(token string) (string, error) {
 	if err == nil && tkn.Valid {
 		// update token
 		expirationTime := timeNow.Add(timeOut * time.Minute)
-		newclaim := &claims{
+		newclaim := &types.Claims{
 			Roles: []string{},
 			Picture: claim.Picture,
 			StandardClaims: jwt.StandardClaims{
@@ -182,16 +158,94 @@ func refreshAdminToken(token string) (string, error) {
 	// log.Printf("Invalid session, expired at %v, time now: %v ", claim.StandardClaims.ExpiresAt, timeNow.Unix())
 	return "", errors.New("Token invalid or expired")
 }
+func GetSchemaFromToken(token string) (string, error) {
+	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
+	claim := &types.Claims{}
 
-func generatePortalJWT(picture string) (string, error) {
+	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+	if nil == err {
+		if !tkn.Valid {
+			err = errors.New("No error, but invalid token")
+		}
+	}
+	if claim.Schema == "" {
+		err = errors.New("Empty schema")
+	}
+	return claim.Schema, err
+
+}
+func CreateNewConnection(schema string, con types.Connection) error {
+	sql := `insert into `+schema+`.connections(name, database_type, address, port, use_tls, description) 
+		values($1,$2,$3,$4,$5,$6) returning id; `
+
+	row := db.QueryRow(sql, con.Name, con.Dbtype, con.Address, con.Port, con.UseTLS, con.Description)
+	var id string
+	err := row.Scan(&id)
+	if err != nil {
+		log.Printf("Error: %s\n", err.Error())
+		return err
+	}
+	// now let's save credentials!
+	sql = `insert into `+schema+`.admincredentials(connection_id, username) values($1, $2) returning id`
+	row = db.QueryRow(sql, id, con.Username)
+	err = row.Scan(&id)
+	if err != nil {
+		log.Printf("Error: %s\n", err.Error())
+		return err
+	}
+	sql = `insert into `+schema+`.passwords(id, password) values($1, $2)`;
+	
+	_, err = db.Exec(sql, id, con.Password)
+	if err != nil {
+		log.Printf("Error: %s\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+func GetConnections(schema string) ([]types.Connection, error ) {
+	sql := `select a.id,a.name,a.address,a.port,a.database_type,a.use_tls,a.description,b.username,b.id from `+
+		schema+`.connections as a join `+
+		schema+`.admincredentials as b on a.id=b.connection_id;`
+	rows, err := db.Query(sql)
+
+	defer rows.Close()
+
+	var conns = []types.Connection{}
+	if nil == err {
+
+		for rows.Next() {
+			var conn = types.Connection{}
+			err = rows.Scan(&conn.Id, &conn.Name, &conn.Address, &conn.Port, &conn.Dbtype, &conn.UseTLS, 
+					&conn.Description, &conn.Username, &conn.Credid)
+			if nil != err {
+				log.Printf("Error in GetConnections:  %s\n", err.Error())
+				return []types.Connection{}, err
+			} else {
+				conns = append(conns, conn)
+			}
+		}
+		
+	} else {
+		log.Printf("Error in GetConnections:  %s\n", err.Error())
+		return []types.Connection{}, nil
+	}
+
+	return conns, nil
+}
+func generatePortalJWT(picture, schema, org_id  string) (string, error) {
 	// generate JWT right header
 	issueTime := time.Now()
 	expirationTime := issueTime.Add(timeOut * time.Minute)
 	
-	claim := &claims{
+	claim := &types.Claims{
 		// TODO
 		Roles: []string{},
 		Picture: picture,
+		Schema: schema,
+		Orgid: org_id,
 		StandardClaims: jwt.StandardClaims{
 			// In JWT, the expiry time is expressed as unix milliseconds
 			ExpiresAt: expirationTime.Unix(),
@@ -208,7 +262,7 @@ log.Printf("token: %s\n", tokenString)
 
 func refreshPortalToken(token string) (string, error) {
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
-	claim := &claims{}
+	claim := &types.Claims{}
 
 	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -217,9 +271,11 @@ func refreshPortalToken(token string) (string, error) {
 	if err == nil && tkn.Valid {
 		// update token
 		expirationTime := timeNow.Add(timeOut * time.Minute)
-		newclaim := &claims{
+		newclaim := &types.Claims{
 			Roles: []string{},
 			Picture: claim.Picture,
+			Schema: claim.Schema,
+			Orgid: claim.Orgid,			
 			StandardClaims: jwt.StandardClaims{
 				// In JWT, the expiry time is expressed as unix milliseconds
 				ExpiresAt: expirationTime.Unix(),
@@ -323,16 +379,16 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 	p := h.Host(host).Subrouter()
 
 	p.HandleFunc("/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
-		var status authStatus
+		var status types.AuthStatus
 
-		token := tokenFromHTTPRequest(r)
+		token := common.TokenFromHTTPRequest(r)
 
 		newtoken, autherror := refreshAdminToken(token)
 		if autherror == nil {
-			status = authStatus{"OK", "Session live", newtoken}
+			status = types.AuthStatus{"OK", "Session live", newtoken}
 		} else {
 			log.Println("Return error, reauthenticate")
-			status = authStatus{"Error", autherror.Error(), ""}
+			status = types.AuthStatus{"Error", autherror.Error(), ""}
 		}
 
 		js, err := json.Marshal(status)
@@ -433,16 +489,16 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 	p := h.Host(host).Subrouter()
 
 	p.HandleFunc("/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
-		var status authStatus
+		var status types.AuthStatus
 
-		token := tokenFromHTTPRequest(r)
+		token := common.TokenFromHTTPRequest(r)
 
 		newtoken, autherror := refreshPortalToken(token)
 		if autherror == nil {
-			status = authStatus{"OK", "Session live", newtoken}
+			status = types.AuthStatus{"OK", "Session live", newtoken}
 		} else {
 			log.Println("Return error, reauthenticate")
-			status = authStatus{"Error", autherror.Error(), ""}
+			status = types.AuthStatus{"Error", autherror.Error(), ""}
 		}
 
 		js, err := json.Marshal(status)
@@ -501,7 +557,23 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		picture, ok := jsonParsed.Path("picture").Data().(string)
 		log.Printf("picture: %s, ok: %b\n", picture, ok)
 
-		token, err := generatePortalJWT(picture)
+		org_id, ok := jsonParsed.Path("org_id").Data().(string)
+		log.Printf("ord id: %s, ok: %b\n", org_id, ok)
+
+		sql := fmt.Sprintf("select schema_name from global.customers where organization=$1;")
+
+		row := db.QueryRow(sql, org_id)
+		var schema string
+		err = row.Scan(&schema)
+
+
+		if(err != nil){
+			log.Printf("Error: %s\n", err.Error() )
+		} else{
+			log.Printf("Schema: %s\n", schema )
+		}
+
+		token, err := generatePortalJWT(picture, schema, org_id)
 		if(err != nil){
 			log.Printf("Error: %s\n", err.Error() )
 		}

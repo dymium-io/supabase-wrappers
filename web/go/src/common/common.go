@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"
+	"strings"
 )
 
 const Nocache = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"
@@ -20,4 +21,15 @@ func VanillaHandlers(p *mux.Router) {
 
 	//http.Handle("/", p)
 
+}
+
+// this function extracts JWT from the request
+func TokenFromHTTPRequest(r *http.Request) string {
+	reqToken := r.Header.Get("Authorization")
+	var tokenString string
+	splitToken := strings.Split(reqToken, "Bearer ")
+	if len(splitToken) > 1 {
+		tokenString = splitToken[1]
+	}
+	return tokenString
 }

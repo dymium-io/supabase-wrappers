@@ -179,3 +179,16 @@ h5 {
   font-size: 0.7em;
   color: #136841;
 }
+.form-label {
+  margin-bottom: 0.15rem;
+}
+
+.w-12em {
+  width: 12em !important;
+}
+.no-background {
+  background-image: none !important;
+}
+.blue {
+  color: rgb(0, 151,206);  
+}
