@@ -192,6 +192,12 @@ h5 {
 .blue {
   color: rgb(0, 151,206);  
 }
+.ablue {
+  color: rgb(0, 151,206);  
+}
+.ablue:hover {
+  color: rgb(1, 59, 79); 
+}
 .nav-tabs .nav-link {
   background-color: #B1D7EB; 
 }
@@ -199,4 +205,46 @@ h5 {
 .nav-tabs .nav-link.active {
   background-color: #EAF2F8;
   border-bottom-color: #EAF2F8;
+}
+#search-bar-0 {
+  font-size: 0.8em
+}
+
+#tablecontainer table {
+  table-layout: auto;
+}
+.pagination .page-item.active .page-link {
+  background-color: rgb(0, 151,206);  
+}
+.spinner
+{
+
+	animation: round 1.4s infinite ease;
+	color: rgb(0, 151,206);  
+	
+	font-size: 90px;
+	margin: 0px auto;
+	ms-transform: translateZ(0);
+	opacity: 0.6;
+	overflow: hidden;
+	position: relative;
+	text-indent: -9999em;
+	transform: translateZ(0);
+	webkit-animation: round 1.7s infinite ease;
+
+	webkit-transform: translateZ(0);
+
+}
+@keyframes round
+{
+	0%
+	{
+		transform: rotate(0deg);
+		webkit-transform: rotate(0deg);
+	}
+	100%
+	{
+		transform: rotate(360deg);
+		webkit-transform: rotate(360deg);
+	}
 }

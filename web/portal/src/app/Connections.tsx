@@ -6,18 +6,17 @@ import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import BootstrapTable from 'react-bootstrap-table-next';
-
-
 import paginationFactory from 'react-bootstrap-table2-paginator';
+import ToolkitProvider, {Search} from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
+import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 
-import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit';
-/*
 const { SearchBar, ClearSearchButton } = Search;
-*/
+
 
 import {tooltip} from '../Components/Tooltip'
 import PasswordField from '../Components/PasswordField'
 import * as com from '../Common'
+import Spinner from '../Components/Spinner'
 import {useInitialize} from '../Utils/CustomHooks'
 const databases = Object.keys(com.databaseTypes).map(key => {
     return <option key={key} value={key}>
@@ -25,6 +24,9 @@ const databases = Object.keys(com.databaseTypes).map(key => {
     </option>
 })
 
+function SpecifyConnection(props) {
+
+}
 function AddConnection() {
     const [validated, setValidated] = useState(false)
     let form = useRef<HTMLFormElement>(null)
@@ -37,18 +39,23 @@ function AddConnection() {
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     const [description, setDescription] =  useState("")
+    const [spinner, setSpinner] =  useState(false)
     let sendConnection = () => { 
+        setSpinner(true)
         let body = JSON.stringify( {name, dbtype, address, port: parseInt(port), useTLS, username, password, description} )
         com.sendToServer("POST", "/api/createnewconnection", 
             null, body, 
             resp=> {
                 console.log("on error")
+                setSpinner(false)
             }, 
             resp=>{
                 console.log("on success")
+                setSpinner(false)
             }, 
             error=>{
                 console.log("on exception")
+                setSpinner(false)
             }) 
     }
 
@@ -73,7 +80,7 @@ function AddConnection() {
 
     return (
         <div className=" text-left">
-            <h5 > Create New Connection</h5>
+            <h5 > Create New Connection <Spinner show={spinner} style={{width: '28px'}}></Spinner></h5>
             <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                 <Row>
                     <Col xs="auto">
@@ -93,13 +100,13 @@ function AddConnection() {
                     </Col>
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="dbname">
-                            <Form.Label>{tooltip('Dymium prefix', 
+                            <Form.Label>{tooltip('Dymium name', 
                             <div className="d-block">
-                               The prefix is used to identify the target database from the SQL sent to the Dymium proxy server.
+                               The name is used to identify the target database from the SQL sent to the Dymium proxy server.
                                For example, instead of
                                <div className='ml-2 my-1'>select * from mytable;</div>
                                you should use:
-                               <div className='ml-2 my-1'>select * from prefix_mytable;</div>
+                               <div className='ml-2 my-1'>select * from name_mytable;</div>
                             </div>
                             , 'auto', '', false)}</Form.Label>
                             <Form.Control size="sm" type="text" placeholder="alphanum, _$^!"
@@ -110,7 +117,7 @@ function AddConnection() {
                             />
                             <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                             <Form.Control.Feedback type="invalid" >
-                                Type systemwide unique prefix to use in SQL
+                                Type systemwide unique name to use in SQL
                             </Form.Control.Feedback>                            
                         </Form.Group>
                     </Col>
@@ -196,7 +203,7 @@ function AddConnection() {
                 </Row>
                 <Row>
                     <Col xs="auto">
-                        <Form.Group className="mb-3" controlId="dbpassword">
+                        <Form.Group className="mb-3" controlId="description">
                             <Form.Label>Description</Form.Label>
                             <Form.Control as="textarea" rows={3}  style={{width: '35em'}}
                                 required
@@ -232,12 +239,18 @@ let columns = [
     }, 
     {
         dataField: 'name',
-        text: 'Prefix:',
+        text: 'Name:',
         sort: true,
     },
     {
         dataField: 'dbtype',
         text: 'DB Type:',
+        formatter: (cell, row, rowIndex, formatExtraData) => { 
+            return com.databaseTypes[row["dbtype"]]
+        },
+        sortValue: (cell, row) => {
+            return com.databaseTypes[row["dbtype"]]
+         } ,
         sort: true
     },
     {
@@ -246,25 +259,61 @@ let columns = [
         sort: true
     },
     {
+        dataField: 'description',
+        text: 'Description:',
+        sort: true
+    },        
+    {
         dataField: 'port',
         text: 'Port:',
+        headerStyle: { width: '100px' },
         sort: true
     },   
     {
         dataField: 'usetls',
         text: 'Use TLS',
-        sort: true
+        formatter: (cell, row, rowIndex, formatExtraData) => { 
+      
+            if(row.usetls)
+                return  <i className="fa-solid fa-check blue"></i>
+            else 
+                return <></>
+        },        
+        headerStyle: { width: '130px' },
+        sort: true,
+        align: 'center'
     },       
+
     {
-        dataField: 'description',
-        text: 'Description:',
-        sort: true
-    },    
+        text: 'Edit',
+        isDummyField: true,
+        formatter: () => { 
+            return <i className="fas fa-edit ablue" role="button"></i>
+        },
+        //formatExtraData: { hoverIdx: this.state.hoverIdx },
+        headerStyle: { width: '50px' },
+        style: { height: '30px' },
+        align: 'center'
+      },    
+      {
+          text: 'Delete',
+          isDummyField: true,
+          formatter: () => { 
+              return <i className="fas fa-trash ablue" role="button"></i>
+          },
+          //formatExtraData: { hoverIdx: this.state.hoverIdx },
+          headerStyle: { width: '90px' },
+          style: { height: '30px' },
+          align: 'center'
+        }
+
 ]
 function EditConnections(props) {
     let [conns, setConns] = useState([])
+    const [spinner, setSpinner] =  useState(false)
+
     let getConnections = () => { 
-       
+       setSpinner(true)
         com.sendToServer("GET", "/api/getconnections", 
             null, "", 
             resp=> {
@@ -276,11 +325,13 @@ function EditConnections(props) {
                         return {
                             id: x.id,
                             credid: x.credid,
+                            dbtype: x.dbtype,
                             name: x.name,
                             dbname: x.dbname,
                             address: x.address,
                             port: x.port,
                             description: x.description,
+                            usetls: x.useTLS,
                         
                         }
                     }
@@ -288,14 +339,16 @@ function EditConnections(props) {
                     )
                     setConns(cc)
                 })
-
+                setSpinner(false)
                 console.log("on success")
             }, 
             resp=>{
                 console.log("on error")
+                setSpinner(false)                
             }, 
             error=>{
                 console.log("on exception: "+error)
+                setSpinner(false)                
             }) 
     }
     useEffect(() => {
@@ -305,18 +358,38 @@ function EditConnections(props) {
     return (
 
         <div className=" text-left">
-            <h5 >Edit Connections</h5>
+           
 
+
+    <div id="tablecontainer" style={{width: '90%'}} className="text-center">
+      <ToolkitProvider
+                    bootstrap4
+                    keyField='prefix'
+                    data={conns}
+                    columns={columns}
+                    search >
+                    {
+                        props => (
+                            <div className="text-left">
+                                <div  className="d-flex">
+                                 <h5 >Edit Connections  <Spinner show={spinner} style={{width: '28px'}}></Spinner></h5>
+                                <div style={{marginLeft: "auto"}}>
+                                <SearchBar size="sm" {...props.searchProps} />
+                                <ClearSearchButton {...props.searchProps} />
+                                </div>
+                                </div>
+                                <div className="d-block">
                                 <BootstrapTable id="scaledtable"
                                     striped bootstrap4 bordered={false}
                                     pagination={paginationFactory()}
-                                    keyField='prefix'
-                                    data={conns}
-                                    columns={columns}                                    
                                     {...props.baseProps}
                                 />
-      
-
+                                </div>
+                            </div>
+                        )
+                    }
+                </ToolkitProvider>
+                </div>
     </div>
     )
  }
