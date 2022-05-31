@@ -224,6 +224,7 @@ func GetConnections(schema string) ([]types.Connection, error ) {
 				log.Printf("Error in GetConnections:  %s\n", err.Error())
 				return []types.Connection{}, err
 			} else {
+				log.Printf("Connection: %v\n", conn)
 				conns = append(conns, conn)
 			}
 		}
@@ -373,6 +374,101 @@ func getTokenFromCode(code, domain, client_id, client_secret, redirect string) (
 	body, err := io.ReadAll(resp.Body)
 
 	return body, err
+}
+
+func UpdateConnection(schema string, con types.Connection) error {
+	// Create a new context, and begin a transaction
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Printf("Error in UpdateConnection: %s\n", err.Error())
+		return err
+	}
+	sql := `update `+schema+`.connections set name=$1, database_type=$2, 
+		address=$3, port=$4, use_tls=$5, description=$6 where id=$7  
+		and exists (select schema_name from global.customers where schema_name = $8);; `
+
+	_, err  = tx.ExecContext(ctx, sql, con.Name, con.Dbtype, con.Address, con.Port, con.UseTLS, con.Description, con.Id, schema)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 1 in UpdateConnection: %s\n", err.Error())
+		return err
+	}
+	if(con.Username != "" && con.Password != "") {
+		sql = `update `+schema+`.admincredentials set username=$1 where connection_id=$2 returning id;`
+		row  := tx.QueryRowContext(ctx, sql, con.Username, con.Id)
+		var credid string
+		err = row.Scan(&credid)
+		if err != nil {
+			tx.Rollback()
+			log.Printf("Error 2 in UpdateConnection: %s\n", err.Error())
+			return err
+		}
+		sql = `update `+schema+`.passwords set password=$1 where id=$2;`
+		_, err  = tx.ExecContext(ctx, sql, con.Password, credid)
+		if err != nil {
+			tx.Rollback()
+			log.Printf("Error 3 in UpdateConnection: %s\n", err.Error())
+			return err
+		}		
+	}
+	log.Printf("Username: %s, password %s\n", con.Username, con.Password )
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	log.Printf("Returning success")	
+	return nil
+}
+
+func DeleteConnection(schema, id string) error {
+	// Create a new context, and begin a transaction
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Printf("Error in DeleteConnection: %s\n", err.Error())
+		return err
+	}
+	sql := "select id from " + schema + ".admincredentials where connection_id=$1 and exists (select schema_name from global.customers where schema_name = $2);";
+	log.Printf("sql: %s\n", sql)
+	row := tx.QueryRowContext(ctx, sql, id, schema)
+	var credid string
+	err = row.Scan(&credid)
+	if err != nil {
+		log.Printf("Error 2 in DeleteConnection: %s\n", err.Error())
+		return err
+	}
+	sql = "delete from "+schema+".passwords where id=$1;"
+	_, err = tx.ExecContext(ctx, sql, credid)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 3 in DeleteConnection: %s\n", err.Error())
+		return err
+	}
+	sql = "delete from "+schema+".admincredentials where id=$1;"
+	_, err = tx.ExecContext(ctx, sql, credid)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 4 in DeleteConnection: %s\n", err.Error())
+		return err
+	}
+	sql = "delete from "+schema+".connections where id=$1;"
+	_, err = tx.ExecContext(ctx, sql, id)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 5 in DeleteConnection: %s\n", err.Error())
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 6 in DeleteConnection: %s\n", err.Error())
+		return err
+	}
+	log.Printf("Returning success")
+	return nil
 }
 func AuthenticationAdminHandlers(h *mux.Router) error {
 	host := os.Getenv("ADMIN_HOST")

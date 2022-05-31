@@ -13,8 +13,8 @@ const AuthenticatedApp = () => {
             <Auth />
             <Menu />
 
-            <Row style={{height: '100vh'}}>
-                <Col xs="auto" className="pr-0"><Sidebar/></Col>
+            <Row style={{height: '100vh'}} className="p-0 m-0">
+                <Col xs="auto" className="px-0"><Sidebar/></Col>
                 <Col className="p-0 spider">
                     <Outlet />
                 </Col>

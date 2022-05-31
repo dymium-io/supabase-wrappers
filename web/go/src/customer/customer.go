@@ -76,8 +76,94 @@ func CustomerHandlers(p *mux.Router) {
 		err := json.Unmarshal(body, &t)
 
 		error = authentication.CreateNewConnection(schema, t)
+		var status types.OperationStatus
+		if(error == nil) {
+			status = types.OperationStatus{"OK", "Connection created"}
+		} else {
+			status = types.OperationStatus{"Error", error.Error()}
+		}
+		js, err := json.Marshal(status)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("POST")
+
+	b.HandleFunc("/api/updateconnection", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+		body, _ := ioutil.ReadAll(r.Body)
+		defer r.Body.Close()
+
+		var t types.Connection
+		err := json.Unmarshal(body, &t)
+
+		error = authentication.UpdateConnection(schema, t)
 
 		js, err := json.Marshal(t)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("POST")
+
+	b.HandleFunc("/api/deleteconnection", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+		body, _ := ioutil.ReadAll(r.Body)
+		defer r.Body.Close()
+
+		t := struct {
+			Id string
+		}{}
+
+		err := json.Unmarshal(body, &t)
+
+		err = authentication.DeleteConnection(schema, t.Id)
+		var status  types.OperationStatus
+		if err == nil {
+			log.Printf("success")
+			status = types.OperationStatus{"OK", "Connection deleted"}
+		} else {
+			log.Printf("Error???? %v\n", err)
+			status = types.OperationStatus{"Error", err.Error()}
+		}
+		
+		js, err := json.Marshal(status)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

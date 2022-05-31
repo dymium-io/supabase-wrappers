@@ -248,3 +248,9 @@ h5 {
 		webkit-transform: rotate(360deg);
 	}
 }
+
+.form-check-label:hover
+{
+	cursor: pointer;
+	text-decoration: underline !important;
+}

@@ -34,7 +34,7 @@ type Connection struct {
 	UseTLS bool  `json:"useTLS"`
 	Description string  `json:"description"`
 	Username string  `json:"username",omitempty`
-	Password string  `json:"id",omitempty`
+	Password string  `json:"password",omitempty`
 
 	Id string  `json:"id",omitempty`
 	Credid  string  `json:"credid",omitempty`
