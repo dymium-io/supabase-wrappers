@@ -16,7 +16,7 @@ const { SearchBar, ClearSearchButton } = Search;
 
 
 import { tooltip } from '../Components/Tooltip'
-import PasswordField from '../Components/PasswordField'
+import PasswordField from '@dymium/common/Components/PasswordField'
 import * as com from '../Common'
 import Spinner from '../Components/Spinner'
 import { useInitialize } from '../Utils/CustomHooks'

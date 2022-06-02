@@ -1,5 +1,5 @@
 {
-  "name": "portal",
+  "name": "@dymium/portal",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -37,8 +37,8 @@
     "web-vitals": "^2.1.0"
   },
   "scripts": {
-    "start": "HTTPS=true DANGEROUSLY_DISABLE_HOST_CHECK=true SSL_CRT_FILE=../devcerts/dymium.crt SSL_KEY_FILE=../devcerts/dymium.key HOST=portal.dymium.local PORT=3001 react-scripts start",
-    "build": "react-scripts build && cp -r build/* ../go/assets/customer",
+    "start": "HTTPS=true DANGEROUSLY_DISABLE_HOST_CHECK=true SSL_CRT_FILE=../../../devcerts/dymium.crt SSL_KEY_FILE=../../../devcerts/dymium.key HOST=portal.dymium.local PORT=3001 react-app-rewired  start",
+    "build": "react-app-rewired  build && cp -r build/* ../go/assets/customer",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -54,5 +54,9 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://portal.dymium.local"
+  "proxy": "http://portal.dymium.local",
+  "devDependencies": {
+    "customize-cra": "^1.0.0",
+    "react-app-rewired": "^2.2.1"
+  }
 }

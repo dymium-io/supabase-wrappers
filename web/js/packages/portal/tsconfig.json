@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",  
     "target": "es5",
     "lib": [
       "dom",
@@ -24,6 +25,9 @@
       "@/*": ["src/*"]
     },
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "paths": {
+    "@dymium/common/*": ["../common/*"]
+  },
+    "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]
 }

@@ -13,3 +13,9 @@ web/go/assets/customer/asset-manifest.json
 web/go/assets/admin/asset-manifest.json
 web/go/assets/admin/favicon.ico
 web/go/assets/admin/index.html
+web/go/src/.vscode/temp.sql
+web/go/assets/admin/index.html
+web/go/assets/customer/asset-manifest.json
+web/go/assets/customer/index.html
+web/go/scripts/BLD/admin/asset-manifest.json
+web/go/scripts/BLD/admin/index.html
