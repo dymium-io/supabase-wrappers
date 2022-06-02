@@ -20,6 +20,9 @@ import PasswordField from '../Components/PasswordField'
 import * as com from '../Common'
 import Spinner from '../Components/Spinner'
 import { useInitialize } from '../Utils/CustomHooks'
+import { useAppDispatch, useAppSelector } from './hooks'
+import {setActiveConnectionTab} from '../Slices/menuSlice'
+
 const databases = Object.keys(com.databaseTypes).map(key => {
     return <option key={key} value={key}>
         {com.databaseTypes[key]}
@@ -733,8 +736,18 @@ function EditConnections(props) {
     )
 }
 function Connections() {
+    const t = useAppSelector((state) => {
+        
+        return state.reducer.activeConnectionTab}
+        )
+    const appDispatch = useAppDispatch()
+    
+
     return (
-        <Tabs defaultActiveKey="add" id="connections" unmountOnExit={true} className="mb-3 text-left">
+        <Tabs defaultActiveKey={t} id="connections" 
+        onSelect={(k) => appDispatch( setActiveConnectionTab(k) )}
+
+        unmountOnExit={true} className="mb-3 text-left">
             <Tab eventKey="add" title="Add Connection" className="mx-4">
                 <AddConnection />
             </Tab>

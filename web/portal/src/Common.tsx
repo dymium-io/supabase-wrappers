@@ -2,7 +2,7 @@ let appliedColors = `
 :root{
 --primary-color: rgb(255, 158, 24);
 --primary-color-text: rgb(31, 31, 32);
---primary-color-2: rgb(119, 74, 10);
+--primary-color-2: rgb(222, 139, 22);
 --primary-color-2-text: #eee;
 --primary-color-3: rgb(220, 158, 140); 
 --primary-color-3-text: black;
@@ -40,7 +40,7 @@ export function getTokenProperty(prop) {
 }
 
 export const databaseTypes = {
-    postgres: "PostgresSQL",
+    postgres: "PostgreSQL",
     mysql: "MySQL",
     mariadb: "MariaDB",
     sqlserver: "SQL Server",

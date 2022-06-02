@@ -29,7 +29,7 @@ func CustomerHandlers(p *mux.Router) {
 
 	getImages := func(w http.ResponseWriter, r *http.Request) {
 
-		filename := "./borrower/static" + r.URL.Path
+		filename := "./customer/" + r.URL.Path
 		if _, err := os.Stat(filename); errors.Is(err, os.ErrNotExist) {
 			// file does not exist
 			w.Header().Set("Cache-Control", common.Nocache)
@@ -99,7 +99,7 @@ func CustomerHandlers(p *mux.Router) {
 			log.Printf("Error: %s\n", error.Error())
 			status := types.OperationStatus{"AuthError", error.Error()}
 			js, err := json.Marshal(status)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -134,7 +134,7 @@ func CustomerHandlers(p *mux.Router) {
 			log.Printf("Error: %s\n", error.Error())
 			status := types.OperationStatus{"AuthError", error.Error()}
 			js, err := json.Marshal(status)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+	
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -180,7 +180,7 @@ func CustomerHandlers(p *mux.Router) {
 			log.Printf("Error: %s\n", error.Error())
 			status := types.OperationStatus{"AuthError", error.Error()}
 			js, err := json.Marshal(status)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -243,15 +243,15 @@ func CustomerHandlers(p *mux.Router) {
 	// For React to work properly, ensure that the URLs going into the React router return index.html
 	b.PathPrefix("/app/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		commonheaders(w, r)
-		http.ServeFile(w, r, "./admin/index.html")
+		http.ServeFile(w, r, "./customer/index.html")
 	})
 	b.PathPrefix("/services/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		commonheaders(w, r)
-		http.ServeFile(w, r, "./admin/index.html")
+		http.ServeFile(w, r, "./customer/index.html")
 	})
 	b.PathPrefix("/resources/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		commonheaders(w, r)
-		http.ServeFile(w, r, "./admin/index.html")
+		http.ServeFile(w, r, "./customer/index.html")
 	})
 
 	b.PathPrefix("/static").HandlerFunc(getImages)
@@ -264,6 +264,6 @@ func CustomerHandlers(p *mux.Router) {
 	b.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		//commonheaders(w, r)
 		fmt.Println("in /!\n")
-		http.ServeFile(w, r, "./borrower/static/index.html")
+		http.ServeFile(w, r, "./customer/index.html")
 	}).Methods("GET")
 }

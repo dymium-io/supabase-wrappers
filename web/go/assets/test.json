@@ -1,0 +1,84 @@
+ { "environment": [
+
+                {
+                    "name": "ADMIN_HOST",
+                    "value": "admin.dymium.us"
+                },
+                {
+                    "name": "CUSTOMER_HOST",
+                    "value": "portal.dymium.us"
+                },
+                {
+                    "name": "DATABASE_HOST",
+                    "value": "customerdatabase.cnsmzptue19j.us-east-1.rds.amazonaws.com"
+                },
+
+                {
+                    "name": "SESSION_SECRET",
+                    "value": "b<Qu9K)q}Ksh+R)JzlJJ'X1sHMp$UI@t&OCjDYTEmVe6WZe,rdJ}!I=4N[|yoTq"
+                },
+
+                {
+                    "name": "DATABASE_PASSWORD",
+                    "value": "$kdvnMsp4o"
+                },
+                {
+                    "name": "DATABASE_USER",
+                    "value": "dymium"
+                },
+                {
+                    "name": "AUTH0_ADMIN_DOMAIN",
+                    "value": "dymium-dev-admin.us.auth0.com"
+                },
+                {
+                    "name": "AUTH0_ADMIN_CLIENT_ID",
+                    "value": "tbKgYCoHXrSFPKXjFNHmJDlStvSbyimM"
+                },
+                {
+                    "name": "AUTH0_ADMIN_CLIENT_SECRET",
+                    "value": "bgGbEa-bI88vTzZple4VCCMNUsUAVeDOUHo8OKEe92tzYsaaptkszpXosR7OUByo"
+                },
+                {
+                    "name": "AUTH0_ADMIN_REDIRECT_URL",
+                    "value": "https://admin.dymium.us/redirect"
+                },
+                {
+                    "name": "AUTH0_ADMIN_RETURN_URL",
+                    "value": "https://admin.dymium.us/app/logout"
+                },
+                {
+                    "name": "AUTH0_ADMIN_AUDIENCE",
+                    "value": "https://admin.dymium.us/api/handler"
+                },
+                {
+                    "name": "AUTH0_ADMIN_ORGANIZATION",
+                    "value": "org_Qqns7tW4acoBx9tc"
+                },
+                {
+                    "name": "AUTH0_PORTAL_DOMAIN",
+                    "value": "dymium-dev.us.auth0.com"
+                },
+                {
+                    "name": "AUTH0_PORTAL_CLIENT_ID",
+                    "value": "SwpyrooK446UYI8DchdNZtRXtg0kvjw5"
+                },
+                {
+                    "name": "AUTH0_PORTAL_CLIENT_SECRET",
+                    "value": "bdgVb-0SKPiqVTpzd4YulCDuUCHaAhGrNsDGwhAO4nQOtuqEO3uuj2hcUtxgcE2u"
+                },
+                {
+                    "name": "AUTH0_PORTAL_REDIRECT_URL",
+                    "value": "https://portal.dymium.us/auth/redirect"
+                },
+                {
+                    "name": "AUTH0_PORTAL_RETURN_URL",
+                    "value": "https://portal.dymium.us/app/logout"
+                },
+                {
+                    "name": "AUTH0_PORTAL_AUDIENCE",
+                    "value": "https://portal.dymium.us/api/handler"
+                }
+
+
+            ]
+        }

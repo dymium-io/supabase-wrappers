@@ -5,6 +5,7 @@ import Error404 from "./Error404"
 import Logout from "./Logout"
 import Error from "./Error"
 import Invitation from "./Invitation"
+import Sticky from "./app/Sticky"
 import Dashboard from "./app/Dashboard"
 import Customers from "./app/Customers"
 import Connections from "./app/Connections"
@@ -28,7 +29,8 @@ function App() {
           <Route path="/app/" element={<AuthenticatedApp />} >
             <Route path="/app/dashboard" element={<Dashboard />} />
             <Route path="/app/customers" element={<Customers />} />
-            <Route path="/app/connections" element={<Connections />} />            
+            <Route path="/app/connections" element={<Connections />} />     
+            <Route path="/app/" element={<Sticky />} />          
           </Route>
           <Route  path="/app/logout" element={<Logout/>} />
           <Route path="/app/error" element={<Error />} />

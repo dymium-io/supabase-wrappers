@@ -5,6 +5,7 @@ LABEL com.dymium.vendor="Dymium" \
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*      
 COPY server /server
 COPY admin /admin
+COPY customer /customer
 EXPOSE 80
 ENV TZ=PST8PDT
 ENTRYPOINT ["/server"]

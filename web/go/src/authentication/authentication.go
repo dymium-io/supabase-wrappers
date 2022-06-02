@@ -17,9 +17,7 @@ import (
 	"os"
 	"strings"
 	"encoding/json"
-	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
 	"time"
 	"errors"
 	"io"
@@ -39,10 +37,7 @@ var auth_admin_domain, auth_admin_client_id, auth_admin_client_secret,
 	auth_admin_redirect, auth_admin_organization, auth_admin_audience string
 var auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_portal_redirect, auth_portal_audience string
 var ctx context.Context
-var adminOIDCrovider *oidc.Provider 
-var adminOauth2config oauth2.Config
-var portalOIDCrovider *oidc.Provider 
-var portalOauth2config oauth2.Config
+
 
 func DatabaseInit(host string, password string, port string) {
 	log.Println("In Database Init")
@@ -54,15 +49,16 @@ func DatabaseInit(host string, password string, port string) {
 		"password=%s dbname=%s sslmode=disable",
 		host, nport, "dymium", password, "dymium")
 	var err error
+	log.Printf("%s\n", psqlInfo)
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
 		log.Printf("In Database, error: %s\n", err.Error())
 		//panic(err)
 	} else {
-		log.Println("Database Connection opened")
+		log.Println("Database Connection opened successfully")
 		err = db.Ping()
 		if err != nil {
-			log.Printf("In Database, error: %s\n", err.Error())
+			log.Printf("In Database, error on Ping: %s\n", err.Error())
 			//panic(err)
 		}		
 	}
@@ -74,27 +70,20 @@ func DatabaseInit(host string, password string, port string) {
 	auth_admin_organization = os.Getenv("AUTH0_ADMIN_ORGANIZATION")
 	auth_admin_audience = os.Getenv("AUTH0_ADMIN_AUDIENCE")
 
-	ctx = context.Background()
-	log.Printf("Create oidc provider: %s\n", auth_admin_domain)
-
 	auth_portal_domain = os.Getenv("AUTH0_PORTAL_DOMAIN")
 	auth_portal_client_id = os.Getenv("AUTH0_PORTAL_CLIENT_ID")
 	auth_portal_client_secret = os.Getenv("AUTH0_PORTAL_CLIENT_SECRET")
 	auth_portal_redirect = os.Getenv("AUTH0_PORTAL_REDIRECT_URL")
 	auth_portal_audience = os.Getenv("AUTH0_PORTAL_AUDIENCE")
 
-	portalOIDCrovider, err = oidc.NewProvider(ctx, auth_portal_domain)
+	// DELETE ME
+	log.Printf("auth_portal_domain: %s\n", auth_portal_domain)
+	log.Printf("auth_portal_client_id: %s\n", auth_portal_client_id)
+	log.Printf("auth_portal_redirect: %s\n", auth_portal_redirect)	
+	log.Printf("auth_portal_audience: %s\n", auth_portal_audience)	
 
-	if err != nil {
-		log.Printf("Error creating provider: %s\n", err.Error())
-	}
-	portalOauth2config = oauth2.Config{
-		ClientID:     auth_portal_client_id,
-		ClientSecret: auth_portal_client_secret,
-		Endpoint:     portalOIDCrovider.Endpoint(),
-		RedirectURL:  auth_portal_redirect,
-		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
-	}	
+	ctx = context.Background()
+
 }
 
 func generateAdminJWT(picture string) (string, error) {
@@ -210,7 +199,7 @@ func GetConnections(schema string) ([]types.Connection, error ) {
 		schema+`.connections as a join `+
 		schema+`.admincredentials as b on a.id=b.connection_id;`
 	rows, err := db.Query(sql)
-
+	log.Printf("in GetConnections: %s\n", sql)
 	defer rows.Close()
 
 	var conns = []types.Connection{}
@@ -231,7 +220,7 @@ func GetConnections(schema string) ([]types.Connection, error ) {
 		
 	} else {
 		log.Printf("Error in GetConnections:  %s\n", err.Error())
-		return []types.Connection{}, nil
+		return conns, err
 	}
 
 	return conns, nil
@@ -472,6 +461,7 @@ func DeleteConnection(schema, id string) error {
 }
 func AuthenticationAdminHandlers(h *mux.Router) error {
 	host := os.Getenv("ADMIN_HOST")
+	log.Printf("ADMIN_HOST: %s\n", host)	
 	p := h.Host(host).Subrouter()
 
 	p.HandleFunc("/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
@@ -582,6 +572,7 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 
 func AuthenticationPortalHandlers(h *mux.Router) error {
 	host := os.Getenv("CUSTOMER_HOST")
+	log.Printf("CUSTOMER_HOST: %s\n", host)
 	p := h.Host(host).Subrouter()
 
 	p.HandleFunc("/auth/refresh", func(w http.ResponseWriter, r *http.Request) {

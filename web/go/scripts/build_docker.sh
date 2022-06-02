@@ -20,10 +20,23 @@ echo Build main app
 
 cd ../../admin
 yarn run build
+retval=$?
+[ $retval -ne 0 ] && {
+    echo "build failed with error code $retval"
+    exit $retval
+}
 
+cd ../portal
+yarn run build
+retval=$?
+[ $retval -ne 0 ] && {
+    echo "build failed with error code $retval"
+    exit $retval
+}
 cd ../go/scripts
 
 cp -r ../assets/admin $build_d/
+cp -r ../assets/customer $build_d/
 
 dymium=$(docker images dymium -q)
 [ -z "$dymium" ] || docker rmi -f "$dymium"
