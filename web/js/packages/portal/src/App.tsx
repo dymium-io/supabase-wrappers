@@ -9,13 +9,18 @@ import Sticky from "./app/Sticky"
 import Dashboard from "./app/Dashboard"
 import Customers from "./app/Customers"
 import Connections from "./app/Connections"
+import Datascopes from "./app/Datascopes"
+import Groups from "./app/Groups"
+import Rules from "./app/Rules"
+import TestSQL from "./app/TestSQL"
+
 import "@fontsource/roboto";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 //import Helmet from "react-helmet";
 
-import './App.css';
+import '@dymium/common/App.css';
 
 function App() {
   return (
@@ -28,8 +33,11 @@ function App() {
 
           <Route path="/app/" element={<AuthenticatedApp />} >
             <Route path="/app/dashboard" element={<Dashboard />} />
-            <Route path="/app/customers" element={<Customers />} />
             <Route path="/app/connections" element={<Connections />} />     
+            <Route path="/app/datascopes" element={<Datascopes />} />                
+            <Route path="/app/groups" element={<Groups />} />    
+            <Route path="/app/rules" element={<Rules />} />         
+            <Route path="/app/test" element={<TestSQL />} />                                             
             <Route path="/app/" element={<Sticky />} />          
           </Route>
           <Route  path="/app/logout" element={<Logout/>} />

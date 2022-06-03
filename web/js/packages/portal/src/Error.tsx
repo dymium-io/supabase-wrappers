@@ -3,7 +3,7 @@ import Card from 'react-bootstrap/Card'
 import Button from 'react-bootstrap/Button'
 import {useLocation} from "react-router-dom";
 import Backdrop from "./Backdrop"
-import './App.css';
+import '@dymium/common/App.css';
 
 function useQuery() {
     const { search } = useLocation();

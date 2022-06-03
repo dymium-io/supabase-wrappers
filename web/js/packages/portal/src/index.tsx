@@ -8,7 +8,7 @@ import { persistStore } from 'redux-persist';
 import store from './Store/index'
 
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './App.css';
+import '@dymium/common/App.css';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 let persistor = persistStore(store);

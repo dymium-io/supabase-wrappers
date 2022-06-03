@@ -124,7 +124,7 @@ body, #root  {
 }
 
 .spider {
-  background-image: url(../public/bluebackground.svg) ; 
+  background-image: url(bluebackground.svg) ; 
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
@@ -192,6 +192,12 @@ h5 {
 .blue {
   color: rgb(0, 151,206);  
 }
+.darkblue {
+  color: rgb(1, 57, 77);  
+}
+.darkblue:hover {
+  color: rgb(228, 248, 255);  
+}
 .ablue {
   color: rgb(0, 151,206);  
 }
@@ -253,4 +259,22 @@ h5 {
 {
 	cursor: pointer;
 	text-decoration: underline !important;
+}
+
+.cursor-pointer:hover
+{
+	cursor: pointer;
+}
+
+::placeholder {
+  color: #bbbbbb !important;
+  opacity: 1; /* Firefox */
+}
+
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+ color:#bbbbbb !important;
+}
+
+::-ms-input-placeholder { /* Microsoft Edge */
+ color: #bbbbbb !important;
 }

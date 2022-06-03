@@ -52,16 +52,13 @@ function ConnectionForm(props) {
                     <Form.Group className="mb-3" controlId="dbname">
                         <Form.Label>{tooltip('Dymium name',
                             <div className="d-block">
-                                The name is used to identify the target database from the SQL sent to the Dymium proxy server.
-                                For example, instead of
-                                <div className='ml-2 my-1'>select * from mytable;</div>
-                                you should use:
-                                <div className='ml-2 my-1'>select * from name_mytable;</div>
+                                The name is used to identify the target database in the Datascope - virtual database with controlled access.
+                    
                             </div>
                             , 'auto', '', false)}</Form.Label>
-                        <Form.Control size="sm" type="text" placeholder="alphanum, _$^!"
+                        <Form.Control size="sm" type="text" placeholder="Alpha_Num"
                             required
-                            pattern="[a-zA-Z0-9_^$]+"
+                            pattern="[a-zA-Z0-9_]+"
                             value={props.name}
                             onChange={e => props.setName(e.target.value)}
                         />
@@ -314,7 +311,7 @@ function AddConnection() {
                         cred={true}
                     />
 
-                    <Button variant="dymium" className="mt-4" type="submit">
+                    <Button variant="dymium" size="sm" className="mt-4" type="submit">
                         Apply
                     </Button>
                 </Form>

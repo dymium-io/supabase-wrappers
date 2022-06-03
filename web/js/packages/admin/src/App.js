@@ -13,7 +13,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 //import Helmet from "react-helmet";
 
-import './App.css';
+import '@dymium/common/App.css';
 
 function App() {
   return (

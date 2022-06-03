@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from "react-router-dom";
 import Backdrop from "./Backdrop"
-import './App.css';
+import '@dymium/common/App.css';
 
 export default function Error404() {
 
