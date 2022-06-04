@@ -1,0 +1,84 @@
+name: Gen
+version: 0.3.0.1
+license: AllRightsReserved
+author: Valentyn Kamyshenko
+maintainer: valya@dymium.io
+copyright: 2022 Dymium Inc
+
+extra-source-files:
+  - README.md
+  - ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+dependencies:
+  - base >= 4.11 && < 10
+  - rio >= 0.1.12.0
+
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wpartial-fields
+  - -Wredundant-constraints
+  - -haddock
+  - -O2
+
+default-extensions:
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - LambdaCase
+  - TupleSections
+  - GADTSyntax
+  - NamedFieldPuns
+
+library:
+  source-dirs: src
+  dependencies:
+    - yaml
+    - microlens-aeson
+    - microlens-platform
+    - pretty-simple
+    - scientific
+    - neat-interpolation
+    - time
+    - hashable
+    # - doctemplates
+    # - doclayout
+    # - template-haskell
+    # - file-embed
+    # - aeson
+  exposed-modules:
+    - Paths_Gen
+    - Import
+    - Run
+
+executables:
+  Gen-exe:
+    main: Main.hs
+    source-dirs: app
+    dependencies:
+      - Gen
+      - optparse-simple
+
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+
+tests:
+  Gen-test:
+    main: Spec.hs
+    source-dirs: test
+    dependencies:
+      - Gen
+      - hspec
+
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
