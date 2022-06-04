@@ -1,7 +1,12 @@
 ---
 module: DbAnalyzer
 
+ConnectionType:
+  - Postgres
+  - MySQL
+
 connection: !!omap
+  - typ: ConnectionType
   - address: string
   - port: int
   - user: string
