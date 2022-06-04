@@ -9,10 +9,10 @@ export default function Offcanvas(props) {
         if(props.onClose != undefined) 
             props.onClose()
     }
-    let clo = "bs-canvas-overlay  w-100 h-100"
+    let clo = "bs-canvas-overlay position-fixed  w-100 h-100"
     let cls = "bs-offcanvas bs-offcanvas-anim position-fixed  h-100"
     if(props.show) {
-        clo = "bs-canvas-overlay-show  w-100 h-100"
+        clo = "bs-canvas-overlay-show position-fixed  w-100 h-100"
         cls = " bs-offcanvas bs-offcanvas-anim position-fixed  h-100 bs-offcanvas-show"
     }
     return (

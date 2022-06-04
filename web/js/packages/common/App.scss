@@ -1,54 +1,24 @@
+$light-gray: #bbbbbb;
+$dark-yellow: rgb(199, 124, 18);
+$main-yellow: rgb(255,158,24);
+$main-blue: rgb(0, 151,206);
+$validation-green: #136841;
+$validation-red: #a41c2a;
+$thick-blue: rgb(2, 101, 137);
+$dark-blue: rgb(1, 57, 77);
+
 body, #root  {
   height: 100vh;
-}
-.App {
-  text-align: center;
-  height: 100vh;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 #anicanvas {
   width: 100%;
   height: 100%;
-  background: linear-gradient(-5deg, #015f81 0%, #0278a2 20%, #0097CE 50%, rgb(255,158,24) 50%, rgb(220, 137, 20)  80%, rgb(199, 124, 18) 100%);
+  background: linear-gradient(-5deg, #015f81 0%, #0278a2 20%, $main-blue 50%, $main-yellow 50%, rgb(220, 137, 20)  80%, $dark-yellow 100%);
   z-index: 0;
 }
 #loginbox  {
-  color: rgb(199, 124, 18) ;
+  color: $dark-yellow;
   color: black;
   text-align: center;
   position: relative;
@@ -78,10 +48,9 @@ body, #root  {
     color: white;
     border: 1px rgba(255, 255, 255, 0.747) solid;
     border-radius: 4px;
-  
 }
 .dymium-button-link:hover {
-  color: rgb(255,158,24) ;
+  color: $main-yellow;
   }
 .svgshadow {
   filter: drop-shadow( 2px 2px 0px #000000);
@@ -90,7 +59,6 @@ body, #root  {
   z-index: 100;
   position: absolute;
   top: 0%;
-
 }
 .linklink {
   color: white;
@@ -101,7 +69,7 @@ body, #root  {
 }
 
 #navb {
-  background-color: rgb(0, 151,206);
+  background-color: $main-blue;
   text-align: left;
 }
 .sidebar {
@@ -122,7 +90,6 @@ body, #root  {
 #logout:hover {
   text-decoration: underline;
 }
-
 .spider {
   background-image: url(bluebackground.svg) ; 
   -webkit-background-size: cover;
@@ -131,22 +98,22 @@ body, #root  {
   background-size: cover;
  
 }
-
 .nav-tabs {
 background-color:rgba(0, 151,206, 0.3);
 }
-
 h5 {
   margin-bottom: 1.2em;
+  color: $thick-blue;
 }
-
+.thickblue {
+  color: $thick-blue;
+}
 .btn-dymium {
-  background-color: rgb(0, 151,206);  
+  background-color: $main-blue;  
   color: white;
 }
-
 .btn-dymium:hover {
-  background-color: rgb(1, 59, 79);
+  background-color: $dark-blue;
   color: white;  
 }
 .invalid-feedback  {
@@ -156,28 +123,27 @@ h5 {
   font-size: 0.7em;
 }
 .form-control.is-invalid, .was-validated .form-control:invalid {
-  border-color: #a41c2a;
+  border-color: $validation-red;
 }
 .form-select.is-invalid, .was-validated .form-select:invalid {
-  border-color: #a41c2a;
+  border-color: $validation-red;
 }
 .invalid-feedback {
     font-size: 0.7em;
-    color: #a41c2a;
+    color: $validation-red;
 }
-
 .form-control.is-valid, .was-validated .form-control:valid {
-  border-color: #136841;
+  border-color: $validation-green;
 }
 .form-select.is-invalid, .was-validated .form-select:valid {
-  border-color: #136841;
+  border-color: $validation-green;
 }
 .form-check-input.is-valid~.form-check-label, .was-validated .form-check-input:valid~.form-check-label {
-  color: #136841;
+  color: $validation-green;
 }
 .valid-feedback {
   font-size: 0.7em;
-  color: #136841;
+  color: $validation-green;
 }
 .form-label {
   margin-bottom: 0.15rem;
@@ -190,16 +156,16 @@ h5 {
   background-image: none !important;
 }
 .blue {
-  color: rgb(0, 151,206);  
+  color: $main-blue;  
 }
 .darkblue {
-  color: rgb(1, 57, 77);  
+  color: $dark-blue;  
 }
 .darkblue:hover {
   color: rgb(228, 248, 255);  
 }
 .ablue {
-  color: rgb(0, 151,206);  
+  color: $main-blue;  
 }
 .ablue:hover {
   color: rgb(1, 59, 79); 
@@ -220,14 +186,12 @@ h5 {
   table-layout: auto;
 }
 .pagination .page-item.active .page-link {
-  background-color: rgb(0, 151,206);  
+  background-color: $main-blue;  
 }
 .spinner
 {
-
 	animation: round 1.4s infinite ease;
-	color: rgb(0, 151,206);  
-	
+	color: $main-blue;  	
 	font-size: 90px;
 	margin: 0px auto;
 	ms-transform: translateZ(0);
@@ -237,7 +201,6 @@ h5 {
 	text-indent: -9999em;
 	transform: translateZ(0);
 	webkit-animation: round 1.7s infinite ease;
-
 	webkit-transform: translateZ(0);
 
 }
@@ -267,14 +230,14 @@ h5 {
 }
 
 ::placeholder {
-  color: #bbbbbb !important;
+  color: $light-gray !important;
   opacity: 1; /* Firefox */
 }
 
 :-ms-input-placeholder { /* Internet Explorer 10-11 */
- color:#bbbbbb !important;
+ color: $light-gray !important;
 }
 
 ::-ms-input-placeholder { /* Microsoft Edge */
- color: #bbbbbb !important;
+ color: $light-gray !important;
 }

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import '@dymium/common/App.css';
 import { Link } from 'react-router-dom'
 import * as com from '../Common'
 import { useAppDispatch, useAppSelector } from './hooks'
@@ -8,10 +7,6 @@ import { setActiveMenu } from '../Slices/menuSlice'
 
 
 import './Sidebar.css';
-
-
-
-
 com.customizeStyleSheet()
 export default function Sidebar() {
   const selected = useAppSelector((state) => {

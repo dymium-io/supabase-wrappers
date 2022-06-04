@@ -15,10 +15,10 @@ import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 const { SearchBar, ClearSearchButton } = Search;
 
 
-import { tooltip } from '../Components/Tooltip'
+import { tooltip } from '@dymium/common/Components/Tooltip'
 import PasswordField from '@dymium/common/Components/PasswordField'
 import * as com from '../Common'
-import Spinner from '../Components/Spinner'
+import Spinner from '@dymium/common/Components/Spinner'
 import { useInitialize } from '../Utils/CustomHooks'
 import { useAppDispatch, useAppSelector } from './hooks'
 import {setActiveConnectionTab} from '../Slices/menuSlice'

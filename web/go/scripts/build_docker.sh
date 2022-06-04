@@ -18,7 +18,7 @@ retval=$?
 }
 echo Build main app
 
-cd ../../admin
+cd ../../js/packages/admin/
 yarn run build
 retval=$?
 [ $retval -ne 0 ] && {
@@ -33,7 +33,7 @@ retval=$?
     echo "build failed with error code $retval"
     exit $retval
 }
-cd ../go/scripts
+cd ../../../go/scripts
 
 cp -r ../assets/admin $build_d/
 cp -r ../assets/customer $build_d/

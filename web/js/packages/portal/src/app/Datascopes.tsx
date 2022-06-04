@@ -6,11 +6,11 @@ import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Card from 'react-bootstrap/Card'
-import Offcanvas from '../Components/Offcanvas'
+import Offcanvas from '@dymium/common/Components/Offcanvas'
 import Modal from 'react-bootstrap/Modal'
 import Alert from 'react-bootstrap/Alert'
 import BootstrapTable from 'react-bootstrap-table-next';
-import Spinner from '../Components/Spinner'
+import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
 
 let remap = {}
@@ -114,7 +114,7 @@ function DatascopeForm(props) {
         })
     }
     let showConnection = (db) => {
-        return <Card className="card mb-3"> <Card.Header><Row><Col xs="auto" style={{ paddingTop: '2px', fontSize: '1.2em' }}>
+        return <Card className="card mb-3"> <Card.Header><Row><Col xs="auto" style={{ paddingTop: '2px', fontSize: '1.2em' }} className="thickblue">
             <i className="fa-solid fa-database mr-2"></i>
             {db.name}</Col><Col><Button onClick={e=>{setShowOffcanvas(true)}}size="sm" variant="dymium">Add Table</Button></Col><Col xs="auto" className="text-right"><i className="fa fa-trash" aria-hidden="true"></i></Col></Row></Card.Header>
         </Card>
@@ -128,7 +128,9 @@ function DatascopeForm(props) {
     }
     return (
         <>
-            <Offcanvas show={showOffcanvas} onClose={(e)=>{setShowOffcanvas(false)}} {...props}>
+            <Offcanvas show={showOffcanvas} onClose={(e)=>{setShowOffcanvas(false)}} 
+            
+            title={"Register table"}>
 
                     Some text as placeholder. In real life you can have the elements you
                     have chosen. Like, text, images, lists, etc.
@@ -277,7 +279,7 @@ export function AddDatascope() {
     return (
         <div className=" text-left">
             {alert}
-            <h5 > Create New Datascope <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+            <h5 > Create New Data Scope <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
             <div className=" text-left">
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                     <DatascopeForm connections={conns} setAlert={setAlert} />
@@ -306,10 +308,10 @@ export default function Datascopes() {
             //onSelect={(k) => appDispatch( setActiveConnectionTab(k) )}
 
             unmountOnExit={true} className="mb-3 text-left">
-            <Tab eventKey="add" title="Add Datascope" className="mx-4">
+            <Tab eventKey="add" title="Add Data Scope" className="mx-4">
                 <AddDatascope />
             </Tab>
-            <Tab eventKey="edit" title="Edit Datascopes" className="mx-4">
+            <Tab eventKey="edit" title="Edit Data Scopes" className="mx-4">
                 <EditDatascopes />
             </Tab>
         </Tabs>

@@ -13,6 +13,7 @@ import Datascopes from "./app/Datascopes"
 import Groups from "./app/Groups"
 import Rules from "./app/Rules"
 import TestSQL from "./app/TestSQL"
+import * as com from './Common'
 
 import "@fontsource/roboto";
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -20,7 +21,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 //import Helmet from "react-helmet";
 
-import '@dymium/common/App.css';
+import '@dymium/common/App.scss';
+com.customizeStyleSheet()
 
 function App() {
   return (
