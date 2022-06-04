@@ -1,16 +1,12 @@
 ---
 module: DbAnalyzer
 
-ConnectionType:
-  - Postgres
-  - MySQL
-
 connection: !!omap
-  - typ: ConnectionType
+  - typ: Common.ConnectionType
   - address: string
   - port: int
   - user: string
-  - db: string
+  - database: string
   - tls: bool
 
 result: !!omap
@@ -28,14 +24,9 @@ table: !!omap
   - name: string
   - columns: <| column |>
 
-DataSemantics:
-  - FamilyName
-  - Email
-  - SSN
-
 column: !!omap
   - name: string
-  - pos: int
+  - position: int
   - typ: string
   - reference: ?string
-  - semantics: ?DataSemantics
+  - semantics: ?Common.DataSemantics

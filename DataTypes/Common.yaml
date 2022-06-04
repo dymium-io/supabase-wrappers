@@ -1,0 +1,11 @@
+---
+module: Common
+
+ConnectionType:
+  - Postgres
+  - MySQL
+
+DataSemantics:
+  - FamilyName
+  - Email
+  - SSN
