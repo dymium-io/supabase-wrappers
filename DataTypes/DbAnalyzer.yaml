@@ -9,9 +9,6 @@ connection: !!omap
   - database: string
   - tls: bool
 
-result: !!omap
-  - databases: <| database |>
-
 database: !!omap
   - name: string
   - schemas: <| schema |>
