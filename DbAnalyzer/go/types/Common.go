@@ -7,7 +7,7 @@ package main
 
 type ConnectionType string
 const (
-  CT_Postgres ConnectionType = "Postgres"
+  CT_PostgreSQL ConnectionType = "PostgreSQL"
   CT_MySQL ConnectionType = "MySQL"
 )
 

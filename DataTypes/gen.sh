@@ -2,4 +2,4 @@
 
 set -e
 
-./gen -l golang -p ../DbAnalyzer/go/types -r types DbAnalyzer.hdtd
+../bin/dataTypesGenerator -l golang -p ../DbAnalyzer/go/types -r types DbAnalyzer.hdtd

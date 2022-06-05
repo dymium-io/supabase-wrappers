@@ -29,10 +29,6 @@ type Database struct {
    Schemas []Schema `json:"schemas"`
 }
 
-type Result struct {
-   Databases []Database `json:"databases"`
-}
-
 type Schema struct {
    Name string `json:"name"`
    Tables []Table `json:"tables"`
