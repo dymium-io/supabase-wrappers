@@ -49,7 +49,7 @@ function ConnectionForm(props) {
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Form.Group className="mb-3" controlId="dbname">
+                    <Form.Group className="mb-3" controlId="dname">
                         <Form.Label>{tooltip('Dymium name',
                             <div className="d-block">
                                 The name is used to identify the target database in the Datascope - virtual database with controlled access.
@@ -68,6 +68,26 @@ function ConnectionForm(props) {
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Col>
+                <Col xs="auto">
+                    <Form.Group className="mb-3" controlId="dbname">
+                        <Form.Label>{tooltip('Database name',
+                            <div className="d-block">
+                                The database name used as the backend connection parameter.
+                    
+                            </div>
+                            , 'auto', '', false)}</Form.Label>
+                        <Form.Control size="sm" type="text" placeholder="Alpha_Num"
+                            required
+                            pattern="[a-zA-Z0-9_]+"
+                            value={props.dbname}
+                            onChange={e => props.setDbName(e.target.value)}
+                        />
+                        <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid" >
+                            Type systemwide unique name to use in SQL
+                        </Form.Control.Feedback>
+                    </Form.Group>
+                </Col>                
             </Row>
             <Row>
                 <Col xs="auto">
@@ -197,6 +217,7 @@ function AddConnection() {
     let form = useRef<HTMLFormElement>(null)
 
     const [name, setName] = useState("")
+    const [dbname, setDbName] = useState("")
     const [dbtype, setDBType] = useState("")
     const [address, setAddress] = useState("")
     const [port, setPort] = useState("")
@@ -209,7 +230,7 @@ function AddConnection() {
 
     let sendConnection = () => {
         setSpinner(true)
-        let body = JSON.stringify({ name, dbtype, address, port: parseInt(port), useTLS, username, password, description })
+        let body = JSON.stringify({ name, dbtype, address, port: parseInt(port), dbname, useTLS, username, password, description })
         com.sendToServer("POST", "/api/createnewconnection",
             null, body,
             resp => {
@@ -217,6 +238,7 @@ function AddConnection() {
                     if (js.Status == "OK") {
                         console.log("on success")
                         setName("")
+                        setDbName("")
                         setDBType("")
                         setAddress("")
                         setPort("")
@@ -295,6 +317,8 @@ function AddConnection() {
                         setDBType={setDBType}
                         name={name}
                         setName={setName}
+                        dbname={dbname}
+                        setDbName={setDbName}
                         address={address}
                         setAddress={setAddress}
                         port={port}
@@ -328,6 +352,7 @@ function EditConnections(props) {
     const [showedit, setShowedit] = useState(false)
 
     const [name, setName] = useState("")
+    const [dbname, setDbName] = useState("")
     const [dbtype, setDBType] = useState("")
     const [address, setAddress] = useState("")
     const [port, setPort] = useState("")
@@ -373,6 +398,7 @@ function EditConnections(props) {
 
                 setName(conn["name"])
                 setDBType(conn["dbtype"])
+                setDbName(conn["dbname"])
                 setAddress(conn["address"])
                 setPort(conn["port"])
                 setUsername(conn["username"])
@@ -419,6 +445,7 @@ function EditConnections(props) {
             },
             sort: true
         },
+
         {
             dataField: 'address',
             text: 'Address:',
@@ -431,6 +458,11 @@ function EditConnections(props) {
             headerStyle: { width: '100px' },
             sort: true
         },
+        {
+            dataField: 'dbname',
+            text: 'Database:',
+            sort: true
+        },        
         {
             dataField: 'description',
             text: 'Description:',
@@ -492,7 +524,7 @@ function EditConnections(props) {
                             credid: x.credid,
                             dbtype: x.dbtype,
                             name: x.name,
-
+                            dbname: x.dbname,
                             address: x.address,
                             port: x.port,
                             description: x.description,
@@ -521,9 +553,10 @@ function EditConnections(props) {
         let body = {
             Id: selectedId,
             Name: name,
-            DbType: dbtype,
+            DbType: dbtype,            
             Address: address,
             Port: port,
+            Dbname: dbname,
             UseTLS: useTLS,
             Description: description
         }
@@ -666,6 +699,8 @@ function EditConnections(props) {
                             setDBType={setDBType}
                             name={name}
                             setName={setName}
+                            dbname={dbname}
+                            setDbName={setDbName}
                             address={address}
                             setAddress={setAddress}
                             port={port}

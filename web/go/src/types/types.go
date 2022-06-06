@@ -31,6 +31,7 @@ type Connection struct {
 	Dbtype string `json:"dbtype"`
 	Address string   `json:"address"`
 	Port int  `json:"port"`
+	Dbname string  `json:"dbname"`
 	UseTLS bool  `json:"useTLS"`
 	Description string  `json:"description"`
 	Username string  `json:"username",omitempty`

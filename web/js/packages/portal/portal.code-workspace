@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "src"
+		},
+		{
+			"path": "../../../go/src"
 		}
 	],
 	"settings": {}

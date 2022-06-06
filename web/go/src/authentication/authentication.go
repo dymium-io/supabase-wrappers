@@ -166,10 +166,10 @@ func GetSchemaFromToken(token string) (string, error) {
 
 }
 func CreateNewConnection(schema string, con types.Connection) error {
-	sql := `insert into `+schema+`.connections(name, database_type, address, port, use_tls, description) 
+	sql := `insert into `+schema+`.connections(name, database_type, address, port, dbname, use_tls, description) 
 		values($1,$2,$3,$4,$5,$6) returning id; `
 
-	row := db.QueryRow(sql, con.Name, con.Dbtype, con.Address, con.Port, con.UseTLS, con.Description)
+	row := db.QueryRow(sql, con.Name, con.Dbtype, con.Address, con.Port, con.Dbname, con.UseTLS, con.Description)
 	var id string
 	err := row.Scan(&id)
 	if err != nil {
@@ -195,7 +195,7 @@ func CreateNewConnection(schema string, con types.Connection) error {
 	return nil
 }
 func GetConnections(schema string) ([]types.Connection, error ) {
-	sql := `select a.id,a.name,a.address,a.port,a.database_type,a.use_tls,a.description,b.username,b.id from `+
+	sql := `select a.id,a.name,a.address,a.port,a.dbname, a.database_type,a.use_tls,a.description,b.username,b.id from `+
 		schema+`.connections as a join `+
 		schema+`.admincredentials as b on a.id=b.connection_id;`
 	rows, err := db.Query(sql)
@@ -207,7 +207,7 @@ func GetConnections(schema string) ([]types.Connection, error ) {
 
 		for rows.Next() {
 			var conn = types.Connection{}
-			err = rows.Scan(&conn.Id, &conn.Name, &conn.Address, &conn.Port, &conn.Dbtype, &conn.UseTLS, 
+			err = rows.Scan(&conn.Id, &conn.Name, &conn.Address, &conn.Port, &conn.Dbname, &conn.Dbtype, &conn.UseTLS, 
 					&conn.Description, &conn.Username, &conn.Credid)
 			if nil != err {
 				log.Printf("Error in GetConnections:  %s\n", err.Error())
@@ -374,10 +374,10 @@ func UpdateConnection(schema string, con types.Connection) error {
 		return err
 	}
 	sql := `update `+schema+`.connections set name=$1, database_type=$2, 
-		address=$3, port=$4, use_tls=$5, description=$6 where id=$7  
-		and exists (select schema_name from global.customers where schema_name = $8);; `
+		address=$3, port=$4, dbname=$5, use_tls=$6, description=$7 where id=$8  
+		and exists (select schema_name from global.customers where schema_name = $9);; `
 
-	_, err  = tx.ExecContext(ctx, sql, con.Name, con.Dbtype, con.Address, con.Port, con.UseTLS, con.Description, con.Id, schema)
+	_, err  = tx.ExecContext(ctx, sql, con.Name, con.Dbtype, con.Address, con.Port, con.Dbname, con.UseTLS, con.Description, con.Id, schema)
 	if err != nil {
 		tx.Rollback()
 		log.Printf("Error 1 in UpdateConnection: %s\n", err.Error())

@@ -37,6 +37,8 @@ function AddTable(props) {
     const [schema, setSchema] = useState("")
     const [table, setTable] = useState("")
 
+    const [tablestructure, setTableStructure] = useState({})
+
     let form = useRef<HTMLFormElement>(null)
 
     let testJSON = {
@@ -50,22 +52,22 @@ function AddTable(props) {
                         columns: [
                             {
                                 name: "id",
-                                position: 0,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "name",
                                 position: 1,
                                 typ: "varchar 60"
                             },
                             {
-                                name: "org",
+                                name: "name",
                                 position: 2,
                                 typ: "varchar 60"
                             },
                             {
-                                name: "domain",
+                                name: "org",
                                 position: 3,
+                                typ: "varchar 60"
+                            },
+                            {
+                                name: "domain",
+                                position: 4,
                                 typ: "varchar 128"
                             },
                         ]
@@ -75,22 +77,22 @@ function AddTable(props) {
                         columns: [
                             {
                                 name: "id",
-                                position: 0,
+                                position: 1,
                                 typ: "varchar 60"
                             },
                             {
                                 name: "invoicecount",
-                                position: 1,
-                                typ: "integer"
-                            },
-                            {
-                                name: "balance",
                                 position: 2,
                                 typ: "integer"
                             },
                             {
-                                name: "duedate",
+                                name: "balance",
                                 position: 3,
+                                typ: "integer"
+                            },
+                            {
+                                name: "duedate",
+                                position: 4,
                                 typ: "date"
                             },
                         ]
@@ -104,32 +106,32 @@ function AddTable(props) {
                         columns: [
                             {
                                 name: "id",
-                                position: 0,
+                                position: 1,
                                 typ: "varchar 60"
                             },
                             {
                                 name: "Firstname",
-                                position: 1,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "Secondname",
-                                position: 1,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "email",
                                 position: 2,
                                 typ: "varchar 60"
                             },
                             {
-                                name: "username",
+                                name: "Secondname",
                                 position: 3,
+                                typ: "varchar 60"
+                            },
+                            {
+                                name: "email",
+                                position: 4,
+                                typ: "varchar 60"
+                            },
+                            {
+                                name: "username",
+                                position: 5,
                                 typ: "varchar 128"
                             },
                             {
                                 name: "password",
-                                position: 4,
+                                position: 6,
                                 typ: "varchar 128"
                             },
                         ]
@@ -138,22 +140,22 @@ function AddTable(props) {
                         columns: [
                             {
                                 name: "id",
-                                position: 0,
+                                position: 1,
                                 typ: "varchar 60"
                             },
                             {
                                 name: "name",
-                                position: 1,
+                                position: 2,
                                 typ: "varchar 60"
                             },
                             {
                                 name: "userid",
-                                position: 1,
+                                position: 3,
                                 typ: "varchar 60"
                             },
                             {
                                 name: "description",
-                                position: 2,
+                                position: 4,
                                 typ: "varchar 600"
                             },
 
@@ -165,145 +167,160 @@ function AddTable(props) {
         ]
     }
 
-    let handleSubmit = e => {
+    let handleSubmit = event => {
+        if (form.current == null) {
+            return false
+        }
+        debugger
+        if (form.current.reportValidity() === false) {
+
+            event.preventDefault();
+            setValidated(true)
+            //console.log("Form validity false!")
+            return false
+        }
+        event.preventDefault();
+        setValidated(false)
+        event.stopPropagation();
+
         return false
     }
     useEffect(() => {
         setDatabase(testJSON)
-    
+
     }, [])
     let getOptions = () => {
-        let schemas = testJSON.schemas.map( x => {
+        let schemas = testJSON.schemas.map(x => {
             return x.name
         })
         console.log(schemas)
         return schemas
-    }    
+    }
     let selectSchema = schema => {
-       setSchema(schema[0])
+        setSchema(schema[0])
     }
     let selectTable = table => {
         setTable(table[0])
-     }
+
+    }
+    useEffect(()=> {
+        debugger
+        initTableSchema()
+    }, [table])
     let getTables = () => {
         let schemas = testJSON.schemas
-        let tables:any[] = []
-        schemas.map( x => {
-            if(x.name == schema) {
+        let tables: any[] = []
+        schemas.map(x => {
+            if (x.name == schema) {
                 tables = x.tables
             }
         })
 
-        return tables.map( x => {
+        return tables.map(x => {
             return x.name
         })
-    }    
+    }
     let selectPII = (rowIndex) => {
         return event => {
             // TODO
         }
     }
+    console.log(tablestructure)
     let selectAction = (rowIndex) => {
         return event => {
-            // TODO
+            debugger
+            tablestructure[rowIndex].action = event            
+            setTableStructure(tablestructure)
         }
-    }    
-    let schemacolumns =  [
-            {
-                dataField: 'position',
-                text: 'position',
-                hidden: true,
-            },
-            {
-                dataField: 'name',
-                text: 'Column',
+    }
+    let schemacolumns = [
+        {
+            dataField: 'position',
+            text: 'position',
+            hidden: true,
+        },
+        {
+            dataField: 'name',
+            text: 'Column',
 
-            },
-            {
-                dataField: 'typ',
-                text: 'Type:',
+        },
+        {
+            dataField: 'typ',
+            text: 'Type:',
 
-            },
-            {
-                dataField: 'semantics',
-                text: 'PII',
-                formatter: (cell, row, rowIndex, formatExtraData) => {
-                    return <Typeahead 
-                    id={"semantics"+rowIndex} onChange={selectPII(rowIndex)} size="sm" 
-                       
+        },
+        {
+            dataField: 'semantics',
+            text: 'PII',
+            formatter: (cell, row, rowIndex, formatExtraData) => {
+                return <Typeahead
+                    id={"semantics" + rowIndex} onChange={selectPII(rowIndex)} size="sm"
+
                     options={PIIs}
-                    
-                    placeholder="Choose schema..."   
-                    />
-                },                
+                    isInvalid={true}
+                    placeholder="Choose schema..."
+                />
+            },
 
-            },         
-            {
-                dataField: 'action',
-                text: 'Action',
-                formatter: (cell, row, rowIndex, formatExtraData) => {
-                    return <Typeahead 
-                    id={"action"+rowIndex} onChange={selectAction(rowIndex)} size="sm" 
-                       
+        },
+        {
+            dataField: 'action',
+            text: 'Action',
+            formatter: (cell, row, rowIndex, formatExtraData) => {
+                return <Typeahead
+                    id={"action" + rowIndex} onChange={selectAction(rowIndex)} size="sm"
+                    isValid={true}
                     options={Actions}
-                    
-                    placeholder="Choose action..."   
-                    />
-                }
-            }                       
-            /*
-            ,
-            {
-                dataField: 'dbtype',
-                text: 'DB Type:',
-                formatter: (cell, row, rowIndex, formatExtraData) => {
-                    return com.databaseTypes[row["dbtype"]]
-                },
-                sortValue: (cell, row) => {
-                    return com.databaseTypes[row["dbtype"]]
-                },
-                sort: true
-            }, */
-        ]
+
+                    placeholder="Choose action..."
+                />
+            }
+        }
+
+    ]
     let showTableSchema = () => {
         let schemas = testJSON.schemas
-        let tables:any[] = []
-        schemas.map( x => {
-            if(x.name == schema) {
+        let tables: any[] = []
+        schemas.map(x => {
+            if (x.name == schema) {
                 tables = x.tables
             }
         })
-        let t 
-        
-        tables.map(x => {
-            if(x.name === table)
-                t = x.columns
-        }) 
+        let t
 
-        if(t === undefined)
+        tables.map(x => {
+            if (x.name === table)
+                t = x.columns
+        })
+
+        if (t === undefined)
             return []
         let retval = t.map(x => {
-            
-            return {position: x.position, name: x.name, typ: x.typ, semantics: x.semantics, action: ""}
+
+            return { position: x.position, name: x.name, typ: x.typ, semantics: x.semantics, action: "" }
         })
         return retval
     }
-
+    let initTableSchema = () => {
+        let s = showTableSchema()
+        debugger
+        setTableStructure(s)
+    }
     return <div>
 
         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
-        
+
             <Row>
                 <Col xs="auto">
                     <Form.Group className="mb-3" controlId="dbname">
                         <Form.Label>Schema Name</Form.Label>
-                        <Typeahead id="schemas" onChange={selectSchema} size="sm" 
-                       
-                        options={getOptions()}
-                        
-                        placeholder="Choose schema..."                        
+                        <Typeahead id="schemas" onChange={selectSchema} size="sm"
+
+                            options={getOptions()}
+                           
+                            placeholder="Choose schema..."
                         />
-            
+
                         <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                         <Form.Control.Feedback type="invalid" >
                             Client side name for Dymium database
@@ -311,39 +328,39 @@ function AddTable(props) {
                     </Form.Group>
                 </Col>
             </Row>
-            { schema !== "" && 
-                        <Row>
-                        <Col xs="auto">
-                            <Form.Group className="mb-3" controlId="dbname">
-                                <Form.Label>Table Name</Form.Label>
-                                <Typeahead id="tables" onChange={selectTable} size="sm" 
+            {schema !== "" &&
+                <Row>
+                    <Col xs="auto">
+                        <Form.Group className="mb-3" controlId="dbname">
+                            <Form.Label>Table Name</Form.Label>
+                            <Typeahead id="tables" onChange={selectTable} size="sm"
 
-                                options={getTables()} 
+                                options={getTables()}
                                 defaultOpen={false}
-                                labelKey="Table"  
+                                labelKey="Table"
                                 placeholder="Choose table..."
-                    
-                                />
-                    
-                                <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                                <Form.Control.Feedback type="invalid" >
-                                    Client side name for Dymium database
-                                </Form.Control.Feedback>
-                            </Form.Group>
-                        </Col>
-                    </Row>
-            }
-            {schema !== "" && table != "" && 
-                                <BootstrapTable id="schematable"
-                                condensed
-                                striped bordered={false}
-                                bootstrap4
-                                keyField='name'
-                                data={showTableSchema()}
-                                columns={schemacolumns}
+
                             />
 
-             
+                            <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                            <Form.Control.Feedback type="invalid" >
+                                Client side name for Dymium database
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                    </Col>
+                </Row>
+            }
+            {schema !== "" && table != "" &&
+                <BootstrapTable id="schematable"
+                    condensed
+                    striped bordered={false}
+                    bootstrap4
+                    keyField='name'
+                    data={showTableSchema()}
+                    columns={schemacolumns}
+                />
+
+
             }
             <Button variant="dymium" size="sm" className="mt-4" type="submit">
                 Apply
@@ -359,7 +376,7 @@ function DatascopeForm(props) {
     const [databases, setDatabases] = useState(empty)
     const [connections, setConnections] = useState(empty)
     const [selectedConnection, setSelectedConnection] = useState("")
-    const [showOffcanvas, setShowOffcanvas] = useState(false)
+
 
     let columns = [
         {
@@ -456,7 +473,7 @@ function DatascopeForm(props) {
     let showConnection = (db) => {
         return <Card key={db.name} id={db.name} className="card mb-3"> <Card.Header><Row><Col xs="auto" style={{ paddingTop: '2px', fontSize: '1.2em' }} className="thickblue">
             <i className="fa-solid fa-database mr-2"></i>
-            Connection: {db.name}</Col><Col><Button onClick={e => { setShowOffcanvas(true) }} size="sm" variant="dymium">Add Table</Button></Col><Col xs="auto" className="text-right"><i className="fa fa-trash" aria-hidden="true"></i></Col></Row></Card.Header>
+            Connection: {db.name}</Col><Col><Button onClick={e => { props.setShowOffcanvas(true) }} size="sm" variant="dymium">Add Table</Button></Col><Col xs="auto" className="text-right"><i className="fa fa-trash" aria-hidden="true"></i></Col></Row></Card.Header>
         </Card>
     }
     let showConnections = () => {
@@ -469,13 +486,7 @@ function DatascopeForm(props) {
 
     return (
         <>
-            <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
 
-                title={"Register table"}>
-
-                <AddTable />
-
-            </Offcanvas>
 
             <Row>
                 <Col xs="auto">
@@ -550,7 +561,7 @@ export function AddDatascope() {
     let [conns, setConns] = useState([])
     const [spinner, setSpinner] = useState(false)
     const [alert, setAlert] = useState(<></>)
-
+    const [showOffcanvas, setShowOffcanvas] = useState(false)
 
     let getConnections = () => {
         setSpinner(true)
@@ -619,10 +630,14 @@ export function AddDatascope() {
     return (
         <div className=" text-left">
             {alert}
+            <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
+                title={"Register table"}>
+                <AddTable />
+            </Offcanvas>
             <h5 > Create New Data Scope <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
             <div className=" text-left">
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
-                    <DatascopeForm connections={conns} setAlert={setAlert} />
+                    <DatascopeForm connections={conns} setAlert={setAlert} setShowOffcanvas={setShowOffcanvas}/>
 
 
 
