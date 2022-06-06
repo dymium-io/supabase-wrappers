@@ -3,7 +3,7 @@
 set -e
 
 ARN="411064808315"
-REPO="DbAnalyzer"
+REPO="db-analyzer"
 REGION="us-west-2"
 
 tag="${1:-latest}"

@@ -2,150 +2,168 @@ package main
 
 import (
         "github.com/aws/aws-lambda-go/lambda"
+	"database/sql"
+	_ "github.com/lib/pq"
+
+	"DbAnalyzer/types"
 	
         "fmt"
-
-	"os"
-	"os/exec"
-	
-	"strings"
-	"io"
-	"io/ioutil"
-
-	"path/filepath"
-
-	"log"
-
-	"sort"
-
-	"encoding/json"
-	"encoding/base64"
 )
 
-type Document struct {
-        Name           string          `json:"name"`
-        FileExtension  string          `json:"fileExtension"`
-        DocumentId     string          `json:"documentId"`
-        LoanId         string          `json:"loanId"`
-        UserId         string          `json:"userId"`
-        ForWhom        string          `json:"forWhom"`
-        BuiltFrom      json.RawMessage `json:"builtFrom"`
-        DocumentBase64 string          `json:"documentBase64"`
-        PngResolution  string          `json:"pngResolution"`
-        PngPagesBase64 []string        `json:"pngPagesBase64"`
-}
 
-const docName = "doc.pdf"
-const pngDirName = "png"
+func LambdaHandler(c types.Connection) (*types.Database, error) {
 
-
-// define struct to sort files in png directory
-type nfT struct {
-	num int
-	nam string
-}
-type nfL []nfT
-
-func (nfl nfL) Len() int {
-	return len(nfl)
-}
-func (nfl nfL) Swap(i, j int) {
-	nfl[i], nfl[j] = nfl[j], nfl[i]
-}
-func (nfl nfL) Less(i, j int) bool {
-	return nfl[i].num < nfl[j].num
-}
-
-func LambdaHandler(doc Document) (*Document, error) {
-
-	var tmpDir string
-	var err error
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		c.Address, c.Port, c.User, c.Password, c.Database,
+		func () string { if c.Tls { return "enable" } else {return "disable" } }())
 	
-	if tmpDir, err = ioutil.TempDir("", "pngsplitter"); err != nil {
-		log.Printf("error %s:",err)
-		return nil, err
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// store document to drive
-	if docF, err := os.Create(filepath.Join(tmpDir, docName)); err != nil {
-		log.Printf("error %s:",err)
-		return nil, err
-	} else {
-		defer docF.Close()
-		decoder := base64.NewDecoder(base64.StdEncoding, strings.NewReader(doc.DocumentBase64))
-		if _, err = io.Copy(docF, decoder); err != nil {
-			log.Printf("error %s:",err)
-			return nil, err
-		}
-	}
-	doc.DocumentBase64 = ""
-
-	// create directory for .png images
-	pngDir := filepath.Join(tmpDir,pngDirName)
-	if err = os.MkdirAll(pngDir, 0700); err != nil {
-		log.Printf("error %s:",err)
-		return nil, err
-	}
-
-	
-	cmd := exec.Command("pdftoppm", "-png", docName, filepath.Join(pngDirName,"z"))
-	cmd.Dir = tmpDir
-	if out, err := cmd.CombinedOutput(); err != nil {
-		log.Printf("error %s:\n\n%s\n",err,out)
-		return nil, fmt.Errorf("error %s:\n\n%s",err,out)
-	}
-
-	var files []os.FileInfo
-	pngs := make([]string, 0)
-	if files, err = ioutil.ReadDir(pngDir); err != nil {
-		log.Printf("error %s:",err)
-		return nil, err
-	}
-	
-	nfl := make(nfL, 0)
-	for _, f := range files {
-		if !f.IsDir() {
-			nf := nfT{
-				nam: f.Name(),
-				num: 0,
-			}
-			if _, err := fmt.Sscanf(nf.nam, "z-%d.png", &nf.num); err != nil {
-				log.Printf("error %s:",err)
-				return nil, err
-			}
-			nfl = append(nfl, nf)
-		}
-	}
-	sort.Sort(nfl)
-	for _, nf := range nfl {
-		if png, err := Base64FileEncode(filepath.Join(tmpDir, pngDirName, nf.nam)); err != nil {
-			log.Printf("error %s:",err)
-			return nil, err
-		} else {
-			pngs = append(pngs, png)
-		}
-	}
-
-        doc.PngResolution = "150"
-        doc.PngPagesBase64 = pngs
-	
-	return &doc, nil
-}
-
-func Base64FileEncode(fn string) (string, error) {
-	fp, err := os.Open(fn)
+	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
-		return "", err
+		return nil,err
 	}
-	defer fp.Close()
+	defer db.Close()
 
-	var b64 strings.Builder
-	encoder := base64.NewEncoder(base64.StdEncoding, &b64)
-	// Magic! Copy from base64 decoder to output buffer
-	io.Copy(encoder, fp)
-	return b64.String(), nil
+	database, err := getDbInfo(db, &c.Database)
+	if err != nil {
+		return nil,err
+	}
+	if err = resolveRefs(db, database); err != nil {
+		return nil,err
+	}
+
+	return database, nil
 }
+
+func getDbInfo(db *sql.DB, dbName *string) (*types.Database,error) {
+	rows, err := db.Query(`SELECT table_schema, table_name, ordinal_position, column_name, udt_name
+                               FROM information_schema.columns
+                               ORDER BY table_schema, table_name, ordinal_position`)
+	if err != nil {
+		return nil,err
+	}
+	defer rows.Close()
+
+	database := types.Database{
+		Name: *dbName,
+		Schemas: []types.Schema{},
+	}
+	curSchema := -1
+	curTbl := -1
+	for rows.Next() {
+		var schema, tblName, cName, typ string
+		var pos int
+		err = rows.Scan(&schema, &tblName, &pos, &cName, &typ)
+		if err != nil {
+			return nil,err
+		}
+		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
+			database.Schemas = append(database.Schemas, types.Schema{
+				Name: schema,
+				Tables: []types.Table{
+					{
+						Name: tblName,
+						Columns: []types.Column{
+							{
+								Name: cName,
+								Position: pos,
+								Typ: typ,
+								Reference: nil,
+								Semantics: nil,
+							},
+						},
+					},
+				},
+			})
+			curSchema += 1
+			curTbl = 0
+		} else if tblName != database.Schemas[curSchema].Tables[curTbl].Name {
+			database.Schemas[curSchema].Tables = append(database.Schemas[curSchema].Tables,
+				types.Table{
+					Name: tblName,
+					Columns: []types.Column{
+						{
+							Name: cName,
+							Position: pos,
+							Typ: typ,
+							Reference: nil,
+							Semantics: nil,
+						},
+					},
+				})
+			curTbl += 1
+		} else {
+			database.Schemas[curSchema].Tables[curTbl].Columns =
+				append(database.Schemas[curSchema].Tables[curTbl].Columns,
+					types.Column{
+						Name: cName,
+						Position: pos,
+						Typ: typ,
+						Reference: nil,
+						Semantics: nil,
+					})
+		}
+	}
+
+	return &database, nil
+}
+
+func resolveRefs(db *sql.DB, database *types.Database) error {
+	rows, err := db.Query(`
+           SELECT
+	       tc.table_schema, 
+	       tc.constraint_name, 
+	       tc.table_name, 
+	       kcu.column_name, 
+	       ccu.table_schema AS foreign_table_schema,
+	       ccu.table_name AS foreign_table_name,
+	       ccu.column_name AS foreign_column_name 
+	   FROM 
+	       information_schema.table_constraints AS tc 
+	       JOIN information_schema.key_column_usage AS kcu
+		 ON tc.constraint_name = kcu.constraint_name
+		 AND tc.table_schema = kcu.table_schema
+	       JOIN information_schema.constraint_column_usage AS ccu
+		 ON ccu.constraint_name = tc.constraint_name
+		 AND ccu.table_schema = tc.table_schema
+	   WHERE tc.constraint_type = 'FOREIGN KEY'`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var schema, constraintName, tblName, columnName, fSchema, fTblName, fColumnName string
+		err := rows.Scan(&schema, &constraintName, &tblName, &columnName, &fSchema, &fTblName, &fColumnName)
+		if err != nil {
+			return err
+		}
+	Loop:
+		for kSchema := range database.Schemas {
+			s := &database.Schemas[kSchema]
+			if s.Name == schema {
+				for kTbl := range s.Tables {
+					t := &s.Tables[kTbl]
+					if t.Name == tblName {
+						for kColumn := range t.Columns {
+							c := &t.Columns[kColumn]
+							if c.Name == columnName {
+								c.Reference = &types.Reference{
+									Schema: fSchema,
+									Table: fTblName,
+									Column: fColumnName,
+								}
+								break Loop
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 
 func main() {
         lambda.Start(LambdaHandler)
