@@ -12,364 +12,11 @@ import Modal from 'react-bootstrap/Modal'
 import Alert from 'react-bootstrap/Alert'
 import BootstrapTable from 'react-bootstrap-table-next';
 import Spinner from '@dymium/common/Components/Spinner'
+import AddTable from './AddTable'
 import * as com from '../Common'
 
 
 let remap = {}
-const PIIs = [
-    "N/A",
-    "Address",
-    "Email",
-    "SSN",
-    "Member ID",
-    "Name"
-]
-const Actions = [
-    "Allow",
-    "Block",
-    "Full Redact",
-    "Obfuscate",
-    "Smart Reduct"
-]
-function AddTable(props) {
-    const [validated, setValidated] = useState(false)
-    const [database, setDatabase] = useState({})
-    const [schema, setSchema] = useState("")
-    const [table, setTable] = useState("")
-
-    const [tablestructure, setTableStructure] = useState({})
-
-    let form = useRef<HTMLFormElement>(null)
-
-    let testJSON = {
-        name: "My test database",
-        schemas: [
-            {
-                name: "global",
-                tables: [
-                    {
-                        name: "customers",
-                        columns: [
-                            {
-                                name: "id",
-                                position: 1,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "name",
-                                position: 2,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "org",
-                                position: 3,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "domain",
-                                position: 4,
-                                typ: "varchar 128"
-                            },
-                        ]
-                    },
-                    {
-                        name: "billing",
-                        columns: [
-                            {
-                                name: "id",
-                                position: 1,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "invoicecount",
-                                position: 2,
-                                typ: "integer"
-                            },
-                            {
-                                name: "balance",
-                                position: 3,
-                                typ: "integer"
-                            },
-                            {
-                                name: "duedate",
-                                position: 4,
-                                typ: "date"
-                            },
-                        ]
-                    }
-                ]
-            }, {
-                name: "spoofcorp",
-                tables: [
-                    {
-                        name: "users",
-                        columns: [
-                            {
-                                name: "id",
-                                position: 1,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "Firstname",
-                                position: 2,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "Secondname",
-                                position: 3,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "email",
-                                position: 4,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "username",
-                                position: 5,
-                                typ: "varchar 128"
-                            },
-                            {
-                                name: "password",
-                                position: 6,
-                                typ: "varchar 128"
-                            },
-                        ]
-                    }, {
-                        name: "projects",
-                        columns: [
-                            {
-                                name: "id",
-                                position: 1,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "name",
-                                position: 2,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "userid",
-                                position: 3,
-                                typ: "varchar 60"
-                            },
-                            {
-                                name: "description",
-                                position: 4,
-                                typ: "varchar 600"
-                            },
-
-                        ]
-                    }
-                ]
-
-            }
-        ]
-    }
-
-    let handleSubmit = event => {
-        if (form.current == null) {
-            return false
-        }
-        debugger
-        if (form.current.reportValidity() === false) {
-
-            event.preventDefault();
-            setValidated(true)
-            //console.log("Form validity false!")
-            return false
-        }
-        event.preventDefault();
-        setValidated(false)
-        event.stopPropagation();
-
-        return false
-    }
-    useEffect(() => {
-        setDatabase(testJSON)
-
-    }, [])
-    let getOptions = () => {
-        let schemas = testJSON.schemas.map(x => {
-            return x.name
-        })
-        console.log(schemas)
-        return schemas
-    }
-    let selectSchema = schema => {
-        setSchema(schema[0])
-    }
-    let selectTable = table => {
-        setTable(table[0])
-
-    }
-    useEffect(()=> {
-        debugger
-        initTableSchema()
-    }, [table])
-    let getTables = () => {
-        let schemas = testJSON.schemas
-        let tables: any[] = []
-        schemas.map(x => {
-            if (x.name == schema) {
-                tables = x.tables
-            }
-        })
-
-        return tables.map(x => {
-            return x.name
-        })
-    }
-    let selectPII = (rowIndex) => {
-        return event => {
-            // TODO
-        }
-    }
-    console.log(tablestructure)
-    let selectAction = (rowIndex) => {
-        return event => {
-            debugger
-            tablestructure[rowIndex].action = event            
-            setTableStructure(tablestructure)
-        }
-    }
-    let schemacolumns = [
-        {
-            dataField: 'position',
-            text: 'position',
-            hidden: true,
-        },
-        {
-            dataField: 'name',
-            text: 'Column',
-
-        },
-        {
-            dataField: 'typ',
-            text: 'Type:',
-
-        },
-        {
-            dataField: 'semantics',
-            text: 'PII',
-            formatter: (cell, row, rowIndex, formatExtraData) => {
-                return <Typeahead
-                    id={"semantics" + rowIndex} onChange={selectPII(rowIndex)} size="sm"
-
-                    options={PIIs}
-                    isInvalid={true}
-                    placeholder="Choose schema..."
-                />
-            },
-
-        },
-        {
-            dataField: 'action',
-            text: 'Action',
-            formatter: (cell, row, rowIndex, formatExtraData) => {
-                return <Typeahead
-                    id={"action" + rowIndex} onChange={selectAction(rowIndex)} size="sm"
-                    isValid={true}
-                    options={Actions}
-
-                    placeholder="Choose action..."
-                />
-            }
-        }
-
-    ]
-    let showTableSchema = () => {
-        let schemas = testJSON.schemas
-        let tables: any[] = []
-        schemas.map(x => {
-            if (x.name == schema) {
-                tables = x.tables
-            }
-        })
-        let t
-
-        tables.map(x => {
-            if (x.name === table)
-                t = x.columns
-        })
-
-        if (t === undefined)
-            return []
-        let retval = t.map(x => {
-
-            return { position: x.position, name: x.name, typ: x.typ, semantics: x.semantics, action: "" }
-        })
-        return retval
-    }
-    let initTableSchema = () => {
-        let s = showTableSchema()
-        debugger
-        setTableStructure(s)
-    }
-    return <div>
-
-        <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
-
-            <Row>
-                <Col xs="auto">
-                    <Form.Group className="mb-3" controlId="dbname">
-                        <Form.Label>Schema Name</Form.Label>
-                        <Typeahead id="schemas" onChange={selectSchema} size="sm"
-
-                            options={getOptions()}
-                           
-                            placeholder="Choose schema..."
-                        />
-
-                        <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                        <Form.Control.Feedback type="invalid" >
-                            Client side name for Dymium database
-                        </Form.Control.Feedback>
-                    </Form.Group>
-                </Col>
-            </Row>
-            {schema !== "" &&
-                <Row>
-                    <Col xs="auto">
-                        <Form.Group className="mb-3" controlId="dbname">
-                            <Form.Label>Table Name</Form.Label>
-                            <Typeahead id="tables" onChange={selectTable} size="sm"
-
-                                options={getTables()}
-                                defaultOpen={false}
-                                labelKey="Table"
-                                placeholder="Choose table..."
-
-                            />
-
-                            <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                            <Form.Control.Feedback type="invalid" >
-                                Client side name for Dymium database
-                            </Form.Control.Feedback>
-                        </Form.Group>
-                    </Col>
-                </Row>
-            }
-            {schema !== "" && table != "" &&
-                <BootstrapTable id="schematable"
-                    condensed
-                    striped bordered={false}
-                    bootstrap4
-                    keyField='name'
-                    data={showTableSchema()}
-                    columns={schemacolumns}
-                />
-
-
-            }
-            <Button variant="dymium" size="sm" className="mt-4" type="submit">
-                Apply
-            </Button>
-        </Form>
-
-
-    </div>
-}
 
 function DatascopeForm(props) {
     let empty: any[] = []
@@ -554,7 +201,7 @@ function DatascopeForm(props) {
 }
 
 
-export function AddDatascope() {
+export function AddDatascope(props) {
     const [validated, setValidated] = useState(false)
     let form = useRef<HTMLFormElement>(null)
 
@@ -562,6 +209,7 @@ export function AddDatascope() {
     const [spinner, setSpinner] = useState(false)
     const [alert, setAlert] = useState(<></>)
     const [showOffcanvas, setShowOffcanvas] = useState(false)
+    const [clear, setClear] = useState(false)
 
     let getConnections = () => {
         setSpinner(true)
@@ -627,12 +275,15 @@ export function AddDatascope() {
         return false
     }
 
+    let onAddTable = (table) => {
+        setShowOffcanvas(false) 
+    }
     return (
         <div className=" text-left">
             {alert}
             <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
                 title={"Register table"}>
-                <AddTable />
+                <AddTable clear={clear} onAddTable={onAddTable}/>
             </Offcanvas>
             <h5 > Create New Data Scope <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
             <div className=" text-left">
