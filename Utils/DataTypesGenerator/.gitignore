@@ -3,3 +3,5 @@
 tarballs/
 /.stack-work/
 /Gen-exe
+/darwin/
+/linux/

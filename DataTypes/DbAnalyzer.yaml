@@ -6,11 +6,9 @@ connection: !!omap
   - address: string
   - port: int
   - user: string
+  - password: string
   - database: string
   - tls: bool
-
-result: !!omap
-  - databases: <| database |>
 
 database: !!omap
   - name: string
@@ -28,5 +26,10 @@ column: !!omap
   - name: string
   - position: int
   - typ: string
-  - reference: ?string
+  - reference: ?reference
   - semantics: ?Common.DataSemantics
+
+reference: !!omap
+  - schema: string
+  - table: string
+  - column: string

@@ -10,6 +10,7 @@ case ${1:-"--darwin"} in
     "--darwin")
 	stack build --copy-bins --local-bin-path darwin
 	upx --best darwin/Gen-exe
+	mv darwin/Gen-exe ../../bin/darwin/dataTypesGenerator
 	;;
     "--linux")
 	cat <<EOF | docker run --rm -i -v $HOME/.stack:/root/.stack -v $PWD:/z fpco/stack-build-small:lts /bin/bash -
@@ -25,6 +26,7 @@ EOF
 	    echo "build failed with error code $retval"
 	    exit $retval
 	}
+	mv linux/Gen-exe ../../bin/linux/dataTypesGenerator
 	;;
     *)
 	echo "Usage: ./compile.sh [--darwin|--linux|--all]"
