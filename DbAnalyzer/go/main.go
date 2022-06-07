@@ -1,13 +1,15 @@
 package main
 
 import (
-        "github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-lambda-go/lambda"
+	
 	"database/sql"
 	_ "github.com/lib/pq"
 
-	"DbAnalyzer/types"
+	"strings"
+	"fmt"
 	
-        "fmt"
+	"DbAnalyzer/types"
 )
 
 
@@ -49,6 +51,7 @@ func getDbInfo(db *sql.DB, dbName *string) (*types.Database,error) {
 	}
 	curSchema := -1
 	curTbl := -1
+	isSystem := false
 	for rows.Next() {
 		var schema, tblName, cName, typ string
 		var pos int
@@ -57,11 +60,18 @@ func getDbInfo(db *sql.DB, dbName *string) (*types.Database,error) {
 			return nil,err
 		}
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
+			if strings.HasPrefix(schema, "pg_") || schema == "information_schema" {
+				isSystem = true
+			} else {
+				isSystem = false
+			}
 			database.Schemas = append(database.Schemas, types.Schema{
 				Name: schema,
+				IsSystem: isSystem,
 				Tables: []types.Table{
 					{
 						Name: tblName,
+						IsSystem: isSystem,
 						Columns: []types.Column{
 							{
 								Name: cName,
@@ -80,6 +90,7 @@ func getDbInfo(db *sql.DB, dbName *string) (*types.Database,error) {
 			database.Schemas[curSchema].Tables = append(database.Schemas[curSchema].Tables,
 				types.Table{
 					Name: tblName,
+					IsSystem: isSystem,
 					Columns: []types.Column{
 						{
 							Name: cName,

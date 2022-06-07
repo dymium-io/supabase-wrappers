@@ -38,10 +38,12 @@ type Reference struct {
 
 type Schema struct {
    Name string `json:"name"`
+   IsSystem bool `json:"isSystem"`
    Tables []Table `json:"tables"`
 }
 
 type Table struct {
    Name string `json:"name"`
+   IsSystem bool `json:"isSystem"`
    Columns []Column `json:"columns"`
 }

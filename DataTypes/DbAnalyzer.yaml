@@ -16,10 +16,12 @@ database: !!omap
 
 schema: !!omap
   - name: string
+  - isSystem: bool
   - tables: <| table |>
 
 table: !!omap
   - name: string
+  - isSystem: bool
   - columns: <| column |>
 
 column: !!omap
