@@ -35,7 +35,7 @@ func init() {
         }
 }
 
-func Invoke(fname, qualifier string, payload []byte) (r []byte, err error) {
+func Invoke(fname string, qualifier *string, payload []byte) (r []byte, err error) {
 	if fnmap == nil { // running in cloud!
 		sess := session.Must(session.NewSessionWithOptions(session.Options{
 			SharedConfigState: session.SharedConfigEnable,
@@ -47,7 +47,7 @@ func Invoke(fname, qualifier string, payload []byte) (r []byte, err error) {
 			&lambda.InvokeInput{
 				FunctionName: aws.String(fname),
 				Payload:      payload,
-				Qualifier:    &qualifier,
+				Qualifier:    qualifier,
 			}); err != nil {
 			return nil, err
 		}
