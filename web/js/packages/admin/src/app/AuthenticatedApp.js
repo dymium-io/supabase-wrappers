@@ -7,7 +7,6 @@ import Menu from './Menu'
 import Sidebar from './Sidebar'
 
 const HomePage = (props) => {
-    debugger
     return (
         "homepage"
     )

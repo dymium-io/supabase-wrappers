@@ -12,6 +12,7 @@ import Modal from 'react-bootstrap/Modal'
 import Alert from 'react-bootstrap/Alert'
 import BootstrapTable from 'react-bootstrap-table-next';
 import Spinner from '@dymium/common/Components/Spinner'
+import cloneDeep from 'lodash/cloneDeep';
 import AddTable from './AddTable'
 import * as com from '../Common'
 
@@ -20,63 +21,118 @@ let remap = {}
 
 function DatascopeForm(props) {
     let empty: any[] = []
-    const [databases, setDatabases] = useState(empty)
     const [connections, setConnections] = useState(empty)
+    const [tables, setTables] = useState({})
     const [selectedConnection, setSelectedConnection] = useState("")
+    const [counter, setCounter] = useState(0)
+    const editedConnection = useRef("")
 
+    // make sure we don't have a stale closure
+    let refs = useRef({})
+    refs.current["connections"] = connections
+    refs.current["tables"] = tables
+    refs.current["setTables"] = setTables
+    refs.current["setCounter"] = setCounter
 
+    let onEdit = (connection, schema, table) => {
+        return e => {
+            let ob = refs.current["tables"][connection]
+            Object.keys(ob).forEach( x => {
+                if(ob[x].schema === schema && ob[x].table === table) {
+                    setSelectedConnection(connection)
+                    props.onEditTable(ob[x]) 
+                }
+            })
+        }
+    }
+    let onDelete = (connection, schema, table)  => {
+        return e => {
+            let tables = cloneDeep(refs.current["tables"])
+            delete tables[connection][schema + "." + table]
+            setTables(tables)
+            //refs.current["setTables"](tables)
+            setCounter(counter + 1)
+            setConnections(refs.current["connections"])
+        }
+    }
     let columns = [
         {
-            dataField: 'id',
-            text: 'id',
+            dataField: 'connection',
+            text: 'connection:',
+            isDummyField: true,
             hidden: true,
         },
         {
-            dataField: 'name',
-            text: 'Name:',
-            sort: true,
-        },
-        {
-            dataField: 'dbtype',
-            text: 'DB Type:',
-            formatter: (cell, row, rowIndex, formatExtraData) => {
-                return com.databaseTypes[row["dbtype"]]
-            },
-            sortValue: (cell, row) => {
-                return com.databaseTypes[row["dbtype"]]
-            },
-            sort: true
-        },
-        {
-            text: 'Prefix',
-            dataField: 'prefix',
+            dataField: 'schema',
+            text: 'Schema:',
             isDummyField: true,
+            sort: true,
             formatter: (cell, row, rowIndex, formatExtraData) => {
 
-                return <Form.Control size="sm" type="text" placeholder="alphanumeric"
-                    required
-                    pattern=".+"
-                    value={props.username}
-                    onChange={e => props.setUsername(e.target.value)}
-                />
-            },
-            //formatExtraData: { hoverIdx: this.state.hoverIdx },
-            //headerStyle: { width: '50px' },
-            //style: { height: '30px' },
-            //align: 'center'
+                return row.schema
+            }
         },
         {
-            text: 'Tables',
+            dataField: 'table',
+            text: 'Table name:',
+            isDummyField: true,
+            sort: true,
+            formatter: (cell, row, rowIndex, formatExtraData) => {
+
+                return row.table
+            }
+        },
+        {
+            dataField: 'columns',
+            text: '# of columns:',
+            isDummyField: true,
+            sort: true,
+            formatter: (cell, row, rowIndex, formatExtraData) => {
+
+                return row.tablescope.length
+            }
+        },
+        {
+            dataField: 'pii',
+            text: 'Sensitivity:',
+            isDummyField: true,
+            sort: true,
+            formatter: (cell, row, rowIndex, formatExtraData) => {
+                let sense = false
+                row.tablescope.forEach(x => {
+                    if (x.semantics !== "N/A")
+                        sense = true
+                })
+                if (sense) return <>Contains PII</>
+                return <>Not
+                    ensitive</>
+            }
+        },
+        {
+            dataField: 'disposition',
+            text: 'Access:',
+            isDummyField: true,
+            sort: true,
+            formatter: (cell, row, rowIndex, formatExtraData) => {
+                let managed = false
+                row.tablescope.forEach(x => {
+                    if (x.action !== "Allow")
+                        managed = true
+                })
+                if (managed) return <>Managed</>
+                return <>Transparent</>
+            }
+        },
+        {
+            text: 'Edit',
             dataField: 'edit',
             isDummyField: true,
             formatter: (cell, row, rowIndex, formatExtraData) => {
 
-                return <i className="fas fa-table ablue"
-                    //onClick={onEdit(row["id"])} 
-                    role="button"></i>
+                return <i className="fas fa-edit ablue" onClick={onEdit(row["connection"], row["schema"], row["table"])} role="button"></i>
             },
             //formatExtraData: { hoverIdx: this.state.hoverIdx },
-            headerStyle: { width: '70px' },
+            headerStyle: { width: '50px' },
             style: { height: '30px' },
             align: 'center'
         },
@@ -85,9 +141,7 @@ function DatascopeForm(props) {
             dataField: 'delete',
             isDummyField: true,
             formatter: (cell, row, rowIndex, formatExtraData) => {
-                return <i className="fas fa-trash ablue"
-                    //onClick={onDelete(row["id"])} 
-                    role="button"></i>
+                return <i className="fas fa-trash ablue" onClick={onDelete(row["connection"], row["schema"], row["table"])} role="button"></i>
             },
             //formatExtraData: { hoverIdx: this.state.hoverIdx },
             headerStyle: { width: '90px' },
@@ -96,45 +150,118 @@ function DatascopeForm(props) {
         }
     ]
 
+    let addTable = (table) => {
+        let _tables = cloneDeep(tables)
+        if (_tables[editedConnection.current] === undefined)
+            _tables[editedConnection.current] = {}
+        table["connection"] = editedConnection.current
+        
+        _tables[editedConnection.current][table.schema + "." + table.table] = table
+        let setTables = refs.current["setTables"]
+
+        setTables(_tables)
+        setCounter(counter + 1)
+    }
+    useEffect( () => {
+        console.log("on tables change")
+        props.onTableUpdate(tables)
+    }, [tables] 
+    )
+    const addTableRef = useRef(addTable)
+    useEffect(() => {
+        props.onAddTableRef(addTableRef)
+        let _tables = {}
+        props.connections.forEach(x => {
+            _tables[x.name] = {} // table name: table
+        })
+        setTables(_tables)
+    }, [])
+
     let available = () => {
         let ret: any[] = []
-        ret = props.connections.filter(x => !databases.includes(x.name)).map(x =>
+        ret = props.connections.filter(x => !connections.includes(x.name)).map(x =>
             <option key={x.name} value={x.name}>{x.name}</option>)
         return ret
     }
+
     let onAddConnection = e => {
         if (selectedConnection === "") {
             return
         }
 
-        let db = [...databases, selectedConnection]
-        setDatabases(db)
+        let db = [...connections, selectedConnection]
+        setConnections(db)
+        setSelectedConnection("")
     }
-    let getTableData = () => {
-        return databases.map(name => {
-            let ob = remap[name]
 
-            return { name, id: ob.id, dbtype: ob.dbtype }
+    let displayTables = name => {
+        let ret: any[] = []
+
+        if (tables[name] === undefined)
+            return ret
+
+        Object.keys(tables[name]).forEach((x: any) => {
+            tables[name][x]["connection"] = name
+            ret.push(tables[name][x])
         })
+
+        
+        return ret
     }
+
     let showConnection = (db) => {
-        return <Card key={db.name} id={db.name} className="card mb-3"> <Card.Header><Row><Col xs="auto" style={{ paddingTop: '2px', fontSize: '1.2em' }} className="thickblue">
-            <i className="fa-solid fa-database mr-2"></i>
-            Connection: {db.name}</Col><Col><Button onClick={e => { props.setShowOffcanvas(true) }} size="sm" variant="dymium">Add Table</Button></Col><Col xs="auto" className="text-right"><i className="fa fa-trash" aria-hidden="true"></i></Col></Row></Card.Header>
+        if(db.name === undefined)
+            return <></>
+        let deleteConnection = e => {
+
+            let d = connections.filter(function (value, index, arr) {
+                return value !== db.name;
+            })
+
+            setConnections(d)
+        }
+        return <Card key={db.name} id={db.name} className="card mb-3">
+            <Card.Header >
+                <Row>
+                    <Col xs="auto" style={{ paddingTop: '2px', fontSize: '1.2em' }} className="thickblue">
+                        <i className="fa-solid fa-database mr-2"></i>
+                        Connection: {db.name}</Col>
+                    <Col><Button onClick={e => {
+
+                        editedConnection.current = db.name
+                        props.AddNewTable()
+                        //props.setShowOffcanvas(true)
+                    }} size="sm" variant="dymium"><i className="fa fa-table mr-1" aria-hidden="true"></i>Add Table</Button></Col>
+                    <Col xs="auto" className="text-right"><i onClick={deleteConnection} className="fa fa-trash blue trash" aria-hidden="true"></i></Col>
+                </Row>
+            </Card.Header>
+            <Card.Body className="p-0 mx-0">
+                {tables[db.name] !== undefined && Object.keys(tables[db.name]).length > 0 &&
+                    <BootstrapTable id="scaledtable"
+                        condensed
+                        striped bordered={false}
+                        bootstrap4
+                        keyField='table'
+                        data={displayTables(db.name)}
+                        columns={columns}
+                    />
+
+                }
+            </Card.Body>
         </Card>
     }
     let showConnections = () => {
-        return databases.map(name => {
+        return connections.map(name => {
+            if(name === "") {   
+                return <></>
+            }
             let ob = remap[name]
-
             return showConnection(ob)
         })
     }
 
     return (
         <>
-
-
             <Row>
                 <Col xs="auto">
                     <Form.Group className="mb-3" controlId="dbname">
@@ -142,8 +269,11 @@ function DatascopeForm(props) {
                         <Form.Control size="sm" type="text" placeholder="alphanumeric"
                             required
                             pattern=".+"
-                            value={props.username}
-                            onChange={e => props.setUsername(e.target.value)}
+                            value={props.dbname}
+                            onChange={e => {
+                                console.log(e.target.value)
+                                props.onDbname(e.target.value)
+                            }}
                         />
                         <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                         <Form.Control.Feedback type="invalid" >
@@ -160,7 +290,7 @@ function DatascopeForm(props) {
                         <Form.Label >Available Connections</Form.Label>
                         <Form.Control as="select" size="sm"
                             onChange={e => {
-                                console.log(e.target.value)
+                          
                                 setSelectedConnection(e.target.value)
                             }}
                             value={selectedConnection}
@@ -181,21 +311,7 @@ function DatascopeForm(props) {
 
             </Row>
             {showConnections()}
-            {/*
-            <Row>
-                <Col >
-                    <BootstrapTable id="scaledtable"
-                        condensed
-                        striped bordered={false}
-                        bootstrap4
-                        keyField='name'
-                        data={getTableData()}
-                        columns={columns}
-                    />
-                </Col>
-                <Col></Col>
-            </Row>
-                        */}
+
         </>
     )
 }
@@ -210,7 +326,9 @@ export function AddDatascope(props) {
     const [alert, setAlert] = useState(<></>)
     const [showOffcanvas, setShowOffcanvas] = useState(false)
     const [clear, setClear] = useState(false)
-
+    const [table, setTable] = useState({})
+    const [dbname, setDbname] = useState("")
+    const [datascope, setDatascope] = useState({})
     let getConnections = () => {
         setSpinner(true)
         setConns([])
@@ -263,9 +381,10 @@ export function AddDatascope(props) {
         if (form.current.reportValidity() === false) {
             event.preventDefault();
             setValidated(true)
-            //console.log("Form validity false!")
             return false
         }
+        console.log(datascope)
+        console.log(dbname)
         event.preventDefault();
         setValidated(false)
         event.stopPropagation();
@@ -275,22 +394,46 @@ export function AddDatascope(props) {
         return false
     }
 
+    let addTableR: any = useRef(null)
+
+    let onAddTableRef = (theref) => {
+        addTableR.current = theref
+    }
     let onAddTable = (table) => {
-        setShowOffcanvas(false) 
+        setShowOffcanvas(false)
+        if (addTableR.current !== undefined && addTableR.current.current) {
+
+            addTableR.current.current(table)
+        }
+    }
+    let onEditTable = t => {
+        setTable(t)
+        setShowOffcanvas(true)
+    }
+    let addNewTable = t => {
+        setTable({})
+        setShowOffcanvas(true)
+    }
+    let onDbname = e => {
+        console.log("onDbname: "+e)
+    }
+    let onTableUpdate = e => {
+        console.log("onTableUpdate: "+e)
+        setDatascope(e)
     }
     return (
         <div className=" text-left">
             {alert}
             <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
-                title={"Register table"}>
-                <AddTable clear={clear} onAddTable={onAddTable}/>
+                title={table["connection"] === undefined ? "Register table" : "Edit table" }>
+                {showOffcanvas &&
+                <AddTable clear={clear} onAddTable={onAddTable} table={table}/>
+                }
             </Offcanvas>
             <h5 > Create New Data Scope <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
             <div className=" text-left">
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
-                    <DatascopeForm connections={conns} setAlert={setAlert} setShowOffcanvas={setShowOffcanvas}/>
-
-
+                    <DatascopeForm dbname={dbname} onDbname={setDbname} onTableUpdate={onTableUpdate} onEditTable={onEditTable} AddNewTable={addNewTable} onAddTableRef={onAddTableRef} connections={conns} setAlert={setAlert} setShowOffcanvas={setShowOffcanvas} />
 
                     <Button variant="dymium" size="sm" className="mt-4" type="submit">
                         Apply

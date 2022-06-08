@@ -17,6 +17,7 @@ import * as com from './Common'
 
 import "@fontsource/roboto";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'react-bootstrap-typeahead/css/Typeahead.css';
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 //import Helmet from "react-helmet";

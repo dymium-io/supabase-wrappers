@@ -600,7 +600,7 @@ function EditConnections(props) {
             "", JSON.stringify(body),
             resp => {
                 resp.json().then(js => {
-                    debugger
+ 
                     console.log("json: " + js)
                     if (js.Status === "OK") {
                         setAlert(

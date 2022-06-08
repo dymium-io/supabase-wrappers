@@ -228,7 +228,13 @@ h5 {
 {
 	cursor: pointer;
 }
-
+.trash {
+  color: $main-blue;
+  &:hover {
+    cursor: pointer;
+    color: $dark-blue;
+  }
+}
 ::placeholder {
   color: $light-gray !important;
   opacity: 1; /* Firefox */
@@ -240,4 +246,11 @@ h5 {
 
 ::-ms-input-placeholder { /* Microsoft Edge */
  color: $light-gray !important;
+}
+.close {
+  opacity: 1.0;
+  color: $main-blue;
+  &:hover {
+    color: $dark-blue;
+  }
 }

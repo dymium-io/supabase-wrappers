@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "../../../go/src"
+		},
+		{
+			"path": "../common"
 		}
 	],
 	"settings": {}

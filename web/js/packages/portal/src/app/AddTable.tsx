@@ -11,6 +11,7 @@ import { Typeahead } from 'react-bootstrap-typeahead';
 import Modal from 'react-bootstrap/Modal'
 import Alert from 'react-bootstrap/Alert'
 import BootstrapTable from 'react-bootstrap-table-next';
+import cloneDeep from 'lodash/cloneDeep';
 import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
 
@@ -183,11 +184,11 @@ export default function AddTable(props) {
             setDummy(!dummy)
             return false
         }
-        console.log(tablestate.current)
+    
         event.preventDefault();
         setValidated(false)
         event.stopPropagation();
-        props.onAddTable([...tablestate.current])
+        props.onAddTable({ schema, table, tablescope:[...tablestate.current]})
         setTableStructure(emptyarray)
         tablestate.current = emptyarray
         setSchema("")
@@ -196,7 +197,11 @@ export default function AddTable(props) {
     }
     useEffect(() => {
         setDatabase(testJSON)
-        debugger
+        if(props.table.connection !== undefined) {
+            setSchema(props.table.schema)
+            setTable(props.table.table)
+            setTableStructure(cloneDeep(props.table.tablescope))
+        }
 
     }, [])
     useEffect(() => {
@@ -219,7 +224,9 @@ export default function AddTable(props) {
         setTable(table[0])
     }
     useEffect(() => {
-        initTableSchema()
+        if(props.table.connection === undefined) {
+            initTableSchema()
+        }
     }, [table])
     let getTables = () => {
         let schemas = testJSON.schemas
@@ -246,15 +253,7 @@ export default function AddTable(props) {
             setTableStructure(tablestate.current)
         }
     }
-    let IsSemanticsValid = (rowIndex) => {
-        if (tablestate.current === undefined || tablestate.current.length === 0)
-            return false
 
-        let ret = PIIs.includes(tablestate.current[rowIndex].semantics)
-        console.log("IsSemanticsValid(" + rowIndex + ")=" + ret)
-        return ret
-
-    }
     let schemacolumns = [
         {
             dataField: 'position',
@@ -280,7 +279,9 @@ export default function AddTable(props) {
                     key={"semantics" + rowIndex + validated}
                     onChange={selectPII(rowIndex)} size="sm"
                     options={PIIs}
+                    defaultSelected={row.semantics !== undefined ? [row.semantics] : []}
                     placeholder="Data type..."
+                    clearButton
                 />
             }
         },
@@ -298,6 +299,8 @@ export default function AddTable(props) {
                     key={"action" + rowIndex + validated}
                     onChange={selectAction(rowIndex)} size="sm"
                     options={Actions}
+                    defaultSelected={row.action !== undefined && row.action !== "" ? [row.action] : []}
+                    clearButton
                     placeholder="Access..."
                 />
             }
@@ -307,21 +310,22 @@ export default function AddTable(props) {
 
     let showTableSchema = () => {
         let schemas = testJSON.schemas
-        let tables: any[] = []
+        let tbls: any[] = []
         schemas.map(x => {
             if (x.name == schema) {
-                tables = x.tables
+                tbls = x.tables
             }
         })
         let t
 
-        tables.map(x => {
+        tbls.map(x => {
             if (x.name === table)
                 t = x.columns
         })
 
         if (t === undefined)
             return []
+
         let retval = t.map(x => {
 
             return { position: x.position, name: x.name, typ: x.typ, semantics: x.semantics, action: "" }
@@ -367,7 +371,7 @@ export default function AddTable(props) {
                                 defaultOpen={false}
                                 labelKey="Table"
                                 placeholder="Choose table..."
-
+                                selected={[table]}
                             />
 
                             <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
@@ -385,7 +389,7 @@ export default function AddTable(props) {
                     striped bordered={false}
                     bootstrap4
                     keyField='name'
-                    data={showTableSchema()}
+                    data={tablestructure}
                     columns={schemacolumns}
                 />
 
