@@ -4,8 +4,8 @@
 # use it only as a template!
 
 myName="<your name>"
-stagingPort=5434
-productionPort=5433
+stagingPort=5444
+productionPort=5443
 
 myPrivateKey=~/.ssh/"<your ssh key>"
 
