@@ -251,6 +251,7 @@ export default function AddTable(props) {
     }
     let selectSchema = schema => {
         setSchema(schema[0])
+        setTable("")
     }
     let selectTable = table => {
         setTable(table[0])
@@ -384,7 +385,7 @@ export default function AddTable(props) {
                         <Form.Label>Schema Name</Form.Label>
                         <Typeahead id="schemas"
                             onChange={selectSchema} size="sm"
-                            selected={[schema]}
+                            selected={schema != undefined ? [schema] :[] }
                             options={getOptions()}
 
                             placeholder="Choose schema..."
@@ -397,7 +398,7 @@ export default function AddTable(props) {
                     </Form.Group>
                 </Col>
             </Row>
-            {schema !== "" &&
+            {schema !== "" && schema != undefined &&
                 <Row>
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="dbname">
@@ -408,7 +409,7 @@ export default function AddTable(props) {
                                 defaultOpen={false}
                                 labelKey="Table"
                                 placeholder="Choose table..."
-                                selected={[table]}
+                                selected={table != undefined ? [table] : []}
                             />
 
                             <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
@@ -419,7 +420,7 @@ export default function AddTable(props) {
                     </Col>
                 </Row>
             }
-            {schema !== "" && table != "" &&
+            {schema !== "" && schema != undefined && table !== "" && table != undefined && tablestructure != [] &&
                 <>               
                  <BootstrapTable id="schematable"
                     condensed
