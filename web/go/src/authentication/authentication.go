@@ -165,9 +165,9 @@ func GetSchemaFromToken(token string) (string, error) {
 	return claim.Schema, err
 
 }
-func CreateNewConnection(schema string, con types.Connection) error {
+func CreateNewConnection(schema string, con types.ConnectionRecord) error {
 	sql := `insert into `+schema+`.connections(name, database_type, address, port, dbname, use_tls, description) 
-		values($1,$2,$3,$4,$5,$6) returning id; `
+		values($1,$2,$3,$4,$5,$6,$7) returning id; `
 
 	row := db.QueryRow(sql, con.Name, con.Dbtype, con.Address, con.Port, con.Dbname, con.UseTLS, con.Description)
 	var id string
@@ -194,7 +194,7 @@ func CreateNewConnection(schema string, con types.Connection) error {
 
 	return nil
 }
-func GetConnections(schema string) ([]types.Connection, error ) {
+func GetConnections(schema string) ([]types.ConnectionRecord, error ) {
 	sql := `select a.id,a.name,a.address,a.port,a.dbname, a.database_type,a.use_tls,a.description,b.username,b.id from `+
 		schema+`.connections as a join `+
 		schema+`.admincredentials as b on a.id=b.connection_id;`
@@ -202,16 +202,16 @@ func GetConnections(schema string) ([]types.Connection, error ) {
 	log.Printf("in GetConnections: %s\n", sql)
 	defer rows.Close()
 
-	var conns = []types.Connection{}
+	var conns = []types.ConnectionRecord{}
 	if nil == err {
 
 		for rows.Next() {
-			var conn = types.Connection{}
+			var conn = types.ConnectionRecord{}
 			err = rows.Scan(&conn.Id, &conn.Name, &conn.Address, &conn.Port, &conn.Dbname, &conn.Dbtype, &conn.UseTLS, 
 					&conn.Description, &conn.Username, &conn.Credid)
 			if nil != err {
 				log.Printf("Error in GetConnections:  %s\n", err.Error())
-				return []types.Connection{}, err
+				return []types.ConnectionRecord{}, err
 			} else {
 				log.Printf("Connection: %v\n", conn)
 				conns = append(conns, conn)
@@ -365,7 +365,7 @@ func getTokenFromCode(code, domain, client_id, client_secret, redirect string) (
 	return body, err
 }
 
-func UpdateConnection(schema string, con types.Connection) error {
+func UpdateConnection(schema string, con types.ConnectionRecord) error {
 	// Create a new context, and begin a transaction
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, nil)
@@ -410,7 +410,21 @@ func UpdateConnection(schema string, con types.Connection) error {
 	log.Printf("Returning success")	
 	return nil
 }
+func GetConnection(schema, id string) (types.Connection, error) {
+	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls from 
+		spoofcorp.connections as a join spoofcorp.admincredentials as b on a.id=b.connection_id 
+			join spoofcorp.passwords as c on b.id=c.id where a.id=$1;`
+	row := db.QueryRow(sql, id)
+	var con types.Connection
+	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &con.Password, &con.Database, &con.Tls)
+	if(err != nil) {
+		log.Printf("Error: ", err.Error())
+	} else {
+		log.Printf("connection: %v", con)
+	}
+	return con, err
 
+}
 func DeleteConnection(schema, id string) error {
 	// Create a new context, and begin a transaction
 	ctx := context.Background()

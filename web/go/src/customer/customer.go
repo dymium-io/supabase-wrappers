@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"aws"
 )
 
 func CustomerHandlers(p *mux.Router) {
@@ -52,6 +53,47 @@ func CustomerHandlers(p *mux.Router) {
 		}
 	}
 
+	b.HandleFunc("/api/queryconnection", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+		
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+		body, _ := ioutil.ReadAll(r.Body)
+		defer r.Body.Close()
+		t := struct {
+			ConnectionId string
+		}{}
+		err := json.Unmarshal(body, &t)
+
+		// get the connection details
+		conn, err := authentication.GetConnection(schema, t.ConnectionId)
+		bconn, err := json.Marshal(conn)
+
+        res, err := aws.Invoke("DbAnalyzer", nil, bconn)
+		if err != nil {
+			log.Printf("Error: ", err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(res)
+	}).Methods("POST")
+
 	b.HandleFunc("/api/createnewconnection", func(w http.ResponseWriter, r *http.Request) {
 		token := common.TokenFromHTTPRequest(r)
 		schema, error := authentication.GetSchemaFromToken(token)
@@ -72,7 +114,7 @@ func CustomerHandlers(p *mux.Router) {
 		body, _ := ioutil.ReadAll(r.Body)
 		defer r.Body.Close()
 
-		var t types.Connection
+		var t types.ConnectionRecord
 		err := json.Unmarshal(body, &t)
 
 		error = authentication.CreateNewConnection(schema, t)
@@ -112,7 +154,7 @@ func CustomerHandlers(p *mux.Router) {
 		body, _ := ioutil.ReadAll(r.Body)
 		defer r.Body.Close()
 
-		var t types.Connection
+		var t types.ConnectionRecord
 		err := json.Unmarshal(body, &t)
 
 		error = authentication.UpdateConnection(schema, t)

@@ -3,3 +3,4 @@
 set -e
 
 ../bin/dataTypesGenerator -l golang -p ../DbAnalyzer/go/types -r DbAnalyzer/types DbAnalyzer.hdtd
+../bin/dataTypesGenerator -l golang -p ../web/go/src/types -r dymium/types DbAnalyzer.hdtd

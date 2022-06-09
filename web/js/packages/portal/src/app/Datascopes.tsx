@@ -229,7 +229,7 @@ function DatascopeForm(props) {
                     <Col><Button onClick={e => {
 
                         editedConnection.current = db.name
-                        props.AddNewTable()
+                        props.AddNewTable(db.id)
                         //props.setShowOffcanvas(true)
                     }} size="sm" variant="dymium"><i className="fa fa-table mr-1" aria-hidden="true"></i>Add Table</Button></Col>
                     <Col xs="auto" className="text-right"><i onClick={deleteConnection} className="fa fa-trash blue trash" aria-hidden="true"></i></Col>
@@ -329,6 +329,8 @@ export function AddDatascope(props) {
     const [table, setTable] = useState({})
     const [dbname, setDbname] = useState("")
     const [datascope, setDatascope] = useState({})
+    const [currentConnectionId, setCurrentConnectionId] = useState("")
+
     let getConnections = () => {
         setSpinner(true)
         setConns([])
@@ -410,7 +412,8 @@ export function AddDatascope(props) {
         setTable(t)
         setShowOffcanvas(true)
     }
-    let addNewTable = t => {
+    let addNewTable = id => {
+        setCurrentConnectionId(id)
         setTable({})
         setShowOffcanvas(true)
     }
@@ -427,7 +430,7 @@ export function AddDatascope(props) {
             <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
                 title={table["connection"] === undefined ? "Register table" : "Edit table" }>
                 {showOffcanvas &&
-                <AddTable clear={clear} onAddTable={onAddTable} table={table}/>
+                <AddTable clear={clear} onAddTable={onAddTable} table={table} connectionId={currentConnectionId}/>
                 }
             </Offcanvas>
             <h5 > Create New Data Scope <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
