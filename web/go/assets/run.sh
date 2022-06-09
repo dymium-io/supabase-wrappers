@@ -26,6 +26,7 @@ export SESSION_SECRET="b<Qu9K)q}Ksh+R)JzlJJ'X1sHMp$UI@t&OCjDYTEmVe6WZe,rdJ}!I=4N
 export CUSTOMER_HOST='portal.dymium.local'
 export ADMIN_HOST='admin.dymium.local'
 
+export AWS_LAMBDAS='{ "DbAnalyzer": "localhost:9080" }'
 
 ./server
 

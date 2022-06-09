@@ -26,7 +26,7 @@ type OperationStatus struct {
 	Text   string
 }
 
-type Connection struct {
+type ConnectionRecord struct {
 	Name string`json:"name"`
 	Dbtype string `json:"dbtype"`
 	Address string   `json:"address"`

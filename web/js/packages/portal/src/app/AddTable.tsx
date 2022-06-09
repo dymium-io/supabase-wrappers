@@ -15,6 +15,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
 
+/*
 const testJSON = {
     name: "My test database",
     schemas: [
@@ -140,7 +141,7 @@ const testJSON = {
         }
     ]
 }
-
+*/
 const PIIs = [
     "N/A",
     "Address",
@@ -196,11 +197,39 @@ export default function AddTable(props) {
         return false
     }
     useEffect(() => {
-        setDatabase(testJSON)
+       
         if(props.table.connection !== undefined) {
             setSchema(props.table.schema)
             setTable(props.table.table)
             setTableStructure(cloneDeep(props.table.tablescope))
+        } else {
+            console.log("connectionId", props.connectionId)
+            let body = JSON.stringify({
+                ConnectionId: props.connectionId
+            })
+            com.sendToServer("POST", "/api/queryconnection",
+            null, body,
+            resp => {
+                resp.json().then(js => {
+                    setDatabase(js)
+
+                    //setSpinner(false)
+
+                }).catch((error) => {
+
+                })
+            },
+            resp => {
+                console.log("on error")
+                //setSpinner(false)
+
+
+            },
+            error => {
+                console.log("on exception")
+                //setSpinner(false)
+
+            })
         }
 
     }, [])
@@ -212,7 +241,10 @@ export default function AddTable(props) {
     }, [props.clear])
 
     let getOptions = () => {
-        let schemas = testJSON.schemas.map(x => {
+        if(database["schemas"] === undefined) {
+            return []
+        }
+        let schemas = database["schemas"].map(x => {
             return x.name
         })
         return schemas
@@ -224,12 +256,15 @@ export default function AddTable(props) {
         setTable(table[0])
     }
     useEffect(() => {
+        debugger
         if(props.table.connection === undefined) {
             initTableSchema()
         }
     }, [table])
     let getTables = () => {
-        let schemas = testJSON.schemas
+        if(database["schemas"] === undefined)
+            return []
+        let schemas = database["schemas"]
         let tables: any[] = []
         schemas.map(x => {
             if (x.name == schema) {
@@ -279,7 +314,7 @@ export default function AddTable(props) {
                     key={"semantics" + rowIndex + validated}
                     onChange={selectPII(rowIndex)} size="sm"
                     options={PIIs}
-                    defaultSelected={row.semantics !== undefined ? [row.semantics] : []}
+                    defaultSelected={row.semantics !== undefined && row.semantics !== ""  ? [row.semantics] : []}
                     placeholder="Data type..."
                     clearButton
                 />
@@ -309,7 +344,9 @@ export default function AddTable(props) {
 
 
     let showTableSchema = () => {
-        let schemas = testJSON.schemas
+        let schemas = database["schemas"]
+        if(schemas === undefined)
+            return []
         let tbls: any[] = []
         schemas.map(x => {
             if (x.name == schema) {
@@ -328,7 +365,7 @@ export default function AddTable(props) {
 
         let retval = t.map(x => {
 
-            return { position: x.position, name: x.name, typ: x.typ, semantics: x.semantics, action: "" }
+            return { position: x.position, name: x.name, typ: x.typ, semantics: x.semantics != null ? x.semantics : "", action: "" }
         })
 
         return retval
