@@ -151,7 +151,7 @@ function DatascopeForm(props) {
     ]
 
     let addTable = (table) => {
-        let _tables = cloneDeep(tables)
+        let _tables = cloneDeep(refs.current["tables"])
         if (_tables[editedConnection.current] === undefined)
             _tables[editedConnection.current] = {}
         table["connection"] = editedConnection.current
