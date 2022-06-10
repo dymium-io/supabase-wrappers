@@ -39,15 +39,18 @@ var auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_p
 var ctx context.Context
 
 
-func DatabaseInit(host string, password string, port string) {
+func DatabaseInit(host string, port, user, password, tls string) {
 	log.Println("In Database Init")
 	nport := 5432
 	if port != "" {
 		nport, _ = strconv.Atoi(port)
 	}
 	psqlInfo = fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, nport, "dymium", password, "dymium")
+		"dbname=%s sslmode=%s",
+		host, nport, user, "dymium", tls)
+        if password != "" {
+		psqlInfo += " password='"+password+"'"
+        }
 	var err error
 	log.Printf("%s\n", psqlInfo)
 	db, err = sql.Open("postgres", psqlInfo)
