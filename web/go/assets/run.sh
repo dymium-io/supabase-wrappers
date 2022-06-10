@@ -1,9 +1,9 @@
 #!/bin/bash
 
-export DATABASE_HOST=localhost
-export DATABASE_USER='dymium'
-export DATABASE_PASSWORD='dymiumP@ss'
-
+export DATABASE_HOST=${DATABASE_HOST:-localhost}
+export DATABASE_PORT=${DATABASE_PORT:-5432}
+export DATABASE_USER=${DATABASE_USER:-dymium}
+export DATABASE_TLS=${DATABASE_TLS:-disable}
 
 export AUTH0_ADMIN_DOMAIN='https://dymium-dev-admin.us.auth0.com/'
 export AUTH0_ADMIN_CLIENT_ID='XiRxsWQLAvSSwLWEQ72hTvvhHoLaEBIE'

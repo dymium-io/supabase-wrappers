@@ -40,8 +40,11 @@ func main() {
 	dbhost := os.Getenv("DATABASE_HOST")
 	dbpassword := os.Getenv("DATABASE_PASSWORD")
 	dbport := os.Getenv("DATABASE_PORT")
+	dbuser := os.Getenv("DATABASE_USER")
+	dbtls  := os.Getenv("DATABASE_TLS")
 
-	authentication.DatabaseInit(dbhost, dbpassword, dbport)
+	authentication.DatabaseInit(dbhost, dbport, dbuser, dbpassword, dbtls)
+
 	p := mux.NewRouter()
 
 	loggingMiddleware := func(next http.Handler) http.Handler {
