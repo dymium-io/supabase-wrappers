@@ -40,3 +40,20 @@ type ConnectionRecord struct {
 	Id string  `json:"id",omitempty`
 	Credid  string  `json:"credid",omitempty`
 }
+type DatascopeRecord struct {
+	//Id string `json:"connection",omitempty`	
+	Connection string `json:"connection"`
+	//ConnectionId string `json:"connection",omitempty`	
+	Schema string `json:"schema"`
+	Table string `json:"table" `
+	Typ string `json:"typ"`
+	Position int `json:"position"`
+	Reference *Reference `json:"reference"`
+	Action string `json:"action"`
+	Col string `json:"col"`
+	Semantics string  `json:"semantics"`
+}
+type Datascope struct {
+	Name string `json:"name"`
+	Records []DatascopeRecord `json:"records"`
+}

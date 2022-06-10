@@ -145,6 +145,9 @@ h5 {
   font-size: 0.7em;
   color: $validation-green;
 }
+input:-internal-autofill-selected {
+  background-color: white;  
+}
 .form-label {
   margin-bottom: 0.15rem;
 }

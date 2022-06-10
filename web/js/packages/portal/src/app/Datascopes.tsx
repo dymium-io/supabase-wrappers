@@ -334,6 +334,7 @@ export function AddDatascope(props) {
     let getConnections = () => {
         setSpinner(true)
         setConns([])
+        setSpinner(true)
         com.sendToServer("GET", "/api/getconnections",
             null, "",
             resp => {
@@ -376,6 +377,62 @@ export function AddDatascope(props) {
     useEffect(() => {
         getConnections()
     }, [])
+
+    let sendConnection = () => {
+        let retarray:any = []
+        Object.keys(datascope).forEach( connection => {
+            let conn = datascope[connection]
+            Object.keys(conn).forEach( schematable => {
+                let st = conn[schematable]
+                // connection, schema, table, tablescope[typ, semantics, name, position, reference, action]
+                console.log(st)
+                st.tablescope.forEach( ts => {
+                    let ob = {connection: st.connection, schema: st.schema, table: st.table, 
+                        typ: ts.typ, position: ts.position, reference: ts.reference, action:ts.action, 
+                        col: ts.name, semantics: ts.semantics}
+                    console.log(JSON.stringify(ob))
+                    retarray.push(ob)
+                })
+            })
+
+        } )
+        // now do send
+        setSpinner(true)
+        let body=JSON.stringify( {name: dbname, records: retarray} )
+        com.sendToServer("POST", "/api/savedatascope",
+            null, body,
+            resp => {
+
+                resp.json().then(js => {
+                    if(js.Status === "OK") {
+                        setAlert(
+                            <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                                Data scope {dbname} created successfully!
+                            </Alert>
+                        )
+                    } else {
+                        setAlert(
+                            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                                Error creating {dbname}:  {js.Text}!
+                            </Alert>
+                        )                        
+                    }
+
+                })
+
+                setSpinner(false)
+                console.log("on success")
+            },
+            resp => {
+                console.log("on error")
+                setSpinner(false)
+            },
+            error => {
+                console.log("on exception: " + error)
+                setSpinner(false)
+            })        
+        console.log(retarray)
+    }
     let handleSubmit = event => {
         if (form.current == null) {
             return false
@@ -391,7 +448,7 @@ export function AddDatascope(props) {
         setValidated(false)
         event.stopPropagation();
 
-        //sendConnection()
+        sendConnection()
 
         return false
     }
@@ -419,6 +476,7 @@ export function AddDatascope(props) {
     }
     let onDbname = e => {
         console.log("onDbname: "+e)
+        setDbname(e)
     }
     let onTableUpdate = e => {
         console.log("onTableUpdate: "+e)

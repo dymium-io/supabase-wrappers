@@ -425,6 +425,87 @@ func GetConnection(schema, id string) (types.Connection, error) {
 	return con, err
 
 }
+func SaveDatascope(schema string, dscope types.Datascope) error {
+	// Create a new context, and begin a transaction
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Printf("Error in SaveDatascope: %s\n", err.Error())
+		return err
+	}
+
+	// check if datascope exists, validating the schema along the way
+	sql := "select count(id) from "+schema+".datascopes where name=$1 and exists (select schema_name from global.customers where schema_name = $2);"
+	row := tx.QueryRowContext(ctx, sql, dscope.Name, schema)
+	var count int
+	err = row.Scan(&count)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 1 in SaveDatascope: %s\n", err.Error())
+		return err
+	}	
+	if(count != 0) {
+		tx.Rollback()
+		log.Printf("count: %d\n", count)
+		err := errors.New("A record for datascope '" + dscope.Name + "' already exists!")
+		log.Printf("Error 2 in SaveDatascope: %s\n", err.Error())
+		return err
+	}
+	sql="insert into "+schema+".datascopes(name) values($1)  returning id;"
+	row = tx.QueryRowContext(ctx, sql, dscope.Name)
+	var ds_id string
+	err = row.Scan(&ds_id)	
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 3 in SaveDatascope: %s\n", err.Error())
+		return err
+	}	
+	log.Printf("id=%s\n", ds_id)
+	// iterate and create 
+	records := dscope.Records
+	for  _, r := range  records  {
+		if(r.Reference == nil) {
+			sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, reference, semantics, action, position) 
+			values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10);`
+			
+			_, err = tx.ExecContext(ctx, sql, ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Reference, r.Semantics, r.Action, r.Position)
+			if err != nil {
+				tx.Rollback()
+				log.Printf("Error 4 in SaveDatascope record: %s\n", err.Error())
+				return err
+			}	
+		} else {
+			log.Printf("schema: %s, table: %s, col:%s\n", r.Reference.Schema, r.Reference.Table, r.Reference.Column)
+			sql=`with rows as (insert into ` + schema + `.refs(schem, tabl, col) values($1, $2, $3) returning id) insert into ` + schema + 
+			`.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, reference) 
+			values($4, $5, (select id from ` + schema + `.connections where name=$6), $7, $8, $9, 
+			 $10, $11, $12, (select id from rows));`
+			log.Printf("%s\n", sql)
+			_, err = tx.ExecContext(ctx, sql, 
+				r.Reference.Schema, r.Reference.Table, r.Reference.Column,
+				ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, 
+				r.Semantics, r.Action, r.Position)
+				
+			if err != nil {
+				tx.Rollback()
+				log.Printf("Error 5 in SaveDatascope record: %s\n", err.Error())
+				return err
+			}				
+		}
+	
+	}
+
+
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 5 in SaveDatascope: %s\n", err.Error())
+		return err
+	}	
+	log.Println("SaveDatascope success!")
+	return nil
+}
 func DeleteConnection(schema, id string) error {
 	// Create a new context, and begin a transaction
 	ctx := context.Background()

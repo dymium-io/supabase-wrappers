@@ -256,8 +256,7 @@ export default function AddTable(props) {
     let selectTable = table => {
         setTable(table[0])
     }
-    useEffect(() => {
-        debugger
+    useEffect(() => {  
         if(props.table.connection === undefined) {
             initTableSchema()
         }
@@ -366,7 +365,7 @@ export default function AddTable(props) {
 
         let retval = t.map(x => {
 
-            return { position: x.position, name: x.name, typ: x.typ, semantics: x.semantics != null ? x.semantics : "", action: "" }
+            return { position: x.position, name: x.name, typ: x.typ, semantics: x.semantics != null ? x.semantics : "", reference: x.reference, action: "" }
         })
 
         return retval
