@@ -1,0 +1,312 @@
+
+./Setup.hs,15
+main main1,2
+
+./app/Config.hs,4829
+module ConfigConfig3,4
+class HasRootDirectory HasRootDirectory37,38
+class HasRootDirectory a where rootDirectory rootDirectory37,38
+class HasPostgreSettings HasPostgreSettings38,39
+class HasPostgreSettings a where postgreSettings postgreSettings38,39
+class HasPostgreSchema HasPostgreSchema39,40
+class HasPostgreSchema a where postgreSchema postgreSchema39,40
+data OptsMigrateOptsMigrate41,42
+    = OptsMigrateOptsMigrate42,43
+        { _omigratePostgreSchema _omigratePostgreSchema43,44
+        , _omigrateRootDirectory _omigrateRootDirectory44,45
+        , _omigrateApply _omigrateApply45,46
+        , _omigrateCreateSchema _omigrateCreateSchema46,47
+        , _omigrateRunTests _omigrateRunTests47,48
+        , _omigratePostgreSettings _omigratePostgreSettings48,49
+instance HasRootDirectory HasRootDirectory OptsMigrate54,55
+instance HasRootDirectory OptsMigrate where rootDirectory rootDirectory54,55
+instance HasPostgreSettings HasPostgreSettings OptsMigrate55,56
+instance HasPostgreSettings OptsMigrate where postgreSettings postgreSettings55,56
+instance HasPostgreSchema HasPostgreSchema OptsMigrate56,57
+instance HasPostgreSchema OptsMigrate where postgreSchema postgreSchema56,57
+runTestsFlag runTestsFlag58,59
+ensureSchemaFlag ensureSchemaFlag61,62
+applyFlag applyFlag64,65
+data OptsConfirmChecksumsOptsConfirmChecksums69,70
+    = OptsConfirmChecksumsOptsConfirmChecksums70,71
+        { _oconfirmPostgreSchema _oconfirmPostgreSchema71,72
+        , _oconfirmRootDirectory _oconfirmRootDirectory72,73
+        , _oconfirmPostgreSettings _oconfirmPostgreSettings73,74
+instance HasRootDirectory HasRootDirectory OptsConfirmChecksums79,80
+instance HasRootDirectory OptsConfirmChecksums where rootDirectory rootDirectory79,80
+instance HasPostgreSettings HasPostgreSettings OptsConfirmChecksums80,81
+instance HasPostgreSettings OptsConfirmChecksums where postgreSettings postgreSettings80,81
+instance HasPostgreSchema HasPostgreSchema OptsConfirmChecksums81,82
+instance HasPostgreSchema OptsConfirmChecksums where postgreSchema postgreSchema81,82
+data OptsRepairChecksumOptsRepairChecksum85,86
+    = OptsRepairChecksumOptsRepairChecksum86,87
+        { _orepairRootDirectory _orepairRootDirectory87,88
+        , _orepairMigrationName _orepairMigrationName88,89
+        , _orepairPostgreSettings _orepairPostgreSettings89,90
+instance HasRootDirectory HasRootDirectory OptsRepairChecksum95,96
+instance HasRootDirectory OptsRepairChecksum where rootDirectory rootDirectory95,96
+instance HasPostgreSettings HasPostgreSettings OptsRepairChecksum96,97
+instance HasPostgreSettings OptsRepairChecksum where postgreSettings postgreSettings96,97
+migrationName migrationName98,99
+data OptsRegisterMigrationsOptsRegisterMigrations103,104
+    = OptsRegisterMigrationsOptsRegisterMigrations104,105
+        { _oregisterFileName _oregisterFileName105,106
+        , _oregisterPostgreSchema _oregisterPostgreSchema106,107
+        , _oregisterRootDirectory _oregisterRootDirectory107,108
+        , _oregisterPostgreSettings _oregisterPostgreSettings108,109
+instance HasRootDirectory HasRootDirectory OptsRegisterMigrations114,115
+instance HasRootDirectory OptsRegisterMigrations where rootDirectory rootDirectory114,115
+instance HasPostgreSettings HasPostgreSettings OptsRegisterMigrations115,116
+instance HasPostgreSettings OptsRegisterMigrations where postgreSettings postgreSettings115,116
+instance HasPostgreSchema HasPostgreSchema OptsRegisterMigrations116,117
+instance HasPostgreSchema OptsRegisterMigrations where postgreSchema postgreSchema116,117
+registerMigrationsFileName registerMigrationsFileName118,119
+data OptsVersionOptsVersion123,124
+    = OptsVersionOptsVersion124,125
+data CommandCommand127,128
+    = CmdMigrate CmdMigrate128,129
+    | CmdConfirmChecksums CmdConfirmChecksums129,130
+    | CmdRepairChecksum CmdRepairChecksum130,131
+    | CmdRegisterMigrations CmdRegisterMigrations131,132
+    | CmdVersion CmdVersion132,133
+configParser configParser135,136
+commandParser commandParser140,141
+infoMigrateParser infoMigrateParser150,151
+cmdMigrateParser cmdMigrateParser154,155
+infoConfirmChecksumsParser infoConfirmChecksumsParser165,166
+cmdConfirmChecksumsParser cmdConfirmChecksumsParser169,170
+infoHackParser infoHackParser177,178
+cmdHackParser cmdHackParser181,182
+infoRepairChecksumParser infoRepairChecksumParser188,189
+cmdRepairChecksumParser cmdRepairChecksumParser192,193
+infoRegisterMigrationsParser infoRegisterMigrationsParser200,201
+cmdRegisterMigrationsParser cmdRegisterMigrationsParser204,205
+rootArgument rootArgument214,215
+schemaArgument schemaArgument218,219
+infoVersionParser infoVersionParser230,231
+cmdVersionParser cmdVersionParser234,235
+
+./app/Mallard.hs,543
+module Main Main6,7
+newtype AppStateAppState27,28
+        { _statePostgreConnection _statePostgreConnection29,30
+instance HasPostgreConnection HasPostgreConnection AppState34,35
+instance HasPostgreConnection AppState where postgreConnection postgreConnection34,35
+main main38,39
+mainVersion mainVersion48,49
+mainMigrate mainMigrate53,54
+mainConfirmChecksums mainConfirmChecksums69,70
+mainRepairChecksum mainRepairChecksum80,81
+mainRegisterMigrations mainRegisterMigrations89,90
+parseRelOrAbsDir parseRelOrAbsDir108,109
+
+./test/Test/Integration.hs,226
+module Test.Integration Test.Integration3,4
+tests tests18,19
+openContactDB openContactDB23,24
+closeDB closeDB35,36
+testContactDeploy testContactDeploy43,44
+insertPerson insertPerson65,66
+getPerson getPerson76,77
+
+./test/Test.hs,15
+main main3,4
+
+./lib/Database/Mallard/Postgre.hs,1291
+module Database.Mallard.PostgreDatabase.Mallard.Postgre6,7
+class HasPostgreConnection HasPostgreConnection48,49
+    postgreConnection postgreConnection49,50
+class HasPostgreSchema HasPostgreSchema50,51
+    postgreSchema postgreSchema51,52
+data MigrationSchemaVersionMigrationSchemaVersion54,55
+    = NotInitNotInit55,56
+    | MigrationVersion MigrationVersion56,57
+instance Ord Ord MigrationSchemaVersion59,60
+    compare compare60,61
+ensureMigratonSchema ensureMigratonSchema65,66
+ensureSchema ensureSchema76,77
+runDB runDB89,90
+getAppliedMigration getAppliedMigration100,101
+getAppliedMigrations getAppliedMigrations114,115
+toMigration toMigration124,125
+applyMigrations applyMigrations135,136
+applyMigration applyMigration138,139
+runTests runTests175,176
+runTest runTest178,179
+applyMigrationSchemaMigraiton applyMigrationSchemaMigraiton186,187
+getMigrationSchemaVersion getMigrationSchemaVersion196,197
+isMigrationVersionZero isMigrationVersionZero208,209
+setChecksum setChecksum217,218
+data DigestSizeMismatchExceptionDigestSizeMismatchException225,226
+    = DigestSizeMismatchExceptionDigestSizeMismatchException226,227
+instance Exception Exception DigestSizeMismatchException229,230
+    displayException displayException230,231
+
+./lib/Database/Mallard/File.hs,236
+module Database.Mallard.FileDatabase.Mallard.File3,4
+scanDirectoryForFiles scanDirectoryForFiles21,22
+importDirectory importDirectory24,25
+importFile importFile30,31
+sortActions sortActions33,34
+importFile' importFile'39,40
+
+./lib/Database/Mallard/Parser.hs,1219
+module Database.Mallard.ParserDatabase.Mallard.Parser8,9
+data ActionAction32,33
+    = ActionMigration ActionMigration33,34
+    | ActionTest ActionTest34,35
+type Description Description36,37
+type Requires Requires37,38
+data FieldValueFieldValue39,40
+    = TextField TextField40,41
+    | ListField ListField41,42
+type Parser Parser43,44
+spaceConsumer spaceConsumer47,48
+symbol symbol52,53
+symbol' symbol'55,56
+brackets brackets58,59
+comma comma61,62
+colon colon64,65
+semiColon semiColon67,68
+migrationS migrationS70,71
+testS testS73,74
+sbang sbang76,77
+sbangOrEof sbangOrEof79,80
+atom atom82,83
+parseActions parseActions90,91
+parseTest parseTest98,99
+parseTestHeader parseTestHeader108,109
+parseMigration parseMigration122,123
+parseMigrationHeader parseMigrationHeader141,142
+parseFieldValue parseFieldValue159,160
+parseHeaderFields parseHeaderFields165,166
+parseQuotedText parseQuotedText175,176
+data ParserExceptionParserException181,182
+    = ParserExceptionParserException182,183
+        { _peFile _peFile183,184
+        , _peError _peError184,185
+instance Exception Exception ParserException188,189
+    displayException displayException189,190
+
+./lib/Database/Mallard/Validation.hs,1478
+module Database.Mallard.ValidationDatabase.Mallard.Validation5,6
+validateAppliedMigrations validateAppliedMigrations24,25
+validateAppliedMigration validateAppliedMigration27,28
+checkAppliedMigrations checkAppliedMigrations41,42
+checkAppliedMigration checkAppliedMigration44,45
+data DigestComparisonDigestComparison55,56
+    = DigestComparisonDigestComparison56,57
+        { _dcPlannedMigrationName _dcPlannedMigrationName57,58
+        , _dcPlannedMigrationChecksum _dcPlannedMigrationChecksum58,59
+        , _dcAppliedMigrationName _dcAppliedMigrationName59,60
+        , _dcAppliedMigrationChecksum _dcAppliedMigrationChecksum60,61
+        , _dcChecksumsMatch _dcChecksumsMatch61,62
+newtype AppliedMigrationMissingExceptionAppliedMigrationMissingException66,67
+        { _ammeAppliedMigrationName _ammeAppliedMigrationName68,69
+instance Exception Exception AppliedMigrationMissingException72,73
+    displayException displayException73,74
+data DigestMismatchExceptionDigestMismatchException79,80
+    = DigestMismatchExceptionDigestMismatchException80,81
+        { _dmePlannedMigrationName _dmePlannedMigrationName81,82
+        , _dmePlannedMigrationChecksum _dmePlannedMigrationChecksum82,83
+        , _dmeAppliedMigrationName _dmeAppliedMigrationName83,84
+        , _dmeAppliedMigrationChecksum _dmeAppliedMigrationChecksum84,85
+instance Exception Exception DigestMismatchException88,89
+    displayException displayException89,90
+
+./lib/Database/Mallard/Commands/ConfirmChecksums.hs,606
+module Database.Mallard.Commands.ConfirmChecksumsDatabase.Mallard.Commands.ConfirmChecksums5,6
+data AppStateAppState20,21
+    = AppStateAppState21,22
+        { _statePool _statePool22,23
+        , _stateSchema _stateSchema23,24
+instance HasPostgreConnection HasPostgreConnection AppState28,29
+instance HasPostgreConnection AppState where postgreConnection postgreConnection28,29
+instance HasPostgreSchema HasPostgreSchema AppState29,30
+instance HasPostgreSchema AppState where postgreSchema postgreSchema29,30
+confirmChecksums confirmChecksums39,40
+showComparison showComparison50,51
+
+./lib/Database/Mallard/Commands/Migrate.hs,533
+module Database.Mallard.Commands.MigrateDatabase.Mallard.Commands.Migrate5,6
+data AppStateAppState23,24
+    = AppStateAppState24,25
+        { _statePool _statePool25,26
+        , _stateSchema _stateSchema26,27
+instance HasPostgreConnection HasPostgreConnection AppState31,32
+instance HasPostgreConnection AppState where postgreConnection postgreConnection31,32
+instance HasPostgreSchema HasPostgreSchema AppState32,33
+instance HasPostgreSchema AppState where postgreSchema postgreSchema32,33
+migrate migrate44,45
+
+./lib/Database/Mallard/Commands/RegisterMigrations.hs,1182
+module Database.Mallard.Commands.RegisterMigrationsDatabase.Mallard.Commands.RegisterMigrations6,7
+data AppStateAppState26,27
+    = AppStateAppState27,28
+        { _statePool _statePool28,29
+        , _stateSchema _stateSchema29,30
+instance HasPostgreConnection HasPostgreConnection AppState34,35
+instance HasPostgreConnection AppState where postgreConnection postgreConnection34,35
+instance HasPostgreSchema HasPostgreSchema AppState35,36
+instance HasPostgreSchema AppState where postgreSchema postgreSchema35,36
+data DependentMigrationMissingExceptionDependentMigrationMissingException38,39
+  = DependentMigrationMissingExceptionDependentMigrationMissingException39,40
+      { _dmmeMigrationName _dmmeMigrationName40,41
+      , _dmmeDependsOn _dmmeDependsOn41,42
+instance Exception Exception DependentMigrationMissingException45,46
+    displayException displayException46,47
+newtype DuplicateMigrationExceptionDuplicateMigrationException50,51
+      { _dmeMigrationName _dmeMigrationName52,53
+instance Exception Exception DuplicateMigrationException56,57
+    displayException displayException57,58
+registerMigrations registerMigrations70,71
+
+./lib/Database/Mallard/Commands/RepairChecksum.hs,356
+module Database.Mallard.Commands.RepairChecksumDatabase.Mallard.Commands.RepairChecksum5,6
+newtype AppStateAppState20,21
+        { _statePool _statePool22,23
+instance HasPostgreConnection HasPostgreConnection AppState27,28
+instance HasPostgreConnection AppState where postgreConnection postgreConnection27,28
+repairChecksum repairChecksum37,38
+
+./lib/Database/Mallard/Types.hs,1211
+module Database.Mallard.Types Database.Mallard.Types3,4
+type MigrationTable MigrationTable17,18
+inflateMigrationIds inflateMigrationIds19,20
+newtype MigrationMissingFromTableMigrationMissingFromTable27,28
+instance Exception Exception MigrationMissingFromTable31,32
+newtype MigrationId MigrationId33,34
+newtype MigrationId = MigrationId { unMigrationId unMigrationId33,34
+instance Show Show MigrationId36,37
+    show show37,38
+type MigrationDigest MigrationDigest39,40
+data MigrationMigration41,42
+    = MigrationMigration42,43
+        { _migrationName _migrationName43,44
+        , _migrationDescription _migrationDescription44,45
+        , _migrationRequires _migrationRequires45,46
+        , _migrationChecksum _migrationChecksum46,47
+        , _migrationScript _migrationScript47,48
+type TestTable TestTable53,54
+newtype TestId TestId55,56
+newtype TestId = TestId { unTestId unTestId55,56
+instance Show Show TestId58,59
+    show show59,60
+data TestTest61,62
+    = TestTest62,63
+        { _testName _testName63,64
+        , _testDescription _testDescription64,65
+        , _testScript _testScript65,66
+scriptsMigrationSchema scriptsMigrationSchema70,71
+
+./lib/Database/Mallard/Graph.hs,309
+module Database.Mallard.GraphDatabase.Mallard.Graph3,4
+data MigrationGraphMigrationGraph20,21
+    = MigrationGraph MigrationGraph21,22
+emptyMigrationGraph emptyMigrationGraph23,24
+mkMigrationGraph mkMigrationGraph27,28
+hasCircle hasCircle45,46
+getUnappliedMigrations getUnappliedMigrations48,49
+
+./lib/Database/Mallard.hs,45
+module Database.MallardDatabase.Mallard0,1
