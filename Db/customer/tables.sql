@@ -17,3 +17,15 @@ CREATE TABLE tables (
     semantics varchar(32) NOT NULL,
     UNIQUE (schem, tabl, col)
 );
+
+-- #!migration
+-- name: "customer/tables-isnullable",
+-- description: "Add is_nullable and dflt fields to tables",
+-- requires: ["customer/tables"];
+
+ALTER TABLE tables
+      ADD COLUMN is_nullable BOOLEAN NOT NULL DEFAULT 'false';
+ALTER TABLE tables
+      ALTER COLUMN is_nullable DROP DEFAULT;
+ALTER TABLE tables
+      ADD COLUMN dflt text;

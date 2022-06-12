@@ -12,3 +12,19 @@ CREATE TABLE connections (
     description varchar(256),
     dbname varchar(128)
 );
+
+-- #!migration
+-- name: "customer/connections-source-type",
+-- description: "Change source_type to ENUM",
+-- requires: ["customer/connections"];
+
+CREATE TYPE source_type AS ENUM (
+    'postgres',
+    'mysql',
+    'mariadb',
+    'sqlserver',
+    'oracle'
+);
+
+ALTER TABLE connections ALTER COLUMN database_type TYPE source_type
+      USING database_type::source_type;
