@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# localhost name as visible from within the docker:
-# docker.for.mac.host.internal
+PORT=9080
 
+echo "Starting on port $PORT"
 docker run --rm  --name db-analyzer \
-       -p 9080:8080 \
+       -p ${PORT}:8080 \
        db-analyzer \
        /main

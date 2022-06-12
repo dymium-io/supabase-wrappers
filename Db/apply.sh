@@ -1,24 +1,24 @@
 #!/bin/sh
 
-DB_CLUSTER=${DB:-localhost}
-DB_PORT=${DB_PORT:-5432}
-DATABASE=${DATABASE:-dymium}
-USER=${USER:-dymium}
+DATABASE_HOST=${DATABASE_HOST:-localhost}
+DATABASE_PORT=${DATABASE_PORT:-5432}
+DATABASE_DB=${DATABASE_DB:-dymium}
+DATABASE_USER=${DATABASE_USER:-dymium}
 
 ../bin/mallard migrate -s public -r public \
-	       --host ${DB_CLUSTER} --port ${DB_PORT} \
-	       --user ${USER} --database ${DATABASE} \
+	       --host ${DATABASE_HOST} --port ${DATABASE_PORT} \
+	       --user ${DATABASE_USER} --database ${DATABASE_DB} \
 	       --apply
 
 ../bin/mallard migrate -s global -r global \
-	       --host ${DB_CLUSTER} --port ${DB_PORT} \
-	       --user ${USER} --database ${DATABASE} \
+	       --host ${DATABASE_HOST} --port ${DATABASE_PORT} \
+	       --user ${DATABASE_USER} --database ${DATABASE_DB} \
 	       --apply
 
 for s in spoofcorp
 do
     ../bin/mallard migrate -s $s -r customer \
-	       --host ${DB_CLUSTER} --port ${DB_PORT} \
-	       --user ${USER} --database ${DATABASE} \
+	       --host ${DATABASE_HOST} --port ${DATABASE_PORT} \
+	       --user ${DATABASE_USER} --database ${DATABASE_DB} \
 	       --apply
 done

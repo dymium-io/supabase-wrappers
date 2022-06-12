@@ -7,10 +7,21 @@ package types
 
 
 
+type Arc struct {
+   From_schema string `json:"from_schema"`
+   From_table string `json:"from_table"`
+   From_column string `json:"from_column"`
+   To_schema string `json:"to_schema"`
+   To_table string `json:"to_table"`
+   To_column string `json:"to_column"`
+}
+
 type Column struct {
    Name string `json:"name"`
    Position int `json:"position"`
    Typ string `json:"typ"`
+   IsNullable bool `json:"isNullable"`
+   Default *string `json:"default"`
    Reference *Reference `json:"reference"`
    Semantics *DataSemantics `json:"semantics"`
 }
@@ -28,6 +39,7 @@ type Connection struct {
 type Database struct {
    Name string `json:"name"`
    Schemas []Schema `json:"schemas"`
+   Refs []Arc `json:"refs"`
 }
 
 type Reference struct {
