@@ -41,9 +41,9 @@ type ConnectionRecord struct {
 	Credid  string  `json:"credid",omitempty`
 }
 type DatascopeRecord struct {
-	//Id string `json:"connection",omitempty`	
+	Id string `json:"id",omitempty`	
 	Connection string `json:"connection"`
-	//ConnectionId string `json:"connection",omitempty`	
+	ConnectionId string `json:"connectionid",omitempty`	
 	Schema string `json:"schema"`
 	Table string `json:"table" `
 	Typ string `json:"typ"`
@@ -55,5 +55,11 @@ type DatascopeRecord struct {
 }
 type Datascope struct {
 	Name string `json:"name"`
+	Id string `json:"id",omitempty`		
 	Records []DatascopeRecord `json:"records"`
+}
+
+type DatascopeIdName struct {
+	Name string `json:"name"`
+	Id string `json:"id"`	
 }

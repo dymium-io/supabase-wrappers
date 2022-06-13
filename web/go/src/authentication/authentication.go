@@ -203,10 +203,10 @@ func GetConnections(schema string) ([]types.ConnectionRecord, error ) {
 		schema+`.admincredentials as b on a.id=b.connection_id;`
 	rows, err := db.Query(sql)
 	log.Printf("in GetConnections: %s\n", sql)
-	defer rows.Close()
 
 	var conns = []types.ConnectionRecord{}
 	if nil == err {
+		defer rows.Close()
 
 		for rows.Next() {
 			var conn = types.ConnectionRecord{}
@@ -428,6 +428,106 @@ func GetConnection(schema, id string) (types.Connection, error) {
 	return con, err
 
 }
+
+func GetDatascope(schema, id string) (types.Datascope, error) {
+	var ds = types.Datascope{}	
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+
+	// check if datascope exists, validating the schema along the way
+	sql := "select name from "+schema+".datascopes where id=$1 and exists (select schema_name from global.customers where schema_name = $2);"
+	row := tx.QueryRowContext(ctx, sql, id, schema)
+	var name string
+	err = row.Scan(&name)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 1 in GetDatascope: %s\n", err.Error())
+		return ds, err
+	}
+
+
+	ds.Id = id
+	ds.Name = name
+
+	sql = `select  a.id, b.name, a.connection_id, a.schem, a.tabl, a.col,  a.position, a.typ, a.action, 
+	a.semantics, coalesce(a.ref_schem, ''), coalesce(a.ref_tabl, ''), coalesce(a.ref_col, '') from ` + schema + 
+	`.tables a join ` + schema + `.connections b on a.connection_id=b.id  where datascope_id=$1;`;
+	rows, err := db.QueryContext(ctx, sql, id)
+
+
+	if nil == err {
+		defer rows.Close()
+
+		for rows.Next() {
+			var dr types.DatascopeRecord
+			var rs, rt, rc string
+
+			err = rows.Scan(&dr.Id, &dr.Connection, &dr.ConnectionId, &dr.Schema, &dr.Table, &dr.Col, &dr.Position, &dr.Typ, 
+				&dr.Action, &dr.Semantics, &rs, &rt, &rc)
+			if err != nil {
+				log.Printf("Error in GetDatascope:  %s\n", err.Error())
+				return ds, err	
+			}
+			var ref *types.Reference
+			
+
+			type Reference struct {
+				Schema string `json:"schema"`
+				Table string `json:"table"`
+				Column string `json:"column"`
+			 }
+
+
+			if rs == "" && rt == "" && rc == "" {
+				ref = nil
+			} else {
+				ref = &types.Reference{rs, rt, rc}
+			}
+			dr.Reference = ref
+			ds.Records = append(ds.Records, dr)
+		}
+
+		return ds, nil
+	} else {
+		log.Printf("Error in GetDatascope:  %s\n", err.Error())
+		return ds, err		
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return ds, err
+	}	
+	return ds, nil
+}
+
+func GetDatascopes(schema string) ([]types.DatascopeIdName, error) {
+	sql := `select id, name from `+schema+`.datascopes where exists (select schema_name from global.customers where schema_name = $1);`
+
+	rows, err := db.Query(sql, schema)
+	log.Printf("in GetDatascope: %s\n", sql)
+	
+
+	var ds = []types.DatascopeIdName{}
+	if nil == err {
+		defer rows.Close()
+
+		for rows.Next() {
+			var din types.DatascopeIdName
+			err = rows.Scan(&din.Id, &din.Name)
+			if err != nil {
+				log.Printf("Error in GetDatascopes:  %s\n", err.Error())
+				return nil, err	
+			}
+			ds = append(ds, din)
+		}
+		return ds, nil
+	} else {
+		log.Printf("Error in GetDatascopes:  %s\n", err.Error())
+		return nil, err		
+	}
+
+}
 func SaveDatascope(schema string, dscope types.Datascope) error {
 	// Create a new context, and begin a transaction
 	ctx := context.Background()
@@ -467,38 +567,23 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 	// iterate and create 
 	records := dscope.Records
 	for  _, r := range  records  {
-		if(r.Reference == nil) {
-			sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, reference, semantics, action, position) 
-			values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10);`
-			
-			_, err = tx.ExecContext(ctx, sql, ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Reference, r.Semantics, r.Action, r.Position)
-			if err != nil {
-				tx.Rollback()
-				log.Printf("Error 4 in SaveDatascope record: %s\n", err.Error())
-				return err
-			}	
-		} else {
-			log.Printf("schema: %s, table: %s, col:%s\n", r.Reference.Schema, r.Reference.Table, r.Reference.Column)
-			sql=`with rows as (insert into ` + schema + `.refs(schem, tabl, col) values($1, $2, $3) returning id) insert into ` + schema + 
-			`.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, reference) 
-			values($4, $5, (select id from ` + schema + `.connections where name=$6), $7, $8, $9, 
-			 $10, $11, $12, (select id from rows));`
-			log.Printf("%s\n", sql)
-			_, err = tx.ExecContext(ctx, sql, 
-				r.Reference.Schema, r.Reference.Table, r.Reference.Column,
-				ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, 
-				r.Semantics, r.Action, r.Position)
-				
-			if err != nil {
-				tx.Rollback()
-				log.Printf("Error 5 in SaveDatascope record: %s\n", err.Error())
-				return err
-			}				
+
+		sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col) 
+		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12);`
+		log.Printf("connection name: %s\n", r.Connection)
+		var rs, rt, rc string
+		if r.Reference != nil {
+			rs = r.Reference.Schema
+			rt = r.Reference.Table
+			rc =  r.Reference.Column
 		}
-	
+		_, err = tx.ExecContext(ctx, sql, ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc)
+		if err != nil {
+			tx.Rollback()
+			log.Printf("Error 4 in SaveDatascope record: %s\n", err.Error())
+			return err
+		}
 	}
-
-
 
 	err = tx.Commit()
 	if err != nil {

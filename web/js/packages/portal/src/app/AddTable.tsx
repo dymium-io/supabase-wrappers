@@ -14,134 +14,8 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import cloneDeep from 'lodash/cloneDeep';
 import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
+import * as types from '@dymium/common/Types/Common'
 
-/*
-const testJSON = {
-    name: "My test database",
-    schemas: [
-        {
-            name: "global",
-            tables: [
-                {
-                    name: "customers",
-                    columns: [
-                        {
-                            name: "id",
-                            position: 1,
-                            typ: "varchar 60"
-                        },
-                        {
-                            name: "name",
-                            position: 2,
-                            typ: "varchar 60"
-                        },
-                        {
-                            name: "org",
-                            position: 3,
-                            typ: "varchar 60"
-                        },
-                        {
-                            name: "domain",
-                            position: 4,
-                            typ: "varchar 128"
-                        },
-                    ]
-                },
-                {
-                    name: "billing",
-                    columns: [
-                        {
-                            name: "id",
-                            position: 1,
-                            typ: "varchar 60"
-                        },
-                        {
-                            name: "invoicecount",
-                            position: 2,
-                            typ: "integer"
-                        },
-                        {
-                            name: "balance",
-                            position: 3,
-                            typ: "integer"
-                        },
-                        {
-                            name: "duedate",
-                            position: 4,
-                            typ: "date"
-                        },
-                    ]
-                }
-            ]
-        }, {
-            name: "spoofcorp",
-            tables: [
-                {
-                    name: "users",
-                    columns: [
-                        {
-                            name: "id",
-                            position: 1,
-                            typ: "varchar 60"
-                        },
-                        {
-                            name: "Firstname",
-                            position: 2,
-                            typ: "varchar 60"
-                        },
-                        {
-                            name: "Secondname",
-                            position: 3,
-                            typ: "varchar 60"
-                        },
-                        {
-                            name: "email",
-                            position: 4,
-                            typ: "varchar 60"
-                        },
-                        {
-                            name: "username",
-                            position: 5,
-                            typ: "varchar 128"
-                        },
-                        {
-                            name: "password",
-                            position: 6,
-                            typ: "varchar 128"
-                        },
-                    ]
-                }, {
-                    name: "projects",
-                    columns: [
-                        {
-                            name: "id",
-                            position: 1,
-                            typ: "varchar 60"
-                        },
-                        {
-                            name: "name",
-                            position: 2,
-                            typ: "varchar 60"
-                        },
-                        {
-                            name: "userid",
-                            position: 3,
-                            typ: "varchar 60"
-                        },
-                        {
-                            name: "description",
-                            position: 4,
-                            typ: "varchar 600"
-                        },
-
-                    ]
-                }
-            ]
-
-        }
-    ]
-}
-*/
 const PIIs = [
     "N/A",
     "Address",
@@ -157,7 +31,14 @@ const Actions = [
     "Obfuscate",
     "Smart Reduct"
 ]
-export default function AddTable(props) {
+
+export interface AddTableProps {
+    table: types.TableScope,
+    connectionId: string,
+    onAddTable: (ar: types.TableScope) => void,
+
+  }
+const AddTable: React.FC<AddTableProps> = (props) => {
     const [validated, setValidated] = useState(false)
     const [database, setDatabase] = useState({})
     const [schema, setSchema] = useState("")
@@ -198,7 +79,7 @@ export default function AddTable(props) {
     }
     useEffect(() => {
        
-        if(props.table.connection !== undefined) {
+        if(props.table.connection !== undefined && props.table.connection !== "") {
             setSchema(props.table.schema)
             setTable(props.table.table)
             setTableStructure(cloneDeep(props.table.tablescope))
@@ -233,12 +114,7 @@ export default function AddTable(props) {
         }
 
     }, [])
-    useEffect(() => {
-        if (props.clear) {
-            tablestate.current = emptyarray
-            setTableStructure(emptyarray)
-        }
-    }, [props.clear])
+
 
     let getOptions = () => {
         if(database["schemas"] === undefined) {
@@ -249,15 +125,17 @@ export default function AddTable(props) {
         })
         return schemas
     }
-    let selectSchema = schema => {
-        setSchema(schema[0])
+    let selectSchema = (schema:any) => {
+        setSchema( schema[0].toString() )
         setTable("")
     }
-    let selectTable = table => {
-        setTable(table[0])
+    let selectTable = (table:any) => {
+        if(table.length === 0)
+            return
+        setTable(table[0].toString())
     }
     useEffect(() => {  
-        if(props.table.connection === undefined) {
+        if(props.table.connection === undefined || props.table.connection === "") {
             initTableSchema()
         }
     }, [table])
@@ -386,7 +264,7 @@ export default function AddTable(props) {
                             onChange={selectSchema} size="sm"
                             selected={schema != undefined ? [schema] :[] }
                             options={getOptions()}
-
+                            clearButton
                             placeholder="Choose schema..."
                         />
 
@@ -403,7 +281,7 @@ export default function AddTable(props) {
                         <Form.Group className="mb-3" controlId="dbname">
                             <Form.Label>Table Name</Form.Label>
                             <Typeahead id="tables" onChange={selectTable} size="sm"
-
+                                clearButton
                                 options={getTables()}
                                 defaultOpen={false}
                                 labelKey="Table"
@@ -442,3 +320,5 @@ export default function AddTable(props) {
 
     </div>
 }
+
+export default AddTable

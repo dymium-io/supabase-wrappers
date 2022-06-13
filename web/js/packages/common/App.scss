@@ -206,6 +206,13 @@ input:-internal-autofill-selected {
 	webkit-animation: round 1.7s infinite ease;
 	webkit-transform: translateZ(0);
 
+
+}
+.hiddenspinner {
+  opacity: 0.0 !important; 
+  webkit-animation: none !important;
+  transform: none !important;
+  animation: none;
 }
 @keyframes round
 {

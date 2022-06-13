@@ -14,322 +14,28 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import Spinner from '@dymium/common/Components/Spinner'
 import cloneDeep from 'lodash/cloneDeep';
 import AddTable from './AddTable'
+import EditDatascopes from './EditDatascopes'
+import DatascopeForm from './DatascopeForm'
+
 import * as com from '../Common'
+import * as types from '@dymium/common/Types/Common'
 
 
-let remap = {}
-
-function DatascopeForm(props) {
-    let empty: any[] = []
-    const [connections, setConnections] = useState(empty)
-    const [tables, setTables] = useState({})
-    const [selectedConnection, setSelectedConnection] = useState("")
-    const [counter, setCounter] = useState(0)
-    const editedConnection = useRef("")
-
-    // make sure we don't have a stale closure
-    let refs = useRef({})
-    refs.current["connections"] = connections
-    refs.current["tables"] = tables
-    refs.current["setTables"] = setTables
-    refs.current["setCounter"] = setCounter
-
-    let onEdit = (connection, schema, table) => {
-        return e => {
-            let ob = refs.current["tables"][connection]
-            Object.keys(ob).forEach( x => {
-                if(ob[x].schema === schema && ob[x].table === table) {
-                    setSelectedConnection(connection)
-                    props.onEditTable(ob[x]) 
-                }
-            })
-        }
-    }
-    let onDelete = (connection, schema, table)  => {
-        return e => {
-            let tables = cloneDeep(refs.current["tables"])
-            delete tables[connection][schema + "." + table]
-            setTables(tables)
-            //refs.current["setTables"](tables)
-            setCounter(counter + 1)
-            setConnections(refs.current["connections"])
-        }
-    }
-    let columns = [
-        {
-            dataField: 'connection',
-            text: 'connection:',
-            isDummyField: true,
-            hidden: true,
-        },
-        {
-            dataField: 'schema',
-            text: 'Schema:',
-            isDummyField: true,
-            sort: true,
-            formatter: (cell, row, rowIndex, formatExtraData) => {
-
-                return row.schema
-            }
-        },
-        {
-            dataField: 'table',
-            text: 'Table name:',
-            isDummyField: true,
-            sort: true,
-            formatter: (cell, row, rowIndex, formatExtraData) => {
-
-                return row.table
-            }
-        },
-        {
-            dataField: 'columns',
-            text: '# of columns:',
-            isDummyField: true,
-            sort: true,
-            formatter: (cell, row, rowIndex, formatExtraData) => {
-
-                return row.tablescope.length
-            }
-        },
-        {
-            dataField: 'pii',
-            text: 'Sensitivity:',
-            isDummyField: true,
-            sort: true,
-            formatter: (cell, row, rowIndex, formatExtraData) => {
-                let sense = false
-                row.tablescope.forEach(x => {
-                    if (x.semantics !== "N/A")
-                        sense = true
-                })
-                if (sense) return <>Contains PII</>
-                return <>Not
-                    ensitive</>
-            }
-        },
-        {
-            dataField: 'disposition',
-            text: 'Access:',
-            isDummyField: true,
-            sort: true,
-            formatter: (cell, row, rowIndex, formatExtraData) => {
-                let managed = false
-                row.tablescope.forEach(x => {
-                    if (x.action !== "Allow")
-                        managed = true
-                })
-                if (managed) return <>Managed</>
-                return <>Transparent</>
-            }
-        },
-        {
-            text: 'Edit',
-            dataField: 'edit',
-            isDummyField: true,
-            formatter: (cell, row, rowIndex, formatExtraData) => {
-
-                return <i className="fas fa-edit ablue" onClick={onEdit(row["connection"], row["schema"], row["table"])} role="button"></i>
-            },
-            //formatExtraData: { hoverIdx: this.state.hoverIdx },
-            headerStyle: { width: '50px' },
-            style: { height: '30px' },
-            align: 'center'
-        },
-        {
-            text: 'Delete',
-            dataField: 'delete',
-            isDummyField: true,
-            formatter: (cell, row, rowIndex, formatExtraData) => {
-                return <i className="fas fa-trash ablue" onClick={onDelete(row["connection"], row["schema"], row["table"])} role="button"></i>
-            },
-            //formatExtraData: { hoverIdx: this.state.hoverIdx },
-            headerStyle: { width: '90px' },
-            style: { height: '30px' },
-            align: 'center'
-        }
-    ]
-
-    let addTable = (table) => {
-        let _tables = cloneDeep(refs.current["tables"])
-        if (_tables[editedConnection.current] === undefined)
-            _tables[editedConnection.current] = {}
-        table["connection"] = editedConnection.current
-        
-        _tables[editedConnection.current][table.schema + "." + table.table] = table
-        let setTables = refs.current["setTables"]
-
-        setTables(_tables)
-        setCounter(counter + 1)
-    }
-    useEffect( () => {
-        console.log("on tables change")
-        props.onTableUpdate(tables)
-    }, [tables] 
-    )
-    const addTableRef = useRef(addTable)
-    useEffect(() => {
-        props.onAddTableRef(addTableRef)
-        let _tables = {}
-        props.connections.forEach(x => {
-            _tables[x.name] = {} // table name: table
-        })
-        setTables(_tables)
-    }, [])
-
-    let available = () => {
-        let ret: any[] = []
-        ret = props.connections.filter(x => !connections.includes(x.name)).map(x =>
-            <option key={x.name} value={x.name}>{x.name}</option>)
-        return ret
-    }
-
-    let onAddConnection = e => {
-        if (selectedConnection === "") {
-            return
-        }
-
-        let db = [...connections, selectedConnection]
-        setConnections(db)
-        setSelectedConnection("")
-    }
-
-    let displayTables = name => {
-        let ret: any[] = []
-
-        if (tables[name] === undefined)
-            return ret
-
-        Object.keys(tables[name]).forEach((x: any) => {
-            tables[name][x]["connection"] = name
-            ret.push(tables[name][x])
-        })
-
-        
-        return ret
-    }
-
-    let showConnection = (db) => {
-        if(db.name === undefined)
-            return <></>
-        let deleteConnection = e => {
-
-            let d = connections.filter(function (value, index, arr) {
-                return value !== db.name;
-            })
-
-            setConnections(d)
-        }
-        return <Card key={db.name} id={db.name} className="card mb-3">
-            <Card.Header >
-                <Row>
-                    <Col xs="auto" style={{ paddingTop: '2px', fontSize: '1.2em' }} className="thickblue">
-                        <i className="fa-solid fa-database mr-2"></i>
-                        Connection: {db.name}</Col>
-                    <Col><Button onClick={e => {
-
-                        editedConnection.current = db.name
-                        props.AddNewTable(db.id)
-                        //props.setShowOffcanvas(true)
-                    }} size="sm" variant="dymium"><i className="fa fa-table mr-1" aria-hidden="true"></i>Add Table</Button></Col>
-                    <Col xs="auto" className="text-right"><i onClick={deleteConnection} className="fa fa-trash blue trash" aria-hidden="true"></i></Col>
-                </Row>
-            </Card.Header>
-            <Card.Body className="p-0 mx-0">
-                {tables[db.name] !== undefined && Object.keys(tables[db.name]).length > 0 &&
-                    <BootstrapTable id="scaledtable"
-                        condensed
-                        striped bordered={false}
-                        bootstrap4
-                        keyField='table'
-                        data={displayTables(db.name)}
-                        columns={columns}
-                    />
-
-                }
-            </Card.Body>
-        </Card>
-    }
-    let showConnections = () => {
-        return connections.map(name => {
-            if(name === "") {   
-                return <></>
-            }
-            let ob = remap[name]
-            return showConnection(ob)
-        })
-    }
-
-    return (
-        <>
-            <Row>
-                <Col xs="auto">
-                    <Form.Group className="mb-3" controlId="dbname">
-                        <Form.Label>Database Name</Form.Label>
-                        <Form.Control size="sm" type="text" placeholder="alphanumeric"
-                            required
-                            pattern=".+"
-                            value={props.dbname}
-                            onChange={e => {
-                                console.log(e.target.value)
-                                props.onDbname(e.target.value)
-                            }}
-                        />
-                        <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                        <Form.Control.Feedback type="invalid" >
-                            Client side name for Dymium database
-                        </Form.Control.Feedback>
-                    </Form.Group>
-
-                </Col>
-
-            </Row>
-            <Row>
-                <Col xs="auto" className="d-flex" style={{ alignItems: "center" }}>
-                    <Form.Group className="mb-3" controlId="connection" >
-                        <Form.Label >Available Connections</Form.Label>
-                        <Form.Control as="select" size="sm"
-                            onChange={e => {
-                          
-                                setSelectedConnection(e.target.value)
-                            }}
-                            value={selectedConnection}
-                        >
-                            <option value="">...</option>
-                            {available()}
-                        </Form.Control>
-
-                    </Form.Group>
-                    <Form.Group>
-                        <Form.Label ></Form.Label>
-                        <Button onClick={onAddConnection} variant="dymium" style={{ marginTop: '1.9em' }} size="sm"><i className="fa-solid fa-database mr-2"></i>Add Connection</Button>
-                    </Form.Group>
-                </Col>
-                <Col className="text-left">
-
-                </Col>
-
-            </Row>
-            {showConnections()}
-
-        </>
-    )
-}
-
+let remap =  new types.ConnectionMap();
 
 export function AddDatascope(props) {
     const [validated, setValidated] = useState(false)
     let form = useRef<HTMLFormElement>(null)
 
-    let [conns, setConns] = useState([])
+    let [conns, setConns] = useState<types.Connection[]>([])
     const [spinner, setSpinner] = useState(false)
-    const [alert, setAlert] = useState(<></>)
+    const [alert, setAlert] = useState<any>(<></>)
     const [showOffcanvas, setShowOffcanvas] = useState(false)
-    const [clear, setClear] = useState(false)
-    const [table, setTable] = useState({})
-    const [dbname, setDbname] = useState("")
-    const [datascope, setDatascope] = useState({})
-    const [currentConnectionId, setCurrentConnectionId] = useState("")
+
+    const [table, setTable] = useState<types.TableScope>({schema: "", table:""})
+    const [dbname, setDbname] = useState<string>("")
+    const [datascope, setDatascope] = useState<types.TablesMap>({})
+    const [currentConnectionId, setCurrentConnectionId] = useState<string>("")
 
     let getConnections = () => {
         setSpinner(true)
@@ -341,8 +47,8 @@ export function AddDatascope(props) {
 
                 resp.json().then(js => {
 
-                    let cc = js.map(x => {
-                        let ob = {
+                    let cc:types.Connection[] = js.map(x => {
+                        let ob:types.Connection = {
                             id: x.id,
                             credid: x.credid,
                             dbtype: x.dbtype,
@@ -357,11 +63,8 @@ export function AddDatascope(props) {
                         remap[x.name] = ob
                         return ob
                     })
-
                     setConns(cc)
-
                 })
-
                 setSpinner(false)
                 console.log("on success")
             },
@@ -379,7 +82,8 @@ export function AddDatascope(props) {
     }, [])
 
     let sendConnection = () => {
-        let retarray:any = []
+        let retarray:types.DatascopeRecord[] = []
+
         Object.keys(datascope).forEach( connection => {
             let conn = datascope[connection]
             Object.keys(conn).forEach( schematable => {
@@ -387,7 +91,7 @@ export function AddDatascope(props) {
                 // connection, schema, table, tablescope[typ, semantics, name, position, reference, action]
                 console.log(st)
                 st.tablescope.forEach( ts => {
-                    let ob = {connection: st.connection, schema: st.schema, table: st.table, 
+                    let ob:types.DatascopeRecord = {connection: st.connection, schema: st.schema, table: st.table, 
                         typ: ts.typ, position: ts.position, reference: ts.reference, action:ts.action, 
                         col: ts.name, semantics: ts.semantics}
                     console.log(JSON.stringify(ob))
@@ -398,7 +102,8 @@ export function AddDatascope(props) {
         } )
         // now do send
         setSpinner(true)
-        let body=JSON.stringify( {name: dbname, records: retarray} )
+        let retob: types.DataScope = {name: dbname, records: retarray}
+        let body=JSON.stringify( retob )
         com.sendToServer("POST", "/api/savedatascope",
             null, body,
             resp => {
@@ -417,9 +122,7 @@ export function AddDatascope(props) {
                             </Alert>
                         )                        
                     }
-
                 })
-
                 setSpinner(false)
                 console.log("on success")
             },
@@ -442,8 +145,7 @@ export function AddDatascope(props) {
             setValidated(true)
             return false
         }
-        console.log(datascope)
-        console.log(dbname)
+
         event.preventDefault();
         setValidated(false)
         event.stopPropagation();
@@ -458,29 +160,27 @@ export function AddDatascope(props) {
     let onAddTableRef = (theref) => {
         addTableR.current = theref
     }
-    let onAddTable = (table) => {
+    let onAddTable = (table:types.TableScope) => {
         setShowOffcanvas(false)
         if (addTableR.current !== undefined && addTableR.current.current) {
-
             addTableR.current.current(table)
         }
     }
-    let onEditTable = t => {
+    let onEditTable = (t:types.TableScope) => {
         setTable(t)
         setShowOffcanvas(true)
     }
-    let addNewTable = id => {
+    let addNewTable = (id:string) => {
         setCurrentConnectionId(id)
-        setTable({})
+        setTable({schema: "", table:""})
         setShowOffcanvas(true)
     }
-    let onDbname = e => {
+    let onDbname = (e:string) => {
         console.log("onDbname: "+e)
         setDbname(e)
     }
-    let onTableUpdate = e => {
-        console.log("onTableUpdate: "+e)
-        setDatascope(e)
+    let onTablesMapUpdate = (t: types.TablesMap) => {
+        setDatascope(t)
     }
     return (
         <div className=" text-left">
@@ -488,13 +188,16 @@ export function AddDatascope(props) {
             <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
                 title={table["connection"] === undefined ? "Register table" : "Edit table" }>
                 {showOffcanvas &&
-                <AddTable clear={clear} onAddTable={onAddTable} table={table} connectionId={currentConnectionId}/>
+                <AddTable onAddTable={onAddTable} table={table} connectionId={currentConnectionId}/>
                 }
             </Offcanvas>
             <h5 > Create New Data Scope <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
             <div className=" text-left">
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
-                    <DatascopeForm dbname={dbname} onDbname={setDbname} onTableUpdate={onTableUpdate} onEditTable={onEditTable} AddNewTable={addNewTable} onAddTableRef={onAddTableRef} connections={conns} setAlert={setAlert} setShowOffcanvas={setShowOffcanvas} />
+                    <DatascopeForm edit={false} dbname={dbname} onDbname={setDbname} onTablesMapUpdate={onTablesMapUpdate} 
+                    onEditTable={onEditTable} AddNewTable={addNewTable} 
+                    onAddTableRef={onAddTableRef} connections={conns} setAlert={setAlert} 
+                    nameToConnection={remap}/>
 
                     <Button variant="dymium" size="sm" className="mt-4" type="submit">
                         Apply
@@ -504,11 +207,7 @@ export function AddDatascope(props) {
         </div>
     )
 }
-export function EditDatascopes() {
-    return (
-        <>Edit datascopes</>
-    )
-}
+
 
 export default function Datascopes() {
     return (

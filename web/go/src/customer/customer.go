@@ -122,6 +122,7 @@ func CustomerHandlers(p *mux.Router) {
 			return
 		}
 		// get the connection details
+		log.Printf("%v\n", t)
 		error = authentication.SaveDatascope(schema, t)
 
 		var status types.OperationStatus
@@ -216,6 +217,45 @@ func CustomerHandlers(p *mux.Router) {
 		w.Write(js)
 	}).Methods("POST")
 
+	
+	b.HandleFunc("/api/getdatascopedetails", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+	
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+		body, _ := ioutil.ReadAll(r.Body)
+		defer r.Body.Close()
+
+		t := struct {
+			Id string
+		}{}
+
+		err := json.Unmarshal(body, &t)
+
+		ds, err := authentication.GetDatascope(schema, t.Id)
+		js, err := json.Marshal(ds)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("POST")
+
 	b.HandleFunc("/api/deleteconnection", func(w http.ResponseWriter, r *http.Request) {
 		token := common.TokenFromHTTPRequest(r)
 		schema, error := authentication.GetSchemaFromToken(token)
@@ -261,6 +301,37 @@ func CustomerHandlers(p *mux.Router) {
 		w.Header().Set("Content-Type", "text/html")
 		w.Write(js)
 	}).Methods("POST")
+
+	
+	b.HandleFunc("/api/getdatascopes", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+
+		datascopes, error := authentication.GetDatascopes(schema)
+
+		js, err := json.Marshal(datascopes)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("GET")
 
 	b.HandleFunc("/api/getconnections", func(w http.ResponseWriter, r *http.Request) {
 		token := common.TokenFromHTTPRequest(r)
