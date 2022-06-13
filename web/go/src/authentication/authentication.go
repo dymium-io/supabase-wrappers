@@ -465,7 +465,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 			err = rows.Scan(&dr.Id, &dr.Connection, &dr.ConnectionId, &dr.Schema, &dr.Table, &dr.Col, &dr.Position, &dr.Typ, 
 				&dr.Action, &dr.Semantics, &rs, &rt, &rc)
 			if err != nil {
-				log.Printf("Error in GetDatascope:  %s\n", err.Error())
+				log.Printf("Error 2 in GetDatascope:  %s\n", err.Error())
 				return ds, err	
 			}
 			var ref *types.Reference
@@ -489,7 +489,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 
 		return ds, nil
 	} else {
-		log.Printf("Error in GetDatascope:  %s\n", err.Error())
+		log.Printf("Error 3 in GetDatascope:  %s\n", err.Error())
 		return ds, err		
 	}
 
@@ -506,7 +506,10 @@ func GetDatascopes(schema string) ([]types.DatascopeIdName, error) {
 
 	rows, err := db.Query(sql, schema)
 	log.Printf("in GetDatascope: %s\n", sql)
-	
+	if err != nil {
+		log.Printf("Error 0 in GetDatascopes:  %s\n", err.Error())
+		return nil, err	
+	}	
 
 	var ds = []types.DatascopeIdName{}
 	if nil == err {
@@ -516,18 +519,108 @@ func GetDatascopes(schema string) ([]types.DatascopeIdName, error) {
 			var din types.DatascopeIdName
 			err = rows.Scan(&din.Id, &din.Name)
 			if err != nil {
-				log.Printf("Error in GetDatascopes:  %s\n", err.Error())
+				log.Printf("Error 1 in GetDatascopes:  %s\n", err.Error())
 				return nil, err	
 			}
 			ds = append(ds, din)
 		}
 		return ds, nil
 	} else {
-		log.Printf("Error in GetDatascopes:  %s\n", err.Error())
+		log.Printf("Error 2 in GetDatascopes:  %s\n", err.Error())
 		return nil, err		
 	}
 
 }
+
+func UpdateDatascope(schema string, dscope types.Datascope) error {
+	// Create a new context, and begin a transaction
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Printf("Error in UpdateDatascope: %s\n", err.Error())
+		return err
+	}
+
+	// check if datascope exists, validating the schema along the way
+	sql := "select id from "+schema+".datascopes where name=$1 and exists (select schema_name from global.customers where schema_name = $2);"
+	row := tx.QueryRowContext(ctx, sql, dscope.Name, schema)
+	var id string
+	err = row.Scan(&id)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 1 in UpdateDatascope: %s\n", err.Error())
+		return err
+	}	
+	log.Printf("datascope id=%s\n", id)
+
+	// delete everything 
+	sql = "delete from "+schema+".datascopes where name=$1;"
+	_, err = tx.ExecContext(ctx, sql, dscope.Name)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 2 in UpdateDatascope: %s\n", err.Error())
+		return err
+	}	
+
+	sql="delete from "+schema+".datascopes where name=$1;"
+	_, err = tx.ExecContext(ctx, sql, dscope.Name)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 3 in UpdateDatascope: %s\n", err.Error())
+		return err
+	}
+
+	if( len(dscope.Records) == 0) {
+		err = tx.Commit()
+		if err != nil {
+			tx.Rollback()
+			log.Printf("Error 6 in UpdateDatascope: %s\n", err.Error())
+			return err
+		}	
+		return nil		
+	}
+
+	sql="insert into "+schema+".datascopes(name) values($1)  returning id;"
+	row = tx.QueryRowContext(ctx, sql, dscope.Name)
+	var ds_id string
+	err = row.Scan(&ds_id)	
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 4 in UpdateDatascope: %s\n", err.Error())
+		return err
+	}	
+	log.Printf("id=%s\n", ds_id)
+	// iterate and create 
+	records := dscope.Records
+	for  _, r := range  records  {
+
+		sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col) 
+		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12);`
+		log.Printf("connection name: %s\n", r.Connection)
+		var rs, rt, rc string
+		if r.Reference != nil {
+			rs = r.Reference.Schema
+			rt = r.Reference.Table
+			rc =  r.Reference.Column
+		}
+		_, err = tx.ExecContext(ctx, sql, ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc)
+		if err != nil {
+			tx.Rollback()
+			log.Printf("Error 5 in UpdateDatascope record: %s\n", err.Error())
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 6 in UpdateDatascope: %s\n", err.Error())
+		return err
+	}	
+	log.Println("UpdateDatascope success!")
+	return nil
+}
+
 func SaveDatascope(schema string, dscope types.Datascope) error {
 	// Create a new context, and begin a transaction
 	ctx := context.Background()

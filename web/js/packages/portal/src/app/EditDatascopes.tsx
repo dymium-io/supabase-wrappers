@@ -24,15 +24,15 @@ interface DataScope {
     records?: types.TableLine[];
 }
 
-let remap =  new types.ConnectionMap();
+let remap = new types.ConnectionMap();
 
 export default function EditDatascopes() {
     const [spinner, setSpinner] = useState(false)
-    let [conns, setConns] = useState<types.Connection[]>([])    
+    let [conns, setConns] = useState<types.Connection[]>([])
     const [alert, setAlert] = useState<any>(<></>)
     const [datascopes, setDatascopes] = useState<DataScope[]>([])
     const [selectedDatascope, setSelectedDatascope] = useState("")
-    const [selectedDatascopeDetails, setSelectedDatascopeDetails] = useState<DataScope|null>(null)
+    const [selectedDatascopeDetails, setSelectedDatascopeDetails] = useState<DataScope | null>(null)
 
     const [initialTables, setInitialTables] = useState<types.TablesMap>({})
     const [validated, setValidated] = useState(false)
@@ -40,7 +40,7 @@ export default function EditDatascopes() {
 
 
     const [showOffcanvas, setShowOffcanvas] = useState<boolean>(false)
-    const [table, setTable] = useState<types.TableScope>({schema: "", table:""})
+    const [table, setTable] = useState<types.TableScope>({ schema: "", table: "" })
     const [dbname, setDbname] = useState("")
     const [datascope, setDatascope] = useState({})
     const [currentConnectionId, setCurrentConnectionId] = useState("")
@@ -56,7 +56,6 @@ export default function EditDatascopes() {
                 })
 
                 setSpinner(false)
-                console.log("on success")
             },
             resp => {
                 console.log("on error")
@@ -78,8 +77,8 @@ export default function EditDatascopes() {
 
                 resp.json().then(js => {
 
-                    let cc:types.Connection[] = js.map(x => {
-                        let ob:types.Connection = {
+                    let cc: types.Connection[] = js.map(x => {
+                        let ob: types.Connection = {
                             id: x.id,
                             credid: x.credid,
                             dbtype: x.dbtype,
@@ -97,7 +96,6 @@ export default function EditDatascopes() {
                     getDatascopes()
                 })
                 setSpinner(false)
-                console.log("on success")
             },
             resp => {
                 console.log("on error")
@@ -125,40 +123,41 @@ export default function EditDatascopes() {
             null, body,
             resp => {
                 resp.json().then(js => {
-debugger
+
                     setSelectedDatascopeDetails(js)
                     setDbname(js.name)
-                    let ob={}
-                    js.records.forEach(r => {
-                        if(ob[r.connection] === undefined) {
-                            ob[r.connection] = {}
-                        }
-                        let key = r.schema + "." + r.table
-                        if(ob[r.connection][key] === undefined) {
-                            ob[r.connection][key] = {}
-                            ob[r.connection][key]["connection"] = r.connection
-                            ob[r.connection][key]["schema"] = r.schema
-                            ob[r.connection][key]["table"] = r.table
-                            ob[r.connection][key]["tablescope"] = []
-                        }
-                        let line = {}
-                        line["id"] = r.id
-                        line["connection"] = r.connection
-                        line["action"] = r.action
-                        line["name"] = r.name
-                        line["position"] = r.position
-                        line["reference"] = r.reference
-                        line["semantics"] = r.semantics
-                        line["typ"] = r.typ
-                        ob[r.connection][key]["tablescope"].push(line)
+                    let ob = {}
+                    if (js.records != null) {
+                        js.records.forEach(r => {
+                            if (ob[r.connection] === undefined) {
+                                ob[r.connection] = {}
+                            }
+                            let key = r.schema + "." + r.table
+                            if (ob[r.connection][key] === undefined) {
+                                ob[r.connection][key] = {}
+                                ob[r.connection][key]["connection"] = r.connection
+                                ob[r.connection][key]["schema"] = r.schema
+                                ob[r.connection][key]["table"] = r.table
+                                ob[r.connection][key]["tablescope"] = []
+                            }
+                            let line = {}
+                            line["id"] = r.id
+                            line["connection"] = r.connection
+                            line["action"] = r.action
+                            line["name"] = r.col
+                            line["position"] = r.position
+                            line["reference"] = r.reference
+                            line["semantics"] = r.semantics
+                            line["typ"] = r.typ
+                            ob[r.connection][key]["tablescope"].push(line)
 
-                    })
+                        })
+                    }
                     setInitialTables(ob)
 
                 })
                 setSpinner(false)
                 getConnections()
-                console.log("on success")
             },
             resp => {
                 console.log("on error")
@@ -172,28 +171,106 @@ debugger
     }, [selectedDatascope]
     )
 
+    let updateConnection = () => {
+        let retarray: types.DatascopeRecord[] = []
+        debugger
+        Object.keys(datascope).forEach(connection => {
+            let conn = datascope[connection]
+            Object.keys(conn).forEach(schematable => {
+                let st = conn[schematable]
+                // connection, schema, table, tablescope[typ, semantics, name, position, reference, action]
+                console.log(st)
+                st.tablescope.forEach(ts => {
+                    let ob: types.DatascopeRecord = {
+                        connection: st.connection, schema: st.schema, table: st.table,
+                        typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
+                        col: ts.name, semantics: ts.semantics
+                    }
+                    console.log(JSON.stringify(ob))
+                    retarray.push(ob)
+                })
+            })
+
+        })
+        // now do send
+        setSpinner(true)
+        let retob: types.DataScope = { name: dbname, records: retarray }
+        let body = JSON.stringify(retob)
+        com.sendToServer("POST", "/api/updatedatascope",
+            null, body,
+            resp => {
+
+                resp.json().then(js => {
+                    if (js.Status === "OK") {
+                        setAlert(
+                            <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                                Data scope {dbname} updated successfully!
+                            </Alert>
+                        )
+                        getConnections()
+                    } else {
+                        setAlert(
+                            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                                Error updating {dbname}:  {js.Text}!
+                            </Alert>
+                        )
+                    }
+                })
+                setSpinner(false)
+            },
+            resp => {
+                console.log("on error")
+                setSpinner(false)
+            },
+            error => {
+                console.log("on exception: " + error)
+                setSpinner(false)
+            })
+        console.log(retarray)
+    }
     let addTableR: any = useRef(null)
     let onAddTableRef = (theref) => {
         addTableR.current = theref
     }
     let onAddTable = (table) => {
         setShowOffcanvas(false)
+        debugger
         if (addTableR.current !== undefined && addTableR.current.current) {
 
             addTableR.current.current(table)
         }
     }
-    let handleSubmit = e => {
+    let handleSubmit = event => {
+        if (form.current == null) {
+            return false
+        }
+        if (form.current.reportValidity() === false) {
+            event.preventDefault();
+            setValidated(true)
+            return false
+        }
 
+        event.preventDefault();
+        setValidated(false)
+        event.stopPropagation();
+
+        updateConnection()
+
+        return false
     }
-    let onTablesMapUpdate = () => {
-
+    let onTablesMapUpdate = (t: types.TablesMap) => {
+        setDatascope(t)
     }
-    let onEditTable = () => {
 
+    let onEditTable = (t: types.TableScope) => {
+        setTable(t)
+        setShowOffcanvas(true)
     }
-    let addNewTable = () => {
 
+    let addNewTable = (id: string) => {
+        setCurrentConnectionId(id)
+        setTable({ schema: "", table: "" })
+        setShowOffcanvas(true)
     }
     return (
         <div className=" text-left">
@@ -233,11 +310,11 @@ debugger
                 {selectedDatascope !== "" &&
                     <div className=" text-left">
                         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
-                            <DatascopeForm edit={true} dbname={dbname} onDbname={setDbname} 
-                            onTablesMapUpdate={onTablesMapUpdate} onEditTable={onEditTable} 
-                            AddNewTable={addNewTable} onAddTableRef={onAddTableRef} connections={conns} 
-                            setAlert={setAlert}  nameToConnection={remap}
-                            initialTables={initialTables}
+                            <DatascopeForm edit={true} dbname={dbname} onDbname={setDbname}
+                                onTablesMapUpdate={onTablesMapUpdate} onEditTable={onEditTable}
+                                AddNewTable={addNewTable} onAddTableRef={onAddTableRef} connections={conns}
+                                setAlert={setAlert} nameToConnection={remap}
+                                initialTables={initialTables}
                             />
 
                             <Button variant="dymium" size="sm" className="mt-4" type="submit">

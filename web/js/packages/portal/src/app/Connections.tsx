@@ -236,7 +236,6 @@ function AddConnection() {
             resp => {
                 resp.json().then(js => {
                     if (js.Status == "OK") {
-                        console.log("on success")
                         setName("")
                         setDbName("")
                         setDBType("")
@@ -253,7 +252,6 @@ function AddConnection() {
                             </Alert>
                         )
                     } else {
-                        console.log("on error");
                         setAlert(
                             < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
                                 Error: {js.Text} !
@@ -266,7 +264,6 @@ function AddConnection() {
                 })
             },
             resp => {
-                console.log("on error")
                 setSpinner(false)
                 setAlert(
                     <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
@@ -537,7 +534,6 @@ function EditConnections(props) {
                 })
 
                 setSpinner(false)
-                console.log("on success")
             },
             resp => {
                 console.log("on error")
@@ -571,8 +567,6 @@ function EditConnections(props) {
             resp => {
 
                 setSpinner(false)
-
-                console.log("on success")
                 setShowedit(false)
                 getConnections()
             },
@@ -616,7 +610,6 @@ function EditConnections(props) {
                         )
                     }
                     setSpinner(false)
-                    console.log("on success")
                     setShowdelete(false)
                     getConnections()
                 }).catch(error => {

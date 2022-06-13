@@ -5,12 +5,14 @@ import type { RootState } from '../Store'
 interface MenuState {
   activeMenu: string,
   activeConnectionTab: string,
+  activeDatascopeTab: string,
 }
 
 // Define the initial state using that type
 const initialState: MenuState = {
   activeMenu: "dashboard",
-  activeConnectionTab: "add"
+  activeConnectionTab: "add",
+  activeDatascopeTab: "add",
 }
 
 export const menuSlice = createSlice({
@@ -24,14 +26,17 @@ export const menuSlice = createSlice({
     setActiveConnectionTab: (state, action) => {
         state.activeConnectionTab = action.payload
       },
+      setActiveDatascopeTab: (state, action) => {
+        state.activeDatascopeTab = action.payload
+      },      
   },
 })
 
 
-export const { setActiveMenu, setActiveConnectionTab } = menuSlice.actions
+export const { setActiveMenu, setActiveConnectionTab, setActiveDatascopeTab } = menuSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectActiveMenu = (state: RootState) => state.activeMenu
-export const selectActiveConnectionTab = (state: RootState) => state.activeMenu
-
+export const selectActiveConnectionTab = (state: RootState) => state.activeConnectionTab
+export const selectActiveDatascopeab = (state: RootState) => state.activeDatascopeTab
 export default menuSlice.reducer

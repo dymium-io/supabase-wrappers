@@ -78,7 +78,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         return false
     }
     useEffect(() => {
-       
+       debugger
         if(props.table.connection !== undefined && props.table.connection !== "") {
             setSchema(props.table.schema)
             setTable(props.table.table)
@@ -126,12 +126,18 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         return schemas
     }
     let selectSchema = (schema:any) => {
-        setSchema( schema[0].toString() )
+        if(schema[0] === undefined) {
+            setSchema( "" )
+        } else {
+            setSchema( schema[0].toString() )
+        }
         setTable("")
     }
     let selectTable = (table:any) => {
-        if(table.length === 0)
+        if(table.length === 0) {
+            setTable("")
             return
+        }
         setTable(table[0].toString())
     }
     useEffect(() => {  
@@ -176,6 +182,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         {
             dataField: 'name',
             text: 'Column',
+            classes: 'overflow-hidden'
         },
         {
             dataField: 'typ',
@@ -266,6 +273,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                             options={getOptions()}
                             clearButton
                             placeholder="Choose schema..."
+                            disabled={props.table.connection !== undefined && props.table.connection !== ""}
                         />
 
                         <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
@@ -287,6 +295,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                                 labelKey="Table"
                                 placeholder="Choose table..."
                                 selected={table != undefined ? [table] : []}
+                                disabled={props.table.connection !== undefined && props.table.connection !== ""}
                             />
 
                             <Form.Control.Feedback >Looks good!</Form.Control.Feedback>

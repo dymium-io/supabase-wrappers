@@ -16,6 +16,8 @@ import cloneDeep from 'lodash/cloneDeep';
 import AddTable from './AddTable'
 import EditDatascopes from './EditDatascopes'
 import DatascopeForm from './DatascopeForm'
+import { useAppDispatch, useAppSelector } from './hooks'
+import {setActiveDatascopeTab} from '../Slices/menuSlice'
 
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Common'
@@ -66,7 +68,6 @@ export function AddDatascope(props) {
                     setConns(cc)
                 })
                 setSpinner(false)
-                console.log("on success")
             },
             resp => {
                 console.log("on error")
@@ -124,7 +125,6 @@ export function AddDatascope(props) {
                     }
                 })
                 setSpinner(false)
-                console.log("on success")
             },
             resp => {
                 console.log("on error")
@@ -210,11 +210,17 @@ export function AddDatascope(props) {
 
 
 export default function Datascopes() {
+    const t = useAppSelector((state) => {
+        
+        return state.reducer.activeDatascopeTab}
+        )
+    const appDispatch = useAppDispatch()
+
     return (
         <Tabs
-            //defaultActiveKey={t} 
+            defaultActiveKey={t} 
             id="datascopes"
-            //onSelect={(k) => appDispatch( setActiveConnectionTab(k) )}
+            onSelect={(k) => appDispatch( setActiveDatascopeTab(k) )}
 
             unmountOnExit={true} className="mb-3 text-left">
             <Tab eventKey="add" title="Add Data Scope" className="mx-4">

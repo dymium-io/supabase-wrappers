@@ -142,6 +142,55 @@ func CustomerHandlers(p *mux.Router) {
 		w.Write(js)		
 	}).Methods("POST")	
 	
+
+	b.HandleFunc("/api/updatedatascope", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+		
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+		body, _ := ioutil.ReadAll(r.Body)
+		defer r.Body.Close()
+
+		t := types.Datascope{}
+		err := json.Unmarshal(body, &t)
+		if err != nil {
+			log.Printf("Unmarshaling error: %s\n", err.Error() )
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// get the connection details
+		log.Printf("%v\n", t)
+		error = authentication.UpdateDatascope(schema, t)
+
+		var status types.OperationStatus
+		if(error == nil) {
+			status = types.OperationStatus{"OK", "Datascope created"}
+		} else {
+			status = types.OperationStatus{"Error", error.Error()}
+		}
+		js, err := json.Marshal(status)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)		
+	}).Methods("POST")
+
 	b.HandleFunc("/api/createnewconnection", func(w http.ResponseWriter, r *http.Request) {
 		token := common.TokenFromHTTPRequest(r)
 		schema, error := authentication.GetSchemaFromToken(token)

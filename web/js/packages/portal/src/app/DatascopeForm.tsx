@@ -70,6 +70,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                 if (ob[x].schema === schema && ob[x].table === table) {
                     setSelectedConnection(connection)
                     props.onEditTable(ob[x])
+                    editedConnection.current = connection
                 }
             })
         }
@@ -250,7 +251,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
     }
 
     let showConnection = (db: types.Connection) => {
-        if (db.name === undefined)
+        if (db === undefined || db.name === undefined)
             return <></>
         let deleteConnection = e => {
             let d = connections.filter(function (value, index, arr) {
@@ -300,7 +301,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
 
     return (
         <>
-        { false &&
+        { !props.edit &&
             <Row>
                 <Col xs="auto">
                     <Form.Group className="mb-3" controlId="dbname">
