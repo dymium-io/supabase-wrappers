@@ -31,15 +31,36 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 		}
 	}
 
-	database, err := getDbInfo(db, c.Customer, c.Datascope)
+	datascopes, err := getDatascopes(db, c.Customer, c.Datascope)
 	if err != nil {
 		return nil ,err
 	}
 
-	return &types.CustomerData{ Connections: []types.Connection{}, Datascopes: *database }, nil
+	connections, err := getConnections(db, c.Customer)
+	if err != nil {
+		return nil ,err
+	}
+	
+	return &types.CustomerData{ Connections: *connections, Datascopes: *datascopes }, nil
 }
 
-func getDbInfo(db *sql.DB, infoSchema string, infoDatascope *string) (*[]types.Datascope,error) {
+func getConnections(db *sql.DB, infoSchema string) (*[]types.Connection,error) {
+	rows, err := db.Query(fmt.Sprintf(`SELECT c.id, c.address, c.port, c.name, c.database_type, c.use_tls, c.dbname
+                                           FROM %s.connections c`,infoSchema))
+	if err != nil {
+		return nil,err
+	}
+	defer rows.Close()
+	connections := []types.Connection{}
+	for rows.Next() {
+		var c types.Connection
+		rows.Scan(&c.Id, &c.Address, &c.Port, &c.Name, &c.Database_type, &c.Use_tls, &c.Dbname)
+		connections = append(connections, c)
+	}
+	return &connections, nil
+}
+
+func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]types.Datascope,error) {
 	infoDatascope_ := ""; if infoDatascope != nil { infoDatascope_ = fmt.Sprintf("d.name = %s AND ",*infoDatascope) }
 	rows, err := db.Query(fmt.Sprintf(`SELECT d.name, c.id,
                                       t.schem, t.tabl, t.col,
