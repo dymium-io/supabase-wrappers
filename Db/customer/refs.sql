@@ -8,3 +8,10 @@ CREATE TABLE refs (
     tabl varchar(128) NOT NULL,
     col varchar(128) NOT NULL
 );
+
+-- #!migration
+-- name: "customer/remove-refs",
+-- description: "drop this table",
+-- requires: ["customer/tables-remove-ref"];
+
+drop table refs;

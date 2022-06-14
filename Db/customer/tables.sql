@@ -29,3 +29,16 @@ ALTER TABLE tables
       ALTER COLUMN is_nullable DROP DEFAULT;
 ALTER TABLE tables
       ADD COLUMN dflt text;
+
+-- #!migration
+-- name: "customer/tables-remove-ref",
+-- description: "remove reference, move its columns here",
+-- requires: ["customer/tables"];      
+ALTER TABLE tables 
+      drop column reference cascade;
+ALTER TABLE tables 
+       add column ref_schem varchar(128);      
+ALTER TABLE tables 
+       add column ref_tabl varchar(128);
+ALTER TABLE tables 
+       add column ref_col varchar(128);
