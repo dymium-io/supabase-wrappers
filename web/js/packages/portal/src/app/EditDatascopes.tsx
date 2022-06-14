@@ -148,6 +148,8 @@ export default function EditDatascopes() {
                             line["position"] = r.position
                             line["reference"] = r.reference
                             line["semantics"] = r.semantics
+                            line["dflt"] = r.dflt
+                            line["isnullable"] = r.isnullable
                             line["typ"] = r.typ
                             ob[r.connection][key]["tablescope"].push(line)
 
@@ -172,8 +174,7 @@ export default function EditDatascopes() {
     )
 
     let updateConnection = () => {
-        let retarray: types.DatascopeRecord[] = []
-        debugger
+        let retarray: types.DatascopeRecord[] = []        
         Object.keys(datascope).forEach(connection => {
             let conn = datascope[connection]
             Object.keys(conn).forEach(schematable => {
@@ -184,7 +185,7 @@ export default function EditDatascopes() {
                     let ob: types.DatascopeRecord = {
                         connection: st.connection, schema: st.schema, table: st.table,
                         typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
-                        col: ts.name, semantics: ts.semantics
+                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable
                     }
                     console.log(JSON.stringify(ob))
                     retarray.push(ob)
@@ -234,7 +235,6 @@ export default function EditDatascopes() {
     }
     let onAddTable = (table) => {
         setShowOffcanvas(false)
-        debugger
         if (addTableR.current !== undefined && addTableR.current.current) {
 
             addTableR.current.current(table)
@@ -278,7 +278,7 @@ export default function EditDatascopes() {
             <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
                 title={table["connection"] === undefined ? "Register table" : "Edit table"}>
                 {showOffcanvas &&
-                    <AddTable onAddTable={onAddTable} table={table} connectionId={currentConnectionId} />
+                    <AddTable onHide={() => {setShowOffcanvas(false)}} onAlert={setAlert} onAddTable={onAddTable} table={table} connectionId={currentConnectionId} />
                 }
             </Offcanvas>
             <h5 > Edit Data Scopes <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>

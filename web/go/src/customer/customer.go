@@ -83,9 +83,11 @@ func CustomerHandlers(p *mux.Router) {
 
         res, err := aws.Invoke("DbAnalyzer", nil, bconn)
 		if err != nil {
-			log.Printf("Error: ", err.Error())
+			log.Printf("DbAnalyzer Error: ", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
+		} else {
+			log.Printf("DbAnalyzer success")
 		}
 
 

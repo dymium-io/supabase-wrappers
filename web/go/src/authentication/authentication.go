@@ -417,6 +417,7 @@ func GetConnection(schema, id string) (types.Connection, error) {
 	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls from 
 		spoofcorp.connections as a join spoofcorp.admincredentials as b on a.id=b.connection_id 
 			join spoofcorp.passwords as c on b.id=c.id where a.id=$1;`
+	log.Printf("in GetConnection, sql=%s\n", sql)
 	row := db.QueryRow(sql, id)
 	var con types.Connection
 	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &con.Password, &con.Database, &con.Tls)
@@ -450,7 +451,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 	ds.Name = name
 
 	sql = `select  a.id, b.name, a.connection_id, a.schem, a.tabl, a.col,  a.position, a.typ, a.action, 
-	a.semantics, coalesce(a.ref_schem, ''), coalesce(a.ref_tabl, ''), coalesce(a.ref_col, '') from ` + schema + 
+	a.semantics, coalesce(a.ref_schem, ''), coalesce(a.ref_tabl, ''), coalesce(a.ref_col, ''), a.dflt, a.is_nullable from ` + schema + 
 	`.tables a join ` + schema + `.connections b on a.connection_id=b.id  where datascope_id=$1;`;
 	rows, err := db.QueryContext(ctx, sql, id)
 
@@ -463,7 +464,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 			var rs, rt, rc string
 
 			err = rows.Scan(&dr.Id, &dr.Connection, &dr.ConnectionId, &dr.Schema, &dr.Table, &dr.Col, &dr.Position, &dr.Typ, 
-				&dr.Action, &dr.Semantics, &rs, &rt, &rc)
+				&dr.Action, &dr.Semantics, &rs, &rt, &rc, &dr.Dflt, &dr.Isnullable)
 			if err != nil {
 				log.Printf("Error 2 in GetDatascope:  %s\n", err.Error())
 				return ds, err	
@@ -554,13 +555,14 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 	log.Printf("datascope id=%s\n", id)
 
 	// delete everything 
-	sql = "delete from "+schema+".datascopes where name=$1;"
-	_, err = tx.ExecContext(ctx, sql, dscope.Name)
+
+	sql="delete from "+schema+".tables where datascope_id=$1;"
+	_, err = tx.ExecContext(ctx, sql, id)
 	if err != nil {
 		tx.Rollback()
 		log.Printf("Error 2 in UpdateDatascope: %s\n", err.Error())
 		return err
-	}	
+	}
 
 	sql="delete from "+schema+".datascopes where name=$1;"
 	_, err = tx.ExecContext(ctx, sql, dscope.Name)
@@ -594,8 +596,8 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 	records := dscope.Records
 	for  _, r := range  records  {
 
-		sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col) 
-		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12);`
+		sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col, dflt, is_nullable) 
+		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);`
 		log.Printf("connection name: %s\n", r.Connection)
 		var rs, rt, rc string
 		if r.Reference != nil {
@@ -603,7 +605,7 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 			rt = r.Reference.Table
 			rc =  r.Reference.Column
 		}
-		_, err = tx.ExecContext(ctx, sql, ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc)
+		_, err = tx.ExecContext(ctx, sql, ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable)
 		if err != nil {
 			tx.Rollback()
 			log.Printf("Error 5 in UpdateDatascope record: %s\n", err.Error())
@@ -661,8 +663,8 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 	records := dscope.Records
 	for  _, r := range  records  {
 
-		sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col) 
-		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12);`
+		sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col, dflt, is_nullable) 
+		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);`
 		log.Printf("connection name: %s\n", r.Connection)
 		var rs, rt, rc string
 		if r.Reference != nil {
@@ -670,7 +672,7 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 			rt = r.Reference.Table
 			rc =  r.Reference.Column
 		}
-		_, err = tx.ExecContext(ctx, sql, ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc)
+		_, err = tx.ExecContext(ctx, sql, ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable)
 		if err != nil {
 			tx.Rollback()
 			log.Printf("Error 4 in SaveDatascope record: %s\n", err.Error())

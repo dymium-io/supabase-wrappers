@@ -52,6 +52,8 @@ type DatascopeRecord struct {
 	Action string `json:"action"`
 	Col string `json:"col"`
 	Semantics string  `json:"semantics"`
+	Dflt string  `json:"dflt"`
+	Isnullable bool `json:"isnullable"`
 }
 type Datascope struct {
 	Name string `json:"name"`

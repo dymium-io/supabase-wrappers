@@ -36,7 +36,8 @@ export interface AddTableProps {
     table: types.TableScope,
     connectionId: string,
     onAddTable: (ar: types.TableScope) => void,
-
+    onAlert: (ar: JSX.Element) => void,
+    onHide: () => void
   }
 const AddTable: React.FC<AddTableProps> = (props) => {
     const [validated, setValidated] = useState(false)
@@ -78,7 +79,6 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         return false
     }
     useEffect(() => {
-       debugger
         if(props.table.connection !== undefined && props.table.connection !== "") {
             setSchema(props.table.schema)
             setTable(props.table.table)
@@ -92,6 +92,14 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             null, body,
             resp => {
                 resp.json().then(js => {
+                    if(js.errorMessage !== undefined) {
+                        props.onAlert( <Alert variant="danger" onClose={() => props.onAlert(<></>)} dismissible>
+                        {js.errorMessage}
+                    </Alert>)
+                    props.onHide()
+                        //setSpinner(false)
+                        return
+                    }
                     setDatabase(js)
 
                     //setSpinner(false)
@@ -250,7 +258,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
 
         let retval = t.map(x => {
 
-            return { position: x.position, name: x.name, typ: x.typ, semantics: x.semantics != null ? x.semantics : "", reference: x.reference, action: "" }
+            return { position: x.position, name: x.name, typ: x.typ, semantics: x.semantics != null ? x.semantics : "", reference: x.reference, action: "", dflt: x["default"], isnullable: x.isNullable }
         })
 
         return retval

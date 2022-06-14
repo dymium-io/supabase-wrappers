@@ -94,7 +94,7 @@ export function AddDatascope(props) {
                 st.tablescope.forEach( ts => {
                     let ob:types.DatascopeRecord = {connection: st.connection, schema: st.schema, table: st.table, 
                         typ: ts.typ, position: ts.position, reference: ts.reference, action:ts.action, 
-                        col: ts.name, semantics: ts.semantics}
+                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable}
                     console.log(JSON.stringify(ob))
                     retarray.push(ob)
                 })
@@ -188,7 +188,7 @@ export function AddDatascope(props) {
             <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
                 title={table["connection"] === undefined ? "Register table" : "Edit table" }>
                 {showOffcanvas &&
-                <AddTable onAddTable={onAddTable} table={table} connectionId={currentConnectionId}/>
+                <AddTable onHide={() => {setShowOffcanvas(false)}}onAlert={setAlert} onAddTable={onAddTable} table={table} connectionId={currentConnectionId}/>
                 }
             </Offcanvas>
             <h5 > Create New Data Scope <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
