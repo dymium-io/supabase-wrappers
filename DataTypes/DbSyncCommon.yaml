@@ -1,0 +1,12 @@
+---
+module: DbSyncCommon
+
+Action:
+  - return
+  - update
+  - delete
+
+request: !!omap
+  - action: Action
+  - customer: string
+  - datascope: ?string

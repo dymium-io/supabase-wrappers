@@ -1,16 +1,6 @@
 ---
 module: DbSync
 
-Action:
-  - return
-  - update
-  - delete
-
-request: !!omap
-  - action: Action
-  - customer: string
-  - datascope: ?string
-
 customerData: !!omap
   - connections: <| connection |>
   - datascopes: <| datascope |>

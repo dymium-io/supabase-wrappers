@@ -5,12 +5,7 @@ package types
 
 
 
-type Action string
-const (
-  A_Return Action = "return"
-  A_Update Action = "update"
-  A_Delete Action = "delete"
-)
+
 
 type Column struct {
    Name string `json:"name"`
@@ -39,12 +34,6 @@ type Datascope struct {
    Name string `json:"name"`
    Connections []string `json:"connections"`
    Schemas []Schema `json:"schemas"`
-}
-
-type Request struct {
-   Action Action `json:"action"`
-   Customer string `json:"customer"`
-   Datascope *string `json:"datascope"`
 }
 
 type Schema struct {

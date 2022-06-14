@@ -1,4 +1,4 @@
 definitions:
-  - source: DbSync.yaml
+  - source: DbAnalyzer.yaml
   - source: DbSyncCommon.yaml
   - source: Common.yaml
