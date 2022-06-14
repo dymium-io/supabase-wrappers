@@ -1,0 +1,46 @@
+---
+module: DbSync
+
+Action:
+  - return
+  - update
+  - delete
+
+request: !!omap
+  - action: Action
+  - customer: string
+  - datascope: ?string
+
+customerData: !!omap
+  - connections: <| connection |>
+  - datascopes: <| datascope |>
+
+connection: !!omap
+  - id: string
+  - address: string
+  - port: int
+  - name: string
+  - database_type: Common.ConnectionType
+  - use_tls: bool
+  - dbname: string
+
+datascope: !!omap
+  - name: string
+  - connections: <| string |>
+  - schemas: <| schema |>
+
+schema: !!omap
+  - name: string
+  - tables: <| table |>
+
+table: !!omap
+  - name: string
+  - connection: string
+  - columns: <| column |>
+
+column: !!omap
+  - name: string
+  - typ: string
+  - isNullable: bool
+  - semantics: string
+  - action: string

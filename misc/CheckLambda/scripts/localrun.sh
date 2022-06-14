@@ -1,7 +1,9 @@
 #!/bin/bash
 
 SERVER_PORT=9099
-AWS_LAMBDAS='{ "DbAnalyzer": "localhost:9080" }'
+AWS_LAMBDAS='{ "DbAnalyzer": "localhost:9080",
+               "DbSync": "localhost:9081"
+             }'
 
 function run () {
     cd $d/../go
