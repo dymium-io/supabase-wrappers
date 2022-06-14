@@ -14,6 +14,8 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import Spinner from '@dymium/common/Components/Spinner'
 import cloneDeep from 'lodash/cloneDeep';
 import AddTable from './AddTable'
+import { useAppDispatch, useAppSelector } from './hooks'
+import {setSelectedDatascopeDefault} from '../Slices/menuSlice'
 import * as com from '../Common'
 import DatascopeForm from './DatascopeForm'
 import * as types from '@dymium/common/Types/Common'
@@ -44,6 +46,12 @@ export default function EditDatascopes() {
     const [dbname, setDbname] = useState("")
     const [datascope, setDatascope] = useState({})
     const [currentConnectionId, setCurrentConnectionId] = useState("")
+    const t = useAppSelector((state) => {
+        
+        return state.reducer.selectedDatascope
+    }
+    )
+    const appDispatch = useAppDispatch()
 
     let getDatascopes = () => {
         setSpinner(true)
@@ -53,6 +61,7 @@ export default function EditDatascopes() {
 
                 resp.json().then(js => {
                     setDatascopes(js)
+                    setSelectedDatascope(t)
                 })
 
                 setSpinner(false)
@@ -267,11 +276,16 @@ export default function EditDatascopes() {
         setShowOffcanvas(true)
     }
 
-    let addNewTable = (id: string) => {
+    let addNewTable = (id: string, schema?:string, table?:string) => {
         setCurrentConnectionId(id)
-        setTable({ schema: "", table: "" })
+        if(schema === undefined || table === undefined)
+            setTable({ schema: "", table: "" })
+        else 
+            setTable({ schema, table})
         setShowOffcanvas(true)
     }
+
+    
     return (
         <div className=" text-left">
             {alert}
@@ -291,6 +305,7 @@ export default function EditDatascopes() {
                             onChange={e => {
 
                                 setSelectedDatascope(e.target.value)
+                                appDispatch( setSelectedDatascopeDefault(e.target.value) )
 
                             }}
                             value={selectedDatascope}

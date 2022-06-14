@@ -188,7 +188,7 @@ export function AddDatascope(props) {
             <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
                 title={table["connection"] === undefined ? "Register table" : "Edit table" }>
                 {showOffcanvas &&
-                <AddTable onHide={() => {setShowOffcanvas(false)}}onAlert={setAlert} onAddTable={onAddTable} table={table} connectionId={currentConnectionId}/>
+                <AddTable onHide={() => {setShowOffcanvas(false)}} onAlert={setAlert} onAddTable={onAddTable} table={table} connectionId={currentConnectionId}/>
                 }
             </Offcanvas>
             <h5 > Create New Data Scope <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>

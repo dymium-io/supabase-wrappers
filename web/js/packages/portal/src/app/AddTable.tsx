@@ -101,7 +101,10 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         return
                     }
                     setDatabase(js)
-
+                    if(props.table.schema !== undefined && props.table.table !== undefined) {
+                        setSchema(props.table.schema)
+                        setTable(props.table.table)
+                    }
                     //setSpinner(false)
 
                 }).catch((error) => {
