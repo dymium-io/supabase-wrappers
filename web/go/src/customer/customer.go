@@ -127,6 +127,22 @@ func CustomerHandlers(p *mux.Router) {
 		log.Printf("%v\n", t)
 		error = authentication.SaveDatascope(schema, t)
 
+
+		var rq types.Request
+		rq.Action = "Update"
+		rq.Customer = schema
+		rq.Datascope = &t.Name
+		snc, _ := json.Marshal(rq)
+
+		_, err = aws.Invoke("DbSync", &schema, snc)
+		if err != nil {
+			log.Printf("DbSync Error: ", err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		} else {
+			log.Printf("DbSync success")
+		}
+
 		var status types.OperationStatus
 		if(error == nil) {
 			status = types.OperationStatus{"OK", "Datascope created"}
@@ -175,6 +191,26 @@ func CustomerHandlers(p *mux.Router) {
 		// get the connection details
 		log.Printf("%v\n", t)
 		error = authentication.UpdateDatascope(schema, t)
+
+
+		var rq types.Request
+		rq.Action = "Update"
+		if( len(t.Records) == 0) {
+			rq.Action = "Delete"
+		}
+
+		rq.Customer = schema
+		rq.Datascope = &t.Name
+		snc, _ := json.Marshal(rq)
+
+		_, err = aws.Invoke("DbSync", &schema, snc)
+		if err != nil {
+			log.Printf("DbSync Error: ", err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		} else {
+			log.Printf("DbSync success")
+		}
 
 		var status types.OperationStatus
 		if(error == nil) {
