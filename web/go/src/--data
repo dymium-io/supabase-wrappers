@@ -1,4 +1,0 @@
-{"error":"access_denied","error_description":"Unauthorized"}--_curl_--"client_id":"h1kuSoDq2LfqwFyBFuwPQAr2b8opc4DT"
---_curl_--"client_secret":"l102JOenHKCCMML2XZO5Bvd4ElRC1_3HbdmNCmz2Zy893nx75ryAq5JvIUiIi9ht"
---_curl_--"audience":"https://admin.dymium.local/api/handler"
---_curl_--"grant_type":"client_credentials"

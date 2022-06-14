@@ -129,7 +129,7 @@ func CustomerHandlers(p *mux.Router) {
 
 
 		var rq types.Request
-		rq.Action = "Update"
+		rq.Action = types.A_Update
 		rq.Customer = schema
 		rq.Datascope = &t.Name
 		snc, _ := json.Marshal(rq)
@@ -194,9 +194,9 @@ func CustomerHandlers(p *mux.Router) {
 
 
 		var rq types.Request
-		rq.Action = "Update"
+		rq.Action = types.A_Update
 		if( len(t.Records) == 0) {
-			rq.Action = "Delete"
+			rq.Action = types.A_Delete
 		}
 
 		rq.Customer = schema
