@@ -370,7 +370,8 @@ func getTokenFromCode(code, domain, client_id, client_secret, redirect string) (
 
 func UpdateConnection(schema string, con types.ConnectionRecord) error {
 	// Create a new context, and begin a transaction
-	ctx := context.Background()
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		log.Printf("Error in UpdateConnection: %s\n", err.Error())
@@ -432,7 +433,8 @@ func GetConnection(schema, id string) (types.Connection, error) {
 
 func GetDatascope(schema, id string) (types.Datascope, error) {
 	var ds = types.Datascope{}	
-	ctx := context.Background()
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 
 	// check if datascope exists, validating the schema along the way
@@ -535,7 +537,8 @@ func GetDatascopes(schema string) ([]types.DatascopeIdName, error) {
 
 func UpdateDatascope(schema string, dscope types.Datascope) error {
 	// Create a new context, and begin a transaction
-	ctx := context.Background()
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		log.Printf("Error in UpdateDatascope: %s\n", err.Error())
@@ -625,7 +628,8 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 
 func SaveDatascope(schema string, dscope types.Datascope) error {
 	// Create a new context, and begin a transaction
-	ctx := context.Background()
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		log.Printf("Error in SaveDatascope: %s\n", err.Error())
@@ -691,7 +695,8 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 }
 func DeleteConnection(schema, id string) error {
 	// Create a new context, and begin a transaction
-	ctx := context.Background()
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		log.Printf("Error in DeleteConnection: %s\n", err.Error())

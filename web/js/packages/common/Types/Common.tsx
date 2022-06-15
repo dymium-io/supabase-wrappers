@@ -58,3 +58,9 @@ export class ConnectionMap {
 export interface TablesMap {
     [index: string]: TableScope
 }
+
+export interface DataScopeInfo {
+    id: string;
+    name: string;
+    records?: types.TableLine[];
+}

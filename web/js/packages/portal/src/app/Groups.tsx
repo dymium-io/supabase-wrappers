@@ -4,8 +4,9 @@ import { Link } from "react-router-dom";
 export default function Groups() {
 
   return (
-    <div className="py-0 my-0">
-       Groups
+    <div className="p-4">
+    <h5>Groups</h5>
+       
     </div>
   )
 

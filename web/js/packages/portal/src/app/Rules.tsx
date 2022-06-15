@@ -4,8 +4,9 @@ import { Link } from "react-router-dom";
 export default function Rules() {
 
   return (
-    <div className="py-0 my-0">
-       Rules
+    <div className="p-4">
+    <h5>Rules</h5>
+       
     </div>
   )
 

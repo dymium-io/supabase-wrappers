@@ -3,11 +3,9 @@ import { Navigate } from "react-router-dom";
 
 
 function Dashboard() {
-
-
     return (
-        <div>
-         Dashboard
+        <div className="p-4">
+         <h5>Dashboard</h5>
         </div>
     )
 }

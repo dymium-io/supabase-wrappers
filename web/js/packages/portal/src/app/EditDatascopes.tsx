@@ -1,18 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import Tabs from 'react-bootstrap/Tabs'
-import Tab from 'react-bootstrap/Tab'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
-import Card from 'react-bootstrap/Card'
 import Offcanvas from '@dymium/common/Components/Offcanvas'
-import { Typeahead } from 'react-bootstrap-typeahead';
 import Modal from 'react-bootstrap/Modal'
 import Alert from 'react-bootstrap/Alert'
-import BootstrapTable from 'react-bootstrap-table-next';
 import Spinner from '@dymium/common/Components/Spinner'
-import cloneDeep from 'lodash/cloneDeep';
 import AddTable from './AddTable'
 import { useAppDispatch, useAppSelector } from './hooks'
 import {setSelectedDatascopeDefault} from '../Slices/menuSlice'
@@ -20,11 +14,7 @@ import * as com from '../Common'
 import DatascopeForm from './DatascopeForm'
 import * as types from '@dymium/common/Types/Common'
 
-interface DataScope {
-    id: string;
-    name: string;
-    records?: types.TableLine[];
-}
+
 
 let remap = new types.ConnectionMap();
 
@@ -32,9 +22,9 @@ export default function EditDatascopes() {
     const [spinner, setSpinner] = useState(false)
     let [conns, setConns] = useState<types.Connection[]>([])
     const [alert, setAlert] = useState<any>(<></>)
-    const [datascopes, setDatascopes] = useState<DataScope[]>([])
+    const [datascopes, setDatascopes] = useState<types.DataScopeInfo[]>([])
     const [selectedDatascope, setSelectedDatascope] = useState("")
-    const [selectedDatascopeDetails, setSelectedDatascopeDetails] = useState<DataScope | null>(null)
+    const [selectedDatascopeDetails, setSelectedDatascopeDetails] = useState<types.DataScopeInfo | null>(null)
 
     const [initialTables, setInitialTables] = useState<types.TablesMap>({})
     const [validated, setValidated] = useState(false)
@@ -311,7 +301,7 @@ export default function EditDatascopes() {
                             value={selectedDatascope}
                         >
                             return <option value="">...</option>
-                            {datascopes.map(x => {
+                            {datascopes != null && datascopes.map(x => {
 
                                 return <option key={x.id} value={x.id}>{x.name}</option>
                             })

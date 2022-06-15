@@ -36,7 +36,7 @@ export interface DatascopeFormProps {
     onTablesMapUpdate: (ar: types.TablesMap) => void,
     onAddTableRef: (ar: any) => void,
     connections: types.Connection[],
-    AddNewTable: (ar: string, schema?:string, table?:string) => void,
+    AddNewTable: (ar: string, schema?: string, table?: string) => void,
     nameToConnection: types.ConnectionMap,
     dbname: string,
     onDbname: (ar: string) => void,
@@ -200,8 +200,8 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
     useEffect(() => {
         console.log("on initialTables change")
         if (props.initialTables !== undefined) {
-            let conns:string[] = []
-            Object.keys(props.initialTables).forEach (x=>{
+            let conns: string[] = []
+            Object.keys(props.initialTables).forEach(x => {
                 conns.push(x)
             })
             setTables(props.initialTables)
@@ -259,39 +259,42 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
             })
             setConnections(d)
         }
-        let showDependencies = () => { 
+        let showDependencies = () => {
             // map tables
-           
-           let references = {}
-           let tbnames = Object.keys(tables[db.name])
-           for(let i = 0; i < tbnames.length; i++) {
-               let tbl = tables[db.name][tbnames[i]].tablescope
-                for(let j = 0; j < tbl.length; j++) {
-                    if(tbl[j]. reference != null) {
+            if (tables[db.name] === undefined)
+                return ""
+            let references = {}
+            let tbnames = Object.keys(tables[db.name])
+            for (let i = 0; i < tbnames.length; i++) {
+                let tbl = tables[db.name][tbnames[i]].tablescope
+                for (let j = 0; j < tbl.length; j++) {
+                    if (tbl[j].reference != null) {
                         console.log(tbl[j])
                         let rsch = tbl[j].reference.schema
                         let rtbl = tbl[j].reference.table
-                        references[rsch + "." + rtbl] = {schema:rsch, table: rtbl, 
-                            refby: tables[db.name][tbnames[i]].schema + "." + tables[db.name][tbnames[i]].table}
+                        references[rsch + "." + rtbl] = {
+                            schema: rsch, table: rtbl,
+                            refby: tables[db.name][tbnames[i]].schema + "." + tables[db.name][tbnames[i]].table
+                        }
                     }
                 }
-           }
+            }
 
-           //
-           let lines:JSX.Element[] = []
-           Object.keys(references).forEach( (key) => {
-               if(tables[db.name][key] !== undefined) 
+            //
+            let lines: JSX.Element[] = []
+            Object.keys(references).forEach((key) => {
+                if (tables[db.name][key] !== undefined)
                     return
-                let {schema, table, refby} = references[key]
+                let { schema, table, refby } = references[key]
                 let r = <div className="m-1">Table {refby} refers to {schema}.{table}. <Button onClick={
                     e => {
-                        if(db.id !== undefined)
+                        if (db.id !== undefined)
                             props.AddNewTable(db.id, schema, table)
                     }
 
-                } size="sm" style={{marginTop:"-2px"}} variant="dymium">Click to add {schema}.{table}</Button></div>
+                } size="sm" style={{ marginTop: "-2px" }} variant="dymium">Click to add {schema}.{table}</Button></div>
                 lines.push(r)
-           })
+            })
             return lines
         }
         return <Card key={db.name} id={db.name} className="card mb-3">
@@ -339,29 +342,29 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
 
     return (
         <>
-        { !props.edit &&
-            <Row>
-                <Col xs="auto">
-                    <Form.Group className="mb-3" controlId="dbname">
-                        <Form.Label>Database Name</Form.Label>
-                        <Form.Control size="sm" type="text" placeholder="alphanumeric"
-                            required
-                            pattern=".+"
-                            value={props.dbname}
-                            onChange={e => {
-                                console.log(e.target.value)
-                                props.onDbname(e.target.value)
-                            }}
-                        />
-                        <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                        <Form.Control.Feedback type="invalid" >
-                            Client side name for Dymium database
-                        </Form.Control.Feedback>
-                    </Form.Group>
+            {!props.edit &&
+                <Row>
+                    <Col xs="auto">
+                        <Form.Group className="mb-3" controlId="dbname">
+                            <Form.Label>Database Name</Form.Label>
+                            <Form.Control size="sm" type="text" placeholder="alphanumeric"
+                                required
+                                pattern=".+"
+                                value={props.dbname}
+                                onChange={e => {
+                                    console.log(e.target.value)
+                                    props.onDbname(e.target.value)
+                                }}
+                            />
+                            <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                            <Form.Control.Feedback type="invalid" >
+                                Client side name for Dymium database
+                            </Form.Control.Feedback>
+                        </Form.Group>
 
-                </Col>
-            </Row>
-                    }
+                    </Col>
+                </Row>
+            }
             <Row>
                 <Col xs="auto" className="d-flex" style={{ alignItems: "center" }}>
                     <Form.Group className="mb-3" controlId="connection" >
