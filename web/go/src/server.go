@@ -42,7 +42,9 @@ func main() {
 	dbport := os.Getenv("DATABASE_PORT")
 	dbuser := os.Getenv("DATABASE_USER")
 	dbtls  := os.Getenv("DATABASE_TLS")
-
+	if(dbtls == "")	{
+		dbtls = "disable"
+	}
 	authentication.DatabaseInit(dbhost, dbport, dbuser, dbpassword, dbtls)
 
 	p := mux.NewRouter()

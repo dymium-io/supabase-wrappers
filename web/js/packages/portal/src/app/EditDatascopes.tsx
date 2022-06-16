@@ -21,7 +21,7 @@ let remap = new types.ConnectionMap();
 export default function EditDatascopes() {
     const [spinner, setSpinner] = useState(false)
     let [conns, setConns] = useState<types.Connection[]>([])
-    const [alert, setAlert] = useState<any>(<></>)
+    const [alert, setAlert] = useState<JSX.Element>(<></>)
     const [datascopes, setDatascopes] = useState<types.DataScopeInfo[]>([])
     const [selectedDatascope, setSelectedDatascope] = useState("")
     const [selectedDatascopeDetails, setSelectedDatascopeDetails] = useState<types.DataScopeInfo | null>(null)

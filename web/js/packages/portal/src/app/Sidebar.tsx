@@ -29,7 +29,7 @@ export default function Sidebar() {
         id: 'connections'
       },
       {
-        item:  <div className='darkblue'><i className="fas fa-lock mr-1  fa-fw"></i>Data Scopes</div>,
+        item:  <div className='darkblue'><i className="fas fa-lock-open mr-1  fa-fw"></i>Data Scopes</div>,
         to: '/app/datascopes',
         id: 'datascopes'
       },      

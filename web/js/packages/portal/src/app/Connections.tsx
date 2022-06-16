@@ -226,7 +226,7 @@ function AddConnection() {
     const [password, setPassword] = useState("")
     const [description, setDescription] = useState("")
     const [spinner, setSpinner] = useState(false)
-    const [alert, setAlert] = useState(<></>)
+    const [alert, setAlert] = useState<JSX.Element>(<></>)
 
     let sendConnection = () => {
         setSpinner(true)
@@ -359,7 +359,7 @@ function EditConnections(props) {
     const [description, setDescription] = useState("")
     const [validated, setValidated] = useState(false)
     const [cred, setCred] = useState(false)
-    const [alert, setAlert] = useState(<></>)
+    const [alert, setAlert] = useState<JSX.Element>(<></>)
     let form = useRef<HTMLFormElement>(null)
 
     let handleSubmit = event => {

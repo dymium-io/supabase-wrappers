@@ -626,6 +626,87 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 	return nil
 }
 
+func GetMappings(schema string) ([]types.GroupMapping, error) {
+
+	sql := `select id, outergroup, innergroup, comment from ` + schema + `.groupmapping where exists (select schema_name from global.customers where schema_name = $1);`
+	rows, err := db.Query(sql, schema)
+
+	var mps = []types.GroupMapping{}
+	if nil == err {
+		defer rows.Close()
+
+		for rows.Next() {
+			var mp = types.GroupMapping{}
+			err = rows.Scan(&mp.Id, &mp.Directorygroup, &mp.Dymiumgroup, &mp.Comments)
+
+			if nil != err {
+				log.Printf("Error in GetMappings:  %s\n", err.Error())
+				return []types.GroupMapping{}, err
+			} else {
+				log.Printf("Connection: %v\n", mp)
+				mps = append(mps, mp)
+			}
+		}
+		
+	} else {
+		log.Printf("Error in GetConnections:  %s\n", err.Error())
+		return mps, err
+	}
+
+
+	return mps, nil
+}
+
+
+func CreateNewMapping(schema, dymiumgroup, directorygroup, comments string) error {
+	// Create a new context, and begin a transaction
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Printf("Error in CreateNewMapping: %s\n", err.Error())
+		return err
+	}
+
+	sql := "insert into "+schema+".groupmapping(outergroup, innergroup, comment) values($1, $2, $3) ;"
+	_, err = tx.ExecContext(ctx, sql, directorygroup, dymiumgroup, comments)
+
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 3 in CreateNewMapping: %s\n", err.Error())
+		return err
+	}	
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 4 in CreateNewMapping: %s\n", err.Error())
+		return err
+	}	
+	log.Println("CreateNewMapping success!")
+	return nil
+}
+
+func UpdateMapping(schema, id, dymiumgroup, directorygroup, comments string) error {
+
+	sql := "update "+schema+".groupmapping set outergroup=$1, innergroup=$2, comment=$3  where id=$4;"
+	log.Printf("sql: %s\n", sql)
+	_, err := db.Exec(sql, directorygroup, dymiumgroup, comments, id)
+	if(err != nil) {
+		log.Println("UpdateMapping error %s\n!", err.Error())
+	}
+	return err
+}
+func DeleteMapping(schema, id string) error {
+
+	sql := "delete from "+schema+".groupmapping where id=$1;"
+	log.Printf("sql: %s\n", sql)
+	_, err := db.Exec(sql, id)
+	if(err != nil) {
+		log.Println("DeleteMapping error %s\n!", err.Error())
+	}
+	return err
+}
 func SaveDatascope(schema string, dscope types.Datascope) error {
 	// Create a new context, and begin a transaction
     ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
@@ -939,6 +1020,9 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 
 		if(err != nil){
 			log.Printf("Error: %s\n", err.Error() )
+			des, _ := jsonParsed.Path("error_description").Data().(string)
+			generateError(w, r, err.Error(), des)	
+			return		
 		} else{
 			log.Printf("Schema: %s\n", schema )
 		}

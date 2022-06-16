@@ -26,3 +26,5 @@ web/go/assets/admin/asset-manifest.json
 web/go/assets/customer/asset-manifest.json
 web/go/assets/customer/index.html
 web/go/assets/admin/index.html
+setup/myddb
+setup/myddb~

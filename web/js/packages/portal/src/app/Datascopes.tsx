@@ -16,6 +16,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import AddTable from './AddTable'
 import EditDatascopes from './EditDatascopes'
 import DatascopeForm from './DatascopeForm'
+import Groups from './Groups'
 import { useAppDispatch, useAppSelector } from './hooks'
 import {setActiveDatascopeTab} from '../Slices/menuSlice'
 
@@ -31,7 +32,7 @@ export function AddDatascope(props) {
 
     let [conns, setConns] = useState<types.Connection[]>([])
     const [spinner, setSpinner] = useState(false)
-    const [alert, setAlert] = useState<any>(<></>)
+    const [alert, setAlert] = useState<JSX.Element>(<></>)
     const [showOffcanvas, setShowOffcanvas] = useState(false)
 
     const [table, setTable] = useState<types.TableScope>({schema: "", table:""})
@@ -229,6 +230,7 @@ export default function Datascopes() {
             <Tab eventKey="edit" title="Edit Data Scopes" className="mx-4">
                 <EditDatascopes />
             </Tab>
+       
         </Tabs>
     )
 }

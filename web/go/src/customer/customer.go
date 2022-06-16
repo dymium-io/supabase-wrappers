@@ -236,7 +236,6 @@ func CustomerHandlers(p *mux.Router) {
 			log.Printf("Error: %s\n", error.Error())
 			status := types.OperationStatus{"AuthError", error.Error()}
 			js, err := json.Marshal(status)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -269,6 +268,129 @@ func CustomerHandlers(p *mux.Router) {
 		w.Write(js)
 	}).Methods("POST")
 
+	b.HandleFunc("/api/createmapping", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+		body, _ := ioutil.ReadAll(r.Body)
+		defer r.Body.Close()
+
+		var t types.GroupMapping
+		err := json.Unmarshal(body, &t)
+
+		error = authentication.CreateNewMapping(schema, t.Dymiumgroup, t.Directorygroup, t.Comments)
+		var status types.OperationStatus
+		if(error == nil) {
+			status = types.OperationStatus{"OK", "Connection created"}
+		} else {
+			status = types.OperationStatus{"Error", error.Error()}
+		}
+		js, err := json.Marshal(status)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("POST")
+
+	b.HandleFunc("/api/updatemapping", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+		body, _ := ioutil.ReadAll(r.Body)
+		defer r.Body.Close()
+
+		var t types.GroupMapping
+		err := json.Unmarshal(body, &t)
+
+		error = authentication.UpdateMapping(schema, *t.Id, t.Dymiumgroup, t.Directorygroup, t.Comments)
+		var status types.OperationStatus
+		if(error == nil) {
+			status = types.OperationStatus{"OK", "Connection created"}
+		} else {
+			status = types.OperationStatus{"Error", error.Error()}
+		}
+		js, err := json.Marshal(status)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("POST")
+	
+	b.HandleFunc("/api/deletemapping", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+		
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+		body, _ := ioutil.ReadAll(r.Body)
+		defer r.Body.Close()
+
+		var t struct {
+			Id string
+		}
+		err := json.Unmarshal(body, &t)
+
+		error = authentication.DeleteMapping(schema, t.Id)
+
+		var status types.OperationStatus
+		if(error != nil) {
+			status = types.OperationStatus{"Error", error.Error()}
+		} else {
+			status = types.OperationStatus{"OK", "Mapping deleted"}
+		}
+		js, err := json.Marshal(status) //
+		if err != nil {
+			log.Printf("Error: %s\n", err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("POST")
+
 	b.HandleFunc("/api/updateconnection", func(w http.ResponseWriter, r *http.Request) {
 		token := common.TokenFromHTTPRequest(r)
 		schema, error := authentication.GetSchemaFromToken(token)
@@ -293,9 +415,15 @@ func CustomerHandlers(p *mux.Router) {
 		err := json.Unmarshal(body, &t)
 
 		error = authentication.UpdateConnection(schema, t)
-
-		js, err := json.Marshal(t)
+		var status types.OperationStatus
+		if(error != nil) {
+			status = types.OperationStatus{"Error", error.Error()}
+		} else {
+			status = types.OperationStatus{"OK", "Connection updated"}
+		}
+		js, err := json.Marshal(status) //
 		if err != nil {
+			log.Printf("Error: %s\n", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -304,7 +432,6 @@ func CustomerHandlers(p *mux.Router) {
 		w.Write(js)
 	}).Methods("POST")
 
-	
 	b.HandleFunc("/api/getdatascopedetails", func(w http.ResponseWriter, r *http.Request) {
 		token := common.TokenFromHTTPRequest(r)
 		schema, error := authentication.GetSchemaFromToken(token)
@@ -389,7 +516,37 @@ func CustomerHandlers(p *mux.Router) {
 		w.Write(js)
 	}).Methods("POST")
 
-	
+
+	 b.HandleFunc("/api/getmappings", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+
+		mappings, error := authentication.GetMappings(schema)
+
+		js, err := json.Marshal(mappings)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("GET")
+
 	b.HandleFunc("/api/getdatascopes", func(w http.ResponseWriter, r *http.Request) {
 		token := common.TokenFromHTTPRequest(r)
 		schema, error := authentication.GetSchemaFromToken(token)

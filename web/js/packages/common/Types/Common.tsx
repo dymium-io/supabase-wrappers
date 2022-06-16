@@ -64,3 +64,10 @@ export interface DataScopeInfo {
     name: string;
     records?: types.TableLine[];
 }
+
+export interface Mapping {
+    id?: string;
+    dymiumgroup: string;
+    directorygroup: string;
+    comments: string;
+}

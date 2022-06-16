@@ -9,3 +9,9 @@ DataSemantics:
   - FamilyName
   - Email
   - SSN
+
+GroupMapping: !!omap
+  - id: ?string
+  - dymiumgroup: string
+  - directorygroup: string
+  - comments: string

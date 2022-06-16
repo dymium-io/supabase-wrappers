@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
+import Tabs from 'react-bootstrap/Tabs'
+import Tab from 'react-bootstrap/Tab'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
@@ -9,9 +11,9 @@ import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Common'
 
-export default function TestSQL() {
+ function Test() {
   const [spinner, setSpinner] = useState(false)
-  const [alert, setAlert] = useState<any>(<></>)
+  const [alert, setAlert] = useState<JSX.Element>(<></>)
   const [datascopes, setDatascopes] = useState<types.DataScopeInfo[]>([])
   const [selectedDatascope, setSelectedDatascope] = useState("")
 
@@ -43,10 +45,10 @@ export default function TestSQL() {
 
   }, [])
   return (
-    <div className=" text-left p-4">
+    <div className=" text-left">
       {alert}
 
-      <h5 > Test SQL<Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+      <h5 > Run SQL statement against Data Scope virtual database<Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
       <div className=" text-left">
 
         <Row>
@@ -96,4 +98,20 @@ export default function TestSQL() {
     </div>
   )
 
+}
+
+
+export default function TestSQL() {
+
+  return (
+      <Tabs
+
+          unmountOnExit={true} className="mb-3 text-left">
+          <Tab eventKey="test" title="Test SQL" className="mx-4">
+              <Test />
+          </Tab>
+
+     
+      </Tabs>
+  )
 }
