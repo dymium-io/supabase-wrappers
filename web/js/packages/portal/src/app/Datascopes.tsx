@@ -16,6 +16,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import AddTable from './AddTable'
 import EditDatascopes from './EditDatascopes'
 import DatascopeForm from './DatascopeForm'
+import AssignGroups from './AssignGroups'
 import Groups from './Groups'
 import { useAppDispatch, useAppSelector } from './hooks'
 import {setActiveDatascopeTab} from '../Slices/menuSlice'
@@ -68,7 +69,8 @@ export function AddDatascope(props) {
                     })
                     setConns(cc)
                 })
-                setSpinner(false)
+                //setSpinner(false)
+                setTimeout( () => setSpinner(false), 500)
             },
             resp => {
                 console.log("on error")
@@ -230,7 +232,9 @@ export default function Datascopes() {
             <Tab eventKey="edit" title="Edit Data Scopes" className="mx-4">
                 <EditDatascopes />
             </Tab>
-       
+            <Tab eventKey="groups" title="Assign Groups" className="mx-4">
+                <AssignGroups />
+            </Tab>       
         </Tabs>
     )
 }

@@ -29,7 +29,7 @@ const Actions = [
     "Block",
     "Full Redact",
     "Obfuscate",
-    "Smart Reduct"
+    "Smart Redact"
 ]
 
 export interface AddTableProps {

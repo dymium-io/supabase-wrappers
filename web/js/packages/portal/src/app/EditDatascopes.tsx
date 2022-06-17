@@ -54,7 +54,7 @@ export default function EditDatascopes() {
                     setSelectedDatascope(t)
                 })
 
-                setSpinner(false)
+                setTimeout( () => setSpinner(false), 500)
             },
             resp => {
                 console.log("on error")
