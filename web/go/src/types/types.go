@@ -55,13 +55,25 @@ type DatascopeRecord struct {
 	Dflt string  `json:"dflt"`
 	Isnullable bool `json:"isnullable"`
 }
+type DatascopeIdName struct {
+	Name string `json:"name"`
+	Id string `json:"id"`	
+}
 type Datascope struct {
 	Name string `json:"name"`
 	Id string `json:"id",omitempty`		
 	Records []DatascopeRecord `json:"records"`
 }
 
-type DatascopeIdName struct {
+type GroupAssignment struct {
 	Name string `json:"name"`
 	Id string `json:"id"`	
+	Groups []DatascopeIdName `json:"groups"`	
+}
+
+type DatascopeAndGroups struct {
+	Id string `json:"id"`		
+	Name string `json:"name"`
+	Groupid string `json:"groupid"`	
+	Groupname string `json:"groupname"`	
 }

@@ -469,6 +469,51 @@ func CustomerHandlers(p *mux.Router) {
 		w.Header().Set("Content-Type", "text/html")
 		w.Write(js)
 	}).Methods("POST")
+	
+	b.HandleFunc("/api/savegroups", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+	
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+		body, _ := ioutil.ReadAll(r.Body)
+		defer r.Body.Close()
+
+		var t types.GroupAssignment
+
+		err := json.Unmarshal(body, &t)
+
+		err = authentication.UpdateGroupAssignment(schema, t)
+
+		var status  types.OperationStatus
+		if err == nil {
+			log.Printf("success")
+			status = types.OperationStatus{"OK", "Groups Updated"}
+		} else {
+			log.Printf("Error %s\n", err.Error())
+			status = types.OperationStatus{"Error", err.Error()}
+		}
+		
+		js, err := json.Marshal(status)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("POST")
 
 	b.HandleFunc("/api/deleteconnection", func(w http.ResponseWriter, r *http.Request) {
 		token := common.TokenFromHTTPRequest(r)
@@ -502,7 +547,7 @@ func CustomerHandlers(p *mux.Router) {
 			log.Printf("success")
 			status = types.OperationStatus{"OK", "Connection deleted"}
 		} else {
-			log.Printf("Error???? %v\n", err)
+			log.Printf("Error: %s\n", err.Error())
 			status = types.OperationStatus{"Error", err.Error()}
 		}
 		
@@ -516,6 +561,35 @@ func CustomerHandlers(p *mux.Router) {
 		w.Write(js)
 	}).Methods("POST")
 
+	b.HandleFunc("/api/getgroupsfordatascopes", func(w http.ResponseWriter, r *http.Request) {
+		token := common.TokenFromHTTPRequest(r)
+		schema, error := authentication.GetSchemaFromToken(token)
+		if error != nil {
+			log.Printf("Error: %s\n", error.Error())
+			status := types.OperationStatus{"AuthError", error.Error()}
+			js, err := json.Marshal(status)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+
+		mappings, error := authentication.GetGroupAssignments(schema)
+
+		js, err := json.Marshal(mappings)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("GET")
 
 	 b.HandleFunc("/api/getmappings", func(w http.ResponseWriter, r *http.Request) {
 		token := common.TokenFromHTTPRequest(r)

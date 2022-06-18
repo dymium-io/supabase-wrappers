@@ -657,6 +657,72 @@ func GetMappings(schema string) ([]types.GroupMapping, error) {
 	return mps, nil
 }
 
+func GetGroupAssignments(schema string) ([]types.DatascopeAndGroups, error) {
+	sql := `select a.id,a.name,b.group_id,c.innergroup from `+schema+
+	`.datascopes as a join `+schema+`.groupsfordatascopes as b on a.id=b.datascope_id  join `+schema+
+	`.groupmapping as c on b.group_id=c.id;`
+
+	rows, err := db.Query(sql)	
+	var mps = []types.DatascopeAndGroups{}
+	if nil == err {
+		defer rows.Close()
+
+		for rows.Next() {
+			var mp = types.DatascopeAndGroups{}
+			err = rows.Scan(&mp.Id, &mp.Name, &mp.Groupid, &mp.Groupname)
+
+			if nil != err {
+				log.Printf("Error in GetGroupAssignments:  %s\n", err.Error())
+				return []types.DatascopeAndGroups{}, err
+			} else {
+				mps = append(mps, mp)
+			}
+		}
+		
+	} else {
+		log.Printf("Error 1 in GetGroupAssignments:  %s\n", err.Error())
+		return mps, err
+	}
+	return mps, nil
+}
+func UpdateGroupAssignment(schema string, groups types.GroupAssignment) error {
+	// Create a new context, and begin a transaction
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Printf("Error in UpdateGroupAssignment: %s\n", err.Error())
+		return err
+	}
+
+	datascope_id := groups.Id
+	sql := `delete from ` +schema+ `.groupsfordatascopes where datascope_id=$1`
+	_, err = tx.ExecContext(ctx, sql, datascope_id)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 2 in UpdateGroupAssignment: %s\n", err.Error())
+		return err
+	}	
+
+	for  _, r := range groups.Groups {
+		group_id := r.Id
+		sql := `insert into ` +schema+ `.groupsfordatascopes(datascope_id, group_id) values ($1, $2);`
+		_, err = tx.ExecContext(ctx, sql, datascope_id, group_id)
+		if err != nil {
+			tx.Rollback()
+			log.Printf("Error 3 in UpdateGroupAssignment: %s\n", err.Error())
+			return err
+		}	
+		}
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 4 in UpdateGroupAssignment: %s\n", err.Error())
+		return err
+	}	
+	
+	return nil
+}
 
 func CreateNewMapping(schema, dymiumgroup, directorygroup, comments string) error {
 	// Create a new context, and begin a transaction

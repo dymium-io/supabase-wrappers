@@ -274,3 +274,13 @@ input:-internal-autofill-selected {
   padding-top: 0.3em;
   font-size: .875rem;
 }
+.highlightOption {
+  background: $main-blue !important;
+}
+.highlight {
+  background: $main-blue !important;
+}
+
+.multiSelectContainer li:hover {
+  background: $main-blue !important;
+}

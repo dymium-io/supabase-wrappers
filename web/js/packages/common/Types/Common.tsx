@@ -59,10 +59,15 @@ export interface TablesMap {
     [index: string]: TableScope
 }
 
+export interface Group {
+    id: string;
+    name: string;
+}
 export interface DataScopeInfo {
     id: string;
     name: string;
-    records?: types.TableLine[];
+    records?: TableLine[];
+    groups?: Group[];
 }
 
 export interface Mapping {

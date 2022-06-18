@@ -54,7 +54,7 @@ function GroupMapping() {
         setSpinner(false)
         setAlert(
           <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-            Error creating mapping.
+            Error retrieving mapping.
           </Alert>
         )
         setShow(false)
@@ -64,7 +64,7 @@ function GroupMapping() {
         setSpinner(false)
         setAlert(
           <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-            Error creating mapping.
+            Error retrieving mapping.
           </Alert>
         )
         setShow(false)

@@ -257,7 +257,7 @@ function AddConnection() {
                                 Error: {js.Text} !
                             </Alert >)
                     }
-                    setSpinner(false)
+                    setTimeout( () => setSpinner(false), 500)
 
                 }).catch((error) => {
 
@@ -533,7 +533,7 @@ function EditConnections(props) {
                     setConns(cc)
                 })
 
-                setSpinner(false)
+                setTimeout( () => setSpinner(false), 500)
             },
             resp => {
                 console.log("on error")
