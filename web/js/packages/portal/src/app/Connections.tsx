@@ -37,7 +37,14 @@ function ConnectionForm(props) {
                     <Form.Group className="mb-3" controlId="dbtype" >
                         <Form.Label >Database type</Form.Label>
                         <Form.Control as="select" required size="sm" value={props.dbtype}
-                            onChange={e => props.setDBType(e.target.value)}
+                            onChange={e => {
+                                let key=e.target.value
+                                if(key !== "")
+                                    props.setPort(com.databasePorts[key])
+                                else 
+                                props.setPort("")
+                                props.setDBType(key)
+                            }}
                         >
                             <option value="">...</option>
                             {databases}

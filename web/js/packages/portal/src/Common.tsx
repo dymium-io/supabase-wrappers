@@ -46,6 +46,13 @@ export const databaseTypes = {
     sqlserver: "SQL Server",
     oracle: "Oracle DB",
 }
+export const databasePorts = {
+    postgres: 5432,
+    mysql: 3306,
+    mariadb: 3306,
+    sqlserver: 1433,
+    oracle: 1521,    
+}
 
 export function sendToServer(method:string, url:string, 
     headers, body:string, onsuccess, onfailure, onexception) {
