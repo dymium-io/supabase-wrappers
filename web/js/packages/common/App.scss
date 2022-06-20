@@ -193,7 +193,7 @@ input:-internal-autofill-selected {
 }
 .spinner
 {
-	animation: round 1.4s infinite ease;
+	animation: round 1.0s infinite ease;
 	color: $main-blue;  	
 	font-size: 90px;
 	margin: 0px auto;
@@ -203,16 +203,21 @@ input:-internal-autofill-selected {
 	position: relative;
 	text-indent: -9999em;
 	transform: translateZ(0);
-	webkit-animation: round 1.7s infinite ease;
+	webkit-animation: round 1.0s infinite ease;
 	webkit-transform: translateZ(0);
 
 
 }
 .hiddenspinner {
-  opacity: 0.0 !important; 
-  webkit-animation: none !important;
+
+  #webkit-animation: fadeIn 0.5s ease;
   transform: none !important;
-  animation: none;
+	#animation: fadeIn 0.7s ease;
+  opacity: 0.0;
+}
+@keyframes fadeIn {
+  0% { opacity: 0.6; }
+  100% { opacity: 0; }
 }
 @keyframes round
 {
@@ -284,3 +289,4 @@ input:-internal-autofill-selected {
 .multiSelectContainer li:hover {
   background: $main-blue !important;
 }
+

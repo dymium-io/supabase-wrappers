@@ -1,13 +1,27 @@
 import React from 'react';
 import { Link } from "react-router-dom";
+import Tabs from 'react-bootstrap/Tabs'
+import Tab from 'react-bootstrap/Tab'
 
-export default function Rules() {
+
+function BuildRules() {
+  return (
+   <></>
+  )
+}
+export default function Groups() {
 
   return (
-    <div className="p-4">
-    <h5>Rules</h5>
-       
-    </div>
+    <Tabs
+
+
+      unmountOnExit={true} className="mb-3 text-left">
+
+      <Tab eventKey="build" title="Build Rules" className="mx-4">
+        <BuildRules />
+      </Tab>
+    </Tabs>
+
   )
 
 }
