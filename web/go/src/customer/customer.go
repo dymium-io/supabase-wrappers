@@ -134,7 +134,7 @@ func CustomerHandlers(p *mux.Router) {
 		rq.Datascope = &t.Name
 		snc, _ := json.Marshal(rq)
 
-		_, err = aws.Invoke("DbSync", &schema, snc)
+		_, err = aws.Invoke("DbSync", nil, snc)
 		if err != nil {
 			log.Printf("DbSync Error: ", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -203,7 +203,7 @@ func CustomerHandlers(p *mux.Router) {
 		rq.Datascope = &t.Name
 		snc, _ := json.Marshal(rq)
 
-		_, err = aws.Invoke("DbSync", &schema, snc)
+		_, err = aws.Invoke("DbSync", nil, snc)
 		if err != nil {
 			log.Printf("DbSync Error: ", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

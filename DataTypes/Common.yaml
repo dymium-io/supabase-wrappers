@@ -4,6 +4,9 @@ module: Common
 ConnectionType:
   - PostgreSQL
   - MySQL
+  - MariaDB
+  - SqlServer
+  - OracleDB
 
 DataSemantics:
   - FamilyName

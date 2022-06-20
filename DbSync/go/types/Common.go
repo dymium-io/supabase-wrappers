@@ -9,6 +9,9 @@ type ConnectionType string
 const (
   CT_PostgreSQL ConnectionType = "PostgreSQL"
   CT_MySQL ConnectionType = "MySQL"
+  CT_MariaDB ConnectionType = "MariaDB"
+  CT_SqlServer ConnectionType = "SqlServer"
+  CT_OracleDB ConnectionType = "OracleDB"
 )
 
 type DataSemantics string
