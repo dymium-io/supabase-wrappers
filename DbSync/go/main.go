@@ -3,65 +3,150 @@ package main
 import (
 	"github.com/aws/aws-lambda-go/lambda"
 
-	"os"
-	
 	"database/sql"
 	_ "github.com/lib/pq"
 
 	"github.com/aclements/go-gg/generic/slice"
-	"strconv"
-	// "strings"
 	"fmt"
-	
+
+	"golang.org/x/exp/maps"
+
 	"DbSync/types"
 )
 
 var db *sql.DB
 
+func conType(ct string) (types.ConnectionType, error) {
+	switch ct {
+	case "postgres":
+		return types.CT_PostgreSQL, nil
+	case "mysql":
+		return types.CT_MySQL, nil
+	case "mariadb":
+		return types.CT_MariaDB, nil
+	case "sqlserver":
+		return types.CT_SqlServer, nil
+	case "oracle":
+		return types.CT_OracleDB, nil
+	}
+	return "", fmt.Errorf("Connection type %s is not supported yet", ct)
+}
+
 func LambdaHandler(c types.Request) (interface{}, error) {
 
-	if c.Action == types.A_Update || c.Action == types.A_Delete {
-		type empty struct{}
-		return &empty{} , nil
+	var cnf *conf
+	var err error
+
+	switch c.Action {
+	case types.A_Delete:
+		if cnf, err = getConf(c.Customer, true); err != nil {
+			return nil, err
+		}
+		return doDelete(*c.Datascope, &cnf.GuardianConf)
+	case types.A_Update:
+		if cnf, err = getConf(c.Customer, true); err != nil {
+			return nil, err
+		}
+	case types.A_Return:
+		if cnf, err = getConf(c.Customer, false); err != nil {
+			return nil, err
+		}
+	}
+	if cnf == nil {
+		return nil, fmt.Errorf("Wrong request: %v",c)
 	}
 
+
 	if db == nil {
-		if err := openDb(); err != nil {
+		if err := openDb(cnf); err != nil {
 			return nil, err
 		}
 	}
 
 	datascopes, err := getDatascopes(db, c.Customer, c.Datascope)
 	if err != nil {
-		return nil ,err
+		return nil, err
 	}
 
 	connections, err := getConnections(db, c.Customer)
 	if err != nil {
-		return nil ,err
+		return nil, err
 	}
-	
-	return &types.CustomerData{ Connections: *connections, Datascopes: *datascopes }, nil
+
+	credentials, err := getCredentials(db, c.Customer)
+	if err != nil {
+		return nil, err
+	}
+
+	switch c.Action {
+	case types.A_Update: {
+		if datascopes == nil || len(*datascopes) != 1 {
+			return nil, fmt.Errorf("No data for datascope %q",*c.Datascope)
+		} else {
+			return doUpdate(
+				&cnf.GuardianConf,
+				&(*datascopes)[0],
+				connections,
+				credentials)
+		}
+	}
+	case types.A_Return:
+		return &types.CustomerData{
+			Credentials: maps.Values(*credentials),
+			Connections: maps.Values(*connections),
+			Datascopes:  *datascopes}, nil
+	}
+
+	return nil, fmt.Errorf("Undefined action %v",c.Action)
 }
 
-func getConnections(db *sql.DB, infoSchema string) (*[]types.Connection,error) {
-	rows, err := db.Query(fmt.Sprintf(`SELECT c.id, c.address, c.port, c.name, c.database_type, c.use_tls, c.dbname
-                                           FROM %s.connections c`,infoSchema))
+func getCredentials(db *sql.DB, infoSchema string) (*map[string]types.Credential, error) {
+	rows, err := db.Query(fmt.Sprintf(`SELECT c.id, a.username, p.password
+                                           FROM %s.connections c, %s.admincredentials a, %s.passwords p
+                                           WHERE a.id = p.id AND a.connection_id = c.id`,
+		infoSchema, infoSchema, infoSchema))
 	if err != nil {
-		return nil,err
+		return nil, err
+	}
+	creds := map[string]types.Credential{}
+	for rows.Next() {
+		var cred types.Credential
+		if err = rows.Scan(&cred.Connection_id, &cred.User_name, &cred.Password); err != nil {
+			return nil, err
+		}
+		creds[cred.Connection_id] = cred
+	}
+	return &creds, nil
+}
+
+func getConnections(db *sql.DB, infoSchema string) (*map[string]types.Connection, error) {
+	rows, err := db.Query(fmt.Sprintf(`SELECT c.id, c.address, c.port, c.name, c.database_type, c.use_tls, c.dbname
+                                           FROM %s.connections c`, infoSchema))
+	if err != nil {
+		return nil, err
 	}
 	defer rows.Close()
-	connections := []types.Connection{}
+	connections := map[string]types.Connection{}
 	for rows.Next() {
 		var c types.Connection
-		rows.Scan(&c.Id, &c.Address, &c.Port, &c.Name, &c.Database_type, &c.Use_tls, &c.Dbname)
-		connections = append(connections, c)
+		var dt string
+		rows.Scan(&c.Id, &c.Address, &c.Port, &c.Name, &dt, &c.Use_tls, &c.Dbname)
+		if c.Database_type, err = conType(dt); err != nil {
+			return nil, err
+		}
+		if c.Address == "localhost" {
+			c.Address = "ocker.for.mac.host.internal"
+		}
+		connections[c.Id] = c
 	}
 	return &connections, nil
 }
 
-func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]types.Datascope,error) {
-	infoDatascope_ := ""; if infoDatascope != nil { infoDatascope_ = fmt.Sprintf("d.name = %s AND ",*infoDatascope) }
+func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]types.Datascope, error) {
+	infoDatascope_ := ""
+	if infoDatascope != nil {
+		infoDatascope_ = fmt.Sprintf("d.name = '%s' AND ", esc(*infoDatascope))
+	}
 	rows, err := db.Query(fmt.Sprintf(`SELECT d.name, c.id,
                                       t.schem, t.tabl, t.col,
                                       t.typ, t.is_nullable,
@@ -71,11 +156,11 @@ func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]typ
                                ORDER BY d.name, t.schem, t.tabl, t.connection_id, t."position"`,
 		infoSchema, infoSchema, infoSchema, infoDatascope_))
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	defer rows.Close()
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -89,20 +174,20 @@ func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]typ
 		err = rows.Scan(&dscope, &con, &schem, &tblName,
 			&col.Name, &col.Typ, &col.IsNullable, &col.Semantics, &col.Action)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
 		if d == nil || dscope != d.Name {
 			datascopes = append(datascopes, types.Datascope{
-				Name: dscope,
-				Connections: []string{ con },
+				Name:        dscope,
+				Connections: []string{con},
 				Schemas: []types.Schema{
 					{
 						Name: schem,
 						Tables: []types.Table{
 							{
-								Name: tblName,
+								Name:       tblName,
 								Connection: con,
-								Columns: []types.Column{ col },
+								Columns:    []types.Column{col},
 							},
 						},
 					},
@@ -116,9 +201,9 @@ func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]typ
 				Name: schem,
 				Tables: []types.Table{
 					{
-						Name: tblName,
+						Name:       tblName,
 						Connection: con,
-						Columns: []types.Column{ col },
+						Columns:    []types.Column{col},
 					},
 				},
 			})
@@ -127,11 +212,11 @@ func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]typ
 			t = &s.Tables[0]
 		} else if tblName != t.Name || con != t.Connection {
 			s.Tables = append(s.Tables, types.Table{
-				Name: tblName,
+				Name:       tblName,
 				Connection: con,
-				Columns: []types.Column{ col },
+				Columns:    []types.Column{col},
 			})
-			d.Connections = append(d.Connections, con)			
+			d.Connections = append(d.Connections, con)
 			t = &s.Tables[len(s.Tables)-1]
 		} else {
 			t.Columns = append(t.Columns, col)
@@ -147,27 +232,13 @@ func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]typ
 	return &datascopes, nil
 }
 
-func openDb () error {
-	var host_, port_, user_, password_, dbname_, sslmode_ string
-	var err error
-	getEnv := func (e string) (string,error) {
-		if s := os.Getenv(e); s != "" {
-			return s, nil
-		} else {
-			return "",fmt.Errorf("Lambda misconfiguration: [%s] is not defined",e)
-		}
-	}
-	if host_,err = getEnv("DATABASE_HOST"); err != nil { return err }
-	if port_,err = getEnv("DATABASE_PORT"); err != nil { return err }
-	if dbname_,err = getEnv("DATABASE_DB"); err != nil { return err }
-	if user_,err = getEnv("DATABASE_USER"); err != nil { return err }
-	if password_,err = getEnv("DATABASE_PASSWORD"); err != nil { return err }
-	if sslmode_,err = getEnv("DATABASE_TLS"); err != nil { return err }
-	if p, err := strconv.Atoi(port_); err != nil || p < 1 || p > 65535 {
-		return fmt.Errorf("Lambda misconfiguration: DATABASE_PORT value %s is wrong",port_)
-	}
-	psqlconn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password='%s' sslmode=%s",
-		host_, port_, dbname_, user_, password_, sslmode_)
+func openDb(cnf *conf) (err error) {
+	
+	sslmode_ := "disable"
+	if cnf.DymiumTls { sslmode_ = "require" }
+	
+	psqlconn := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password='%s' sslmode=%s",
+		cnf.DymiumHost, cnf.DymiumPort, cnf.DymiumDatabase, cnf.DymiumUser, cnf.DymiumPassword, sslmode_)
 	db, err = sql.Open("postgres", psqlconn)
 	if err != nil {
 		return err
@@ -176,5 +247,5 @@ func openDb () error {
 }
 
 func main() {
-        lambda.Start(LambdaHandler)
+	lambda.Start(LambdaHandler)
 }

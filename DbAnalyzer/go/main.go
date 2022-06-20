@@ -17,7 +17,7 @@ func LambdaHandler(c types.Connection) (*types.Database, error) {
 
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Address, c.Port, c.User, c.Password, c.Database,
-		func () string { if c.Tls { return "enable" } else {return "disable" } }())
+		func () string { if c.Tls { return "require" } else {return "disable" } }())
 	
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
@@ -100,7 +100,7 @@ func getDbInfo(db *sql.DB, dbName *string) (*types.Database,error) {
 			if cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)",*cCharMaxLen)
 			} else {
-				t = "character"
+				t = "dpchar"
 			}
 		case "ARRAY":
 			switch *eTyp {

@@ -1,0 +1,147 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"net"
+	"os"
+	"strconv"
+)
+
+type guardianConf struct {
+	GuardianAddress       []string `json:"guardian_address"`
+	GuardianPort          int      `json:"guardian_port"`
+	GuardianTls           *bool    `json:"guardian_tls"`
+	GuardianUser          string   `json:"guardian_user"`
+	GuardianDatabase      string   `json:"guardian_database"`
+	GuardianAdminPassword string   `json:"guardian_password"`
+}
+
+type conf struct {
+	DymiumHost     string `json:"dymium_host"`
+	DymiumPort     int    `json:"dymium_port"`
+	DymiumTls      bool   `json:"dymium_tls"`
+	DymiumDatabase string `json:"dymium_databse"`
+	DymiumUser     string `json:"dymium_user"`
+	DymiumPassword string `json:"dymium_password"`
+	GuardianConf   guardianConf
+}
+
+func getConf(customer string, confGuardian bool) (c *conf, err error) {
+
+	returnError := func(err error) (*conf, error) {
+		return nil, err
+	}
+
+	cnf := conf{}
+
+	if cnf.DymiumHost = os.Getenv("DATABASE_HOST"); cnf.DymiumHost == "" {
+		return returnError(fmt.Errorf("DATABASE_HOST is not defined"))
+	} else if cnf.DymiumHost == "localhost" {
+		cnf.DymiumHost = "docker.for.mac.host.internal"
+	}
+
+	if port := os.Getenv("DATABASE_PORT"); port == "" {
+		return returnError(fmt.Errorf("DATABASE_PORT is not defined"))
+	} else if cnf.DymiumPort, err = strconv.Atoi(port); err != nil || cnf.DymiumPort < 1 || cnf.DymiumPort >= 0xFFFF {
+		return returnError(fmt.Errorf("Wrong DATABASE_PORT %s", port))
+	}
+
+	if tls := os.Getenv("DATABASE_TLS"); tls == "" {
+		return returnError(fmt.Errorf("DATABASE_TLS is not defined"))
+	} else if cnf.DymiumTls, err = strconv.ParseBool(tls); err != nil {
+		return returnError(fmt.Errorf("Wrong DATABASE_TLS %s", tls))
+	}
+
+	if cnf.DymiumDatabase = os.Getenv("DATABASE_DB"); cnf.DymiumDatabase == "" {
+		return returnError(fmt.Errorf("DATABASE_DB is not defined"))
+	}
+
+	if cnf.DymiumUser = os.Getenv("DATABASE_USER"); cnf.DymiumUser == "" {
+		return returnError(fmt.Errorf("DATABASE_USER is not defined"))
+	}
+
+	if cnf.DymiumPassword = os.Getenv("DATABASE_PASSWORD"); cnf.DymiumPassword == "" {
+		return returnError(fmt.Errorf("DATABASE_PASSWORD is not defined"))
+	}
+
+	if !confGuardian {
+		return &cnf, nil
+	}
+
+	var cnfM map[string]guardianConf
+
+	if cnfS := os.Getenv("GUARDIAN_CONF"); cnfS != "" {
+		if err = json.Unmarshal([]byte(cnfS), &cnfM); err != nil {
+			return returnError(fmt.Errorf("wrong GUARDIAN_CONF definition: %v", err))
+		}
+	} else {
+		return returnError(fmt.Errorf("GUARDIAN_CONF is not defined"))
+	}
+
+	if r, ok := cnfM["DEFAULT"]; ok {
+		cnf.GuardianConf = r
+		fmt.Println(r)
+	} else {
+		return returnError(fmt.Errorf("GUARDIAN_CONF[%q] nor GUARDIAN_CONF[\"DEFAULT\"] are not defined", customer))
+	}
+
+	if r, ok := cnfM[customer]; ok {
+		if r.GuardianPort != 0 {
+			cnf.GuardianConf.GuardianPort = r.GuardianPort
+		}
+		if cnf.GuardianConf.GuardianPort <= 0 || cnf.GuardianConf.GuardianPort >= 0xFFFF {
+			return returnError(fmt.Errorf("Wrong guardian port number %d", cnf.GuardianConf.GuardianPort))
+		}
+		
+		if r.GuardianDatabase != "" {
+			cnf.GuardianConf.GuardianDatabase = r.GuardianDatabase
+		}
+		if r.GuardianDatabase == "" {
+			return returnError(fmt.Errorf("Guardian database name is not defined"))
+		}
+		
+		if r.GuardianUser != "" {
+			cnf.GuardianConf.GuardianUser = r.GuardianUser
+		}
+		if cnf.GuardianConf.GuardianUser == "" {
+			return returnError(fmt.Errorf("Guardian user is not defined"))
+		}
+		
+		if r.GuardianAdminPassword != "" {
+			cnf.GuardianConf.GuardianAdminPassword = r.GuardianAdminPassword
+		}
+		if cnf.GuardianConf.GuardianAdminPassword == "" {
+			return returnError(fmt.Errorf("Guardian admin password is not defined"))
+		}
+		if r.GuardianTls != nil {
+			cnf.GuardianConf.GuardianTls = r.GuardianTls
+		}
+
+		if len(r.GuardianAddress) > 0 {
+			cnf.GuardianConf.GuardianAddress = r.GuardianAddress
+		}
+	}
+
+	if len(cnf.GuardianConf.GuardianAddress) == 0 {
+		if ipsIP, err := net.LookupIP(customer + ".guardian.local"); err != nil {
+			return returnError(fmt.Errorf("Can not resolve DNS name %q: %v", customer+".guardian.local", err))
+		} else {
+			cnf.GuardianConf.GuardianAddress = make([]string, len(ipsIP))
+			for k, ip := range ipsIP {
+				cnf.GuardianConf.GuardianAddress[k] = ip.String()
+			}
+		}		
+	} else {
+		for k := range cnf.GuardianConf.GuardianAddress {
+			if cnf.GuardianConf.GuardianAddress[k] == "localhost" {
+				cnf.GuardianConf.GuardianAddress[k] = "docker.for.mac.host.internal"
+			}
+		}
+	}
+
+	fmt.Println(cnf)
+
+	return &cnf, nil
+
+}

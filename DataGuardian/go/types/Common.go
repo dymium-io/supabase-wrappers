@@ -21,9 +21,4 @@ const (
   DS_SSN DataSemantics = "SSN"
 )
 
-type GroupMapping struct {
-   Id *string `json:"id"`
-   Dymiumgroup string `json:"dymiumgroup"`
-   Directorygroup string `json:"directorygroup"`
-   Comments string `json:"comments"`
-}
+

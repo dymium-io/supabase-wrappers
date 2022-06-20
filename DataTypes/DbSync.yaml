@@ -2,8 +2,14 @@
 module: DbSync
 
 customerData: !!omap
+  - credentials: <| credential |>
   - connections: <| connection |>
   - datascopes: <| datascope |>
+
+credential: !!omap
+  - connection_id: string
+  - user_name: string
+  - password: string
 
 connection: !!omap
   - id: string
