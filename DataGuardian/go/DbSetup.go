@@ -191,10 +191,10 @@ func configureDatabase(db *sql.DB,
 					redact := '0'
 					switch c.Action {
 					case "Redact": 
-						if strings.HasPrefix(c.Name, "char") ||
-							strings.HasPrefix(c.Name, "var") ||
-							c.Name == "text" ||
-							c.Name == "bpchar" {
+						if strings.HasPrefix(c.Typ, "char") ||
+							strings.HasPrefix(c.Typ, "var") ||
+							c.Typ == "text" ||
+							c.Typ == "bpchar" {
 							redact = '2'
 						} else {
 							redact = '1'
