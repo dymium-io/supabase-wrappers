@@ -21,7 +21,14 @@ retval=$?
     exit $retval
 }
 
+(
+    cd $script_d/../postgres/postgres_fdw
+    docker run -it --rm -v $PWD:/postgres_fdw postgres-dev /bin/bash -c "cd /postgres_fdw; USE_PGXS=true make"
+)
+
+
 cd $build_d
+cp $script_d/../postgres/postgres_fdw/postgres_fdw.so .
 
 # creating docker
 DataGuardian=$(docker images data-guardian -q)
