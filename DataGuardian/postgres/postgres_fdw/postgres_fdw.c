@@ -49,6 +49,7 @@
 #include "utils/rel.h"
 #include "utils/sampling.h"
 #include "utils/selfuncs.h"
+#include "nodes/print.h"
 
 PG_MODULE_MAGIC;
 
@@ -172,6 +173,7 @@ typedef struct PgFdwScanState
 	MemoryContext temp_cxt;		/* context for per-tuple temporary data */
 
 	int			fetch_size;		/* number of tuples per fetch */
+	int         *how_to_redact; /* !Dymium addition! */
 } PgFdwScanState;
 
 /*
@@ -512,7 +514,8 @@ static HeapTuple make_tuple_from_result_row(PGresult *res,
 											AttInMetadata *attinmeta,
 											List *retrieved_attrs,
 											ForeignScanState *fsstate,
-											MemoryContext temp_context);
+											MemoryContext temp_context,
+											int *how_to_redact);
 static void conversion_error_callback(void *arg);
 static bool foreign_join_ok(PlannerInfo *root, RelOptInfo *joinrel,
 							JoinType jointype, RelOptInfo *outerrel, RelOptInfo *innerrel,
@@ -1504,12 +1507,15 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 	if (eflags & EXEC_FLAG_EXPLAIN_ONLY)
 		return;
 
+	// Dymium
+	// pprint(fsplan);
+	
 	/*
 	 * We'll save private state in node->fdw_state.
 	 */
 	fsstate = (PgFdwScanState *) palloc0(sizeof(PgFdwScanState));
 	node->fdw_state = (void *) fsstate;
-
+	
 	/*
 	 * Identify which user to do the remote access as.  This should match what
 	 * ExecCheckRTEPerms() does.  In case of a join or aggregate, use the
@@ -1559,8 +1565,32 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 	 */
 	if (fsplan->scan.scanrelid > 0)
 	{
+		Oid	 relid;
 		fsstate->rel = node->ss.ss_currentRelation;
 		fsstate->tupdesc = RelationGetDescr(fsstate->rel);
+		fsstate->how_to_redact = (int*)palloc0(fsstate->tupdesc->natts);
+		/* !Dymium! */
+		relid = RelationGetRelid(fsstate->rel);
+		for(int k = 0; k != fsstate->tupdesc->natts; ++k) {
+			List *options = GetForeignColumnOptions(relid, k + 1);
+			ListCell *lc;
+			foreach(lc, options)
+			{
+				DefElem    *def = (DefElem *) lfirst(lc);
+
+				if (strcmp(def->defname, "redact") == 0)
+				{
+					char *redact = defGetString(def);
+					switch(redact[0]) {
+					case '0': fsstate->how_to_redact[k]=0; break;
+					case '1': fsstate->how_to_redact[k]=1; break;
+					case '2': fsstate->how_to_redact[k]=2; break;
+					case '3': fsstate->how_to_redact[k]=3; break;
+					}
+					break;
+				}
+			}
+		}
 	}
 	else
 	{
@@ -1585,6 +1615,7 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 
 	/* Set the async-capable flag */
 	fsstate->async_capable = node->ss.ps.async_capable;
+
 }
 
 /*
@@ -3841,7 +3872,8 @@ fetch_more_data(ForeignScanState *node)
 										   fsstate->attinmeta,
 										   fsstate->retrieved_attrs,
 										   node,
-										   fsstate->temp_cxt);
+										   fsstate->temp_cxt,
+										   fsstate->how_to_redact);
 		}
 
 		/* Update fetch_ct_2 */
@@ -4328,7 +4360,8 @@ store_returning_result(PgFdwModifyState *fmstate,
 											fmstate->attinmeta,
 											fmstate->retrieved_attrs,
 											NULL,
-											fmstate->temp_cxt);
+											fmstate->temp_cxt,
+											NULL);
 
 		/*
 		 * The returning slot will not necessarily be suitable to store
@@ -4622,7 +4655,8 @@ get_returning_data(ForeignScanState *node)
 												dmstate->attinmeta,
 												dmstate->retrieved_attrs,
 												node,
-												dmstate->temp_cxt);
+												dmstate->temp_cxt,
+												NULL);
 			ExecStoreHeapTuple(newtup, slot, false);
 		}
 		PG_CATCH();
@@ -5202,7 +5236,8 @@ analyze_row_processor(PGresult *res, int row, PgFdwAnalyzeState *astate)
 													   astate->attinmeta,
 													   astate->retrieved_attrs,
 													   NULL,
-													   astate->temp_cxt);
+													   astate->temp_cxt,
+													   NULL);
 
 		MemoryContextSwitchTo(oldcontext);
 	}
@@ -7158,7 +7193,8 @@ make_tuple_from_result_row(PGresult *res,
 						   AttInMetadata *attinmeta,
 						   List *retrieved_attrs,
 						   ForeignScanState *fsstate,
-						   MemoryContext temp_context)
+						   MemoryContext temp_context,
+						   int *how_to_redact)
 {
 	HeapTuple	tuple;
 	TupleDesc	tupdesc;
@@ -7216,12 +7252,46 @@ make_tuple_from_result_row(PGresult *res,
 	{
 		int			i = lfirst_int(lc);
 		char	   *valstr;
-
 		/* fetch next column's textual value */
 		if (PQgetisnull(res, row, j))
 			valstr = NULL;
-		else
+		else {
 			valstr = PQgetvalue(res, row, j);
+			// !Dymium!
+			if(how_to_redact) {
+				switch (how_to_redact[i-1]) {
+				case 0: /* printf("Don't redact: [%s]\n",valstr); */ break;
+				case 1:
+				  // printf("Redact as number: [%s] => ", valstr);
+				  valstr[0]='0'; valstr[1]='\0';
+				  // printf("[%s]\n",valstr);
+				  break;
+				case 2:
+				  // printf("Redact as string: [%s] => ", valstr);
+				  { int k; for(k=0; k != 3 && valstr[k] != 0; ++k) { valstr[k] = 'x'; } valstr[k] = 0; }
+				  //printf("[%s]\n",valstr);
+				  break;
+				case 3:
+				  // printf("Obfuscate: [%s] => ", valstr);
+				  {
+				    int k;
+				    for(k = 0; valstr[k] != 0; ++k) {
+				      char c = valstr[k];
+				      if(c >= '0' && c <= '9') {
+					valstr[k] = '0' + (c - '0' + 6553*(k+1)) % 10;
+				      } else if(c >= 'a' && c <= 'z') {
+					valstr[k] = 'a' + (c - 'a' + 2743*(k+13)) % 26;
+				      } else if(c >= 'A' && c <= 'Z') {
+					valstr[k] = 'A' + (c - 'A' + 1483*(k+286)) % 26;
+				      }
+				    }
+				    // printf("[%s]\n",valstr);
+				  }
+				  break;
+				}
+				// fflush(stdout);
+			}
+		}
 
 		/*
 		 * convert value to internal representation

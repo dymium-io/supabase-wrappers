@@ -188,7 +188,21 @@ func configureDatabase(db *sql.DB,
 					if c.IsNullable {
 						notNull = ""
 					}
-					defs = append(defs, fmt.Sprintf("  %q %s%s", c.Name, c.Typ, notNull))
+					redact := '0'
+					switch c.Action {
+					case "Redact": 
+						if strings.HasPrefix(c.Name, "char") ||
+							strings.HasPrefix(c.Name, "var") ||
+							c.Name == "text" ||
+							c.Name == "bpchar" {
+							redact = '2'
+						} else {
+							redact = '1'
+						}
+					case "Obfuscate": redact = '3'	
+					}
+					defs = append(defs, fmt.Sprintf("  %q %s OPTIONS( redact '%c' )%s",
+						c.Name, c.Typ, redact, notNull))
 				}
 			}
 			e := "CREATE FOREIGN TABLE %q.%q (\n" + strings.Join(defs, ",\n") + "\n)\n" +
