@@ -4,15 +4,10 @@
     overflow-x: hidden;
     overflow-y: auto;    
     z-index: 10000;
-    right: -600px;
     top: 0px;
-    width: 0px;
     border-left: solid #ccc 1px;
 }
-.bs-offcanvas-show {
-    right: 0px;
-    width: 600px;
-}
+
 
 .bs-canvas-overlay {
     display: none;

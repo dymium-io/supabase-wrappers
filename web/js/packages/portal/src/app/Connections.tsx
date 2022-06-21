@@ -602,7 +602,6 @@ function EditConnections(props) {
             resp => {
                 resp.json().then(js => {
  
-                    console.log("json: " + js)
                     if (js.Status === "OK") {
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>

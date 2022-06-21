@@ -179,14 +179,13 @@ export default function EditDatascopes() {
             Object.keys(conn).forEach(schematable => {
                 let st = conn[schematable]
                 // connection, schema, table, tablescope[typ, semantics, name, position, reference, action]
-                console.log(st)
+
                 st.tablescope.forEach(ts => {
                     let ob: types.DatascopeRecord = {
                         connection: st.connection, schema: st.schema, table: st.table,
                         typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
                         col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable
                     }
-                    console.log(JSON.stringify(ob))
                     retarray.push(ob)
                 })
             })
@@ -226,7 +225,7 @@ export default function EditDatascopes() {
                 console.log("on exception: " + error)
                 setSpinner(false)
             })
-        console.log(retarray)
+
     }
     let addTableR: any = useRef(null)
     let onAddTableRef = (theref) => {

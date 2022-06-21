@@ -269,7 +269,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                 let tbl = tables[db.name][tbnames[i]].tablescope
                 for (let j = 0; j < tbl.length; j++) {
                     if (tbl[j].reference != null) {
-                        console.log(tbl[j])
+  
                         let rsch = tbl[j].reference.schema
                         let rtbl = tbl[j].reference.table
                         references[rsch + "." + rtbl] = {

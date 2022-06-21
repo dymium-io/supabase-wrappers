@@ -1186,7 +1186,6 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         for (let i = 0; i < newtablestructure.length; i++) {
             let table = newtablestructure[i]
 
-            debugger
             let [action, semantics] = ActionByName(predo, newtablestructure[i].name)
             newtablestructure[i].action = action
             newtablestructure[i].semantics = semantics

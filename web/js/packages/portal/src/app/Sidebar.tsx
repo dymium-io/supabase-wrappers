@@ -57,7 +57,6 @@ export default function Sidebar() {
       if(ob.id === selected) {
         cl = 'hover-sidebar navselected '
       }
-      console.log(ob.id + ", " + selected + ", " + cl) 
       return <Link onClick={(k) => appDispatch( setActiveMenu(ob.id) )} key={ob.id} id={ob.id} className={cl} to={ob.to} > {ob.item} </Link>
     }
     )

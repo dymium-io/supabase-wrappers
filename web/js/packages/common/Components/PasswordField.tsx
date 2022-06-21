@@ -10,7 +10,7 @@ export default function PasswordField(props) {
     let toggle = e => {
         if (input.current == undefined)
             return
-        console.log(input.current["type"])
+   
         if (input.current["type"] === 'password') {
             setEye(false)
             input.current.type = "text"
