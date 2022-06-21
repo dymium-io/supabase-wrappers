@@ -232,11 +232,11 @@ func generatePortalJWT(picture, schema, org_id  string) (string, error) {
 	// generate JWT right header
 	issueTime := time.Now()
 	expirationTime := issueTime.Add(timeOut * time.Minute)
-	
+	log.Printf("generatePortalJWT: picture %s, org_id:%s\n", picture, org_id)
 	claim := &types.Claims{
 		// TODO
 		Roles: []string{},
-		Picture: picture,
+		Picture: picture ,
 		Schema: schema,
 		Orgid: org_id,
 		StandardClaims: jwt.StandardClaims{
@@ -261,14 +261,15 @@ func refreshPortalToken(token string) (string, error) {
 		return jwtKey, nil
 	})
 	timeNow := time.Now()
+	log.Printf("refreshPortalToken: picture %s\n", claim.Picture)
 	if err == nil && tkn.Valid {
 		// update token
 		expirationTime := timeNow.Add(timeOut * time.Minute)
 		newclaim := &types.Claims{
 			Roles: []string{},
 			Picture: claim.Picture,
-			Schema: claim.Schema,
-			Orgid: claim.Orgid,			
+			Schema: claim.Schema ,
+			Orgid: claim.Orgid ,	
 			StandardClaims: jwt.StandardClaims{
 				// In JWT, the expiry time is expressed as unix milliseconds
 				ExpiresAt: expirationTime.Unix(),
@@ -889,6 +890,28 @@ func DeleteConnection(schema, id string) error {
 	log.Printf("Returning success")
 	return nil
 }
+func GetFakeAuthentication () []byte{
+
+
+	token, err :=  generatePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s", 
+	"spoofcorp", "org_nsEsSgfq3IYXe2pu")
+	if(err != nil){
+		log.Printf("Error: %s\n", err.Error() )
+	}
+	return []byte(`<html>
+	<head>
+	<script>
+	 !function() {
+		sessionStorage.setItem("Session", "`+token+`")
+		window.location.href = "/app/"
+	 }()
+	</script>
+	</head>
+	<body>Callback arrived</body>
+	</html>`)
+	
+}
+
 func AuthenticationAdminHandlers(h *mux.Router) error {
 	host := os.Getenv("ADMIN_HOST")
 	log.Printf("ADMIN_HOST: %s\n", host)	

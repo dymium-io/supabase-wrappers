@@ -591,6 +591,20 @@ func CustomerHandlers(p *mux.Router) {
 		w.Write(js)
 	}).Methods("GET")
 
+	b.HandleFunc("/api/fakelogin", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("host: %s\n", r.Host)
+		if(r.Host != "portal.dymium.local" || r.Host != os.Getenv("CUSTOMER_HOST")) {
+			log.Printf("Error: fake login on non-local host requested")
+			http.Error(w, "Fake login forbidden", http.StatusInternalServerError)
+			return
+		}
+		js := authentication.GetFakeAuthentication()
+
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)
+	}).Methods("GET")
+
 	 b.HandleFunc("/api/getmappings", func(w http.ResponseWriter, r *http.Request) {
 		token := common.TokenFromHTTPRequest(r)
 		schema, error := authentication.GetSchemaFromToken(token)

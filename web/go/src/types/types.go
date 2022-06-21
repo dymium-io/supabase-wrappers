@@ -11,7 +11,7 @@ type Claims struct {
 	Roles      []string `json:"roles"`
 	Picture    string `json:"picture"`
 	Schema     string `json:"schema"`
-	Orgid      string `json:"picture"`
+	Orgid      string `json:"orgid"`
 	jwt.StandardClaims
 }
 

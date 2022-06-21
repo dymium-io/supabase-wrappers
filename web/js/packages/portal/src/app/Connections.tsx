@@ -200,10 +200,10 @@ function ConnectionForm(props) {
                 </Row>
             }
             <Row>
-                <Col xs="auto">
+                <Col xs>
                     <Form.Group className="mb-3" controlId="description">
                         <Form.Label>Description</Form.Label>
-                        <Form.Control as="textarea" rows={3} style={{ width: '35em' }}
+                        <Form.Control as="textarea" rows={3} style={{ width: '100%' }}
                             required
                             placeholder="Please put in the description of this connection"
                             onChange={e => props.setDescription(e.target.value)}

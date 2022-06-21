@@ -7,6 +7,8 @@ $validation-red: #a41c2a;
 $thick-blue: rgb(2, 101, 137);
 $dark-blue: rgb(1, 57, 77);
 
+$breakdown-width:900px;
+
 body, #root  {
   height: 100vh;
 }
@@ -290,3 +292,21 @@ input:-internal-autofill-selected {
   background: $main-blue !important;
 }
 
+
+.sidebar_container {
+  overflow-x: clip;
+  transition: width 0.1s ease-out;
+  width: 160px;
+}
+
+@media (max-width: $breakdown-width) {
+  .sidebar_container {
+    width: 38px;
+    transition: width 0.1s ease-out;
+ 
+
+  }  
+  .sidebar_container:hover {
+    overflow-x:visible;
+  }
+}  

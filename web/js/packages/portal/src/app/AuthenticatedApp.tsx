@@ -13,9 +13,9 @@ const AuthenticatedApp = () => {
             <Auth />
             <Menu />
 
-            <Row style={{height: '100vh'}} className="p-0 m-0">
-                <Col xs="auto" className="px-0"><Sidebar/></Col>
-                <Col className="p-0 spider">
+            <Row  style={{height: '100vh'}} className="p-0 m-0">
+                <Col xs="auto" id="sidebar_container"  className="px-0 sidebar_container"><Sidebar/></Col>
+                <Col xs className="p-0 spider" style={{overflowX: "scroll"}}>
                     <Outlet />
                 </Col>
 

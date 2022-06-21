@@ -12,13 +12,16 @@ const HomePage = (props) => {
     )
 }
 const AuthenticatedApp = () => {
+    useEffect( () => {
+
+    }, []) 
     return (
         <>
             <Auth />
             <Menu />
 
             <Row style={{height: '100vh'}}>
-                <Col xs="auto"><Sidebar/></Col>
+                <Col xs="auto" id="sidebar_container" className="sidebar_container"><Sidebar/></Col>
                 <Col>
                     <Outlet />
                 </Col>
