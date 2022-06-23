@@ -114,6 +114,7 @@ export const PII_civilian = {
     authentication: "Authentication information",
     first_name: "First name",
     last_name: "Last name",
+    middle_name: "Middle name",
     country: "Country",
     state: "State",
     city: "City",
@@ -125,6 +126,8 @@ export const PII_civilian = {
     job_position: "Job position",
     company: "Company",
     work_place: "Workplace",
-    work_address: "Work Address"
-
+    work_address: "Work Address",
+    business_entity: "Business entity Id",
+    contact_info: "Contact Info",
+    address: "Address"
 }
