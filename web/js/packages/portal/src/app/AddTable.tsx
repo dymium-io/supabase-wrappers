@@ -206,7 +206,7 @@ const PrefillUnclassified = {
         },
         {
             regexp: "(job)",
-            detection: "Job",
+            detection: "Job position",
             action: "Allow"
         },
         {
@@ -424,7 +424,7 @@ const Confidential = {
         },
         {
             regexp: "(job)",
-            detection: "Job",
+            detection: "Job position",
             action: "Obfuscate"
         },
         {
@@ -644,7 +644,7 @@ const Secret = {
         },
         {
             regexp: "(job)",
-            detection: "Job",
+            detection: "Job position",
             action: "Redact"
         },
         {
@@ -862,7 +862,7 @@ const TopSecret = {
         },
         {
             regexp: "(job)",
-            detection: "Job",
+            detection: "Job position",
             action: "Block"
         },
         {
