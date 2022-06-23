@@ -1,15 +1,13 @@
 package main
 
 import (
-
 	"database/sql"
 	_ "github.com/lib/pq"
-	
+
 	"fmt"
 	"log"
 
 	"DbSync/types"
-
 )
 
 func doUpdate(
@@ -17,7 +15,7 @@ func doUpdate(
 	datascope *types.Datascope,
 	connections *map[string]types.Connection,
 	credentials *map[string]types.Credential) (empty struct{}, err error) {
-	
+
 	sslmode_ := "disable"
 	if *cnf.GuardianTls {
 		sslmode_ = "require"
@@ -33,13 +31,13 @@ func doUpdate(
 		} else {
 			defer db.Close()
 			if rows, err := db.Query(fmt.Sprintf("SELECT 1 FROM pg_database WHERE datname = '%s'", esc(datascope.Name))); err != nil {
-				return empty, fmt.Errorf("%s connection: Can not query database name '%s': %v",a, esc(datascope.Name),err)
+				return empty, fmt.Errorf("%s connection: Can not query database name '%s': %v", a, esc(datascope.Name), err)
 			} else {
 				defer rows.Close()
 
 				if !rows.Next() {
-					if _, err = db.Exec(fmt.Sprintf("CREATE DATABASE %q OWNER %s",datascope.Name, cnf.GuardianUser)); err != nil {
-						return empty, fmt.Errorf("%s connection: Can not create database %q: %v",a, datascope.Name,err)
+					if _, err = db.Exec(fmt.Sprintf("CREATE DATABASE %q OWNER %s", datascope.Name, cnf.GuardianUser)); err != nil {
+						return empty, fmt.Errorf("%s connection: Can not create database %q: %v", a, datascope.Name, err)
 					}
 				}
 			}
@@ -63,14 +61,14 @@ func doUpdate(
 func clearDatabase(db *sql.DB) error {
 
 	exec := func(sql string) error {
-		if _,err := db.Exec(sql); err != nil {
-			return fmt.Errorf("%s failed: %v",err,err)
+		if _, err := db.Exec(sql); err != nil {
+			return fmt.Errorf("%s failed: %v", err, err)
 		}
 		return nil
 	}
 
 	if rows, err := db.Query("SELECT 1 FROM information_schema.schemata WHERE schema_name = '_dymium'"); err != nil {
-		return fmt.Errorf("looking for _dymium failed: %v",err)
+		return fmt.Errorf("looking for _dymium failed: %v", err)
 	} else {
 		defer rows.Close()
 		if rows.Next() {
@@ -85,6 +83,9 @@ func clearDatabase(db *sql.DB) error {
 					}
 					exec(fmt.Sprintf("DROP SERVER %q CASCADE", server))
 				}
+				if _, err := db.Exec("DELETE FROM _dymium.servers"); err != nil {
+					return fmt.Errorf("DELETE FROM _dymium.servers: %v", err)
+				}
 			}
 			if rsch, err := db.Query("SELECT \"schema\" FROM _dymium.schemas"); err != nil {
 				return fmt.Errorf("Getting list of schemas: %v", err)
@@ -97,14 +98,11 @@ func clearDatabase(db *sql.DB) error {
 					}
 					exec(fmt.Sprintf("DROP SCHEMA %q CASCADE", schema))
 				}
+				if _, err := db.Exec("DELETE FROM _dymium.schemas"); err != nil {
+					return fmt.Errorf("DELETE FROM _dymium.schemas: %v", err)
+				}
 			}
 		} else {
-			if err := exec("CREATE SCHEMA _dymium"); err != nil {
-				return fmt.Errorf("CREATE SCHEMA _dymium failed: %v",err)
-			}
-			if err := exec("CREATE TABLE _dymium"); err != nil {
-				return fmt.Errorf("CREATE SCHEMA _dymium failed: %v",err)
-			}
 			if err := exec("CREATE SCHEMA _dymium"); err != nil {
 				return err
 			}
@@ -116,6 +114,6 @@ func clearDatabase(db *sql.DB) error {
 			}
 		}
 	}
-	
+
 	return nil
 }
