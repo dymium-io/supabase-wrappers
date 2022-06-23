@@ -1,3 +1,7 @@
+//
+// Copyright (c) 2022 Dymium, Inc. All rights reserved.
+// written by igor@dymium.io
+//
 package main
 
 import (
@@ -7,30 +11,18 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
-
 	"github.com/go-http-utils/etag"
 	"github.com/gorilla/mux"
 	cache "github.com/victorspringer/http-cache"
 	"github.com/victorspringer/http-cache/adapter/memory"
-
 	"dymium.com/dymium/customer"
 	"dymium.com/dymium/admin"
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/authentication"
 )
 
-// this function extracts JWT from the request
-func tokenFromHTTPRequest(r *http.Request) string {
-	reqToken := r.Header.Get("Authorization")
-	var tokenString string
-	splitToken := strings.Split(reqToken, "Bearer ")
-	if len(splitToken) > 1 {
-		tokenString = splitToken[1]
-	}
-	return tokenString
-}
+
 
 func main() {
 	selfAddr := flag.String("address", "", "IP address to listen on")

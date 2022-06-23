@@ -1,7 +1,7 @@
 // Copyright 2013 The Gorilla Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-// hacked by Igor to make it discretionary
+// hacked by igor@dymium.io to make it discretionary
 package main
 
 import (

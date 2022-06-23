@@ -1,3 +1,7 @@
+//
+// Copyright (c) 2022 Dymium, Inc. All rights reserved.
+// written by igor@dymium.io
+//
 package dhandlers
 
 import (
@@ -72,7 +76,7 @@ func QueryConnection(w http.ResponseWriter, r *http.Request) {
 
 	res, err := aws.Invoke("DbAnalyzer", nil, bconn)
 	if err != nil {
-		log.Printf("DbAnalyzer Error: ", err.Error())
+		log.Printf("DbAnalyzer Error: %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	} else {
@@ -110,7 +114,7 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 
 	_, err = aws.Invoke("DbSync", nil, snc)
 	if err != nil {
-		log.Printf("DbSync Error: ", err.Error())
+		log.Printf("DbSync Error: %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	} else {
@@ -302,7 +306,7 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 	}
 	// get the connection details
 	log.Printf("%v\n", t)
-	error = authentication.UpdateDatascope(schema, t)
+	error := authentication.UpdateDatascope(schema, t)
 
 
 	var rq types.Request
@@ -317,7 +321,7 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 
 	_, err = aws.Invoke("DbSync", nil, snc)
 	if err != nil {
-		log.Printf("DbSync Error: ", err.Error())
+		log.Printf("DbSync Error: %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	} else {
@@ -405,43 +409,66 @@ func GetDatascopes(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 
 	datascopes, error := authentication.GetDatascopes(schema)
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "text/html")
 
+	if(error != nil) {
+		var status  types.OperationStatus
+		status = types.OperationStatus{"Error", error.Error()}
+		js, _ := json.Marshal(status)
+		w.Write(js)
+		return
+	}
 	js, err := json.Marshal(datascopes)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
-	w.Header().Set("Content-Type", "text/html")
+
 	w.Write(js)
 }
 func GetMappings(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "text/html")
 
 	mappings, error := authentication.GetMappings(schema)
+	if(error != nil) {
+		var status  types.OperationStatus
+		status = types.OperationStatus{"Error", error.Error()}
+		js, _ := json.Marshal(status)
+		w.Write(js)
+		return
+	}
 
 	js, err := json.Marshal(mappings)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
-	w.Header().Set("Content-Type", "text/html")
+
 	w.Write(js)
 }
 
 func GetGroupsForDatascopes(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
-
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "text/html")
+	
 	mappings, error := authentication.GetGroupAssignments(schema)
-
+	if(error != nil) {
+		var status  types.OperationStatus
+		status = types.OperationStatus{"Error", error.Error()}
+		js, _ := json.Marshal(status)
+		w.Write(js)
+		return
+	}
 	js, err := json.Marshal(mappings)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
-	w.Header().Set("Content-Type", "text/html")
+
 	w.Write(js)
 }
 func FakeLogin(w http.ResponseWriter, r *http.Request) {
@@ -494,16 +521,24 @@ func GetLogout(w http.ResponseWriter, r *http.Request) {
 }
 func GetConnections(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "text/html")
 
 	connections, error := authentication.GetConnections(schema)
+	if(error != nil) {
+		var status  types.OperationStatus
+		status = types.OperationStatus{"Error", error.Error()}
+		js, _ := json.Marshal(status)
+		w.Write(js)
+		return
+	}
 
 	js, err := json.Marshal(connections)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
-	w.Header().Set("Content-Type", "text/html")
+
 	w.Write(js)
 }
 func GetImages(w http.ResponseWriter, r *http.Request) {

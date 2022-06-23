@@ -1,3 +1,7 @@
+//
+// Copyright (c) 2022 Dymium, Inc. All rights reserved.
+// written by igor@dymium.io
+//
 package customer
 
 import (
