@@ -569,13 +569,6 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 		return err
 	}
 
-	sql="delete from "+schema+".datascopes where name=$1;"
-	_, err = tx.ExecContext(ctx, sql, dscope.Name)
-	if err != nil {
-		tx.Rollback()
-		log.Printf("Error 3 in UpdateDatascope: %s\n", err.Error())
-		return err
-	}
 
 	if( len(dscope.Records) == 0) {
 		err = tx.Commit()
@@ -587,16 +580,7 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 		return nil		
 	}
 
-	sql="insert into "+schema+".datascopes(name) values($1)  returning id;"
-	row = tx.QueryRowContext(ctx, sql, dscope.Name)
-	var ds_id string
-	err = row.Scan(&ds_id)	
-	if err != nil {
-		tx.Rollback()
-		log.Printf("Error 4 in UpdateDatascope: %s\n", err.Error())
-		return err
-	}	
-	log.Printf("id=%s\n", ds_id)
+
 	// iterate and create 
 	records := dscope.Records
 	for  _, r := range  records  {
@@ -610,7 +594,7 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 			rt = r.Reference.Table
 			rc =  r.Reference.Column
 		}
-		_, err = tx.ExecContext(ctx, sql, ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable)
+		_, err = tx.ExecContext(ctx, sql, id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable)
 		if err != nil {
 			tx.Rollback()
 			log.Printf("Error 5 in UpdateDatascope record: %s\n", err.Error())
