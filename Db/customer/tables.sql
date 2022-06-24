@@ -42,3 +42,11 @@ ALTER TABLE tables
        add column ref_tabl varchar(128);
 ALTER TABLE tables 
        add column ref_col varchar(128);
+
+
+-- #!migration
+-- name: "customer/tables-adjust-unique",
+-- description: "add datascopeid to unique",
+-- requires: ["customer/tables"];     
+ALTER TABLE tables drop constraint tables_schem_tabl_col_key;
+ALTER TABLE tables add constraint tables_datascope_id_schem_tabl_col_key unique(datascope_id, schem, tabl, col);
