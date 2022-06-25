@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"path"
 	"fmt"
 	"aws"
 )
@@ -542,7 +543,8 @@ func GetConnections(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 func GetImages(w http.ResponseWriter, r *http.Request) {
-	filename := "./customer/" + r.URL.Path
+	filename := path.Join(authentication.FilesystemRoot, "./customer/" + r.URL.Path)
+
 	if _, err := os.Stat(filename); errors.Is(err, os.ErrNotExist) {
 		// file does not exist
 		w.Header().Set("Cache-Control", common.Nocache)

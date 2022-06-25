@@ -26,6 +26,7 @@ import (
 	"github.com/Jeffail/gabs"
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/types"
+	"path/filepath"
 )
 
 
@@ -40,30 +41,30 @@ var auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_p
 var ctx context.Context
 
 
-func DatabaseInit(host string, port, user, password, tls string) {
-	log.Println("In Database Init")
+var FilesystemRoot string
+
+func DatabaseInit(host string, port, user, password, dbname, tls string) error {
 	nport := 5432
 	if port != "" {
 		nport, _ = strconv.Atoi(port)
 	}
 	psqlInfo = fmt.Sprintf("host=%s port=%d user=%s "+
 		"dbname=%s sslmode=%s",
-		host, nport, user, "dymium", tls)
+		host, nport, user, dbname, tls)
         if password != "" {
 		psqlInfo += " password='"+password+"'"
         }
 	var err error
-	log.Printf("%s\n", psqlInfo)
+
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
 		log.Printf("In Database, error: %s\n", err.Error())
-		//panic(err)
+		return err
 	} else {
-		log.Println("Database Connection opened successfully")
 		err = db.Ping()
 		if err != nil {
 			log.Printf("In Database, error on Ping: %s\n", err.Error())
-			//panic(err)
+			return err
 		}		
 	}
 
@@ -80,16 +81,21 @@ func DatabaseInit(host string, port, user, password, tls string) {
 	auth_portal_redirect = os.Getenv("AUTH0_PORTAL_REDIRECT_URL")
 	auth_portal_audience = os.Getenv("AUTH0_PORTAL_AUDIENCE")
 
-	// DELETE ME
-	log.Printf("auth_portal_domain: %s\n", auth_portal_domain)
-	log.Printf("auth_portal_client_id: %s\n", auth_portal_client_id)
-	log.Printf("auth_portal_redirect: %s\n", auth_portal_redirect)	
-	log.Printf("auth_portal_audience: %s\n", auth_portal_audience)	
-
 	ctx = context.Background()
 
+	FilesystemRoot = os.Getenv("FILESYSTEM_ROOT")
+	if(FilesystemRoot == "") {
+		FilesystemRoot, _ = os.Getwd()
+	} else {
+		FilesystemRoot, _ = filepath.Abs(FilesystemRoot)
+	}
+
+	return nil
 }
 
+func GetDB() *sql.DB {
+	return db
+}
 func generateAdminJWT(picture string) (string, error) {
 		// generate JWT right header
 		issueTime := time.Now()
@@ -229,11 +235,11 @@ func GetConnections(schema string) ([]types.ConnectionRecord, error ) {
 
 	return conns, nil
 }
-func generatePortalJWT(picture, schema, org_id  string) (string, error) {
+func GeneratePortalJWT(picture, schema, org_id  string) (string, error) {
 	// generate JWT right header
 	issueTime := time.Now()
 	expirationTime := issueTime.Add(timeOut * time.Minute)
-	log.Printf("generatePortalJWT: picture %s, org_id:%s\n", picture, org_id)
+
 	claim := &types.Claims{
 		// TODO
 		Roles: []string{},
@@ -250,7 +256,7 @@ func generatePortalJWT(picture, schema, org_id  string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 	// Create the JWT string
 	tokenString, err := token.SignedString(jwtKey)
-log.Printf("token: %s\n", tokenString)
+
 	return tokenString, err
 }
 
@@ -262,7 +268,7 @@ func refreshPortalToken(token string) (string, error) {
 		return jwtKey, nil
 	})
 	timeNow := time.Now()
-	log.Printf("refreshPortalToken: picture %s\n", claim.Picture)
+
 	if err == nil && tkn.Valid {
 		// update token
 		expirationTime := timeNow.Add(timeOut * time.Minute)
@@ -355,7 +361,7 @@ func getTokenFromCode(code, domain, client_id, client_secret, redirect string) (
 	client := &http.Client{}
 	urlStr := fmt.Sprintf("%soauth/token", 
 	domain)
-	log.Printf("in get token: %s\n%s\n", urlStr, encodedData)
+	
 	nr, err := http.NewRequest(http.MethodPost, urlStr, strings.NewReader(encodedData) ) // URL-encoded payload
 	if err != nil {
 		log.Printf("Error: %s\n", err.Error()) 
@@ -425,7 +431,7 @@ func GetConnection(schema, id string) (types.Connection, error) {
 	var con types.Connection
 	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &con.Password, &con.Database, &con.Tls)
 	if(err != nil) {
-		log.Printf("Error: ", err.Error())
+		log.Printf("Error: %s\n", err.Error())
 	} else {
 		log.Printf("connection: %v", con)
 	}
@@ -745,7 +751,7 @@ func UpdateMapping(schema, id, dymiumgroup, directorygroup, comments string) err
 	log.Printf("sql: %s\n", sql)
 	_, err := db.Exec(sql, directorygroup, dymiumgroup, comments, id)
 	if(err != nil) {
-		log.Println("UpdateMapping error %s\n!", err.Error())
+		log.Printf("UpdateMapping error %s\n", err.Error())
 	}
 	return err
 }
@@ -755,7 +761,7 @@ func DeleteMapping(schema, id string) error {
 	log.Printf("sql: %s\n", sql)
 	_, err := db.Exec(sql, id)
 	if(err != nil) {
-		log.Println("DeleteMapping error %s\n!", err.Error())
+		log.Printf("DeleteMapping error %s\n", err.Error())
 	}
 	return err
 }
@@ -878,7 +884,7 @@ func DeleteConnection(schema, id string) error {
 func GetFakeAuthentication () []byte{
 
 
-	token, err :=  generatePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s", 
+	token, err :=  GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s", 
 	"spoofcorp", "org_nsEsSgfq3IYXe2pu")
 	if(err != nil){
 		log.Printf("Error: %s\n", err.Error() )
@@ -1083,7 +1089,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		log.Printf("picture: %s, ok: %b\n", picture, ok)
 
 		org_id, ok := jsonParsed.Path("org_id").Data().(string)
-		log.Printf("ord id: %s, ok: %b\n", org_id, ok)
+		log.Printf("ord id: %s, ok: %t\n", org_id, ok)
 
 		sql := fmt.Sprintf("select schema_name from global.customers where organization=$1;")
 
@@ -1101,7 +1107,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 			log.Printf("Schema: %s\n", schema )
 		}
 
-		token, err := generatePortalJWT(picture, schema, org_id)
+		token, err := GeneratePortalJWT(picture, schema, org_id)
 		if(err != nil){
 			log.Printf("Error: %s\n", err.Error() )
 		}

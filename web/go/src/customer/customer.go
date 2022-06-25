@@ -5,7 +5,6 @@
 package customer
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"os"
@@ -55,7 +54,6 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/{name:.*\\.ico}", dhandlers.GetImages)
 
 	nonauthenticated.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("in /!\n")
 		http.ServeFile(w, r, "./customer/index.html")
 	}).Methods("GET")
 }

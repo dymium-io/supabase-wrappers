@@ -37,8 +37,10 @@ func main() {
 	if(dbtls == "")	{
 		dbtls = "disable"
 	}
-	authentication.DatabaseInit(dbhost, dbport, dbuser, dbpassword, dbtls)
-
+	err := authentication.DatabaseInit(dbhost, dbport, dbuser, dbpassword, "dymium", dbtls)
+	if(err != nil) {
+		log.Panicln(err)
+	}
 	p := mux.NewRouter()
 
 	loggingMiddleware := func(next http.Handler) http.Handler {

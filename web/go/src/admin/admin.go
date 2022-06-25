@@ -93,7 +93,7 @@ func AdminHandlers(p *mux.Router) {
 	})
 
 	b.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("in /!\n")
+		fmt.Println("in /!")
 		http.ServeFile(w, r, "./admin/index.html")
 	}).Methods("GET")
 }
