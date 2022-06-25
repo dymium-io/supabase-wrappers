@@ -1086,7 +1086,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		jsonParsed, err = gabs.ParseJSON(info)
 
 		picture, ok := jsonParsed.Path("picture").Data().(string)
-		log.Printf("picture: %s, ok: %b\n", picture, ok)
+		log.Printf("picture: %s, ok: %t\n", picture, ok)
 
 		org_id, ok := jsonParsed.Path("org_id").Data().(string)
 		log.Printf("ord id: %s, ok: %t\n", org_id, ok)
