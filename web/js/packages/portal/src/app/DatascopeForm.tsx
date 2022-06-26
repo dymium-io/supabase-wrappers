@@ -16,7 +16,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import AddTable from './AddTable'
 import EditDatascopes from './EditDatascopes'
 import * as com from '../Common'
-import * as types from '@dymium/common/Types/Common'
+import * as types from '@dymium/common/Types/Commonold'
 
 
 //

@@ -12,7 +12,7 @@ import { useAppDispatch, useAppSelector } from './hooks'
 import {setSelectedDatascopeDefault} from '../Slices/menuSlice'
 import * as com from '../Common'
 import DatascopeForm from './DatascopeForm'
-import * as types from '@dymium/common/Types/Common'
+import * as types from '@dymium/common/Types/Commonold'
 
 
 
@@ -69,7 +69,7 @@ export default function EditDatascopes() {
     let getConnections = () => {
         setSpinner(true)
         setConns([])
-        setSpinner(true)
+
         com.sendToServer("GET", "/api/getconnections",
             null, "",
             resp => {

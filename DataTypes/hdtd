@@ -1,0 +1,44 @@
+---
+
+DbAnalyzer:
+  language: GoLang
+  path: ../DbAnalyzer/go/types
+  root-module: DbAnalyzer/types
+  modules:
+    - source: DbAnalyzer.yaml
+    - source: Common.yaml
+
+DbSync:
+  language: GoLang
+  path: ../DbSync/go/types
+  root-module: DbSync/types
+  modules:
+    - source: DbSync.yaml
+    - source: DbSyncCommon.yaml
+    - source: Common.yaml
+
+DbGuardian:
+  language: GoLang
+  path: ../DbGuardian/go/types
+  root-module: initializer/types
+  modules:
+    - source: DbSync.yaml
+    - source: DbSyncCommon.yaml
+    - source: Common.yaml
+
+web-go:
+  language: GoLang
+  path: ../web/go/src/types
+  root-module: dymium/types
+  modules:
+    - source: DbAnalyzer.yaml
+    - source: DbSyncCommon.yaml
+    - source: Common.yaml
+
+web-ts:
+  language: TypeScript
+  path: ../web/js/packages/common/Types
+  modules:
+    - source: DbAnalyzer.yaml
+    - source: DbSyncCommon.yaml
+    - source: Common.yaml

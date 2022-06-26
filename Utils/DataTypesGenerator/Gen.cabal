@@ -31,6 +31,7 @@ library
       LangGenerators.Haskell
       LangGenerators.Js
       LangGenerators.Python
+      LangGenerators.Ts
       Types
       Types.Ddt
       Types.Lang

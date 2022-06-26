@@ -28,7 +28,7 @@ data SearchResult where
   StructFound :: SearchResult
   EnumFound   :: EnumDef -> SearchResult
 
-fromYaml :: [(DdtDef, [Value])] -> RIO App [ModuleDef]
+fromYaml :: [(DdtModuleDef, [Value])] -> RIO App [ModuleDef]
 fromYaml yy' =
   let mnames = getModuleNamePath <$> yy in
   case mnames ^..each ._Left :: [T.Text] of
@@ -45,7 +45,7 @@ fromYaml yy' =
         mapM_ (logError . display) e
         exitFailure
   where
-    yy :: [(DdtDef, Value)]
+    yy :: [(DdtModuleDef, Value)]
     yy = mconcat $ uncurry C.enPairing <$> yy'
 
 searchGen :: [((T.Text,Maybe FilePath),Value)] -> T.Text -> T.Text -> SearchResult
@@ -108,7 +108,7 @@ moduleDef search ((mName',mPath'),y) =
           modRefs :: [(T.Text, Field)] -> Set.Set T.Text
           modRefs = foldMap (maybe Set.empty Set.singleton . moduleName . snd)
 
-getModuleNamePath :: (DdtDef,Value) -> Either T.Text (T.Text,Maybe FilePath)
+getModuleNamePath :: (DdtModuleDef,Value) -> Either T.Text (T.Text,Maybe FilePath)
 getModuleNamePath (ddt,y) =
   case y ^? key "module" . _String of
     Nothing ->  Left $ "module name is not defined in "<>T.pack (ddtSource ddt)

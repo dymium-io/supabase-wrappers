@@ -20,7 +20,6 @@ type    Camelizer   = Text -> Text
 
 data App = App
   { verbose           :: !Bool
-  , appHddtName       :: !Text
   , appLogFunc        :: !LogFunc
   , appProcessContext :: !ProcessContext
   }

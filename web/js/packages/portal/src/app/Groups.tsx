@@ -18,7 +18,7 @@ import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import Spinner from '@dymium/common/Components/Spinner'
 import cloneDeep from 'lodash/cloneDeep';
 import * as com from '../Common'
-import * as types from '@dymium/common/Types/Common'
+import * as types from '@dymium/common/Types/Commonold'
 const { SearchBar, ClearSearchButton } = Search;
 
 function GroupMapping() {

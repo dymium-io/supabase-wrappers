@@ -18,3 +18,52 @@ GroupMapping: !!omap
   - dymiumgroup: string
   - directorygroup: string
   - comments: string
+
+ConnectionRecord: !!omap 
+  - name: string
+  - dbtype: string
+  - address: string
+  - port: int
+  - dbname: string
+  - useTLS: bool
+  - description: string
+  - username: ?string
+  - password: ?string
+  - id: ?string
+  - credid: ?string
+
+ConnectionsQuery: !!omap 
+  - status: string
+  - errormessage: ?string
+  - records: ?<|ConnectionRecord|>
+
+reference: !!omap
+  - schema: string
+  - table: string
+  - column: string
+
+DatascopeRecord: !!omap
+  - id: ?string	
+  - connection: string
+  - connectionId: ?string	
+  - schema: string
+  - table: string
+  - typ: string
+  - position: int
+  - reference: ?reference
+  - action: string
+  - col: string
+  - semantics: string
+  - dflt: string
+  - isnullable: bool
+
+
+OperationStatus: !!omap
+  - status: string
+  - errormessage:   string
+
+
+ConnectionResponse: !!omap 
+  - status: string
+  - errormessage:   string
+  - data: <|ConnectionRecord|>

@@ -1,4 +1,0 @@
-definitions:
-  - source: DbSync.yaml
-  - source: DbSyncCommon.yaml
-  - source: Common.yaml

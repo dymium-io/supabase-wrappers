@@ -1,3 +1,0 @@
-definitions:
-  - source: DbAnalyzer.yaml
-  - source: Common.yaml

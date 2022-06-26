@@ -31,13 +31,8 @@ column: !!omap
   - typ: string
   - isNullable: bool
   - default: ?string
-  - reference: ?reference
+  - reference: ?Common.reference
   - semantics: ?Common.DataSemantics
-
-reference: !!omap
-  - schema: string
-  - table: string
-  - column: string
 
 arc: !!omap
   - from_schema: string

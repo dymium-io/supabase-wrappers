@@ -1,6 +1,7 @@
 module dymium.com/dymium
 
 require (
+	aws v0.0.0-00010101000000-000000000000
 	github.com/Jeffail/gabs v1.4.0
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/andybalholm/brotli v1.0.0
@@ -21,6 +22,7 @@ require (
 	github.com/nsf/jsondiff v0.0.0-20210926074059-1e845ec5d249
 	github.com/signintech/gopdf v0.9.8
 	github.com/smartystreets/goconvey v1.6.4
+	github.com/stretchr/testify v1.6.1
 	github.com/tidwall/buntdb v1.1.0
 	github.com/victorspringer/http-cache v0.0.0-20190721184638-fe78e97af707
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
@@ -30,10 +32,10 @@ require (
 )
 
 require (
-	aws v0.0.0-00010101000000-000000000000 // indirect
 	cloud.google.com/go v0.78.0 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/coreos/go-oidc/v3 v3.1.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v0.5.2 // indirect
 	github.com/fasthttp-contrib/websocket v0.0.0-20160511215533-1f3b11f56072 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
@@ -47,6 +49,7 @@ require (
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/moul/http2curl v1.0.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/snorwin/jsonpatch v1.4.0 // indirect
 	github.com/tidwall/btree v0.0.0-20170113224114-9876f1454cf0 // indirect
@@ -64,6 +67,7 @@ require (
 	google.golang.org/genproto v0.0.0-20210225212918-ad91960f0274 // indirect
 	google.golang.org/grpc v1.36.0 // indirect
 	gopkg.in/antage/eventsource.v1 v1.0.0-20150318155416-803f4c5af225 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
 
 replace aws => ../../../libs/go/aws

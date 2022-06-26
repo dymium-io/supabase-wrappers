@@ -395,7 +395,7 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 		log.Printf("Error 1 in UpdateConnection: %s\n", err.Error())
 		return err
 	}
-	if(con.Username != "" && con.Password != "") {
+	if(con.Username != nil && con.Password != nil) {
 		sql = `update `+schema+`.admincredentials set username=$1 where connection_id=$2 returning id;`
 		row  := tx.QueryRowContext(ctx, sql, con.Username, con.Id)
 		var credid string
@@ -413,7 +413,7 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 			return err
 		}		
 	}
-	log.Printf("Username: %s, password %s\n", con.Username, con.Password )
+	log.Printf("Username: %s, password %s\n", *con.Username, *con.Password )
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()

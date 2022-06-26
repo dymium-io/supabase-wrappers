@@ -33,11 +33,16 @@ func main() {
 	dbpassword := os.Getenv("DATABASE_PASSWORD")
 	dbport := os.Getenv("DATABASE_PORT")
 	dbuser := os.Getenv("DATABASE_USER")
+	dbname := os.Getenv("DATABASE_NAME")
 	dbtls  := os.Getenv("DATABASE_TLS")
+	log.Printf("dbname: %s\n", dbname)
 	if(dbtls == "")	{
 		dbtls = "disable"
 	}
-	err := authentication.DatabaseInit(dbhost, dbport, dbuser, dbpassword, "dymium", dbtls)
+	if(dbname == "") {
+		dbname = "dymium"
+	}
+	err := authentication.DatabaseInit(dbhost, dbport, dbuser, dbpassword, dbname, dbtls)
 	if(err != nil) {
 		log.Panicln(err)
 	}

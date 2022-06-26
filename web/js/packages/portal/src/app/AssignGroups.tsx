@@ -16,7 +16,7 @@ import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 const { SearchBar, ClearSearchButton } = Search;
 
 import * as com from '../Common'
-import * as types from '@dymium/common/Types/Common'
+import * as types from '@dymium/common/Types/Commonold'
 import { legacy_createStore } from '@reduxjs/toolkit';
 import { getDisplayName } from 'react-bootstrap-typeahead/types/utils';
 

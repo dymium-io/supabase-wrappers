@@ -28,3 +28,7 @@ web/go/assets/customer/index.html
 web/go/assets/admin/index.html
 setup/myddb
 setup/myddb~
+setup/adventureworks.sql
+setup/northwind.sql
+setup/adventureworks.sql~
+setup/northwind.sql~

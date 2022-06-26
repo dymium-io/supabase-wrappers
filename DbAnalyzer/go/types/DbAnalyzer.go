@@ -42,12 +42,6 @@ type Database struct {
    Refs []Arc `json:"refs"`
 }
 
-type Reference struct {
-   Schema string `json:"schema"`
-   Table string `json:"table"`
-   Column string `json:"column"`
-}
-
 type Schema struct {
    Name string `json:"name"`
    IsSystem bool `json:"isSystem"`

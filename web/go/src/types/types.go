@@ -21,6 +21,7 @@ type AdminClaims struct {
 	jwt.StandardClaims
 }
 
+/*
 type OperationStatus struct {
 	Status string
 	Text   string
@@ -40,6 +41,7 @@ type ConnectionRecord struct {
 	Id string  `json:"id",omitempty`
 	Credid  string  `json:"credid",omitempty`
 }
+
 type DatascopeRecord struct {
 	Id string `json:"id",omitempty`	
 	Connection string `json:"connection"`
@@ -55,6 +57,9 @@ type DatascopeRecord struct {
 	Dflt string  `json:"dflt"`
 	Isnullable bool `json:"isnullable"`
 }
+*/
+
+
 type DatascopeIdName struct {
 	Name string `json:"name"`
 	Id string `json:"id"`	

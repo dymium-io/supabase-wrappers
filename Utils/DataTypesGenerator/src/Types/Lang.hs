@@ -10,6 +10,7 @@ data Lang
   | Python
   | GoLang
   | JS
+  | TS
     deriving(Eq,Enum,Bounded)
 
 instance Read Lang where
@@ -21,6 +22,7 @@ instance Read Lang where
            "python"  -> return Python
            "golang"  -> return GoLang
            "js"      -> return JS
+           "ts"      -> return TS
            _         -> pfail
     )
 
@@ -29,3 +31,4 @@ instance Show Lang where
   show Python  = "python"
   show GoLang  = "golang"
   show JS      = "js"
+  show TS      = "ts"

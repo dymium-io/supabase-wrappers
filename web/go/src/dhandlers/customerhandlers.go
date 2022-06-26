@@ -533,8 +533,9 @@ func GetConnections(w http.ResponseWriter, r *http.Request) {
 		w.Write(js)
 		return
 	}
-
-	js, err := json.Marshal(connections)
+	var status types.ConnectionResponse
+	status = types.ConnectionResponse{"OK", "", connections}
+	js, err := json.Marshal(status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

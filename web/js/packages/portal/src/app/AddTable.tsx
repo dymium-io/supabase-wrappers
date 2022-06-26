@@ -15,7 +15,7 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import cloneDeep from 'lodash/cloneDeep';
 import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
-import * as types from '@dymium/common/Types/Common'
+import * as types from '@dymium/common/Types/Commonold'
 
 const PIIs = Object.values(com.PII_civilian)
 

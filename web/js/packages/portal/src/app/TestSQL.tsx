@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import Alert from 'react-bootstrap/Alert'
 import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
-import * as types from '@dymium/common/Types/Common'
+import * as types from '@dymium/common/Types/Commonold'
 
  function Test() {
   const [spinner, setSpinner] = useState(false)

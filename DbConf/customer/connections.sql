@@ -28,3 +28,9 @@ CREATE TYPE source_type AS ENUM (
 
 ALTER TABLE connections ALTER COLUMN database_type TYPE source_type
       USING database_type::source_type;
+
+-- #!migration
+-- name: "customer/make-name-unique",
+-- description: "make name unique",
+-- requires: ["customer/connections-source-type"];
+ALTER TABLE connections ADD CONSTRAINT name_unique UNIQUE (name);;

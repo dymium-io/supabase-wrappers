@@ -1,4 +1,0 @@
-definitions:
-  - source: DbAnalyzer.yaml
-  - source: DbSyncCommon.yaml
-  - source: Common.yaml

@@ -16,11 +16,12 @@ import "net/http/httptest"
 import "bytes"
 import "io/ioutil"
 import "encoding/json"
+import "github.com/stretchr/testify/assert"
 
 var status types.OperationStatus
-var createconnection = `{"name":"adventureworks","dbtype":"postgres","address":"docker.for.mac.host.internal","port":5432,"dbname":"Adventureworks","useTLS":false,"username":"postgres","password":"$kdvnMsp4o","description":"test data base from Microsoft"}`
-
-func TestAuthMiddleware(t *testing.T){
+var adventureworks = `{"name":"adventureworks","dbtype":"postgres","address":"docker.for.mac.host.internal","port":5432,"dbname":"Adventureworks","useTLS":false,"username":"postgres","password":"$kdvnMsp4o","description":"test data base from Microsoft"}`
+var northwind = `{"name":"northwind","dbtype":"postgres","address":"docker.for.mac.host.internal","port":5432,"dbname":"northwind","useTLS":false,"username":"postgres","password":"$kdvnMsp4o","description":"another MS database"}`
+func TestApiHandlers(t *testing.T){
 ///------------------ db setup start ------------------------	
 	func () {
 		dbhost := os.Getenv("DATABASE_HOST")
@@ -177,7 +178,7 @@ func TestAuthMiddleware(t *testing.T){
 	}()
 // -------- test auth middleware	
 	func() {
-		req, err := http.NewRequest("POST", "/api/createnewconnection",  bytes.NewBuffer([]byte(createconnection )))
+		req, err := http.NewRequest("POST", "/api/createnewconnection",  bytes.NewBuffer([]byte(northwind )))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -206,7 +207,7 @@ func TestAuthMiddleware(t *testing.T){
 		fmt.Println("Authentication without JWT failed correctly")
 	}()
 	// -------- create a connection	
-	func(data string) {
+	createConnection := func(data string) {
 		req, err := http.NewRequest("POST", "/api/createnewconnection",  bytes.NewBuffer([]byte(data )))
 		if err != nil {
 			t.Fatal(err)
@@ -234,5 +235,81 @@ func TestAuthMiddleware(t *testing.T){
 			return		
 		}
 		fmt.Println("Created connection, should check the database")
-	}(createconnection)
+	}
+	createConnection(adventureworks)
+	countConnections := func (c int) {
+		db := authentication.GetDB()
+		sql := `select count(*) from spoofcorp.connections;`
+		row := db.QueryRow(sql)
+		var count int 
+		row.Scan(&count)
+		fmt.Printf("Number of connections: %d\n", count)
+		assert.Equal(t, count, c, "One record should be present")
+	}
+	countConnections(1)
+	createConnection(northwind)
+	countConnections(2)
+	// -------- create a connection	
+	createDupConnection := func(data string) {
+		req, err := http.NewRequest("POST", "/api/createnewconnection",  bytes.NewBuffer([]byte(data )))
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+
+		h := http.HandlerFunc(CreateNewConnection)
+		hh := AuthMiddleware(h)
+		hh.ServeHTTP(rr, req)
+		body, _ := ioutil.ReadAll(rr.Body)
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		err = json.Unmarshal(body, &status)
+		if err != nil {
+			t.Errorf("Unmarshaling error: %s\n", err.Error() )
+			return
+		}
+		if(status.Status == "OK") {
+			t.Errorf("The insertion of duplicate name in connection should have failed\n" )
+			return		
+		}
+		fmt.Printf("Test properly failed with the error: %s\n", status.Errormessage)
+	}
+	createDupConnection(northwind)
+
+	
+	func () {
+		req, err := http.NewRequest("GET", "/api/getconnections",  nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+
+		h := http.HandlerFunc(GetConnections)
+		hh := AuthMiddleware(h)
+		hh.ServeHTTP(rr, req)
+		body, _ := ioutil.ReadAll(rr.Body)
+		fmt.Printf("%s\n", string(body))
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		err = json.Unmarshal(body, &status)
+		if err != nil {
+			t.Errorf("Unmarshaling error: %s\n", err.Error() )
+			return
+		}
+		if(status.Status != "OK") {
+			t.Errorf("Authentication should not have passed\n" )
+			return		
+		}
+		fmt.Println("Created connection, should check the database")			
+	}()
 }

@@ -8,6 +8,7 @@ import           Import
 import           RIO.FilePath
 import qualified RIO.HashMap            as HM
 import           RIO.Lens
+import qualified RIO.Map                as M
 import qualified RIO.Text               as T
 
 import           Data.Yaml
@@ -22,52 +23,75 @@ import qualified LangGenerators.GoLang  as GoLang
 import qualified LangGenerators.Haskell as Haskell
 import qualified LangGenerators.Js      as Js
 import qualified LangGenerators.Python  as Python
+import qualified LangGenerators.Ts      as Ts
 
-run :: Lang -> InstallPath -> RootModule -> Maybe Text -> RIO App ()
-run lang installPath rootModule mapF = do
-  hddtName <- ask <&> appHddtName
-  liftIO (decodeAllFileEither $ T.unpack hddtName :: IO (Either ParseException [Ddt])) >>= \case
-    Right [hddt'] -> do
-      hddt <- normalizeHddtPaths hddt'
-      let hddtD = hddt & ddtDefinitions
-          r =  hddtD <&> ddtSource
-          d = decodeAllFileEither . (takeDirectory (T.unpack hddtName) </>)
-      yy <- liftIO (mapM d r :: IO [Either ParseException [Value]])
-      let errs = yy ^..traverse ._Left
-      unless (null errs) $ do
-          mapM_ (logError . displayShow) errs
-          exitFailure
-      ddt <- fromYaml $ yy ^..traverse . _Right & zip hddtD
-      ask <&> verbose >>= flip when (pPrint ddt)
-      camelizer <- Cmz.camelizerDef mapF ddt
-      case lang of
-        Haskell -> Haskell.run ddt installPath rootModule camelizer
-        JS      -> Js.run      ddt installPath rootModule camelizer
-        GoLang  -> GoLang.run  ddt installPath rootModule camelizer
-        Python  -> Python.run  ddt installPath rootModule camelizer
+run :: FilePath -> [Text] -> RIO App ()
+run hddtName modules = do
+  res <- liftIO (decodeAllFileEither hddtName :: IO (Either ParseException [M.Map Text DdtDef]))
+  case res of
+    Right [hddts] -> do
+      hddtList <- makeHddtList hddts
+      forM_ hddtList $ \(name, hddt') -> do
+        logInfo $ "\x1B[34mRunning \x1B[0;31m" <> display name <> "\x1B[0;34m installation...\x1B[0m"
+        hddtD <- normalizeHddtPaths hddtName (ddtModules hddt')
+        let lang = ddtLanguage hddt'
+            installPath = InstallPath (ddtRootPath hddt')
+            rootModule = RootModule (ddtRootModule hddt')
+            mapF = ddtMapFile hddt'
+            r =  hddtD <&> ddtSource
+            d = decodeAllFileEither . (takeDirectory hddtName </>)
+        yy <- liftIO (mapM d r :: IO [Either ParseException [Value]])
+        let errs = yy ^..traverse ._Left
+        unless (null errs) $ do
+            mapM_ (logError . displayShow) errs
+            exitFailure
+        ddt <- fromYaml $ yy ^..traverse . _Right & zip hddtD
+        ask <&> verbose >>= flip when (pPrint ddt)
+        camelizer <- Cmz.camelizerDef mapF ddt
+        case T.toLower lang of
+          "haskell" -> Haskell.run ddt installPath rootModule camelizer
+          js | js == "js" || js == "javascript" ->
+            Js.run ddt installPath rootModule camelizer
+          ts | ts == "ts" || ts == "typescript" ->
+            Ts.run      ddt installPath rootModule camelizer
+          go | go == "go" || go == "golang" ->
+            GoLang.run  ddt installPath rootModule camelizer
+          "python"  -> Python.run  ddt installPath rootModule camelizer
+          _ -> do
+            logError . displayShow $
+              "Language ["<>lang<>"is not supported\n" <>
+              "Supported languages are: Haskell, JavaScript, TypeScript, Golang, and Python"
+            exitFailure
     Left err -> do
       logError $ displayShow err
       exitFailure
-    Right _ -> do
-      logError $ displayShow ("Wrong format of ["<>hddtName<>"]: multiple objects")
+    _ -> do
+      logError "Multiple sections in HDDT file are not supported"
       exitFailure
 
+    where
+      makeHddtList hddts =
+        if null modules
+        then pure $ M.toList hddts
+        else forM modules $ \m -> do
+          case M.lookup m hddts of
+            Nothing -> do
+              logError $ "Installation "<> display m <>" not defined in HDDT file"
+              exitFailure
+            Just h -> pure (m,h)
 
-normalizeHddtPaths :: Ddt -> RIO App Ddt
-normalizeHddtPaths ddt = do
-    definitions' <- traverse updateDdtDef definitions
-    pure $ ddt { ddtDefinitions = definitions' }
+normalizeHddtPaths :: FilePath -> [DdtModuleDef] -> RIO App [DdtModuleDef]
+normalizeHddtPaths hddtName definitions = do
+    traverse updateDdtDef definitions
   where
-    definitions = ddtDefinitions ddt
 
-    updateDdtDef :: DdtDef -> RIO App DdtDef
+    updateDdtDef :: DdtModuleDef -> RIO App DdtModuleDef
     updateDdtDef ddtDef = do
       defaultDestination <- case  ddtDestination ddtDef of
         Nothing -> pure Nothing
         Just p  -> C.normalisePath p >>= \case
           p'@('/':_ ) -> do
-            hddtName <- ask <&> appHddtName
-            logError $ display hddtName<>
+            logError $ displayShow hddtName<>
               ": absolute path "<>
               displayShow p'<>
               " is not allowed as the destination"
@@ -88,8 +112,7 @@ normalizeHddtPaths ddt = do
           p' <- Just <$> C.normalisePath p
           pure $ ddtMod' { ddtPath = p' }
         Just p@('/' : _) -> do
-                   hddtName <- ask <&> appHddtName
-                   logError $  display hddtName<>
+                   logError $  displayShow hddtName<>
                      ": absolute path "<>
                      displayShow p<>
                      " is not allowed as the destination of "<>

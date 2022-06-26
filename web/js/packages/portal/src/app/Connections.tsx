@@ -18,6 +18,7 @@ const { SearchBar, ClearSearchButton } = Search;
 import { tooltip } from '@dymium/common/Components/Tooltip'
 import PasswordField from '@dymium/common/Components/PasswordField'
 import * as com from '../Common'
+import * as types from '@dymium/common/Types/Common'
 import Spinner from '@dymium/common/Components/Spinner'
 import { useInitialize } from '../Utils/CustomHooks'
 import { useAppDispatch, useAppSelector } from './hooks'
@@ -513,44 +514,6 @@ function EditConnections(props) {
         }
 
     ]
-    let getConnections = () => {
-        setSpinner(true)
-        setConns([])
-        com.sendToServer("GET", "/api/getconnections",
-            null, "",
-            resp => {
-
-                resp.json().then(js => {
-
-                    let cc = js.map(x => {
-                        return {
-                            id: x.id,
-                            credid: x.credid,
-                            dbtype: x.dbtype,
-                            name: x.name,
-                            dbname: x.dbname,
-                            address: x.address,
-                            port: x.port,
-                            description: x.description,
-                            usetls: x.useTLS,
-
-                        }
-                    })
-
-                    setConns(cc)
-                })
-
-                setTimeout( () => setSpinner(false), 500)
-            },
-            resp => {
-                console.log("on error")
-                setSpinner(false)
-            },
-            error => {
-                console.log("on exception: " + error)
-                setSpinner(false)
-            })
-    }
 
     let updateConnection = () => {
         let body = {
@@ -575,19 +538,19 @@ function EditConnections(props) {
 
                 setSpinner(false)
                 setShowedit(false)
-                getConnections()
+                com.getConnections(setSpinner, setConns, setAlert, ()=>{})
             },
             resp => {
                 console.log("on error")
                 setSpinner(false)
                 setShowedit(false)
-                getConnections()
+                com.getConnections(setSpinner, setConns, setAlert, ()=>{})
             },
             error => {
                 console.log("on exception: " + error)
                 setSpinner(false)
                 setShowedit(false)
-                getConnections()
+                com.getConnections(setSpinner, setConns, setAlert, ()=>{})
             })
     }
 
@@ -617,7 +580,7 @@ function EditConnections(props) {
                     }
                     setSpinner(false)
                     setShowdelete(false)
-                    getConnections()
+                    com.getConnections(setSpinner, setConns, setAlert, ()=>{})
                 }).catch(error => {
                     console.log("Error: " + error.message)
                     setAlert(
@@ -628,7 +591,7 @@ function EditConnections(props) {
                     setSpinner(false)
                     console.log("on exception")
                     setShowdelete(false)
-                    getConnections()
+                    com.getConnections(setSpinner, setConns, setAlert, ()=>{})
                 })
             },
             resp => {
@@ -640,7 +603,7 @@ function EditConnections(props) {
                 )
                 setSpinner(false)
                 setShowdelete(false)
-                getConnections()
+                com.getConnections(setSpinner, setConns, setAlert, ()=>{})
             },
             error => {
                 console.log("on exception: " + error)
@@ -651,12 +614,12 @@ function EditConnections(props) {
                 )
                 setSpinner(false)
                 setShowdelete(false)
-                getConnections()
+                com.getConnections(setSpinner, setConns, setAlert, ()=>{})
             })
     }
 
     useEffect(() => {
-        getConnections()
+        com.getConnections(setSpinner, setConns, setAlert, ()=>{})
     }, [])
     let connectionName = () => {
         let ret = ""

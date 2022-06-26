@@ -22,7 +22,7 @@ import { useAppDispatch, useAppSelector } from './hooks'
 import {setActiveDatascopeTab} from '../Slices/menuSlice'
 
 import * as com from '../Common'
-import * as types from '@dymium/common/Types/Common'
+import * as types from '@dymium/common/Types/Commonold'
 
 
 let remap =  new types.ConnectionMap();
@@ -82,7 +82,7 @@ export function AddDatascope(props) {
             })
     }
     useEffect(() => {
-        getConnections()
+        com.getConnections(setSpinner, setConns, setAlert, ()=>{})
     }, [])
 
     let sendConnection = () => {
