@@ -243,7 +243,7 @@ function AddConnection() {
             null, body,
             resp => {
                 resp.json().then(js => {
-                    if (js.Status == "OK") {
+                    if (js.status == "OK") {
                         setName("")
                         setDbName("")
                         setDBType("")
@@ -262,7 +262,7 @@ function AddConnection() {
                     } else {
                         setAlert(
                             < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
-                                Error: {js.Text} !
+                                Error: {js.errormessage} !
                             </Alert >)
                     }
                     setTimeout( () => setSpinner(false), 500)
@@ -538,19 +538,19 @@ function EditConnections(props) {
 
                 setSpinner(false)
                 setShowedit(false)
-                com.getConnections(setSpinner, setConns, setAlert, ()=>{})
+                com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
             },
             resp => {
                 console.log("on error")
                 setSpinner(false)
                 setShowedit(false)
-                com.getConnections(setSpinner, setConns, setAlert, ()=>{})
+                com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
             },
             error => {
                 console.log("on exception: " + error)
                 setSpinner(false)
                 setShowedit(false)
-                com.getConnections(setSpinner, setConns, setAlert, ()=>{})
+                com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
             })
     }
 
@@ -565,7 +565,7 @@ function EditConnections(props) {
             resp => {
                 resp.json().then(js => {
  
-                    if (js.Status === "OK") {
+                    if (js.status === "OK") {
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
                                 Connection {name} deleted successfully!
@@ -574,13 +574,13 @@ function EditConnections(props) {
                     } else {
                         setAlert(
                             <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                                Error deleting connection {name}: {js.Text}
+                                Error deleting connection {name}: {js.errormessage}
                             </Alert>
                         )
                     }
                     setSpinner(false)
                     setShowdelete(false)
-                    com.getConnections(setSpinner, setConns, setAlert, ()=>{})
+                    com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
                 }).catch(error => {
                     console.log("Error: " + error.message)
                     setAlert(
@@ -591,7 +591,7 @@ function EditConnections(props) {
                     setSpinner(false)
                     console.log("on exception")
                     setShowdelete(false)
-                    com.getConnections(setSpinner, setConns, setAlert, ()=>{})
+                    com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
                 })
             },
             resp => {
@@ -603,7 +603,7 @@ function EditConnections(props) {
                 )
                 setSpinner(false)
                 setShowdelete(false)
-                com.getConnections(setSpinner, setConns, setAlert, ()=>{})
+                com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
             },
             error => {
                 console.log("on exception: " + error)
@@ -614,12 +614,12 @@ function EditConnections(props) {
                 )
                 setSpinner(false)
                 setShowdelete(false)
-                com.getConnections(setSpinner, setConns, setAlert, ()=>{})
+                com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
             })
     }
 
     useEffect(() => {
-        com.getConnections(setSpinner, setConns, setAlert, ()=>{})
+        com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
     }, [])
     let connectionName = () => {
         let ret = ""

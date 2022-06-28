@@ -86,7 +86,7 @@ export default class Auth extends Component {
                 this.setState({ show: true })
             } else {
                 response.json().then(js => {
-                    if (js.Status !== "OK") {
+                    if (js.status !== "OK") {
                         console.log("Status not OK,  " + JSON.stringify(js) + ", at: " + d.toLocaleString())
                         sessionStorage.removeItem("Session")
                         console.log("Pop the message")
@@ -97,7 +97,7 @@ export default class Auth extends Component {
                         if(window.location.pathname !== '/')
                             this.setState({ show: true })
                     } else {
-                        sessionStorage.setItem("Session", js.Token)
+                        sessionStorage.setItem("Session", js.token)
                     }
                 })
             }

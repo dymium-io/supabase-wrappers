@@ -1,4 +1,4 @@
-
+import * as types from '@dymium/common/Types/Common'
 export interface Reference {
     schema: string
     table: string
@@ -52,7 +52,7 @@ export interface DataScope {
 
 }
 export class ConnectionMap {
-    [index: string]: Connection;
+    [index: string]: types.ConnectionRecord;
 }
 
 export interface TablesMap {

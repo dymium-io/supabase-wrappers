@@ -12,15 +12,25 @@ import "testing"
 import "path/filepath"
 import "net/http"
 import "fmt"
+import "io"
 import "net/http/httptest"
 import "bytes"
 import "io/ioutil"
 import "encoding/json"
 import "github.com/stretchr/testify/assert"
+import "github.com/stretchr/testify/require"
 
 var status types.OperationStatus
 var adventureworks = `{"name":"adventureworks","dbtype":"postgres","address":"docker.for.mac.host.internal","port":5432,"dbname":"Adventureworks","useTLS":false,"username":"postgres","password":"$kdvnMsp4o","description":"test data base from Microsoft"}`
 var northwind = `{"name":"northwind","dbtype":"postgres","address":"docker.for.mac.host.internal","port":5432,"dbname":"northwind","useTLS":false,"username":"postgres","password":"$kdvnMsp4o","description":"another MS database"}`
+var todelete = `{"name":"todelete","dbtype":"postgres","address":"deletemehost","port":5432,"dbname":"todelete","useTLS":false,"username":"postgres","password":"rqweqwrqweqweqw","description":"database to delete"}`
+
+var datascope_test_1 = `{"name":"test1","id":"","records":[{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"jobcandidate","typ":"integer","position":1,"reference":null,"action":"Obfuscate","col":"jobcandidateid","semantics":"Job position","dflt":"nextval('humanresources.jobcandidate_jobcandidateid_seq'::regclass)","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"jobcandidate","typ":"integer","position":2,"reference":{"schema":"humanresources","table":"employee","column":"businessentityid"},"action":"Obfuscate","col":"businessentityid","semantics":"Business entity Id","dflt":"","isnullable":true},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"jobcandidate","typ":"xml","position":3,"reference":null,"action":"Allow","col":"resume","semantics":"N/A","dflt":"","isnullable":true},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"jobcandidate","typ":"timestamp without time zone","position":4,"reference":null,"action":"Allow","col":"modifieddate","semantics":"N/A","dflt":"now()","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"integer","position":1,"reference":null,"action":"Obfuscate","col":"businessentityid","semantics":"Business entity Id","dflt":"","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"varchar(15)","position":2,"reference":null,"action":"Obfuscate","col":"nationalidnumber","semantics":"Social Security Number","dflt":"","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"varchar(256)","position":3,"reference":null,"action":"Block","col":"loginid","semantics":"Login details","dflt":"","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"varchar(50)","position":6,"reference":null,"action":"Obfuscate","col":"jobtitle","semantics":"Job position","dflt":"","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"date","position":7,"reference":null,"action":"Allow","col":"birthdate","semantics":"N/A","dflt":"","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"character(1)","position":8,"reference":null,"action":"Allow","col":"maritalstatus","semantics":"N/A","dflt":"","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"character(1)","position":9,"reference":null,"action":"Obfuscate","col":"gender","semantics":"Gender","dflt":"","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"date","position":10,"reference":null,"action":"Allow","col":"hiredate","semantics":"N/A","dflt":"","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"boolean","position":11,"reference":null,"action":"Allow","col":"salariedflag","semantics":"N/A","dflt":"true","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"smallint","position":12,"reference":null,"action":"Allow","col":"vacationhours","semantics":"N/A","dflt":"0","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"smallint","position":13,"reference":null,"action":"Allow","col":"sickleavehours","semantics":"N/A","dflt":"0","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"boolean","position":14,"reference":null,"action":"Allow","col":"currentflag","semantics":"N/A","dflt":"true","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"uuid","position":15,"reference":null,"action":"Allow","col":"rowguid","semantics":"N/A","dflt":"uuid_generate_v1()","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"timestamp without time zone","position":16,"reference":null,"action":"Allow","col":"modifieddate","semantics":"N/A","dflt":"now()","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"humanresources","table":"employee","typ":"varchar","position":17,"reference":null,"action":"Allow","col":"organizationnode","semantics":"N/A","dflt":"'/'::character varying","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"smallint","position":1,"reference":null,"action":"Allow","col":"employee_id","semantics":"N/A","dflt":"","isnullable":false},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"varchar(20)","position":2,"reference":null,"action":"Obfuscate","col":"last_name","semantics":"Last name","dflt":"","isnullable":false},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"varchar(10)","position":3,"reference":null,"action":"Obfuscate","col":"first_name","semantics":"First name","dflt":"","isnullable":false},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"varchar(30)","position":4,"reference":null,"action":"Allow","col":"title","semantics":"N/A","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"varchar(25)","position":5,"reference":null,"action":"Allow","col":"title_of_courtesy","semantics":"N/A","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"date","position":6,"reference":null,"action":"Allow","col":"birth_date","semantics":"N/A","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"date","position":7,"reference":null,"action":"Allow","col":"hire_date","semantics":"N/A","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"varchar(60)","position":8,"reference":null,"action":"Obfuscate","col":"address","semantics":"Address","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"varchar(15)","position":9,"reference":null,"action":"Obfuscate","col":"city","semantics":"City","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"varchar(15)","position":10,"reference":null,"action":"Allow","col":"region","semantics":"N/A","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"varchar(10)","position":11,"reference":null,"action":"Obfuscate","col":"postal_code","semantics":"Zipcode","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"varchar(15)","position":12,"reference":null,"action":"Obfuscate","col":"country","semantics":"Country","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"varchar(24)","position":13,"reference":null,"action":"Obfuscate","col":"home_phone","semantics":"Telephone number","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"varchar(4)","position":14,"reference":null,"action":"Allow","col":"extension","semantics":"N/A","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"bytea","position":15,"reference":null,"action":"Allow","col":"photo","semantics":"N/A","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"text","position":16,"reference":null,"action":"Allow","col":"notes","semantics":"N/A","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"smallint","position":17,"reference":{"schema":"public","table":"employees","column":"employee_id"},"action":"Allow","col":"reports_to","semantics":"N/A","dflt":"","isnullable":true},{"id":null,"connection":"northwind","connectionId":null,"schema":"public","table":"employees","typ":"varchar(255)","position":18,"reference":null,"action":"Allow","col":"photo_path","semantics":"N/A","dflt":"","isnullable":true}]}`
+var datascope_test_2 = `{"name":"test2","id":"","records":[{"id":null,"connection":"adventureworks","connectionId":null,"schema":"person","table":"address","typ":"integer","position":1,"reference":null,"action":"Obfuscate","col":"addressid","semantics":"Address","dflt":"nextval('person.address_addressid_seq'::regclass)","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"person","table":"address","typ":"varchar(60)","position":2,"reference":null,"action":"Obfuscate","col":"addressline1","semantics":"Address","dflt":"","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"person","table":"address","typ":"varchar(60)","position":3,"reference":null,"action":"Obfuscate","col":"addressline2","semantics":"Address","dflt":"","isnullable":true},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"person","table":"address","typ":"varchar(30)","position":4,"reference":null,"action":"Obfuscate","col":"city","semantics":"City","dflt":"","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"person","table":"address","typ":"integer","position":5,"reference":{"schema":"person","table":"stateprovince","column":"stateprovinceid"},"action":"Obfuscate","col":"stateprovinceid","semantics":"State","dflt":"","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"person","table":"address","typ":"varchar(15)","position":6,"reference":null,"action":"Obfuscate","col":"postalcode","semantics":"Zipcode","dflt":"","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"person","table":"address","typ":"varchar(44)","position":7,"reference":null,"action":"Allow","col":"spatiallocation","semantics":"N/A","dflt":"","isnullable":true},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"person","table":"address","typ":"uuid","position":8,"reference":null,"action":"Allow","col":"rowguid","semantics":"N/A","dflt":"uuid_generate_v1()","isnullable":false},{"id":null,"connection":"adventureworks","connectionId":null,"schema":"person","table":"address","typ":"timestamp without time zone","position":9,"reference":null,"action":"Allow","col":"modifieddate","semantics":"N/A","dflt":"now()","isnullable":false}]}`
+
+var edited_adventureworks = `{"Id":"d057ee99-ff26-414a-9a46-467420cdb932","Name":"adventureworks","DbType":"postgres","Address":"docker.for.mac.host.internal","Port":5432,"Dbname":"Adventureworks","Description":"edited test data base from Microsoft"}`
+var edited_northwind = `{"Id":"57510719-2ca7-49e7-92bf-d174cf8f0e08","Name":"northwind","DbType":"postgres","Address":"docker.for.mac.host.internal","Port":5432,"Dbname":"northwind","Description":"another MS database edited with password","Username":"newusername","Password":"newpassword"}`
+
 func TestApiHandlers(t *testing.T){
 ///------------------ db setup start ------------------------	
 	func () {
@@ -34,7 +44,7 @@ func TestApiHandlers(t *testing.T){
 		if(dbtls == "")	{
 			dbtls = "disable"
 		}
-		err := authentication.DatabaseInit(dbhost, dbport, dbadminuser, dbpassword, "postgres", dbtls)
+		err := authentication.Init(dbhost, dbport, dbadminuser, dbpassword, "postgres", dbtls)
 		if(err != nil) {
 			t.Errorf("Error: %s\n", err.Error() )
 			return
@@ -64,7 +74,7 @@ func TestApiHandlers(t *testing.T){
 		err = db.Close()
 
 		// ----------------------------- open test -----------------------------------
-		err = authentication.DatabaseInit(dbhost, dbport, dbadminuser, dbpassword, "test", dbtls)
+		err = authentication.Init(dbhost, dbport, dbadminuser, dbpassword, "test", dbtls)
 		if(err != nil) {
 			t.Errorf("Error: %s\n", err.Error() )
 			return
@@ -176,6 +186,7 @@ func TestApiHandlers(t *testing.T){
 		}	
 		fmt.Println("No static file retrieved 404 correctly")
 	}()
+
 // -------- test auth middleware	
 	func() {
 		req, err := http.NewRequest("POST", "/api/createnewconnection",  bytes.NewBuffer([]byte(northwind )))
@@ -207,8 +218,10 @@ func TestApiHandlers(t *testing.T){
 		fmt.Println("Authentication without JWT failed correctly")
 	}()
 	// -------- create a connection	
-	createConnection := func(data string) {
-		req, err := http.NewRequest("POST", "/api/createnewconnection",  bytes.NewBuffer([]byte(data )))
+	LoadAuthHandler := func (method string, url string, reader io.Reader, 
+		handler func(http.ResponseWriter, *http.Request))  ( *httptest.ResponseRecorder, []byte) {
+
+		req, err := http.NewRequest(method, url, reader)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -216,10 +229,18 @@ func TestApiHandlers(t *testing.T){
 		req.Header.Set("Content-Type", "application/json")
 		rr := httptest.NewRecorder()
 
-		h := http.HandlerFunc(CreateNewConnection)
+		h := http.HandlerFunc(handler)
 		hh := AuthMiddleware(h)
 		hh.ServeHTTP(rr, req)
 		body, _ := ioutil.ReadAll(rr.Body)
+
+		return rr, body
+	}	
+	createConnection := func(data string) {
+
+		rr, body := LoadAuthHandler("POST", "/api/createnewconnection", bytes.NewBuffer([]byte(data )), 
+			CreateNewConnection) 
+
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
@@ -231,7 +252,7 @@ func TestApiHandlers(t *testing.T){
 			return
 		}
 		if(status.Status != "OK") {
-			t.Errorf("Authentication should not have passed\n" )
+			t.Errorf("Authentication should have passed %s\n", status.Errormessage )
 			return		
 		}
 		fmt.Println("Created connection, should check the database")
@@ -251,18 +272,10 @@ func TestApiHandlers(t *testing.T){
 	countConnections(2)
 	// -------- create a connection	
 	createDupConnection := func(data string) {
-		req, err := http.NewRequest("POST", "/api/createnewconnection",  bytes.NewBuffer([]byte(data )))
-		if err != nil {
-			t.Fatal(err)
-		}
-		req.Header.Set("Authorization", "Bearer "+token)
-		req.Header.Set("Content-Type", "application/json")
-		rr := httptest.NewRecorder()
 
-		h := http.HandlerFunc(CreateNewConnection)
-		hh := AuthMiddleware(h)
-		hh.ServeHTTP(rr, req)
-		body, _ := ioutil.ReadAll(rr.Body)
+		rr, body := LoadAuthHandler("POST", "/api/createnewconnection", bytes.NewBuffer([]byte(data )), 
+			CreateNewConnection) 
+
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
@@ -280,36 +293,132 @@ func TestApiHandlers(t *testing.T){
 		fmt.Printf("Test properly failed with the error: %s\n", status.Errormessage)
 	}
 	createDupConnection(northwind)
-
+	createConnection(todelete)
+	countConnections(3)
 	
-	func () {
-		req, err := http.NewRequest("GET", "/api/getconnections",  nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-		req.Header.Set("Authorization", "Bearer "+token)
-		req.Header.Set("Content-Type", "application/json")
-		rr := httptest.NewRecorder()
+	getConnections := func (expected int) (string, []types.ConnectionRecord) {
 
-		h := http.HandlerFunc(GetConnections)
-		hh := AuthMiddleware(h)
-		hh.ServeHTTP(rr, req)
-		body, _ := ioutil.ReadAll(rr.Body)
-		fmt.Printf("%s\n", string(body))
+		rr, body := LoadAuthHandler("GET", "/api/getconnections", nil,
+			GetConnections) 
+		
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return
+			return "", []types.ConnectionRecord{}
 		}
+		var status types.ConnectionResponse
 		err = json.Unmarshal(body, &status)
-		if err != nil {
-			t.Errorf("Unmarshaling error: %s\n", err.Error() )
-			return
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in GetConnections %s\n", status.Errormessage ) )
+		require.Equal(t, expected, len(status.Data), "Three records should be present")
+		return *status.Data[ len(status.Data ) -1 ].Id, status.Data
+	}
+	id, _ := getConnections(3)
+
+	func (id string)  {
+		fmt.Printf("Delete connection %s\n", id)
+		var ds types.DatascopeId = types.DatascopeId{Id:id}
+		js, err := json.Marshal(ds)
+		require.Equal(t, nil, err, fmt.Errorf("Error marshaling: %s\n", err ) )
+
+		rr, body := LoadAuthHandler("POST", "/api/deleteconnection", bytes.NewBuffer(js), 
+			DeleteConnection) 
+		
+		require.Equal(t, nil, err, fmt.Errorf("Error reading body: %s\n", err ) )
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return 
 		}
-		if(status.Status != "OK") {
-			t.Errorf("Authentication should not have passed\n" )
-			return		
+		var status  types.OperationStatus
+		err = json.Unmarshal(body, &status)
+	
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in DeleteConnection %s\n", status.Errormessage ) )
+
+		return
+	}(id)
+
+	id, _ = getConnections(2)
+// -------- edit a connection without password
+	func (data string) {
+		rr, body := LoadAuthHandler("POST", "/api/updateconnection", bytes.NewBuffer([]byte(data)), 
+			UpdateConnection) 
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return 
+		}		
+		var status  types.OperationStatus
+		err = json.Unmarshal(body, &status)
+		fmt.Println("Check update properly failing")
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
+		require.NotEqual(t, "OK", status.Status, fmt.Sprintf("Error in UpdateConnection %s\n", status.Errormessage ) )
+
+	}(edited_adventureworks)
+	UpdateConn := func (data, name string) {
+		_, conns := getConnections(2)
+		var realid string
+		for i := 0; i < len(conns); i++ {
+			if(conns[i].Name == name) {
+				realid = *conns[i].Id
+			}
 		}
-		fmt.Println("Created connection, should check the database")			
-	}()
+		fmt.Printf("determined id as %s\n", realid)
+		var cr types.ConnectionRecord 
+		json.Unmarshal([]byte(data), &cr)
+		*cr.Id = realid 
+		js, _ := json.Marshal(cr)
+
+		rr, body := LoadAuthHandler("POST", "/api/updateconnection", bytes.NewBuffer([]byte(js)), 
+			UpdateConnection) 
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return 
+		}		
+		var status  types.OperationStatus
+		err = json.Unmarshal(body, &status)
+	
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in UpdateConnection %s\n", status.Errormessage ) )
+	
+	}
+	UpdateConn(edited_adventureworks, "adventureworks")
+	UpdateConn(edited_northwind, "northwind")
+
+	// now let' start with datascopes
+	SaveDs := func (data string) {
+		rr, body := LoadAuthHandler("POST", "/api/savedatascope", bytes.NewBuffer([]byte(data)), 
+			SaveDatascope) 
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return 
+		}		
+		var status  types.OperationStatus
+		err = json.Unmarshal(body, &status)
+		
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in SaveDatascope %s\n", status.Errormessage ) )
+
+	}
+	SaveDs(datascope_test_1)
+	func (data string) {
+		rr, body := LoadAuthHandler("POST", "/api/savedatascope", bytes.NewBuffer([]byte(data)), 
+			SaveDatascope) 
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return 
+		}		
+		var status  types.OperationStatus
+		err = json.Unmarshal(body, &status)
+	
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
+		require.NotEqual(t, "OK", status.Status, fmt.Sprintf("Error in SaveDatascope %s\n", status.Errormessage ) )
+		fmt.Println("SaveDatascope properly failing")
+	}(datascope_test_1)
+
 }

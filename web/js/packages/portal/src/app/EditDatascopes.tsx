@@ -12,27 +12,28 @@ import { useAppDispatch, useAppSelector } from './hooks'
 import {setSelectedDatascopeDefault} from '../Slices/menuSlice'
 import * as com from '../Common'
 import DatascopeForm from './DatascopeForm'
-import * as types from '@dymium/common/Types/Commonold'
+import * as internal from '@dymium/common/Types/Internal'
+import * as types from '@dymium/common/Types/Common'
 
 
 
-let remap = new types.ConnectionMap();
+let remap = new internal.ConnectionMap();
 
 export default function EditDatascopes() {
     const [spinner, setSpinner] = useState(false)
-    let [conns, setConns] = useState<types.Connection[]>([])
+    let [conns, setConns] = useState<internal.Connection[]>([])
     const [alert, setAlert] = useState<JSX.Element>(<></>)
-    const [datascopes, setDatascopes] = useState<types.DataScopeInfo[]>([])
+    const [datascopes, setDatascopes] = useState<types.DatascopeIdName[]>([])
     const [selectedDatascope, setSelectedDatascope] = useState("")
-    const [selectedDatascopeDetails, setSelectedDatascopeDetails] = useState<types.DataScopeInfo | null>(null)
+    const [selectedDatascopeDetails, setSelectedDatascopeDetails] = useState<internal.DataScopeInfo | null>(null)
 
-    const [initialTables, setInitialTables] = useState<types.TablesMap>({})
+    const [initialTables, setInitialTables] = useState<internal.TablesMap>({})
     const [validated, setValidated] = useState(false)
     let form = useRef<HTMLFormElement>(null)
 
 
     const [showOffcanvas, setShowOffcanvas] = useState<boolean>(false)
-    const [table, setTable] = useState<types.TableScope>({ schema: "", table: "" })
+    const [table, setTable] = useState<internal.TableScope>({ schema: "", table: "" })
     const [dbname, setDbname] = useState("")
     const [datascope, setDatascope] = useState({})
     const [currentConnectionId, setCurrentConnectionId] = useState("")
@@ -66,57 +67,15 @@ export default function EditDatascopes() {
             })
     }
 
-    let getConnections = () => {
-        setSpinner(true)
-        setConns([])
-
-        com.sendToServer("GET", "/api/getconnections",
-            null, "",
-            resp => {
-
-                resp.json().then(js => {
-
-                    let cc: types.Connection[] = js.map(x => {
-                        let ob: types.Connection = {
-                            id: x.id,
-                            credid: x.credid,
-                            dbtype: x.dbtype,
-                            name: x.name,
-
-                            address: x.address,
-                            port: x.port,
-                            description: x.description,
-                            usetls: x.useTLS,
-                        }
-                        remap[x.name] = ob
-                        return ob
-                    })
-                    setConns(cc)
-                    getDatascopes()
-                })
-                setSpinner(false)
-            },
-            resp => {
-                console.log("on error")
-                setSpinner(false)
-            },
-            error => {
-                console.log("on exception: " + error)
-                setSpinner(false)
-            })
-    }
-
     useEffect(() => {
-        getConnections()
+        com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{getDatascopes()})
 
     }, [])
     useEffect(() => {
         if (selectedDatascope === "")
             return
         console.log("selectedDatascope changed to " + selectedDatascope)
-        let body = JSON.stringify(
-            { id: selectedDatascope }
-        )
+        let body = types.DatascopeId.fromJson({ id: selectedDatascope }).toJson()
         setSpinner(true)
         com.sendToServer("POST", "/api/getdatascopedetails",
             null, body,
@@ -158,7 +117,7 @@ export default function EditDatascopes() {
 
                 })
                 setSpinner(false)
-                getConnections()
+                com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{getDatascopes()})
             },
             resp => {
                 console.log("on error")
@@ -173,7 +132,7 @@ export default function EditDatascopes() {
     )
 
     let updateConnection = () => {
-        let retarray: types.DatascopeRecord[] = []        
+        let retarray: internal.DatascopeRecord[] = []        
         Object.keys(datascope).forEach(connection => {
             let conn = datascope[connection]
             Object.keys(conn).forEach(schematable => {
@@ -181,7 +140,7 @@ export default function EditDatascopes() {
                 // connection, schema, table, tablescope[typ, semantics, name, position, reference, action]
 
                 st.tablescope.forEach(ts => {
-                    let ob: types.DatascopeRecord = {
+                    let ob: internal.DatascopeRecord = {
                         connection: st.connection, schema: st.schema, table: st.table,
                         typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
                         col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable
@@ -193,24 +152,24 @@ export default function EditDatascopes() {
         })
         // now do send
         setSpinner(true)
-        let retob: types.DataScope = { name: dbname, records: retarray }
+        let retob: internal.DataScope = { name: dbname, records: retarray }
         let body = JSON.stringify(retob)
         com.sendToServer("POST", "/api/updatedatascope",
             null, body,
             resp => {
 
                 resp.json().then(js => {
-                    if (js.Status === "OK") {
+                    if (js.status === "OK") {
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
                                 Data scope {dbname} updated successfully!
                             </Alert>
                         )
-                        getConnections()
+                        com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{getDatascopes()})
                     } else {
                         setAlert(
                             <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                                Error updating {dbname}:  {js.Text}!
+                                Error updating {dbname}:  {js.errormessage}!
                             </Alert>
                         )
                     }
@@ -256,11 +215,11 @@ export default function EditDatascopes() {
 
         return false
     }
-    let onTablesMapUpdate = (t: types.TablesMap) => {
+    let onTablesMapUpdate = (t: internal.TablesMap) => {
         setDatascope(t)
     }
 
-    let onEditTable = (t: types.TableScope) => {
+    let onEditTable = (t: internal.TableScope) => {
         setTable(t)
         setShowOffcanvas(true)
     }

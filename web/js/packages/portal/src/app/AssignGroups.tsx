@@ -16,7 +16,7 @@ import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 const { SearchBar, ClearSearchButton } = Search;
 
 import * as com from '../Common'
-import * as types from '@dymium/common/Types/Commonold'
+import * as types from '@dymium/common/Types/Internal'
 import { legacy_createStore } from '@reduxjs/toolkit';
 import { getDisplayName } from 'react-bootstrap-typeahead/types/utils';
 
@@ -177,10 +177,10 @@ export default function AssignGroups() {
             resp => {
                 resp.json().then(js => {
                     
-                    if (js.Status !== "OK") {
+                    if (js.status !== "OK") {
                         setAlert(
                             <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                                Error: {js.Text}
+                                Error: {js.errormessage}
                             </Alert>
                         )
                     } else {

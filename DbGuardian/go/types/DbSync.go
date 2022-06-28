@@ -37,7 +37,7 @@ type CustomerData struct {
    Datascopes []Datascope `json:"datascopes"`
 }
 
-type Datascope struct {
+type DbSync_Datascope struct {
    Name string `json:"name"`
    Connections []string `json:"connections"`
    Schemas []Schema `json:"schemas"`

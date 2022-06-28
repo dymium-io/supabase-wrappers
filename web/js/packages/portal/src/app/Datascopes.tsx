@@ -22,67 +22,27 @@ import { useAppDispatch, useAppSelector } from './hooks'
 import {setActiveDatascopeTab} from '../Slices/menuSlice'
 
 import * as com from '../Common'
-import * as types from '@dymium/common/Types/Commonold'
+import * as internal from '@dymium/common/Types/Internal'
+import * as types from '@dymium/common/Types/Common'
 
-
-let remap =  new types.ConnectionMap();
+let remap =  new internal.ConnectionMap();
 
 export function AddDatascope(props) {
     const [validated, setValidated] = useState(false)
     let form = useRef<HTMLFormElement>(null)
 
-    let [conns, setConns] = useState<types.Connection[]>([])
+    let [conns, setConns] = useState<internal.Connection[]>([])
     const [spinner, setSpinner] = useState(false)
     const [alert, setAlert] = useState<JSX.Element>(<></>)
     const [showOffcanvas, setShowOffcanvas] = useState(false)
 
-    const [table, setTable] = useState<types.TableScope>({schema: "", table:""})
+    const [table, setTable] = useState<internal.TableScope>({schema: "", table:""})
     const [dbname, setDbname] = useState<string>("")
-    const [datascope, setDatascope] = useState<types.TablesMap>({})
+    const [datascope, setDatascope] = useState<internal.TablesMap>({})
     const [currentConnectionId, setCurrentConnectionId] = useState<string>("")
 
-    let getConnections = () => {
-        setSpinner(true)
-        setConns([])
-        setSpinner(true)
-        com.sendToServer("GET", "/api/getconnections",
-            null, "",
-            resp => {
-
-                resp.json().then(js => {
-
-                    let cc:types.Connection[] = js.map(x => {
-                        let ob:types.Connection = {
-                            id: x.id,
-                            credid: x.credid,
-                            dbtype: x.dbtype,
-                            name: x.name,
-
-                            address: x.address,
-                            port: x.port,
-                            description: x.description,
-                            usetls: x.useTLS,
-
-                        }
-                        remap[x.name] = ob
-                        return ob
-                    })
-                    setConns(cc)
-                })
-                //setSpinner(false)
-                setTimeout( () => setSpinner(false), 500)
-            },
-            resp => {
-                console.log("on error")
-                setSpinner(false)
-            },
-            error => {
-                console.log("on exception: " + error)
-                setSpinner(false)
-            })
-    }
     useEffect(() => {
-        com.getConnections(setSpinner, setConns, setAlert, ()=>{})
+        com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{})
     }, [])
 
     let sendConnection = () => {
@@ -92,12 +52,11 @@ export function AddDatascope(props) {
             let conn = datascope[connection]
             Object.keys(conn).forEach( schematable => {
                 let st = conn[schematable]
-                // connection, schema, table, tablescope[typ, semantics, name, position, reference, action]
           
                 st.tablescope.forEach( ts => {
-                    let ob:types.DatascopeRecord = {connection: st.connection, schema: st.schema, table: st.table, 
+                    let ob:types.DatascopeRecord = types.DatascopeRecord.fromJson({connection: st.connection, schema: st.schema, table: st.table, 
                         typ: ts.typ, position: ts.position, reference: ts.reference, action:ts.action, 
-                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable}
+                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable})
                     retarray.push(ob)
                 })
             })
@@ -105,14 +64,14 @@ export function AddDatascope(props) {
         } )
         // now do send
         setSpinner(true)
-        let retob: types.DataScope = {name: dbname, records: retarray}
-        let body=JSON.stringify( retob )
+        let retob: types.Datascope = types.Datascope.fromJson({name: dbname, records: retarray})
+        let body= retob.toJson()
         com.sendToServer("POST", "/api/savedatascope",
             null, body,
             resp => {
 
                 resp.json().then(js => {
-                    if(js.Status === "OK") {
+                    if(js.status === "OK") {
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
                                 Data scope {dbname} created successfully!
@@ -121,7 +80,7 @@ export function AddDatascope(props) {
                     } else {
                         setAlert(
                             <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                                Error creating {dbname}:  {js.Text}!
+                                Error creating {dbname}:  {js.errormessage}!
                             </Alert>
                         )                        
                     }
@@ -162,13 +121,13 @@ export function AddDatascope(props) {
     let onAddTableRef = (theref) => {
         addTableR.current = theref
     }
-    let onAddTable = (table:types.TableScope) => {
+    let onAddTable = (table:internal.TableScope) => {
         setShowOffcanvas(false)
         if (addTableR.current !== undefined && addTableR.current.current) {
             addTableR.current.current(table)
         }
     }
-    let onEditTable = (t:types.TableScope) => {
+    let onEditTable = (t:internal.TableScope) => {
         setTable(t)
         setShowOffcanvas(true)
     }
@@ -180,7 +139,7 @@ export function AddDatascope(props) {
     let onDbname = (e:string) => {
         setDbname(e)
     }
-    let onTablesMapUpdate = (t: types.TablesMap) => {
+    let onTablesMapUpdate = (t: internal.TablesMap) => {
         setDatascope(t)
     }
     return (

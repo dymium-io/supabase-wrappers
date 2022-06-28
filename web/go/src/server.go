@@ -42,7 +42,7 @@ func main() {
 	if(dbname == "") {
 		dbname = "dymium"
 	}
-	err := authentication.DatabaseInit(dbhost, dbport, dbuser, dbpassword, dbname, dbtls)
+	err := authentication.Init(dbhost, dbport, dbuser, dbpassword, dbname, dbtls)
 	if(err != nil) {
 		log.Panicln(err)
 	}

@@ -16,8 +16,8 @@ import cloneDeep from 'lodash/cloneDeep';
 import AddTable from './AddTable'
 import EditDatascopes from './EditDatascopes'
 import * as com from '../Common'
-import * as types from '@dymium/common/Types/Commonold'
-
+import * as types from '@dymium/common/Types/Common'
+import * as internal from '@dymium/common/Types/Internal'
 
 //
 // dbname - datascope name
@@ -31,13 +31,13 @@ import * as types from '@dymium/common/Types/Commonold'
 // nameToConnection
 export interface DatascopeFormProps {
     edit: boolean,
-    initialTables?: types.TablesMap,
-    onEditTable: (ar: types.TableScope) => void,
-    onTablesMapUpdate: (ar: types.TablesMap) => void,
+    initialTables?: internal.TablesMap,
+    onEditTable: (ar: internal.TableScope) => void,
+    onTablesMapUpdate: (ar: internal.TablesMap) => void,
     onAddTableRef: (ar: any) => void,
-    connections: types.Connection[],
+    connections: internal.Connection[],
     AddNewTable: (ar: string, schema?: string, table?: string) => void,
-    nameToConnection: types.ConnectionMap,
+    nameToConnection: internal.ConnectionMap,
     dbname: string,
     onDbname: (ar: string) => void,
     setAlert: (ar: any) => void, // not sure how to deal with the type properly here
@@ -51,7 +51,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
 
     let empty: any[] = []
     const [connections, setConnections] = useState<string[]>(empty)
-    const [tables, setTables] = useState<types.TablesMap>({})
+    const [tables, setTables] = useState<internal.TablesMap>({})
     const [selectedConnection, setSelectedConnection] = useState<string>("")
     const [counter, setCounter] = useState(0)
     const editedConnection = useRef("")
@@ -65,7 +65,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
 
     let onEdit = (connection, schema, table) => {
         return e => {
-            let ob: types.TableScope = refs.current["tables"][connection]
+            let ob: internal.TableScope = refs.current["tables"][connection]
             Object.keys(ob).forEach(x => {
                 if (ob[x].schema === schema && ob[x].table === table) {
                     setSelectedConnection(connection)
@@ -77,7 +77,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
     }
     let onDelete = (connection: string, schema: string, table: string) => {
         return e => {
-            let tables: types.TablesMap = cloneDeep(refs.current["tables"])
+            let tables: internal.TablesMap = cloneDeep(refs.current["tables"])
             delete tables[connection][schema + "." + table]
             setTables(tables)
             //refs.current["setTables"](tables)
@@ -250,7 +250,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
         return ret
     }
 
-    let showConnection = (db: types.Connection) => {
+    let showConnection = (db: types.ConnectionRecord) => {
         if (db === undefined || db.name === undefined)
             return <></>
         let deleteConnection = e => {
@@ -288,7 +288,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                 let { schema, table, refby } = references[key]
                 let r = <div className="m-1">Table {refby} refers to {schema}.{table}. <Button onClick={
                     e => {
-                        if (db.id !== undefined)
+                        if (db.id !== null)
                             props.AddNewTable(db.id, schema, table)
                     }
 
@@ -306,7 +306,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                     <Col><Button onClick={e => {
 
                         editedConnection.current = db.name
-                        if (db.id !== undefined)
+                        if (db.id !== null)
                             props.AddNewTable(db.id)
 
                     }} size="sm" variant="dymium"><i className="fa fa-table mr-1" aria-hidden="true"></i>Add Table</Button></Col>
@@ -335,7 +335,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
             if (name === "") {
                 return <></>
             }
-            let ob: types.Connection = props.nameToConnection[name]
+            let ob: types.ConnectionRecord = props.nameToConnection[name]
             return showConnection(ob)
         })
     }
@@ -383,7 +383,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                     </Form.Group>
                     <Form.Group>
                         <Form.Label ></Form.Label>
-                        <Button onClick={onAddConnection} variant="dymium" style={{ marginTop: '1.9em' }} size="sm"><i className="fa-solid fa-database mr-2"></i>Select Connection</Button>
+                        <Button onClick={onAddConnection} variant="dymium" style={{ marginTop: '1.9em' }} size="sm"><i className="fa-solid fa-database mr-2"></i>Add Connection</Button>
                     </Form.Group>
                 </Col>
                 <Col className="text-left">

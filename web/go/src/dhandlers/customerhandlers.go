@@ -21,7 +21,6 @@ import (
 	"strings"
 	"path"
 	"fmt"
-	"aws"
 )
 type contextKey int
 const authenticatedSchemaKey contextKey = 0
@@ -75,7 +74,7 @@ func QueryConnection(w http.ResponseWriter, r *http.Request) {
 	conn, err := authentication.GetConnection(schema, t.ConnectionId)
 	bconn, err := json.Marshal(conn)
 
-	res, err := aws.Invoke("DbAnalyzer", nil, bconn)
+	res, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 	if err != nil {
 		log.Printf("DbAnalyzer Error: %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -102,10 +101,8 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// get the connection details
-	log.Printf("%v\n", t)
-	error := authentication.SaveDatascope(schema, t)
 
+	error := authentication.SaveDatascope(schema, t)
 
 	var rq types.Request
 	rq.Action = types.A_Update
@@ -113,7 +110,7 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 	rq.Datascope = &t.Name
 	snc, _ := json.Marshal(rq)
 
-	_, err = aws.Invoke("DbSync", nil, snc)
+	_, err = authentication.Invoke("DbSync", nil, snc)
 	if err != nil {
 		log.Printf("DbSync Error: %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -144,9 +141,7 @@ func GetDatascopeDetails(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
-	t := struct {
-		Id string
-	}{}
+	var t types.DatascopeId
 
 	err := json.Unmarshal(body, &t)
 
@@ -320,7 +315,7 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 	rq.Datascope = &t.Name
 	snc, _ := json.Marshal(rq)
 
-	_, err = aws.Invoke("DbSync", nil, snc)
+	_, err = authentication.Invoke("DbSync", nil, snc)
 	if err != nil {
 		log.Printf("DbSync Error: %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -390,7 +385,6 @@ func DeleteConnection(w http.ResponseWriter, r *http.Request) {
 	err = authentication.DeleteConnection(schema, t.Id)
 	var status  types.OperationStatus
 	if err == nil {
-		log.Printf("success")
 		status = types.OperationStatus{"OK", "Connection deleted"}
 	} else {
 		log.Printf("Error: %s\n", err.Error())

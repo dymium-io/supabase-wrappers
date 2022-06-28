@@ -57,13 +57,28 @@ DatascopeRecord: !!omap
   - dflt: string
   - isnullable: bool
 
+DatascopeIdName: !!omap
+  - name: string
+  - id: string	
+
+DatascopeId: !!omap 
+  - id: string
+
+Datascope: !!omap
+  - name: string
+  - id:  string		
+  - records: <|DatascopeRecord|>
 
 OperationStatus: !!omap
   - status: string
   - errormessage:   string
 
-
 ConnectionResponse: !!omap 
   - status: string
   - errormessage:   string
   - data: <|ConnectionRecord|>
+
+AuthStatus: !!omap 
+  - status: string
+  - errormessage: string
+  - token: string

@@ -20,6 +20,58 @@ export type DataSemantics =
   | 'Email'
   | 'SSN'
 
+export class AuthStatus {
+  private '_status': string
+  private '_errormessage': string
+  private '_token': string
+
+  constructor() {
+    this['_status'] = ''
+    this['_errormessage'] = ''
+    this['_token'] = ''
+  }
+  get status(): string { return this['_status'] }
+  set status(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_status'])) {
+      setDirtyFlag()
+      this['_status'] = __v__
+    }
+  }
+  get errormessage(): string { return this['_errormessage'] }
+  set errormessage(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_errormessage'])) {
+      setDirtyFlag()
+      this['_errormessage'] = __v__
+    }
+  }
+  get token(): string { return this['_token'] }
+  set token(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_token'])) {
+      setDirtyFlag()
+      this['_token'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): AuthStatus {
+    disableDF()
+    let cls = new AuthStatus()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.status = __a__['status']
+       cls.errormessage = __a__['errormessage']
+       cls.token = __a__['token']
+    } else {
+       doAlert(`AuthStatus: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class ConnectionRecord {
   private '_name': string
   private '_dbtype': string
@@ -287,6 +339,126 @@ export class ConnectionsQuery {
        cls.records = __a__['records'] == null ? null : array1Reader(ConnectionRecord.fromJson)(__a__['records'])
     } else {
        doAlert(`ConnectionsQuery: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class Datascope {
+  private '_name': string
+  private '_id': string
+  private '_records': Array<DatascopeRecord>
+
+  constructor() {
+    this['_name'] = ''
+    this['_id'] = ''
+    this['_records'] = []
+  }
+  get name(): string { return this['_name'] }
+  set name(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_name'])) {
+      setDirtyFlag()
+      this['_name'] = __v__
+    }
+  }
+  get id(): string { return this['_id'] }
+  set id(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_id'])) {
+      setDirtyFlag()
+      this['_id'] = __v__
+    }
+  }
+  get records(): Array<DatascopeRecord> { return this['_records'] }
+  set records(__a__: any) {
+    setDirtyFlag()
+    this['_records'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): Datascope {
+    disableDF()
+    let cls = new Datascope()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.name = __a__['name']
+       cls.id = __a__['id']
+       cls.records = array1Reader(DatascopeRecord.fromJson)(__a__['records'])
+    } else {
+       doAlert(`Datascope: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class DatascopeId {
+  private '_id': string
+
+  constructor() {
+    this['_id'] = ''
+  }
+  get id(): string { return this['_id'] }
+  set id(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_id'])) {
+      setDirtyFlag()
+      this['_id'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): DatascopeId {
+    disableDF()
+    let cls = new DatascopeId()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.id = __a__['id']
+    } else {
+       doAlert(`DatascopeId: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class DatascopeIdName {
+  private '_name': string
+  private '_id': string
+
+  constructor() {
+    this['_name'] = ''
+    this['_id'] = ''
+  }
+  get name(): string { return this['_name'] }
+  set name(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_name'])) {
+      setDirtyFlag()
+      this['_name'] = __v__
+    }
+  }
+  get id(): string { return this['_id'] }
+  set id(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_id'])) {
+      setDirtyFlag()
+      this['_id'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): DatascopeIdName {
+    disableDF()
+    let cls = new DatascopeIdName()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.name = __a__['name']
+       cls.id = __a__['id']
+    } else {
+       doAlert(`DatascopeIdName: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls

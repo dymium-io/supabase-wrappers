@@ -1,5 +1,7 @@
 import Alert from 'react-bootstrap/Alert'
 import * as types from '@dymium/common/Types/Common'
+import * as internal from '@dymium/common/Types/Internal'
+
 let appliedColors = `
 :root{
 --primary-color: rgb(255, 158, 24);
@@ -92,7 +94,7 @@ export function sendToServer(method: string, url: string,
 }
 
 
-export function getConnections(setSpinner, setConns, setAlert, onSuccess) {
+export function getConnections(setSpinner, setConns, setAlert, remap:internal.ConnectionMap|undefined, onSuccess) {
     setSpinner(true)
     setConns([])
     sendToServer("GET", "/api/getconnections",
@@ -110,8 +112,9 @@ export function getConnections(setSpinner, setConns, setAlert, onSuccess) {
                     setTimeout(() => setSpinner(false), 500)
                     return
                 }
+            
                 let cc = js.data.map(x => {
-                    return {
+                    let ob = types.ConnectionRecord.fromJson({
                         id: x.id,
                         credid: x.credid,
                         dbtype: x.dbtype,
@@ -122,7 +125,10 @@ export function getConnections(setSpinner, setConns, setAlert, onSuccess) {
                         description: x.description,
                         usetls: x.useTLS,
 
-                    }
+                    })
+                    if(undefined != remap && x.name != null)
+                        remap[x.name] = ob
+                    return ob
                 })
 
                 setConns(cc)

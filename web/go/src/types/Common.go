@@ -21,6 +21,12 @@ const (
   DS_SSN DataSemantics = "SSN"
 )
 
+type AuthStatus struct {
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
+   Token string `json:"token"`
+}
+
 type ConnectionRecord struct {
    Name string `json:"name"`
    Dbtype string `json:"dbtype"`
@@ -45,6 +51,21 @@ type ConnectionsQuery struct {
    Status string `json:"status"`
    Errormessage *string `json:"errormessage"`
    Records *[]ConnectionRecord `json:"records"`
+}
+
+type Datascope struct {
+   Name string `json:"name"`
+   Id string `json:"id"`
+   Records []DatascopeRecord `json:"records"`
+}
+
+type DatascopeId struct {
+   Id string `json:"id"`
+}
+
+type DatascopeIdName struct {
+   Name string `json:"name"`
+   Id string `json:"id"`
 }
 
 type DatascopeRecord struct {

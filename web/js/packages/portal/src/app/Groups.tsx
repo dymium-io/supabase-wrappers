@@ -18,7 +18,7 @@ import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import Spinner from '@dymium/common/Components/Spinner'
 import cloneDeep from 'lodash/cloneDeep';
 import * as com from '../Common'
-import * as types from '@dymium/common/Types/Commonold'
+import * as types from '@dymium/common/Types/Internal'
 const { SearchBar, ClearSearchButton } = Search;
 
 function GroupMapping() {
@@ -79,7 +79,7 @@ function GroupMapping() {
       null, body,
       resp => {
         resp.json().then(js => {
-          if (js.Status == "OK") {
+          if (js.status == "OK") {
 
             getMappings()
             setAlert(
@@ -91,7 +91,7 @@ function GroupMapping() {
           } else {
             setAlert(
               < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
-                Error: {js.Text} !
+                Error: {js.errormessage} !
               </Alert >)
           }
           setSpinner(false)
@@ -129,7 +129,7 @@ function GroupMapping() {
       null, body,
       resp => {
         resp.json().then(js => {
-          if (js.Status == "OK") {
+          if (js.status == "OK") {
 
             getMappings()
             setAlert(
@@ -140,7 +140,7 @@ function GroupMapping() {
           } else {
             setAlert(
               < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
-                Error: {js.Text} !
+                Error: {js.errormessage} !
               </Alert >)
           }
           setSpinner(false)
@@ -177,7 +177,7 @@ function GroupMapping() {
       null, body,
       resp => {
         resp.json().then(js => {
-          if (js.Status == "OK") {
+          if (js.status == "OK") {
 
             getMappings()
             setAlert(
@@ -188,7 +188,7 @@ function GroupMapping() {
           } else {
             setAlert(
               < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
-                Error deleting mapping: {js.Text} !
+                Error deleting mapping: {js.errormessage} !
               </Alert >)
           }
           setSpinner(false)

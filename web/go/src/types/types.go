@@ -1,12 +1,6 @@
 package types
 import "github.com/dgrijalva/jwt-go"
 
-type AuthStatus struct {
-	Status string
-	Text   string
-	Token  string
-}
-
 type Claims struct {
 	Roles      []string `json:"roles"`
 	Picture    string `json:"picture"`
@@ -20,6 +14,8 @@ type AdminClaims struct {
 	Picture    string `json:"picture"`
 	jwt.StandardClaims
 }
+
+type Invoke_t func(string, *string, []byte) ([]byte, error)
 
 /*
 type OperationStatus struct {
@@ -57,7 +53,7 @@ type DatascopeRecord struct {
 	Dflt string  `json:"dflt"`
 	Isnullable bool `json:"isnullable"`
 }
-*/
+
 
 
 type DatascopeIdName struct {
@@ -69,6 +65,7 @@ type Datascope struct {
 	Id string `json:"id",omitempty`		
 	Records []DatascopeRecord `json:"records"`
 }
+*/
 
 type GroupAssignment struct {
 	Name string `json:"name"`

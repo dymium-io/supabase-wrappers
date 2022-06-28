@@ -27,6 +27,7 @@ import (
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/types"
 	"path/filepath"
+	"aws"
 )
 
 
@@ -43,7 +44,14 @@ var ctx context.Context
 
 var FilesystemRoot string
 
-func DatabaseInit(host string, port, user, password, dbname, tls string) error {
+
+var Invoke types.Invoke_t
+
+func InitInvoke( i types.Invoke_t) {
+	Invoke = i
+}
+//aws.Invoke("DbAnalyzer", nil, bconn)
+func Init(host string, port, user, password, dbname, tls string) error {
 	nport := 5432
 	if port != "" {
 		nport, _ = strconv.Atoi(port)
@@ -89,7 +97,7 @@ func DatabaseInit(host string, port, user, password, dbname, tls string) error {
 	} else {
 		FilesystemRoot, _ = filepath.Abs(FilesystemRoot)
 	}
-
+	Invoke = aws.Invoke
 	return nil
 }
 
@@ -209,7 +217,6 @@ func GetConnections(schema string) ([]types.ConnectionRecord, error ) {
 		schema+`.connections as a join `+
 		schema+`.admincredentials as b on a.id=b.connection_id;`
 	rows, err := db.Query(sql)
-	log.Printf("in GetConnections: %s\n", sql)
 
 	var conns = []types.ConnectionRecord{}
 	if nil == err {
@@ -223,11 +230,9 @@ func GetConnections(schema string) ([]types.ConnectionRecord, error ) {
 				log.Printf("Error in GetConnections:  %s\n", err.Error())
 				return []types.ConnectionRecord{}, err
 			} else {
-				log.Printf("Connection: %v\n", conn)
 				conns = append(conns, conn)
 			}
 		}
-		
 	} else {
 		log.Printf("Error in GetConnections:  %s\n", err.Error())
 		return conns, err
@@ -289,7 +294,7 @@ func refreshPortalToken(token string) (string, error) {
 		tokenString, err := newtoken.SignedString(jwtKey)
 
 		if err != nil {
-			log.Printf("Error: Database Problem: %s", err)
+			log.Printf("Error: Token Signing Problem: %s", err)
 
 			// If there is an error in creating the JWT return an internal server error
 			return "", errors.New("JWT Creation Problem")
@@ -300,7 +305,7 @@ func refreshPortalToken(token string) (string, error) {
 
 	// trigger redirect to authentication
 	// log.Printf("Invalid session, expired at %v, time now: %v ", claim.StandardClaims.ExpiresAt, timeNow.Unix())
-	return "", errors.New("Token invalid or expired")
+	return "", err
 }
 
 func generateError(w http.ResponseWriter, r *http.Request, header string, body string) error {
@@ -387,9 +392,11 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 	}
 	sql := `update `+schema+`.connections set name=$1, database_type=$2, 
 		address=$3, port=$4, dbname=$5, use_tls=$6, description=$7 where id=$8  
-		and exists (select schema_name from global.customers where schema_name = $9);; `
+		and exists (select schema_name from global.customers where schema_name = $9) returning id; `
 
-	_, err  = tx.ExecContext(ctx, sql, con.Name, con.Dbtype, con.Address, con.Port, con.Dbname, con.UseTLS, con.Description, con.Id, schema)
+	row  := tx.QueryRowContext(ctx, sql, con.Name, con.Dbtype, con.Address, con.Port, con.Dbname, con.UseTLS, con.Description, con.Id, schema)
+	var newid string
+	err = row.Scan(&newid)
 	if err != nil {
 		tx.Rollback()
 		log.Printf("Error 1 in UpdateConnection: %s\n", err.Error())
@@ -413,7 +420,9 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 			return err
 		}		
 	}
-	log.Printf("Username: %s, password %s\n", *con.Username, *con.Password )
+	if(con.Username != nil && con.Password != nil) {
+		log.Printf("Username: %s, password %s\n", *con.Username, *con.Password )
+	}
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
@@ -641,7 +650,7 @@ func GetMappings(schema string) ([]types.GroupMapping, error) {
 		}
 		
 	} else {
-		log.Printf("Error in GetConnections:  %s\n", err.Error())
+		log.Printf("Error in GetMappings:  %s\n", err.Error())
 		return mps, err
 	}
 
@@ -801,7 +810,7 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 		log.Printf("Error 3 in SaveDatascope: %s\n", err.Error())
 		return err
 	}	
-	log.Printf("id=%s\n", ds_id)
+
 	// iterate and create 
 	records := dscope.Records
 	for  _, r := range  records  {
@@ -842,7 +851,7 @@ func DeleteConnection(schema, id string) error {
 		return err
 	}
 	sql := "select id from " + schema + ".admincredentials where connection_id=$1 and exists (select schema_name from global.customers where schema_name = $2);";
-	log.Printf("sql: %s\n", sql)
+
 	row := tx.QueryRowContext(ctx, sql, id, schema)
 	var credid string
 	err = row.Scan(&credid)
@@ -878,7 +887,7 @@ func DeleteConnection(schema, id string) error {
 		log.Printf("Error 6 in DeleteConnection: %s\n", err.Error())
 		return err
 	}
-	log.Printf("Returning success")
+
 	return nil
 }
 func GetFakeAuthentication () []byte{
