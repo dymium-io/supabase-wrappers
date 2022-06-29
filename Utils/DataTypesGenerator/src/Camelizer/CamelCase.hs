@@ -1,8 +1,8 @@
 module Camelizer.CamelCase where
 
 import           RIO
-import qualified RIO.HashMap               as HM
 import           RIO.List.Partial          ((!!))
+import qualified RIO.Map                   as M
 import qualified RIO.Text                  as T
 
 import qualified Camelizer.CamelCase.Words
@@ -37,7 +37,7 @@ camelCase str = T.concat $ T.toTitle <$> extract len []
     sub l k = T.take (k - l) . T.drop l $ s
 
     cost :: Int -> Int -> Cost
-    cost l k = case flip HM.lookup Camelizer.CamelCase.Words.words $ sub l k of
+    cost l k = case flip M.lookup Camelizer.CamelCase.Words.words $ sub l k of
       Nothing -> (k - l, 0)
       Just c  -> (0, c)
 

@@ -1,7 +1,7 @@
 ---
 module: DbAnalyzer
 
-connection: !!omap
+connection:
   - typ: Common.ConnectionType
   - address: string
   - port: int
@@ -10,22 +10,22 @@ connection: !!omap
   - database: string
   - tls: bool
 
-database: !!omap
+database:
   - name: string
   - schemas: <| schema |>
   - refs: <| arc |>
 
-schema: !!omap
+schema:
   - name: string
   - isSystem: bool
   - tables: <| table |>
 
-table: !!omap
+table:
   - name: string
   - isSystem: bool
   - columns: <| column |>
 
-column: !!omap
+column:
   - name: string
   - position: int
   - typ: string
@@ -34,7 +34,7 @@ column: !!omap
   - reference: ?Common.reference
   - semantics: ?Common.DataSemantics
 
-arc: !!omap
+arc:
   - from_schema: string
   - from_table: string
   - from_column: string

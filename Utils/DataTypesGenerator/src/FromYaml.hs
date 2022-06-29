@@ -2,17 +2,20 @@ module FromYaml(fromYaml) where
 
 import           Import
 import qualified RIO.HashMap                  as HM
+import qualified RIO.Map                      as M
 import qualified RIO.Set                      as Set
 
 import           RIO.Lens
 
 import           Lens.Micro.Platform          ()
 
+import qualified Data.Graph                   as G
+
 import           Data.Scientific
 import qualified Data.Time                    as DT
 import           Data.Yaml
 import           Lens.Micro.Aeson
-import           RIO.List.Partial             (tail)
+import           RIO.List.Partial             (head, tail)
 
 import           RIO.Partial                  (read)
 import qualified RIO.Text                     as T
@@ -29,15 +32,20 @@ data SearchResult where
   EnumFound   :: EnumDef -> SearchResult
 
 fromYaml :: [(DdtModuleDef, [Value])] -> RIO App [ModuleDef]
-fromYaml yy' =
-  let mnames = getModuleNamePath <$> yy in
+fromYaml yy' = do
+  checkModuleNames yy'
+  checkForObjects yy
+  let mnames = getModuleNamePath <$> yy
   case mnames ^..each ._Left :: [T.Text] of
     [] ->
       let v = zip (mnames ^..each ._Right) (mconcat $ snd <$> yy')
           mDefs = moduleDef (searchGen v) <$> v
       in
       case mDefs ^..each ._Left of
-      [] -> pure $ mDefs ^..each ._Right
+      [] -> do
+        let mms = mDefs ^..each ._Right
+        checkCircularDependencies mms
+        pure mms
       e  -> do
         mapM_ (logError . display) $ mconcat e
         exitFailure
@@ -48,17 +56,64 @@ fromYaml yy' =
     yy :: [(DdtModuleDef, Value)]
     yy = mconcat $ uncurry C.enPairing <$> yy'
 
-searchGen :: [((T.Text,Maybe FilePath),Value)] -> T.Text -> T.Text -> SearchResult
-searchGen yy = \mn s -> case mn `HM.lookup` m of
+checkModuleNames :: [(DdtModuleDef, [Value])] -> RIO App ()
+checkModuleNames modvals =
+  case [ ddtSource md |
+         (md, v) <- modvals, checkMName v ] of
+    [] -> pure ()
+    o  -> do
+      logError "\x1B[31mError\x1B[0m:"
+      forM_ o $ \ src ->
+        logError $ "  in file "<>displayShow src<>": module name is not defined"
+      exitFailure
+  where
+    checkMName :: [Value] -> Bool
+    checkMName v = not $ null [ () | m <- v, let mn = m ^? key "module" . _String, isNothing mn ]
+
+checkForObjects :: [(DdtModuleDef, Value)] -> RIO App ()
+checkForObjects modvals =
+  case [ (ddtSource md, v ^. key "module" . _String, objs) |
+         (md, v) <- modvals, let objs = getObjs v, not (null objs) ] of
+    [] -> pure ()
+    o  -> do
+      logError "\x1B[31mError\x1B[0m:"
+      forM_ o $ \ (src, m, objs) ->
+        logError $ "  in file "<>displayShow src<>": module "<>displayShow m<>": struct(s) "<>displayShow objs
+      logError "defined as Objects. Did you forget '-'?"
+      exitFailure
+  where
+    getObjs = (^.. _Object .to HM.toList .each .filtered (has $ _2 ._Object) . _1)
+
+checkCircularDependencies :: [ModuleDef] -> RIO App ()
+checkCircularDependencies mms =
+  let scc' = G.stronglyConnComp [ ( mName m, mName m, externalModules m ) | m <- mms ]
+      scc  = [ unCycle c | c <- scc', isCyclic c ]
+      isCyclic (G.CyclicSCC _)  = True
+      isCyclic (G.AcyclicSCC _) = False
+      unCycle (G.CyclicSCC v) = v
+      unCycle _               = error "* IMPOSSIBLE *"
+
+  in case scc of
+    [] -> pure ()
+    _  -> do
+      logError "\x1B[31mError\x1B[0m:"
+      forM_ scc $ \ v ->
+        logError $ "Cyclic dependency in modules: " <> displayShow (T.intercalate " -> " (v <> [ head v ]))
+      exitFailure
+
+
+searchGen :: [((T.Text,(T.Text, Maybe FilePath)),Value)]
+          -> T.Text -> T.Text -> SearchResult
+searchGen yy = \mn s -> case mn `M.lookup` m of
   Nothing      -> Err $ "Module `"<>mn<>"` not defined"
-  Just (mE,mS) -> case (s `HM.lookup` mE, s `Set.member` mS) of
+  Just (mE,mS) -> case (s `M.lookup` mE, s `Set.member` mS) of
     (Nothing, False) -> Err $ "Neither enum nor struct `"<>s<>"` is defined in module `"<>mn<>"`"
     (Just _,  True)  -> Err $ "Both enum and struct `"<>s<>"` are defined in module `"<>mn<>"`"
     (Just e,  False) -> EnumFound e
     (Nothing, True)  -> StructFound
   where
-    m = HM.fromList $ (fst . fst &&& ((HM.fromList . getEnums  &&&
-                                       Set.fromList . getListOfStructs) . snd)) <$> yy
+    m = M.fromList $ (fst . fst &&& ((M.fromList . getEnums  &&&
+                                      Set.fromList . getListOfStructs) . snd)) <$> yy
 
     getEnums :: Value -> [(T.Text, EnumDef)]
     getEnums =
@@ -69,14 +124,15 @@ searchGen yy = \mn s -> case mn `HM.lookup` m of
       (^.. _Object .to HM.toList .each .filtered (has $ _2 .nth 0 ._Object) ._1)
 
 moduleDef :: (T.Text -> T.Text -> SearchResult) ->
-             ((T.Text, Maybe FilePath), Value) ->
+             ((T.Text, (T.Text, Maybe FilePath)), Value) ->
              Either [T.Text] ModuleDef
-moduleDef search ((mName',mPath'),y) =
+moduleDef search ((mName',(renamedModuleName, mPath')),y) =
   let structs' = y ^.. _Object .to HM.toList .each .filtered (has $ _2 .nth 0 ._Object) <&> parseStruct' in
   case structs' ^..each ._Left of
     [] ->
        let (structs, externalModules) = (id &&& externalModules') $ structs' ^..each ._Right in
-       Right $ ModuleDef { mPath = maybe [] splitDirectories mPath'
+       Right $ ModuleDef { mPath = (renamedModuleName,
+                                    maybe [] splitDirectories mPath')
                          , mName = mName'
                          , externalModules
                          , enums
@@ -108,15 +164,14 @@ moduleDef search ((mName',mPath'),y) =
           modRefs :: [(T.Text, Field)] -> Set.Set T.Text
           modRefs = foldMap (maybe Set.empty Set.singleton . moduleName . snd)
 
-getModuleNamePath :: (DdtModuleDef,Value) -> Either T.Text (T.Text,Maybe FilePath)
+getModuleNamePath :: (DdtModuleDef,Value)
+                  -> Either T.Text (T.Text, (T.Text, Maybe FilePath))
 getModuleNamePath (ddt,y) =
   case y ^? key "module" . _String of
     Nothing ->  Left $ "module name is not defined in "<>T.pack (ddtSource ddt)
-    Just mn ->  Right $
-                maybe
-                (mn, mp)
-                (fromMaybe mn . ddtName &&& ddtPath)
-                (mn `HM.lookup` ddtMod ddt)
+    Just mn -> Right $ case mn `M.lookup` ddtMod ddt of
+      Nothing -> (mn, (mn, mp))
+      Just md -> (mn, (fromMaybe mn . ddtName &&& ddtPath) md)
   where
     mp = ddtDestination ddt
 
@@ -327,7 +382,7 @@ specialTypesS = Set.fromList [ "BoolS"
 
 parseType :: T.Text -> Maybe FType
 parseType =
-  let m = HM.fromList [ ("BoolS", BoolS)
+  let m =  M.fromList [ ("BoolS", BoolS)
                       , ("IntS", IntS)
                       , ("DoubleS", DoubleS)
                       , ("DollarS", DollarS)
@@ -339,7 +394,7 @@ parseType =
                       , ("float", PrimDouble)
                       , ("string", PrimString)
                       ]
-  in flip HM.lookup m
+  in flip M.lookup m
 
 parseDefaultValue :: T.Text -> T.Text -> Either T.Text Dflt
 parseDefaultValue _ "" = Right NoDflt

@@ -1,17 +1,17 @@
 ---
 module: DbSync
 
-customerData: !!omap
+customerData:
   - credentials: <| credential |>
   - connections: <| connection |>
   - datascopes: <| datascope |>
 
-credential: !!omap
+credential:
   - connection_id: string
   - user_name: string
   - password: string
 
-connection: !!omap
+connection:
   - id: string
   - address: string
   - port: int
@@ -20,21 +20,21 @@ connection: !!omap
   - use_tls: bool
   - dbname: string
 
-datascope: !!omap
+datascope:
   - name: string
   - connections: <| string |>
   - schemas: <| schema |>
 
-schema: !!omap
+schema:
   - name: string
   - tables: <| table |>
 
-table: !!omap
+table:
   - name: string
   - connection: string
   - columns: <| column |>
 
-column: !!omap
+column:
   - name: string
   - typ: string
   - isNullable: bool

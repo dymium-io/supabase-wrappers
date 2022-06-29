@@ -6,7 +6,7 @@ Action:
   - update
   - delete
 
-request: !!omap
+request:
   - action: Action
   - customer: string
   - datascope: ?string

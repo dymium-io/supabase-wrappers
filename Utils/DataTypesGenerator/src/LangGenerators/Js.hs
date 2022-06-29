@@ -5,8 +5,8 @@ module LangGenerators.Js where
 
 import           RIO
 import           RIO.FilePath      (joinPath, (<.>), (</>))
-import qualified RIO.HashMap       as HM
 import           RIO.List          (sort, sortOn)
+import qualified RIO.Map           as M
 import qualified RIO.Set           as Set
 import qualified RIO.Text          as T
 
@@ -28,7 +28,7 @@ run mDefs installPath@(InstallPath installPath') _rootModule camelizer = do
 
 data NameMappers =
   NameMappers
-  { nm_modulesPaths     :: Text -> [FilePath]
+  { nm_modulesPaths     :: Text -> (Text, [FilePath])
   , nm_mNameMapper      :: Text -> Text
   , nm_enumNameMapper   :: Text -> (Text -> Text)
   , nm_enumFldMapper    :: Text -> ((Text,Text) -> Text)
@@ -86,16 +86,18 @@ genModule
   |]
   where
     inst =
-      let fName = T.unpack (mName mDef) <.> "js" in
-      joinPath (installPath : mPath mDef) </> fName
+      let (fName', fPath) = mPath mDef
+          fName = T.unpack fName' <.> "js"
+      in
+      joinPath (installPath : fPath) </> fName
 
     imports = mconcat $ importString <$> externalModules mDef
       where
         importString em = T.concat ["import * as ",lName," from ",jsString rPath,"\n"]
           where
             lName = mNameMapper em
-            rPath = T.pack . (</> (T.unpack em <.> "js")) .joinPath $
-              case C.calcRelativePath (modulesPaths mName') (modulesPaths em) of
+            rPath = T.pack . (</> (T.unpack (fst $ modulesPaths em) <.> "js")) .joinPath $
+              case C.calcRelativePath (snd $ modulesPaths mName') (snd $ modulesPaths em) of
                 r@("..":_) -> r
                 r          -> "." : r
 
@@ -658,19 +660,19 @@ genMappers mDefs camelizer =
     nm_enumNameMapper,
     nm_structNameMapper = const camelizer,
     nm_enumFldMapper =
-      let m = HM.fromList $ (mName &&& eFldMapper) <$> mDefs in
-      \mn -> fromMaybe (error "-- IMPOSSIBLE --") $ mn `HM.lookup` m,
+      let m = M.fromList $ (mName &&& eFldMapper) <$> mDefs in
+      \mn -> fromMaybe (error "-- IMPOSSIBLE --") $ mn `M.lookup` m,
     nm_structFldMapper = const snd
     }
   where
 
-    nm_modulesPaths :: T.Text -> [FilePath]
+    nm_modulesPaths :: T.Text -> (T.Text, [FilePath])
     nm_modulesPaths =
       let
-        m = HM.fromList $ (mName &&& mPath) <$> mDefs
+        m = M.fromList $ (mName &&& mPath) <$> mDefs
       in
       \mn -> fromMaybe (error $ "can not find path to module `"<>T.unpack mn<>"`")
-             (mn `HM.lookup` m)
+             (mn `M.lookup` m)
 
     nm_enumNameMapper :: T.Text -> (T.Text -> T.Text)
     nm_enumNameMapper =  const camelizer
@@ -681,7 +683,7 @@ genMappers mDefs camelizer =
               mconcat $
               uncurry C.enPairing . (eName &&& eValues)
               <$> enums mDef
-      in (\e -> fromMaybe (error "-- IMPOSSIBLE --") $ e `HM.lookup` m)
+      in (\e -> fromMaybe (error "-- IMPOSSIBLE --") $ e `M.lookup` m)
 
     eShortNameGen :: ModuleDef -> (Text,Text) -> Text
     eShortNameGen mDef (eName', fName') =

@@ -48,6 +48,7 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -haddock -O2
   build-depends:
       base >=4.11 && <10
+    , containers
     , hashable
     , microlens-aeson
     , microlens-platform

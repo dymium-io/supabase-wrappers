@@ -12,9 +12,9 @@ import           Run
 
 -- | Command line arguments
 data Options = Options
-  { optionsVerbose :: !Bool
-  , optionsDTD     :: !FilePath
-  , optionsModules :: ![Text]
+  { optionsVerbose       :: !Bool
+  , optionsDTD           :: !FilePath
+  , optionsInstallations :: ![Text]
   }
 
 main :: IO ()
@@ -29,7 +29,7 @@ main = do
                     <> help "Verbose output?"
                   )
        <*> strArgument (metavar "HDTD")
-       <*> many (strArgument (metavar "module"))
+       <*> many (strArgument (metavar "installation ..."))
     )
     empty
   lo' <- logOptionsHandle stderr (optionsVerbose options)
@@ -41,4 +41,4 @@ main = do
           , appLogFunc = lf
           , appProcessContext = pc
           }
-    in runRIO app $ run (optionsDTD options) (optionsModules options)
+    in runRIO app $ run (optionsDTD options) (optionsInstallations options)

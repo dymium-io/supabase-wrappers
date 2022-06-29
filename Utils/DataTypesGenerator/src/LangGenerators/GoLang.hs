@@ -5,17 +5,18 @@ module LangGenerators.GoLang where
 
 import           RIO
 import           RIO.FilePath      (joinPath, splitDirectories, (<.>), (</>))
-import qualified RIO.HashMap       as HM
 import           RIO.List          (lastMaybe, nub, sortOn)
+import qualified RIO.Map           as M
 import qualified RIO.Text          as T
 
 import           Data.Char         (isUpper)
 import qualified Data.Time         as DT
 import           NeatInterpolation
 
+import           Data.Hashable     (hash)
+
 import qualified Common            as C
 
-import           Data.Hashable
 import qualified RIO.Set           as Set
 import           Types
 
@@ -75,8 +76,10 @@ genModule
   |]
   where
     inst =
-      let fName = T.unpack (mName mDef) <.> "go" in
-      joinPath (installPath : mPath mDef) </> fName
+      let (fName', fPath) = mPath mDef
+          fName = T.unpack fName' <.> "go"
+      in
+      joinPath (installPath : fPath) </> fName
 
     findImports =
        case lefts imp of
@@ -196,12 +199,12 @@ genMappers (RootModule rootModule) mDefs camelizer =
 
     getPackage :: T.Text -> Maybe Package
     getPackage =
-      let m = HM.fromList $ (mName &&& getPkg . mPath) <$> mDefs in
+      let m = M.fromList $ (mName &&& getPkg . mPath) <$> mDefs in
       \mn -> fromMaybe (error $ "can not find path to module `"<>T.unpack mn<>"`")
-             (mn `HM.lookup` m)
+             (mn `M.lookup` m)
       where
-        getPkg :: [FilePath] -> Maybe Package
-        getPkg path
+        getPkg :: (Text, [FilePath]) -> Maybe Package
+        getPkg (_,path)
           | [] <- path' = Nothing
           | Just p <- lastMaybe path' =
             Just $ Package { pPath = path'
@@ -218,45 +221,45 @@ genMappers (RootModule rootModule) mDefs camelizer =
     enumFldMapper =
       let
 
-        packMapper = foldl' pMap HM.empty mDefs
+        packMapper = foldl' pMap M.empty mDefs
           where
             pMap pm mDef = foldl' (\pm' (en, ef) ->
-                                    HM.insertWith (<>) (pRef <$> getPackage (mName mDef))
+                                    M.insertWith (<>) (pRef <$> getPackage (mName mDef))
                                     [(mName mDef, (en, ef))]
                                     pm'
                                   )
                            pm
                            (mconcat $ uncurry C.enPairing . (eName &&& eValues) <$> enums mDef)
 
-        m = mconcat (HM.toList <$> (C.uniqNames eShortNameGen eLongNameGen <$> HM.elems packMapper)) <&>
+        m = mconcat (M.toList <$> (C.uniqNames eShortNameGen eLongNameGen <$> M.elems packMapper)) <&>
             (\((mName', (eName', fName')), v) -> (mName', [((eName',fName'),v)])) &
-            HM.fromListWith (<>) &
-            HM.map HM.fromList &
-            HM.map (\mE -> fromMaybe (error "-- IMPOSSIBLE --") . (`HM.lookup` mE))
+            M.fromListWith (<>) &
+            M.map M.fromList &
+            M.map (\mE -> fromMaybe (error "-- IMPOSSIBLE --") . (`M.lookup` mE))
 
-      in  fromMaybe (error "-- IMPOSSIBLE --") . (`HM.lookup` m)
+      in  fromMaybe (error "-- IMPOSSIBLE --") . (`M.lookup` m)
 
     structNameMapper :: T.Text -> (T.Text -> T.Text)
     structNameMapper =
       let
 
-        packMapper = foldl' pMap HM.empty mDefs
+        packMapper = foldl' pMap M.empty mDefs
           where
             pMap pm mDef = foldl' (\pm' sn ->
-                                    HM.insertWith (<>) (pRef <$> getPackage (mName mDef))
+                                    M.insertWith (<>) (pRef <$> getPackage (mName mDef))
                                     [(mName mDef, sn)]
                                     pm'
                                   )
                            pm
                            (sName <$> structs mDef)
 
-        m = mconcat (HM.toList <$> (C.uniqNames sShortNameGen sLongNameGen <$> HM.elems packMapper)) <&>
+        m = mconcat (M.toList <$> (C.uniqNames sShortNameGen sLongNameGen <$> M.elems packMapper)) <&>
             (\((mName', sName'), v) -> (mName', [(sName',v)])) &
-            HM.fromListWith (<>) &
-            HM.map HM.fromList &
-            HM.map (\mS -> fromMaybe (error "-- IMPOSSIBLE --") . (`HM.lookup` mS))
+            M.fromListWith (<>) &
+            M.map M.fromList &
+            M.map (\mS -> fromMaybe (error "-- IMPOSSIBLE --") . (`M.lookup` mS))
 
-      in fromMaybe (error "-- IMPOSSIBLE --") . (`HM.lookup` m)
+      in fromMaybe (error "-- IMPOSSIBLE --") . (`M.lookup` m)
 
 
     sShortNameGen :: (Text, Text) -> Text
