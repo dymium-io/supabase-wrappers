@@ -53,7 +53,7 @@ type ConnectionsQuery struct {
    Records *[]ConnectionRecord `json:"records"`
 }
 
-type Common_Datascope struct {
+type Datascope struct {
    Name string `json:"name"`
    Id string `json:"id"`
    Records []DatascopeRecord `json:"records"`

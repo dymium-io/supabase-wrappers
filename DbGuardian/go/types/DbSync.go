@@ -34,18 +34,18 @@ type Credential struct {
 type CustomerData struct {
    Credentials []Credential `json:"credentials"`
    Connections []Connection `json:"connections"`
-   Datascopes []Datascope `json:"datascopes"`
-}
-
-type DbSync_Datascope struct {
-   Name string `json:"name"`
-   Connections []string `json:"connections"`
-   Schemas []Schema `json:"schemas"`
+   Datascopes []Scope `json:"datascopes"`
 }
 
 type Schema struct {
    Name string `json:"name"`
    Tables []Table `json:"tables"`
+}
+
+type Scope struct {
+   Name string `json:"name"`
+   Connections []string `json:"connections"`
+   Schemas []Schema `json:"schemas"`
 }
 
 type Table struct {

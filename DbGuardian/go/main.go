@@ -55,7 +55,7 @@ func main() {
 	}
 }
 
-func createDatabases(datascopes []types.Datascope) error {
+func createDatabases(datascopes []types.Scope) error {
 
 	var user, password, testUser, testPassword string
 	if user = os.Getenv("DATABASE_USER"); user == "" {

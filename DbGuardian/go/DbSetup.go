@@ -21,7 +21,7 @@ func extensionName(connectionType types.ConnectionType) (string, error) {
 }
 
 func configureDatabase(db *sql.DB,
-	datascope *types.Datascope,
+	datascope *types.Scope,
 	connections map[string]types.Connection,
 	credentials map[string]types.Credential,
 	createDymiumTables bool) error {

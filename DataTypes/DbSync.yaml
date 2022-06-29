@@ -4,7 +4,7 @@ module: DbSync
 customerData:
   - credentials: <| credential |>
   - connections: <| connection |>
-  - datascopes: <| datascope |>
+  - datascopes: <| scope |>
 
 credential:
   - connection_id: string
@@ -20,7 +20,7 @@ connection:
   - use_tls: bool
   - dbname: string
 
-datascope:
+scope:
   - name: string
   - connections: <| string |>
   - schemas: <| schema |>

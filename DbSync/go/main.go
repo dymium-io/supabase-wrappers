@@ -142,7 +142,7 @@ func getConnections(db *sql.DB, infoSchema string) (*map[string]types.Connection
 	return &connections, nil
 }
 
-func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]types.Datascope, error) {
+func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]types.Scope, error) {
 	infoDatascope_ := ""
 	if infoDatascope != nil {
 		infoDatascope_ = fmt.Sprintf("d.name = '%s' AND ", esc(*infoDatascope))
@@ -164,8 +164,8 @@ func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]typ
 	}
 	defer rows.Close()
 
-	datascopes := []types.Datascope{}
-	var d *types.Datascope
+	datascopes := []types.Scope{}
+	var d *types.Scope
 	var s *types.Schema
 	var t *types.Table
 	for rows.Next() {
@@ -177,7 +177,7 @@ func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]typ
 			return nil, err
 		}
 		if d == nil || dscope != d.Name {
-			datascopes = append(datascopes, types.Datascope{
+			datascopes = append(datascopes, types.Scope{
 				Name:        dscope,
 				Connections: []string{con},
 				Schemas: []types.Schema{

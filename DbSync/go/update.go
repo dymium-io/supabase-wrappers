@@ -12,7 +12,7 @@ import (
 
 func doUpdate(
 	cnf *guardianConf,
-	datascope *types.Datascope,
+	datascope *types.Scope,
 	connections *map[string]types.Connection,
 	credentials *map[string]types.Credential) (empty struct{}, err error) {
 
