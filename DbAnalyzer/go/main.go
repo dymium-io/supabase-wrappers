@@ -13,17 +13,27 @@ import (
 )
 
 
-func LambdaHandler(c types.Connection) (*types.Database, error) {
+func LambdaHandler(c types.Connection) (interface{}, error) {
 
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Address, c.Port, c.User, c.Password, c.Database,
 		func () string { if c.Tls { return "require" } else {return "disable" } }())
+
+	if c.Typ != types.CT_PostgreSQL {
+		return nil, fmt.Errorf("Data sources of type %v are not supported yet",c.Typ)
+	}
 	
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		return nil,err
 	}
 	defer db.Close()
+	if err := db.Ping(); err != nil {
+		return nil,err
+	}
+	if c.TestOnly {
+		return struct{}{}, nil
+	}
 
 	database, err := getDbInfo(db, &c.Database)
 	if err != nil {
