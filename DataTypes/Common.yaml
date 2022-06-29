@@ -82,3 +82,18 @@ AuthStatus:
   - status: string
   - errormessage: string
   - token: string
+
+DatascopesStatus: !!omap 
+  - status: string
+  - errormessage: string
+  - records: <|DatascopeIdName|>
+
+DatascopeInfoStatus: !!omap 
+  - status: string
+  - errormessage: string
+  - record: ?Datascope
+
+GroupMappingStatus: !!omap 
+  - status: string
+  - errormessage: string
+  - records: <|GroupMapping|> 

@@ -36,40 +36,14 @@ export default function AssignGroups() {
     let normalstyle = { chips: { background: "rgb(0, 151,206)" } }
     const [multistyle, setMultistyle] = useState(normalstyle)
 
-    let getDatascopes = () => {
-        setSpinner(true)
-        com.sendToServer("GET", "/api/getdatascopes",
-            null, "",
-            resp => {
-                resp.json().then(js => {
-                    setDatascopes(js)
-                    getGroups(js)
-                })
-            },
-            resp => {
-                setAlert(
-                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                        Error retrieving datascopes.
-                    </Alert>
-                )
-                setSpinner(false)
-            },
-            error => {
-                setAlert(
-                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                        Error retrieving datascopes.
-                    </Alert>
-                )
-                setSpinner(false)
-            })
-    }
+
     let getGroups = (datascopes) => {
         com.sendToServer("GET", "/api/getmappings",
             null, "",
             resp => {
                 resp.json().then(js => {
                     let grps: types.Group[] = []
-                    js.forEach(x => {
+                    js.records.forEach(x => {
                         grps.push({ id: x.id, name: x.dymiumgroup })
                     })
                     setGroups(grps)
@@ -219,7 +193,9 @@ export default function AssignGroups() {
     }
 
     useEffect(() => {
-        getDatascopes()
+        com.getDatascopes(setSpinner, setAlert, setDatascopes, (js) => {
+            getGroups(js)
+        }) 
     }, [])
 
     let onEdit = (id, name, groups) => {

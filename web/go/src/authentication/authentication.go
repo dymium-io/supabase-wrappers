@@ -525,7 +525,6 @@ func GetDatascopes(schema string) ([]types.DatascopeIdName, error) {
 	sql := `select id, name from `+schema+`.datascopes where exists (select schema_name from global.customers where schema_name = $1);`
 
 	rows, err := db.Query(sql, schema)
-	log.Printf("in GetDatascope: %s\n", sql)
 	if err != nil {
 		log.Printf("Error 0 in GetDatascopes:  %s\n", err.Error())
 		return nil, err	
@@ -602,7 +601,7 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 
 		sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col, dflt, is_nullable) 
 		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);`
-		log.Printf("connection name: %s\n", r.Connection)
+	
 		var rs, rt, rc string
 		if r.Reference != nil {
 			rs = r.Reference.Schema
@@ -817,7 +816,7 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 
 		sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col, dflt, is_nullable) 
 		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);`
-		log.Printf("connection name: %s\n", r.Connection)
+	
 		var rs, rt, rc string
 		if r.Reference != nil {
 			rs = r.Reference.Schema

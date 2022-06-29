@@ -465,6 +465,62 @@ export class DatascopeIdName {
   }
 }
 
+export class DatascopeInfoStatus {
+  private '_status': string
+  private '_errormessage': string
+  private '_record': Datascope | null
+
+  constructor() {
+    this['_status'] = ''
+    this['_errormessage'] = ''
+    this['_record'] = null
+  }
+  get status(): string { return this['_status'] }
+  set status(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_status'])) {
+      setDirtyFlag()
+      this['_status'] = __v__
+    }
+  }
+  get errormessage(): string { return this['_errormessage'] }
+  set errormessage(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_errormessage'])) {
+      setDirtyFlag()
+      this['_errormessage'] = __v__
+    }
+  }
+  get record(): Datascope | null { return this['_record'] }
+  set record(__a__: any) {
+    if(__a__ == null) {
+      if(this['_record'] == null) { return }
+      setDirtyFlag()
+      this['_record'] = null
+      return
+    } else {
+      setDirtyFlag()
+      this['_record'] = __a__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): DatascopeInfoStatus {
+    disableDF()
+    let cls = new DatascopeInfoStatus()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.status = __a__['status']
+       cls.errormessage = __a__['errormessage']
+       cls.record = __a__['record'] == null ? null : Datascope.fromJson(__a__['record'])
+    } else {
+       doAlert(`DatascopeInfoStatus: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class DatascopeRecord {
   private '_id': string | null
   private '_connection': string
@@ -645,6 +701,55 @@ export class DatascopeRecord {
   }
 }
 
+export class DatascopesStatus {
+  private '_status': string
+  private '_errormessage': string
+  private '_records': Array<DatascopeIdName>
+
+  constructor() {
+    this['_status'] = ''
+    this['_errormessage'] = ''
+    this['_records'] = []
+  }
+  get status(): string { return this['_status'] }
+  set status(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_status'])) {
+      setDirtyFlag()
+      this['_status'] = __v__
+    }
+  }
+  get errormessage(): string { return this['_errormessage'] }
+  set errormessage(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_errormessage'])) {
+      setDirtyFlag()
+      this['_errormessage'] = __v__
+    }
+  }
+  get records(): Array<DatascopeIdName> { return this['_records'] }
+  set records(__a__: any) {
+    setDirtyFlag()
+    this['_records'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): DatascopesStatus {
+    disableDF()
+    let cls = new DatascopesStatus()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.status = __a__['status']
+       cls.errormessage = __a__['errormessage']
+       cls.records = array1Reader(DatascopeIdName.fromJson)(__a__['records'])
+    } else {
+       doAlert(`DatascopesStatus: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class GroupMapping {
   private '_id': string | null
   private '_dymiumgroup': string
@@ -709,6 +814,55 @@ export class GroupMapping {
        cls.comments = __a__['comments']
     } else {
        doAlert(`GroupMapping: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class GroupMappingStatus {
+  private '_status': string
+  private '_errormessage': string
+  private '_records': Array<GroupMapping>
+
+  constructor() {
+    this['_status'] = ''
+    this['_errormessage'] = ''
+    this['_records'] = []
+  }
+  get status(): string { return this['_status'] }
+  set status(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_status'])) {
+      setDirtyFlag()
+      this['_status'] = __v__
+    }
+  }
+  get errormessage(): string { return this['_errormessage'] }
+  set errormessage(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_errormessage'])) {
+      setDirtyFlag()
+      this['_errormessage'] = __v__
+    }
+  }
+  get records(): Array<GroupMapping> { return this['_records'] }
+  set records(__a__: any) {
+    setDirtyFlag()
+    this['_records'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): GroupMappingStatus {
+    disableDF()
+    let cls = new GroupMappingStatus()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.status = __a__['status']
+       cls.errormessage = __a__['errormessage']
+       cls.records = array1Reader(GroupMapping.fromJson)(__a__['records'])
+    } else {
+       doAlert(`GroupMappingStatus: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls

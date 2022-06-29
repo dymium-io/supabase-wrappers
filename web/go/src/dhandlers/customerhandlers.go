@@ -10,6 +10,7 @@ import (
 	"dymium.com/dymium/types"
 	_"github.com/gorilla/mux"
 	"golang.org/x/net/context"
+	"github.com/Jeffail/gabs"	
 	"encoding/json"
 	"io/ioutil"
 	"net/url"
@@ -103,6 +104,22 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 	}
 
 	error := authentication.SaveDatascope(schema, t)
+	var status types.OperationStatus
+	if(error == nil) {
+		status = types.OperationStatus{"OK", "Datascope created"}
+	} else {
+		status = types.OperationStatus{"Error", error.Error()}
+		js, err := json.Marshal(status)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(js)			
+		return	
+	}
 
 	var rq types.Request
 	rq.Action = types.A_Update
@@ -110,21 +127,37 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 	rq.Datascope = &t.Name
 	snc, _ := json.Marshal(rq)
 
-	_, err = authentication.Invoke("DbSync", nil, snc)
+	invokebody, err := authentication.Invoke("DbSync", nil, snc)
 	if err != nil {
-		log.Printf("DbSync Error: %s\n", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("DbSync Invoke Error: %s\n", err.Error())
+		status = types.OperationStatus{"Error", err.Error()}
+		js, err := json.Marshal(status)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")		
+		w.Write(js)		
 		return
 	} else {
 		log.Printf("DbSync success")
 	}
 
-	var status types.OperationStatus
-	if(error == nil) {
-		status = types.OperationStatus{"OK", "Datascope created"}
-	} else {
-		status = types.OperationStatus{"Error", error.Error()}
+	jsonParsed, err := gabs.ParseJSON(invokebody)
+	if(err != nil) {
+		log.Printf("DbSync Error parsing output: %s\n", err.Error())
 	}
+	value, ok := jsonParsed.Path("Errormessage").Data().(string)
+	if(ok) {
+		rr := fmt.Sprintf("Error in Invoke return: %s", value)
+		status = types.OperationStatus{"Error", rr}
+		log.Printf("%s\n", rr)
+	} else {
+		log.Printf("Invoke body: %s\n", string(invokebody))
+	}
+
+
 	js, err := json.Marshal(status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -145,13 +178,19 @@ func GetDatascopeDetails(w http.ResponseWriter, r *http.Request) {
 
 	err := json.Unmarshal(body, &t)
 
+	var status types.DatascopeInfoStatus
 	ds, err := authentication.GetDatascope(schema, t.Id)
-	js, err := json.Marshal(ds)
+	if(err != nil) {
+		status = types.DatascopeInfoStatus{"Error", err.Error(), nil} 
+	} else {
+		status = types.DatascopeInfoStatus{"OK", "", &ds} 
+	}
+	js, err := json.Marshal(status)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
+	}	
 	w.Header().Set("Cache-Control", common.Nocache)
 	w.Header().Set("Content-Type", "text/html")
 	w.Write(js)
@@ -400,6 +439,8 @@ func DeleteConnection(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Write(js)
 }
+
+
 func GetDatascopes(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 
@@ -408,13 +449,13 @@ func GetDatascopes(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 
 	if(error != nil) {
-		var status  types.OperationStatus
-		status = types.OperationStatus{"Error", error.Error()}
+		status := types.DatascopesStatus{"Error", error.Error(), []types.DatascopeIdName{}}
 		js, _ := json.Marshal(status)
 		w.Write(js)
 		return
 	}
-	js, err := json.Marshal(datascopes)
+	status := types.DatascopesStatus{"OK", "", datascopes}
+	js, err := json.Marshal(status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -429,14 +470,14 @@ func GetMappings(w http.ResponseWriter, r *http.Request) {
 
 	mappings, error := authentication.GetMappings(schema)
 	if(error != nil) {
-		var status  types.OperationStatus
-		status = types.OperationStatus{"Error", error.Error()}
+		var status  types.GroupMappingStatus
+		status = types.GroupMappingStatus{"Error", error.Error(), []types.GroupMapping{}}
 		js, _ := json.Marshal(status)
 		w.Write(js)
 		return
 	}
-
-	js, err := json.Marshal(mappings)
+	status := types.GroupMappingStatus{"OK", "", mappings}
+	js, err := json.Marshal(status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

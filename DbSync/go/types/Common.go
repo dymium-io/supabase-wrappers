@@ -68,6 +68,12 @@ type DatascopeIdName struct {
    Id string `json:"id"`
 }
 
+type DatascopeInfoStatus struct {
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
+   Record *Datascope `json:"record"`
+}
+
 type DatascopeRecord struct {
    Id *string `json:"id"`
    Connection string `json:"connection"`
@@ -84,11 +90,23 @@ type DatascopeRecord struct {
    Isnullable bool `json:"isnullable"`
 }
 
+type DatascopesStatus struct {
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
+   Records []DatascopeIdName `json:"records"`
+}
+
 type GroupMapping struct {
    Id *string `json:"id"`
    Dymiumgroup string `json:"dymiumgroup"`
    Directorygroup string `json:"directorygroup"`
    Comments string `json:"comments"`
+}
+
+type GroupMappingStatus struct {
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
+   Records []GroupMapping `json:"records"`
 }
 
 type OperationStatus struct {

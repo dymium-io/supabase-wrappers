@@ -25,12 +25,13 @@ export default function EditDatascopes() {
     const [alert, setAlert] = useState<JSX.Element>(<></>)
     const [datascopes, setDatascopes] = useState<types.DatascopeIdName[]>([])
     const [selectedDatascope, setSelectedDatascope] = useState("")
-    const [selectedDatascopeDetails, setSelectedDatascopeDetails] = useState<internal.DataScopeInfo | null>(null)
+    const [selectedDatascopeDetails, setSelectedDatascopeDetails] = useState<types.Datascope | null>(null)
 
     const [initialTables, setInitialTables] = useState<internal.TablesMap>({})
     const [validated, setValidated] = useState(false)
     let form = useRef<HTMLFormElement>(null)
 
+    let setSDRef = useRef(setSelectedDatascope)
 
     const [showOffcanvas, setShowOffcanvas] = useState<boolean>(false)
     const [table, setTable] = useState<internal.TableScope>({ schema: "", table: "" })
@@ -44,31 +45,13 @@ export default function EditDatascopes() {
     )
     const appDispatch = useAppDispatch()
 
-    let getDatascopes = () => {
-        setSpinner(true)
-        com.sendToServer("GET", "/api/getdatascopes",
-            null, "",
-            resp => {
-
-                resp.json().then(js => {
-                    setDatascopes(js)
-                    setSelectedDatascope(t)
-                })
-
-                setTimeout( () => setSpinner(false), 500)
-            },
-            resp => {
-                console.log("on error")
-                setSpinner(false)
-            },
-            error => {
-                console.log("on exception: " + error)
-                setSpinner(false)
-            })
-    }
-
     useEffect(() => {
-        com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{getDatascopes()})
+        com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{
+          
+            com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{
+                setSelectedDatascope(t)
+            }) 
+        })
 
     }, [])
     useEffect(() => {
@@ -80,12 +63,32 @@ export default function EditDatascopes() {
         com.sendToServer("POST", "/api/getdatascopedetails",
             null, body,
             resp => {
-                resp.json().then(js => {
-
+                resp.json().then(fjs => {
+                    let ojs = types.DatascopeInfoStatus.fromJson(fjs)
+                    if(ojs.status !== "OK") {
+                        setSpinner(false)
+                        setAlert(
+                            <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                                {ojs.errormessage}                                
+                            </Alert>
+                        )                        
+                        return
+                    }
+                    let js = ojs.record                    
+                    if(js == null) { 
+                        setSpinner(false)
+                        setAlert(
+                            <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                                No record returned                               
+                            </Alert>
+                        )                               
+                    }
+     
                     setSelectedDatascopeDetails(js)
-                    setDbname(js.name)
+                    if(js != null)
+                        setDbname(js.name)
                     let ob = {}
-                    if (js.records != null) {
+                    if (js != null && js.records != null) {
                         js.records.forEach(r => {
                             if (ob[r.connection] === undefined) {
                                 ob[r.connection] = {}
@@ -117,7 +120,11 @@ export default function EditDatascopes() {
 
                 })
                 setSpinner(false)
-                com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{getDatascopes()})
+                com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{
+                    com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{
+                        setSelectedDatascope(t)
+                    }) 
+                })
             },
             resp => {
                 console.log("on error")
@@ -165,7 +172,12 @@ export default function EditDatascopes() {
                                 Data scope {dbname} updated successfully!
                             </Alert>
                         )
-                        com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{getDatascopes()})
+                        com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{
+                   
+                            com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{
+                                setSelectedDatascope(t)
+                            }) 
+                        })
                     } else {
                         setAlert(
                             <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
@@ -232,7 +244,6 @@ export default function EditDatascopes() {
             setTable({ schema, table})
         setShowOffcanvas(true)
     }
-
     
     return (
         <div className=" text-left">

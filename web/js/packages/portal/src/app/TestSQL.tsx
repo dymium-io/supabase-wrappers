@@ -17,31 +17,8 @@ import * as types from '@dymium/common/Types/Internal'
   const [datascopes, setDatascopes] = useState<types.DataScopeInfo[]>([])
   const [selectedDatascope, setSelectedDatascope] = useState("")
 
-
-  let getDatascopes = () => {
-    setSpinner(true)
-    com.sendToServer("GET", "/api/getdatascopes",
-      null, "",
-      resp => {
-
-        resp.json().then(js => {
-          setDatascopes(js)
-        })
-
-        setSpinner(false)
-      },
-      resp => {
-        console.log("on error")
-        setSpinner(false)
-      },
-      error => {
-        console.log("on exception: " + error)
-        setSpinner(false)
-      })
-  }
-
   useEffect(() => {
-    getDatascopes()
+    com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{}) 
 
   }, [])
   return (

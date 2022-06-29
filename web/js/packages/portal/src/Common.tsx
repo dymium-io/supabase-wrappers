@@ -123,7 +123,7 @@ export function getConnections(setSpinner, setConns, setAlert, remap:internal.Co
                         address: x.address,
                         port: x.port,
                         description: x.description,
-                        usetls: x.useTLS,
+                        useTLS: x.useTLS,
 
                     })
                     if(undefined != remap && x.name != null)
@@ -148,7 +148,52 @@ export function getConnections(setSpinner, setConns, setAlert, remap:internal.Co
             setSpinner(false)
         })
 }
+export function getDatascopes(setSpinner, setAlert, setDatascopes, onSuccess)  {
+    setSpinner(true)
+    sendToServer("GET", "/api/getdatascopes",
+      null, "",
+      resp => {
 
+        resp.json().then(js => {
+           if(js.status !== "OK") {
+            setAlert(
+                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                    Error retrieving datascopes: {js.errormessage} { }
+                </Alert>
+            )
+           } else {
+              setDatascopes(js.records)
+              onSuccess(js.records)
+           }
+           setTimeout( () => setSpinner(false), 500)
+        }).catch((error) => {
+            setSpinner(false)
+            setAlert(
+                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                    Error retrieving datascopes {error.message}
+                </Alert>
+            )            
+        })
+      },
+      resp => {
+        console.log("on error")
+        setSpinner(false)
+        setAlert(
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                Error retrieving datascopes
+            </Alert>
+        )        
+      },
+      error => {
+        console.log("on exception: " + error)
+        setSpinner(false)
+        setAlert(
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                Error retrieving datascopes {error.message}
+            </Alert>
+        )           
+      })
+  }
 export const PII_civilian = {
     not_applicable: "N/A",
     full_name: "Full Name",

@@ -43,7 +43,8 @@ function GroupMapping() {
       null, "",
       resp => {
         resp.json().then(js => {
-          setMappings(js)
+          
+          setMappings(js.records)
           setSpinner(false)
           setShow(false)
         }).catch((error) => {

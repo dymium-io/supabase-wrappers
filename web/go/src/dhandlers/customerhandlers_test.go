@@ -31,6 +31,9 @@ var datascope_test_2 = `{"name":"test2","id":"","records":[{"id":null,"connectio
 var edited_adventureworks = `{"Id":"d057ee99-ff26-414a-9a46-467420cdb932","Name":"adventureworks","DbType":"postgres","Address":"docker.for.mac.host.internal","Port":5432,"Dbname":"Adventureworks","Description":"edited test data base from Microsoft"}`
 var edited_northwind = `{"Id":"57510719-2ca7-49e7-92bf-d174cf8f0e08","Name":"northwind","DbType":"postgres","Address":"docker.for.mac.host.internal","Port":5432,"Dbname":"northwind","Description":"another MS database edited with password","Username":"newusername","Password":"newpassword"}`
 
+var groupmapping_1 = `{"dymiumgroup":"dada","directorygroup":"production","comments":"test"}`
+var groupmapping_2 = `{"dymiumgroup":"admins","directorygroup":"admins","comments":"Admin group test"}`
+
 func TestApiHandlers(t *testing.T){
 ///------------------ db setup start ------------------------	
 	func () {
@@ -406,6 +409,7 @@ func TestApiHandlers(t *testing.T){
 	}
 	SaveDs(datascope_test_1)
 	func (data string) {
+		fmt.Printf("Save datascope")
 		rr, body := LoadAuthHandler("POST", "/api/savedatascope", bytes.NewBuffer([]byte(data)), 
 			SaveDatascope) 
 		if s := rr.Code; s != http.StatusOK {
@@ -413,6 +417,7 @@ func TestApiHandlers(t *testing.T){
 				s, http.StatusOK)
 			return 
 		}		
+		
 		var status  types.OperationStatus
 		err = json.Unmarshal(body, &status)
 	
@@ -421,4 +426,125 @@ func TestApiHandlers(t *testing.T){
 		fmt.Println("SaveDatascope properly failing")
 	}(datascope_test_1)
 
+//type Invoke_t func(string, *string, []byte) ([]byte, error)
+	authentication.InitInvoke( func(a string, b *string, data []byte)([]byte, error) {
+		fmt.Println("Our InitInvoke called")
+		return []byte(`{"Errormessage":"Zhopa"}`), nil
+	}) 
+	func (data string) {
+		fmt.Printf("Save datascope")
+		rr, body := LoadAuthHandler("POST", "/api/savedatascope", bytes.NewBuffer([]byte(data)), 
+			SaveDatascope) 
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return 
+		}		
+	
+		var status  types.OperationStatus
+		err = json.Unmarshal(body, &status)
+	
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
+		require.NotEqual(t, "OK", status.Status, fmt.Sprintf("Error in SaveDatascope %s\n", status.Errormessage ) )
+		fmt.Println("SaveDatascope properly failing")
+	}(datascope_test_2)
+
+	idnames := func () []types.DatascopeIdName {
+	
+		rr, body := LoadAuthHandler("GET", "/api/getdatascopes", nil, 
+			GetDatascopes) 
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return nil
+		}		
+		
+		var status  types.DatascopesStatus
+		err = json.Unmarshal(body, &status)
+	
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in GetDatascopes %s\n", status.Errormessage ) )
+		require.Equal(t, 2, len(status.Records), "Error: the number of datascopes must be 2!"  )
+		return status.Records
+	}()	
+
+	func () {
+		fmt.Printf("Get datascope details")
+		
+		id := types.DatascopeId{idnames[0].Id }
+		js, _ := json.Marshal(id)
+
+		rr, body := LoadAuthHandler("POST", "/api/getdatascopedetails", bytes.NewBuffer([]byte(js)), 
+			GetDatascopeDetails) 
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return 
+		}		
+		
+		var status  types.DatascopesStatus
+		err = json.Unmarshal(body, &status)
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in GetDatascopeDetails %s\n", status.Errormessage ) )
+
+	}()	
+
+	AddGroup := func (data string) {
+		rr, body := LoadAuthHandler("POST", "/api/createmapping", bytes.NewBuffer([]byte(data)), 
+			CreateMapping) 
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return 
+		}		
+		
+		var status  types.DatascopesStatus
+		err = json.Unmarshal(body, &status)
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage ) )
+
+	}	
+	AddGroup(groupmapping_1)
+	AddGroup(groupmapping_2)
+
+	func () {
+		rr, body := LoadAuthHandler("POST", "/api/createmapping", bytes.NewBuffer([]byte(groupmapping_1)), 
+			CreateMapping) 
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return 
+		}		
+		
+		var status  types.DatascopesStatus
+		err = json.Unmarshal(body, &status)
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
+		require.NotEqual(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage ) )
+		fmt.Println("Proper error is thrown for CreateMapping")
+	}()
+
+	func () {
+		rr, body := LoadAuthHandler("GET", "/api/getmappings", nil, GetMappings) 
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return 
+		}		
+	
+		var status  types.GroupMappingStatus
+		err = json.Unmarshal(body, &status)
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage ) )
+
+	}()	
 }
+
+
