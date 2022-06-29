@@ -9,6 +9,7 @@ connection:
   - password: string
   - database: string
   - tls: bool
+  - testOnly: bool
 
 database:
   - name: string

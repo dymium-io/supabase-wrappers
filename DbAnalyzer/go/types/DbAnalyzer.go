@@ -34,6 +34,7 @@ type Connection struct {
    Password string `json:"password"`
    Database string `json:"database"`
    Tls bool `json:"tls"`
+   TestOnly bool `json:"testOnly"`
 }
 
 type Database struct {

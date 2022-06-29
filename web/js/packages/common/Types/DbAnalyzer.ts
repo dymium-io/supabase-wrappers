@@ -217,6 +217,7 @@ export class Connection {
   private '_password': string
   private '_database': string
   private '_tls': boolean
+  private '_testOnly': boolean
 
   constructor() {
     this['_typ'] = 'PostgreSQL'
@@ -226,6 +227,7 @@ export class Connection {
     this['_password'] = ''
     this['_database'] = ''
     this['_tls'] = false
+    this['_testOnly'] = false
   }
   get typ(): Common_52182865.ConnectionType { return this['_typ'] }
   set typ(__a__: any) {
@@ -283,6 +285,14 @@ export class Connection {
       this['_tls'] = __v__
     }
   }
+  get testOnly(): boolean { return this['_testOnly'] }
+  set testOnly(__a__: any) {
+    let __v__ = boolReader(false)(__a__)
+    if(!_.isEqual(__v__,this['_testOnly'])) {
+      setDirtyFlag()
+      this['_testOnly'] = __v__
+    }
+  }
 
   toJson(): string { return JSON.stringify(this).split('"_').join('"') }
 
@@ -297,6 +307,7 @@ export class Connection {
        cls.password = __a__['password']
        cls.database = __a__['database']
        cls.tls = __a__['tls']
+       cls.testOnly = __a__['testOnly']
     } else {
        doAlert(`Connection: an attempt to initialize from ${__a__}`)
     }
