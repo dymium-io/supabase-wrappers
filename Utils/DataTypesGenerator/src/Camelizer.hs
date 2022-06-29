@@ -57,7 +57,7 @@ getDiff mf m mds = do
           mK' = Set.fromList $ HM.keys m'
       if mK' == mdsK
         then do
-        withBinaryFile (T.unpack mf) WriteMode $ writeHashMap m' ""
+        withBinaryFile (T.unpack mf) WriteMode $ writeMap m' ""
         pure (\k ->
                fromMaybe (error $ T.unpack $ "Undefined key "<>k)
                (k `HM.lookup` m'))
@@ -118,8 +118,8 @@ applyEdits m adds dels = m'
     m'  = HM.union m'' adds
 
 
-writeHashMap :: HM.HashMap Text Text -> String -> Handle -> RIO App ()
-writeHashMap hm indent h =
+writeMap :: HM.HashMap Text Text -> String -> Handle -> RIO App ()
+writeMap hm indent h =
   liftIO $ mapM_ (\(k,v) -> hPutStr h $ indent<>show k<>": "<>show v<>"\n") lst
   where
     lst = Lst.sortOn fst $ HM.toList hm

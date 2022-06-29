@@ -6,10 +6,12 @@ where
 import           Import
 
 import           RIO.FilePath
-import qualified RIO.HashMap            as HM
 import           RIO.Lens
 import qualified RIO.Map                as M
+import qualified RIO.Set                as Set
 import qualified RIO.Text               as T
+
+import           Lens.Micro.Aeson
 
 import           Data.Yaml
 import           Text.Pretty.Simple
@@ -26,26 +28,28 @@ import qualified LangGenerators.Python  as Python
 import qualified LangGenerators.Ts      as Ts
 
 run :: FilePath -> [Text] -> RIO App ()
-run hddtName modules = do
-  res <- liftIO (decodeAllFileEither hddtName :: IO (Either ParseException [M.Map Text DdtDef]))
+run hdtdName installations = do
+  res <- liftIO (decodeAllFileEither hdtdName :: IO (Either ParseException [M.Map Text DdtDef]))
   case res of
-    Right [hddts] -> do
-      hddtList <- makeHddtList hddts
-      forM_ hddtList $ \(name, hddt') -> do
+    Right [hdtds] -> do
+      hdtdList <- makeHdtdList hdtds
+      forM_ hdtdList $ \(name, hdtd') -> do
         logInfo $ "\x1B[34mRunning \x1B[0;31m" <> display name <> "\x1B[0;34m installation...\x1B[0m"
-        hddtD <- normalizeHddtPaths hddtName (ddtModules hddt')
-        let lang = ddtLanguage hddt'
-            installPath = InstallPath (ddtRootPath hddt')
-            rootModule = RootModule (ddtRootModule hddt')
-            mapF = ddtMapFile hddt'
-            r =  hddtD <&> ddtSource
-            d = decodeAllFileEither . (takeDirectory hddtName </>)
+        hdtdD <- normalizeHdtdPaths hdtdName (ddtModules hdtd')
+        let lang = ddtLanguage hdtd'
+            installPath = InstallPath (ddtRootPath hdtd')
+            rootModule = RootModule (ddtRootModule hdtd')
+            mapF = ddtMapFile hdtd'
+            r =  hdtdD <&> ddtSource
+            d = decodeAllFileEither . (takeDirectory hdtdName </>)
         yy <- liftIO (mapM d r :: IO [Either ParseException [Value]])
         let errs = yy ^..traverse ._Left
         unless (null errs) $ do
             mapM_ (logError . displayShow) errs
             exitFailure
-        ddt <- fromYaml $ yy ^..traverse . _Right & zip hddtD
+        let yy' = yy ^..traverse . _Right & zip hdtdD
+        checkSubmodules yy'
+        ddt <- fromYaml yy'
         ask <&> verbose >>= flip when (pPrint ddt)
         camelizer <- Cmz.camelizerDef mapF ddt
         case T.toLower lang of
@@ -66,22 +70,36 @@ run hddtName modules = do
       logError $ displayShow err
       exitFailure
     _ -> do
-      logError "Multiple sections in HDDT file are not supported"
+      logError "Multiple sections in HDTD file are not supported"
       exitFailure
 
     where
-      makeHddtList hddts =
-        if null modules
-        then pure $ M.toList hddts
-        else forM modules $ \m -> do
-          case M.lookup m hddts of
+      makeHdtdList hdtds =
+        if null installations
+        then pure $ M.toList hdtds
+        else forM installations $ \m -> do
+          case M.lookup m hdtds of
             Nothing -> do
-              logError $ "Installation "<> display m <>" not defined in HDDT file"
+              logError $ "Installation "<> display m <>" not defined in HDTD file"
               exitFailure
             Just h -> pure (m,h)
 
-normalizeHddtPaths :: FilePath -> [DdtModuleDef] -> RIO App [DdtModuleDef]
-normalizeHddtPaths hddtName definitions = do
+      checkSubmodules :: [(DdtModuleDef, [Value])] -> RIO App ()
+      checkSubmodules = mapM_ $ \(hddtModule, parsedValues) ->
+        let hddtSubmodules = Set.fromList $ M.keys (ddtMod hddtModule)
+            definedModules = Set.fromList $ parsedValues ^.. each . key "module" . _String
+        in
+         case Set.difference hddtSubmodules definedModules of
+           d | null d -> pure ()
+           d -> do
+             forM_(Set.toList d) $ \d' -> logError $ "\x1B[31mError\x1B[0m: Submodule "<>
+               displayShow d'  <> " is not defined in "<>
+               displayShow (ddtSource hddtModule)
+             exitFailure
+
+
+normalizeHdtdPaths :: FilePath -> [DdtModuleDef] -> RIO App [DdtModuleDef]
+normalizeHdtdPaths hdtdName definitions = do
     traverse updateDdtDef definitions
   where
 
@@ -91,13 +109,13 @@ normalizeHddtPaths hddtName definitions = do
         Nothing -> pure Nothing
         Just p  -> C.normalisePath p >>= \case
           p'@('/':_ ) -> do
-            logError $ displayShow hddtName<>
+            logError $ displayShow hdtdName<>
               ": absolute path "<>
               displayShow p'<>
               " is not allowed as the destination"
             exitFailure
           p' -> pure $ Just p'
-      ddtMod' <- HM.traverseWithKey (updateModDest defaultDestination) (ddtMod ddtDef)
+      ddtMod' <- M.traverseWithKey (updateModDest defaultDestination) (ddtMod ddtDef)
       pure $ ddtDef
         { ddtMod = ddtMod'
         , ddtDestination = defaultDestination
@@ -112,7 +130,7 @@ normalizeHddtPaths hddtName definitions = do
           p' <- Just <$> C.normalisePath p
           pure $ ddtMod' { ddtPath = p' }
         Just p@('/' : _) -> do
-                   logError $  displayShow hddtName<>
+                   logError $  displayShow hdtdName<>
                      ": absolute path "<>
                      displayShow p<>
                      " is not allowed as the destination of "<>

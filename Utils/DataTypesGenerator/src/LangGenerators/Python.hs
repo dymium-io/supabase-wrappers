@@ -5,8 +5,8 @@ module LangGenerators.Python where
 
 import           RIO
 import           RIO.FilePath
-import qualified RIO.HashMap       as HM
 import           RIO.List          (intercalate, sort, sortOn)
+import qualified RIO.Map           as M
 import qualified RIO.Text          as T
 
 import qualified Data.Time         as DT
@@ -27,7 +27,7 @@ run mDefs installPath@(InstallPath installPath') _rootModule camelizer = do
 
 data NameMappers =
   NameMappers
-  { modulesPaths     :: Text -> [FilePath]
+  { modulesPaths     :: Text -> (Text, [FilePath])
   , mNameMapper      :: Text -> Text
   , enumNameMapper   :: Text -> Text
   , enumFldMapper    :: (Text,Text) -> Text
@@ -63,8 +63,10 @@ genModule
   |]
   where
     inst =
-      let fName = T.unpack (mName mDef) <.> "py" in
-      joinPath (installPath : mPath mDef) </> fName
+      let (fName', fPath) = mPath mDef
+          fName = T.unpack fName' <.> "py"
+      in
+      joinPath (installPath : fPath) </> fName
 
     importEnum = case () of
       _ | null enums' -> ""
@@ -76,11 +78,11 @@ genModule
 
     imports = mconcat $ importString <$> externalModules mDef
       where
-        importString em = T.concat ["from ",rPath," import ",em," as ",lName,"\n"]
+        importString em = T.concat ["from ",rPath," import ",fst (mPath mDef)," as ",lName,"\n"]
           where
             lName = mNameMapper nameMappers  em
             rPath = T.pack $ '.' : intercalate "."
-                    (transform <$> C.calcRelativePath (mPath mDef) (modulesPaths nameMappers em))
+                    (transform <$> C.calcRelativePath (snd $ mPath mDef) (snd $ modulesPaths nameMappers em))
             transform = \case
               ".." -> ""
               p    -> p
@@ -173,13 +175,13 @@ genMappers mDefs camelizer = do
                                               , fn <- checkField (sFields sDef) ]
         checkField fDefs = [ fn | (fn,_) <- fDefs, fn `Set.member` pyKeywords ]
 
-    modulesPaths :: T.Text -> [FilePath]
+    modulesPaths :: T.Text -> (T.Text, [FilePath])
     modulesPaths =
       let
-        m = HM.fromList $ (mName &&& mPath) <$> mDefs
+        m = M.fromList $ (mName &&& mPath) <$> mDefs
       in
       \mn -> fromMaybe (error $ "can not find path to module `"<>T.unpack mn<>"`")
-             (mn `HM.lookup` m)
+             (mn `M.lookup` m)
 
     enumNameMapper :: Text -> Text
     enumNameMapper = camelizer

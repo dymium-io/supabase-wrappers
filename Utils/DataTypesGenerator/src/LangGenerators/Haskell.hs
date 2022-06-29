@@ -5,8 +5,8 @@ module LangGenerators.Haskell where
 
 import           Import
 import           RIO.FilePath       (joinPath, splitDirectories, (<.>), (</>))
-import qualified RIO.HashMap        as HM
 import           RIO.List           (intercalate, sortOn)
+import qualified RIO.Map            as M
 import qualified RIO.Text           as T
 
 import           Data.Char          (isDigit, isLower, isUpper)
@@ -164,8 +164,10 @@ genModule
     |]
   where
     inst =
-      let fName = (T.unpack (mName mDef) & C.capitalize) <.> ".hs" in
-      joinPath (installPath : mPath mDef) </>  fName
+      let (fName', fPath) = mPath mDef
+          fName = (T.unpack fName' & C.capitalize) <.> "hs"
+      in
+      joinPath (installPath : fPath) </>  fName
 
     mNameMapped = mNameMapper nameMappers thisModuleName
     enumHeader = T.intercalate "\n, " ((<>"(..)") . thisEnumNameMapper . eName <$> enums')
@@ -407,25 +409,25 @@ genMappers (RootModule rootModule) mDefs camelizer =
   NameMappers {
     mNameMapper = moduleNameMapper,
     enumNameMapper =
-      let m = HM.fromList $ (mName &&& eNameMapper) <$> mDefs in
-      \mn -> fromMaybe (error "-- IMPOSSIBLE --") $ mn `HM.lookup` m,
+      let m = M.fromList $ (mName &&& eNameMapper) <$> mDefs in
+      \mn -> fromMaybe (error "-- IMPOSSIBLE --") $ mn `M.lookup` m,
     structNameMapper =
-      let m = HM.fromList $ (mName &&& sNameMapper) <$> mDefs in
-      \mn -> fromMaybe (error "-- IMPOSSIBLE --") $ mn `HM.lookup` m,
+      let m = M.fromList $ (mName &&& sNameMapper) <$> mDefs in
+      \mn -> fromMaybe (error "-- IMPOSSIBLE --") $ mn `M.lookup` m,
     enumFldMapper =
-      let m = HM.fromList $ (mName &&& eFldMapper) <$> mDefs in
-      \mn -> fromMaybe (error "-- IMPOSSIBLE --") $ mn `HM.lookup` m,
+      let m = M.fromList $ (mName &&& eFldMapper) <$> mDefs in
+      \mn -> fromMaybe (error "-- IMPOSSIBLE --") $ mn `M.lookup` m,
     structFldMapper =
-      let m = HM.fromList $ (mName &&& sFldMapper) <$> mDefs in
-      \mn -> fromMaybe (error "-- IMPOSSIBLE --") $ mn `HM.lookup` m
+      let m = M.fromList $ (mName &&& sFldMapper) <$> mDefs in
+      \mn -> fromMaybe (error "-- IMPOSSIBLE --") $ mn `M.lookup` m
     }
   where
     moduleNameMapper :: Text -> Text
     moduleNameMapper  =
-      \mn -> fromMaybe (error "-- IMPOSSIBLE --") $ mn `HM.lookup` m
+      \mn -> fromMaybe (error "-- IMPOSSIBLE --") $ mn `M.lookup` m
       where
-        m :: HM.HashMap Text Text
-        m = HM.fromList $ (\md -> (mName md, genModuleName $ (mName &&& mPath) md)) <$> mDefs
+        m :: M.Map Text Text
+        m = M.fromList $ (\md -> (mName md, genModuleName $ mPath md)) <$> mDefs
 
         genModuleName :: (Text, [FilePath]) -> Text
         genModuleName (mn,mp) =
@@ -438,13 +440,13 @@ genMappers (RootModule rootModule) mDefs camelizer =
 
     eNameMapper :: ModuleDef -> (Text -> Text)
     eNameMapper mDef =
-      let m = HM.fromList $ (eName &&& C.capitalizeT . camelizer . eName) <$> enums mDef in
-      (\en -> fromMaybe (error $ "-- IMPOSSIBLE --`"<>T.unpack en<>"`") $ en `HM.lookup` m)
+      let m = M.fromList $ (eName &&& C.capitalizeT . camelizer . eName) <$> enums mDef in
+      (\en -> fromMaybe (error $ "-- IMPOSSIBLE --`"<>T.unpack en<>"`") $ en `M.lookup` m)
 
     sNameMapper :: ModuleDef -> (Text -> Text)
     sNameMapper mDef =
-      let m = HM.fromList $ (sName &&& C.capitalizeT . camelizer . sName) <$> structs mDef in
-      (\sn -> fromMaybe (error "-- IMPOSSIBLE --") $ sn `HM.lookup` m)
+      let m = M.fromList $ (sName &&& C.capitalizeT . camelizer . sName) <$> structs mDef in
+      (\sn -> fromMaybe (error "-- IMPOSSIBLE --") $ sn `M.lookup` m)
 
     eFldMapper :: ModuleDef -> ((Text, Text) -> Text)
     eFldMapper mDef =
@@ -452,7 +454,7 @@ genMappers (RootModule rootModule) mDefs camelizer =
               mconcat $
               uncurry C.enPairing . (eName &&& eValues)
               <$> enums mDef
-      in (\e -> fromMaybe (error "-- IMPOSSIBLE --") $ e `HM.lookup` m)
+      in (\e -> fromMaybe (error "-- IMPOSSIBLE --") $ e `M.lookup` m)
 
     sFldMapper :: ModuleDef -> ((Text, Text) -> Text)
     sFldMapper mDef =
@@ -460,7 +462,7 @@ genMappers (RootModule rootModule) mDefs camelizer =
               mconcat $
               uncurry C.enPairing . (sName &&& fmap fst . sFields)
               <$> structs mDef
-      in (\s -> fromMaybe (error "-- IMPOSSIBLE --") $ s `HM.lookup` m)
+      in (\s -> fromMaybe (error "-- IMPOSSIBLE --") $ s `M.lookup` m)
 
     eShortNameGen :: ModuleDef -> (Text,Text) -> Text
     eShortNameGen mDef (eName', fName') =

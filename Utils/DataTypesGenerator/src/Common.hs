@@ -7,8 +7,8 @@ import           Data.Tuple    (swap)
 
 import qualified RIO.Directory as D
 import           RIO.FilePath  (joinPath, normalise, splitDirectories, (</>))
-import qualified RIO.HashMap   as HM
 import           RIO.Lens      (each)
+import qualified RIO.Map       as M
 import qualified RIO.Set       as Set
 import qualified RIO.Text      as T
 
@@ -20,7 +20,7 @@ createInstallPaths :: InstallPath ->
                       RIO App ()
 createInstallPaths (InstallPath installPath) mDef transformPath = do
   paths <- traverse (normalisePath . joinPath)
-           $ mDef ^..each .to mPath
+           $ mDef ^..each .to (snd . mPath)
   let uniqPaths = Set.elems $ Set.fromList paths
   createDirectoryIfMissing installPath
   mapM_ (createDirectoryIfMissing . (installPath </>) . transformPath) uniqPaths
@@ -55,34 +55,34 @@ lowerizeT s
 enPairing :: Functor f => a -> f b -> f (a,b)
 enPairing a b = (a,) <$> b
 
-uniqNames :: (Hashable c, Eq c) =>
+uniqNames :: (Ord c) =>
              ( c -> Text ) ->
              ( [c] -> [Text] ) ->
              [ c ] ->
-             HM.HashMap c Text
+             M.Map c Text
 uniqNames shortNameGen longNameGen lst =
   let
-    hm' = HM.fromListWith merge $ (shortNameGen &&& Right) <$> lst
+    hm' = M.fromListWith merge $ (shortNameGen &&& Right) <$> lst
     merge = curry $ \case
       (Right r1, Right r2) -> Left [r1,r2]
       (Right r,  Left  rl) -> Left (r : rl)
       (Left  rl, Right r)  -> Left (r : rl)
       (Left  r1, Left  r2) -> Left (r1 <> r2)
   in
-    HM.fromList $ mconcat $
+    M.fromList $ mconcat $
     (\case
         (Right n, v) -> [(n,v)]
         (Left  n, _) -> zip n $ longNameGen n
-    )  . swap <$> HM.toList hm'
+    )  . swap <$> M.toList hm'
 
 hashMapper :: [ModuleDef] -> (T.Text -> T.Text)
 hashMapper mDefs =
-  let m = HM.fromList $
+  let m = M.fromList $
           (\(mn, p) -> (mn, mn<>"_"<>transform p)) . (mName &&& mPath) <$> mDefs
       transform = T.pack . take 8 . drop 1 . show . hash
   in
    \mn -> fromMaybe (error $ "mNameMapper: module `"<>T.unpack mn<>"` not found")
-          (mn `HM.lookup` m)
+          (mn `M.lookup` m)
 
 
 normalisePath :: FilePath -> RIO App FilePath

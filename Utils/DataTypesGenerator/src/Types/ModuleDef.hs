@@ -5,7 +5,7 @@ import           RIO
 
 data ModuleDef
   = ModuleDef
-    { mPath           :: ![FilePath]
+    { mPath           :: !(Text,[FilePath])
     , mName           :: !Text
     , externalModules :: ![Text]
     , enums           :: ![EnumDef]

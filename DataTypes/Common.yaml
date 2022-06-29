@@ -13,13 +13,13 @@ DataSemantics:
   - Email
   - SSN
 
-GroupMapping: !!omap
+GroupMapping:
   - id: ?string
   - dymiumgroup: string
   - directorygroup: string
   - comments: string
 
-ConnectionRecord: !!omap 
+ConnectionRecord:
   - name: string
   - dbtype: string
   - address: string
@@ -32,17 +32,17 @@ ConnectionRecord: !!omap
   - id: ?string
   - credid: ?string
 
-ConnectionsQuery: !!omap 
+ConnectionsQuery:
   - status: string
   - errormessage: ?string
   - records: ?<|ConnectionRecord|>
 
-reference: !!omap
+reference:
   - schema: string
   - table: string
   - column: string
 
-DatascopeRecord: !!omap
+DatascopeRecord:
   - id: ?string	
   - connection: string
   - connectionId: ?string	
@@ -57,28 +57,28 @@ DatascopeRecord: !!omap
   - dflt: string
   - isnullable: bool
 
-DatascopeIdName: !!omap
+DatascopeIdName:
   - name: string
   - id: string	
 
-DatascopeId: !!omap 
+DatascopeId:
   - id: string
 
-Datascope: !!omap
+Datascope:
   - name: string
   - id:  string		
   - records: <|DatascopeRecord|>
 
-OperationStatus: !!omap
+OperationStatus:
   - status: string
   - errormessage:   string
 
-ConnectionResponse: !!omap 
+ConnectionResponse:
   - status: string
   - errormessage:   string
   - data: <|ConnectionRecord|>
 
-AuthStatus: !!omap 
+AuthStatus:
   - status: string
   - errormessage: string
   - token: string

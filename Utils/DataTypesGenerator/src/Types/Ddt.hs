@@ -3,7 +3,7 @@ module Types.Ddt where
 import           RIO
 
 import           Data.Yaml
-import qualified RIO.HashMap as HM
+import qualified RIO.Map   as M
 
 data DdtDef
   = DdtDef
@@ -18,7 +18,7 @@ data DdtModuleDef
   = DdtModuleDef
     { ddtSource      :: !FilePath
     , ddtDestination :: !(Maybe FilePath)
-    , ddtMod         :: !(HashMap Text DdtMod)
+    , ddtMod         :: !(Map Text DdtMod)
     } deriving(Show, Eq)
 
 data DdtMod
@@ -46,7 +46,7 @@ instance ToJSON DdtModuleDef where
     , "destination" .= ddtDestination o
     , "submodules" .=
       (let m = ddtMod o in
-        if HM.null $ ddtMod o
+        if M.null $ ddtMod o
         then Nothing
         else Just m
       )
@@ -56,7 +56,7 @@ instance FromJSON DdtModuleDef where
     DdtModuleDef
     <$> v .:  "source"
     <*> v .:? "destination"
-    <*> v .:? "submodules" .!= HM.empty
+    <*> v .:? "submodules" .!= M.empty
 
 instance ToJSON DdtDef where
   toJSON o =

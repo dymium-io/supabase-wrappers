@@ -2,4 +2,5 @@
 
 set -e
 
-../bin/dataTypesGenerator hdtd
+cd $(dirname $0)
+../bin/dataTypesGenerator hdtd "$@"

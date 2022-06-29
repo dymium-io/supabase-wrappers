@@ -47,6 +47,7 @@ library:
     - neat-interpolation
     - time
     - hashable
+    - containers
     # - doctemplates
     # - doclayout
     # - template-haskell

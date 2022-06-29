@@ -3,7 +3,7 @@
 
 import _ from 'lodash'
 
-import * as Common_39657738 from './Common.ts'
+import * as Common_52182865 from './Common.ts'
 
 export let dirtyFlag = false
 function doAlert(s) { console.log(s) }
@@ -101,8 +101,8 @@ export class Column {
   private '_typ': string
   private '_isNullable': boolean
   private '_default': string | null
-  private '_reference': Common_39657738.Reference | null
-  private '_semantics': Common_39657738.DataSemantics | null
+  private '_reference': Common_52182865.Reference | null
+  private '_semantics': Common_52182865.DataSemantics | null
 
   constructor() {
     this['_name'] = ''
@@ -160,7 +160,7 @@ export class Column {
       }
     }
   }
-  get reference(): Common_39657738.Reference | null { return this['_reference'] }
+  get reference(): Common_52182865.Reference | null { return this['_reference'] }
   set reference(__a__: any) {
     if(__a__ == null) {
       if(this['_reference'] == null) { return }
@@ -172,7 +172,7 @@ export class Column {
       this['_reference'] = __a__
     }
   }
-  get semantics(): Common_39657738.DataSemantics | null { return this['_semantics'] }
+  get semantics(): Common_52182865.DataSemantics | null { return this['_semantics'] }
   set semantics(__a__: any) {
     if(__a__ == null) {
       if(this['_semantics'] == null) { return }
@@ -199,7 +199,7 @@ export class Column {
        cls.typ = __a__['typ']
        cls.isNullable = __a__['isNullable']
        cls.default = __a__['default'] == null ? null : __a__['default']
-       cls.reference = __a__['reference'] == null ? null : Common_39657738.Reference.fromJson(__a__['reference'])
+       cls.reference = __a__['reference'] == null ? null : Common_52182865.Reference.fromJson(__a__['reference'])
        cls.semantics = __a__['semantics'] == null ? null : __a__['semantics']
     } else {
        doAlert(`Column: an attempt to initialize from ${__a__}`)
@@ -210,7 +210,7 @@ export class Column {
 }
 
 export class Connection {
-  private '_typ': Common_39657738.ConnectionType
+  private '_typ': Common_52182865.ConnectionType
   private '_address': string
   private '_port': number
   private '_user': string
@@ -227,7 +227,7 @@ export class Connection {
     this['_database'] = ''
     this['_tls'] = false
   }
-  get typ(): Common_39657738.ConnectionType { return this['_typ'] }
+  get typ(): Common_52182865.ConnectionType { return this['_typ'] }
   set typ(__a__: any) {
     let __v__ = enumReader(['PostgreSQL','MySQL','MariaDB','SqlServer','OracleDB'],'PostgreSQL')(__a__)
     if(!_.isEqual(__v__,this['_typ'])) {
