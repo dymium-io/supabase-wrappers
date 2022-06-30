@@ -34,3 +34,13 @@ ALTER TABLE connections ALTER COLUMN database_type TYPE source_type
 -- description: "make name unique",
 -- requires: ["customer/connections-source-type"];
 ALTER TABLE connections ADD CONSTRAINT name_unique UNIQUE (name);;
+
+-- #!migration
+-- name: "customer/rename-enum",
+-- description: "make enum consistent with the types in  yaml",
+-- requires: ["customer/make-name-unique"];
+ALTER TYPE source_type RENAME VALUE 'postgres' to 'PostgreSQL';  
+ALTER TYPE source_type RENAME VALUE 'mysql' to 'MySQL';  
+ALTER TYPE source_type RENAME VALUE 'mariadb' to 'MariaDB';  
+ALTER TYPE source_type RENAME VALUE 'sqlserver' to 'SqlServer';  
+ALTER TYPE source_type RENAME VALUE 'oracle' to 'OracleDB';  

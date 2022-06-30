@@ -10,6 +10,92 @@ function doAlert(s) { console.log(s) }
 
 
 
+export class ConnectionDetailRequest {
+  private '_connectionId': string
+
+  constructor() {
+    this['_connectionId'] = ''
+  }
+  get connectionId(): string { return this['_connectionId'] }
+  set connectionId(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_connectionId'])) {
+      setDirtyFlag()
+      this['_connectionId'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): ConnectionDetailRequest {
+    disableDF()
+    let cls = new ConnectionDetailRequest()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.connectionId = __a__['connectionId']
+    } else {
+       doAlert(`ConnectionDetailRequest: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class ConnectionDetailResponse {
+  private '_status': string
+  private '_errormessage': string
+  private '_database': Database | null
+
+  constructor() {
+    this['_status'] = ''
+    this['_errormessage'] = ''
+    this['_database'] = null
+  }
+  get status(): string { return this['_status'] }
+  set status(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_status'])) {
+      setDirtyFlag()
+      this['_status'] = __v__
+    }
+  }
+  get errormessage(): string { return this['_errormessage'] }
+  set errormessage(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_errormessage'])) {
+      setDirtyFlag()
+      this['_errormessage'] = __v__
+    }
+  }
+  get database(): Database | null { return this['_database'] }
+  set database(__a__: any) {
+    if(__a__ == null) {
+      if(this['_database'] == null) { return }
+      setDirtyFlag()
+      this['_database'] = null
+      return
+    } else {
+      setDirtyFlag()
+      this['_database'] = __a__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): ConnectionDetailResponse {
+    disableDF()
+    let cls = new ConnectionDetailResponse()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.status = __a__['status']
+       cls.errormessage = __a__['errormessage']
+       cls.database = __a__['database'] == null ? null : Database.fromJson(__a__['database'])
+    } else {
+       doAlert(`ConnectionDetailResponse: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class Arc {
   private '_from_schema': string
   private '_from_table': string

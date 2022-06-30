@@ -65,7 +65,7 @@ type Datascope struct {
 	Id string `json:"id",omitempty`		
 	Records []DatascopeRecord `json:"records"`
 }
-*/
+
 
 type GroupAssignment struct {
 	Name string `json:"name"`
@@ -73,9 +73,12 @@ type GroupAssignment struct {
 	Groups []DatascopeIdName `json:"groups"`	
 }
 
+
 type DatascopeAndGroups struct {
 	Id string `json:"id"`		
 	Name string `json:"name"`
 	Groupid string `json:"groupid"`	
 	Groupname string `json:"groupname"`	
 }
+
+*/

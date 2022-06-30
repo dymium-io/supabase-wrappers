@@ -59,6 +59,13 @@ type Datascope struct {
    Records []DatascopeRecord `json:"records"`
 }
 
+type DatascopeAndGroups struct {
+   Id string `json:"id"`
+   Name string `json:"name"`
+   Groupid string `json:"groupid"`
+   Groupname string `json:"groupname"`
+}
+
 type DatascopeId struct {
    Id string `json:"id"`
 }
@@ -96,6 +103,12 @@ type DatascopesStatus struct {
    Records []DatascopeIdName `json:"records"`
 }
 
+type GroupAssignment struct {
+   Name string `json:"name"`
+   Id string `json:"id"`
+   Groups []DatascopeIdName `json:"groups"`
+}
+
 type GroupMapping struct {
    Id *string `json:"id"`
    Dymiumgroup string `json:"dymiumgroup"`
@@ -112,6 +125,10 @@ type GroupMappingStatus struct {
 type OperationStatus struct {
    Status string `json:"status"`
    Errormessage string `json:"errormessage"`
+}
+
+type RequestById struct {
+   Id string `json:"id"`
 }
 
 type Reference struct {

@@ -394,6 +394,69 @@ export class Datascope {
   }
 }
 
+export class DatascopeAndGroups {
+  private '_id': string
+  private '_name': string
+  private '_groupid': string
+  private '_groupname': string
+
+  constructor() {
+    this['_id'] = ''
+    this['_name'] = ''
+    this['_groupid'] = ''
+    this['_groupname'] = ''
+  }
+  get id(): string { return this['_id'] }
+  set id(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_id'])) {
+      setDirtyFlag()
+      this['_id'] = __v__
+    }
+  }
+  get name(): string { return this['_name'] }
+  set name(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_name'])) {
+      setDirtyFlag()
+      this['_name'] = __v__
+    }
+  }
+  get groupid(): string { return this['_groupid'] }
+  set groupid(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_groupid'])) {
+      setDirtyFlag()
+      this['_groupid'] = __v__
+    }
+  }
+  get groupname(): string { return this['_groupname'] }
+  set groupname(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_groupname'])) {
+      setDirtyFlag()
+      this['_groupname'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): DatascopeAndGroups {
+    disableDF()
+    let cls = new DatascopeAndGroups()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.id = __a__['id']
+       cls.name = __a__['name']
+       cls.groupid = __a__['groupid']
+       cls.groupname = __a__['groupname']
+    } else {
+       doAlert(`DatascopeAndGroups: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class DatascopeId {
   private '_id': string
 
@@ -750,6 +813,55 @@ export class DatascopesStatus {
   }
 }
 
+export class GroupAssignment {
+  private '_name': string
+  private '_id': string
+  private '_groups': Array<DatascopeIdName>
+
+  constructor() {
+    this['_name'] = ''
+    this['_id'] = ''
+    this['_groups'] = []
+  }
+  get name(): string { return this['_name'] }
+  set name(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_name'])) {
+      setDirtyFlag()
+      this['_name'] = __v__
+    }
+  }
+  get id(): string { return this['_id'] }
+  set id(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_id'])) {
+      setDirtyFlag()
+      this['_id'] = __v__
+    }
+  }
+  get groups(): Array<DatascopeIdName> { return this['_groups'] }
+  set groups(__a__: any) {
+    setDirtyFlag()
+    this['_groups'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): GroupAssignment {
+    disableDF()
+    let cls = new GroupAssignment()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.name = __a__['name']
+       cls.id = __a__['id']
+       cls.groups = array1Reader(DatascopeIdName.fromJson)(__a__['groups'])
+    } else {
+       doAlert(`GroupAssignment: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class GroupMapping {
   private '_id': string | null
   private '_dymiumgroup': string
@@ -904,6 +1016,36 @@ export class OperationStatus {
        cls.errormessage = __a__['errormessage']
     } else {
        doAlert(`OperationStatus: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class RequestById {
+  private '_id': string
+
+  constructor() {
+    this['_id'] = ''
+  }
+  get id(): string { return this['_id'] }
+  set id(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_id'])) {
+      setDirtyFlag()
+      this['_id'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): RequestById {
+    disableDF()
+    let cls = new RequestById()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.id = __a__['id']
+    } else {
+       doAlert(`RequestById: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls

@@ -37,6 +37,7 @@ ConnectionsQuery:
   - errormessage: ?string
   - records: ?<|ConnectionRecord|>
 
+
 reference:
   - schema: string
   - table: string
@@ -64,6 +65,9 @@ DatascopeIdName:
 DatascopeId:
   - id: string
 
+RequestById:
+  - id: string
+
 Datascope:
   - name: string
   - id:  string		
@@ -83,17 +87,29 @@ AuthStatus:
   - errormessage: string
   - token: string
 
-DatascopesStatus: !!omap 
+DatascopesStatus:
   - status: string
   - errormessage: string
   - records: <|DatascopeIdName|>
 
-DatascopeInfoStatus: !!omap 
+DatascopeInfoStatus:  
   - status: string
   - errormessage: string
   - record: ?Datascope
 
-GroupMappingStatus: !!omap 
+GroupMappingStatus:  
   - status: string
   - errormessage: string
   - records: <|GroupMapping|> 
+
+GroupAssignment:
+  - name: string
+  - id: string	
+  - groups: <|DatascopeIdName|>
+
+
+DatascopeAndGroups:
+  - id: string	
+  - name: string
+  - groupid: string	
+  - groupname: string

@@ -63,31 +63,51 @@ func Commonheaders(w http.ResponseWriter, r *http.Request) {
 }
 func QueryConnection(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
-
+	status := types.ConnectionDetailResponse{"OK", "", nil}
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
-	t := struct {
-		ConnectionId string
-	}{}
+	t := types.ConnectionDetailRequest{}
 	err := json.Unmarshal(body, &t)
 
 	// get the connection details
 	conn, err := authentication.GetConnection(schema, t.ConnectionId)
 	bconn, err := json.Marshal(conn)
 
-	res, err := authentication.Invoke("DbAnalyzer", nil, bconn)
+	invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 	if err != nil {
 		log.Printf("DbAnalyzer Error: %s\n", err.Error())
+		status =  types.ConnectionDetailResponse{"Error", err.Error(), nil}
+		
+	} else {
+		jsonParsed, err := gabs.ParseJSON(invokebody)
+		if(err != nil) {
+			log.Printf("DbSync Error parsing output: %s\n", err.Error())
+		}
+		value, ok := jsonParsed.Path("Errormessage").Data().(string)
+		if(ok) {
+			rr := fmt.Sprintf("Error in Invoke return: %s", value)
+			status = types.ConnectionDetailResponse{"Error", rr, nil}
+		
+		} else {
+			t := types.Database{}
+			err := json.Unmarshal(invokebody, &t)
+			if(err != nil) {
+				status =  types.ConnectionDetailResponse{"Error", err.Error(), nil}
+			} else {
+				status =  types.ConnectionDetailResponse{"OK", "", &t}
+			}
+		}
+	}
+	
+	js, err := json.Marshal(status)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	} else {
-		log.Printf("DbAnalyzer success")
 	}
-
 
 	w.Header().Set("Cache-Control", common.Nocache)
 	w.Header().Set("Content-Type", "text/html")
-	w.Write(res)
+	w.Write(js)
 }
 func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
@@ -131,6 +151,7 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("DbSync Invoke Error: %s\n", err.Error())
 		status = types.OperationStatus{"Error", err.Error()}
+
 		js, err := json.Marshal(status)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -310,7 +331,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 	var t types.ConnectionRecord
 	err := json.Unmarshal(body, &t)
 
-	error := authentication.CreateNewConnection(schema, t)
+	id, error := authentication.CreateNewConnection(schema, t)
 	var status types.OperationStatus
 	if(error == nil) {
 		status = types.OperationStatus{"OK", "Connection created"}
@@ -322,11 +343,43 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	if(error == nil) {
+		// get the connection details
+		conn, err := authentication.GetConnection(schema, id)
+
+		if err == nil {
+			conn.TestOnly = true
+			bconn, err := json.Marshal(conn)
+
+			invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
+			if err != nil {
+				log.Printf("DbAnalyzer Error: %s\n", err.Error())
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			} else {
+				jsonParsed, err := gabs.ParseJSON(invokebody)
+				if(err != nil) {
+					log.Printf("DbSync Error parsing output: %s\n", err.Error())
+				}
+				value, ok := jsonParsed.Path("Errormessage").Data().(string)
+				if(ok) {
+					rr := fmt.Sprintf("Error in Invoke return: %s", value)
+					status = types.OperationStatus{"Error", rr}
+					log.Printf("%s\n", rr)
+				} else {
+					log.Printf("Invoke body: %s\n", string(invokebody))
+				}
+			
+			}
+		}
+	}
+
 	w.Header().Set("Cache-Control", common.Nocache)
 	w.Header().Set("Content-Type", "text/html")
 	w.Write(js)
 }
 func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
+	var status types.OperationStatus
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 
 	body, _ := ioutil.ReadAll(r.Body)
@@ -340,9 +393,20 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// get the connection details
-	log.Printf("%v\n", t)
 	error := authentication.UpdateDatascope(schema, t)
-
+	if error != nil {
+		log.Printf("DbSync Invoke Error: %s\n", error.Error())
+		status = types.OperationStatus{"Error", error.Error()}
+		js, err := json.Marshal(status)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")		
+		w.Write(js)		
+		return		
+	}
 
 	var rq types.Request
 	rq.Action = types.A_Update
@@ -354,27 +418,43 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 	rq.Datascope = &t.Name
 	snc, _ := json.Marshal(rq)
 
-	_, err = authentication.Invoke("DbSync", nil, snc)
+	invokebody, err := authentication.Invoke("DbSync", nil, snc)
 	if err != nil {
-		log.Printf("DbSync Error: %s\n", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("DbSync Invoke Error: %s\n", err.Error())
+		status = types.OperationStatus{"Error", err.Error()}
+
+		js, err := json.Marshal(status)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")		
+		w.Write(js)		
 		return
 	} else {
 		log.Printf("DbSync success")
 	}
 
-	var status types.OperationStatus
-	if(error == nil) {
-		status = types.OperationStatus{"OK", "Datascope created"}
-	} else {
-		status = types.OperationStatus{"Error", error.Error()}
+	jsonParsed, err := gabs.ParseJSON(invokebody)
+	if(err != nil) {
+		log.Printf("DbSync Error parsing output: %s\n", err.Error())
 	}
+	value, ok := jsonParsed.Path("Errormessage").Data().(string)
+	if(ok) {
+		rr := fmt.Sprintf("Error in Invoke return: %s", value)
+		status = types.OperationStatus{"Error", rr}
+		log.Printf("%s\n", rr)
+	} else {
+		status = types.OperationStatus{"OK", ""}
+	
+	}
+
 	js, err := json.Marshal(status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Cache-Control", common.Nocache)
 	w.Header().Set("Content-Type", "text/html")
 	w.Write(js)		

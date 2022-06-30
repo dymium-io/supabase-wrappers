@@ -183,7 +183,7 @@ func GetSchemaFromToken(token string) (string, error) {
 	return claim.Schema, err
 
 }
-func CreateNewConnection(schema string, con types.ConnectionRecord) error {
+func CreateNewConnection(schema string, con types.ConnectionRecord) (string, error) {
 	sql := `insert into `+schema+`.connections(name, database_type, address, port, dbname, use_tls, description) 
 		values($1,$2,$3,$4,$5,$6,$7) returning id; `
 
@@ -192,25 +192,26 @@ func CreateNewConnection(schema string, con types.ConnectionRecord) error {
 	err := row.Scan(&id)
 	if err != nil {
 		log.Printf("Error: %s\n", err.Error())
-		return err
+		return "", err
 	}
 	// now let's save credentials!
+	var credid string
 	sql = `insert into `+schema+`.admincredentials(connection_id, username) values($1, $2) returning id`
 	row = db.QueryRow(sql, id, con.Username)
-	err = row.Scan(&id)
+	err = row.Scan(&credid)
 	if err != nil {
 		log.Printf("Error: %s\n", err.Error())
-		return err
+		return id, err
 	}
 	sql = `insert into `+schema+`.passwords(id, password) values($1, $2)`;
 	
-	_, err = db.Exec(sql, id, con.Password)
+	_, err = db.Exec(sql, credid, con.Password)
 	if err != nil {
 		log.Printf("Error: %s\n", err.Error())
-		return err
+		return id, err
 	}
 
-	return nil
+	return id, nil
 }
 func GetConnections(schema string) ([]types.ConnectionRecord, error ) {
 	sql := `select a.id,a.name,a.address,a.port,a.dbname, a.database_type,a.use_tls,a.description,b.username,b.id from `+
@@ -435,15 +436,13 @@ func GetConnection(schema, id string) (types.Connection, error) {
 	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls from 
 		spoofcorp.connections as a join spoofcorp.admincredentials as b on a.id=b.connection_id 
 			join spoofcorp.passwords as c on b.id=c.id where a.id=$1;`
-	log.Printf("in GetConnection, sql=%s\n", sql)
+log.Printf("in GetConnection %s %s\n", schema, id)
 	row := db.QueryRow(sql, id)
 	var con types.Connection
 	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &con.Password, &con.Database, &con.Tls)
 	if(err != nil) {
-		log.Printf("Error: %s\n", err.Error())
-	} else {
-		log.Printf("connection: %v", con)
-	}
+		log.Printf("Error in GetConnection: %s\n", err.Error())
+	} 
 	return con, err
 
 }
@@ -643,7 +642,6 @@ func GetMappings(schema string) ([]types.GroupMapping, error) {
 				log.Printf("Error in GetMappings:  %s\n", err.Error())
 				return []types.GroupMapping{}, err
 			} else {
-				log.Printf("Connection: %v\n", mp)
 				mps = append(mps, mp)
 			}
 		}
@@ -749,14 +747,12 @@ func CreateNewMapping(schema, dymiumgroup, directorygroup, comments string) erro
 		log.Printf("Error 4 in CreateNewMapping: %s\n", err.Error())
 		return err
 	}	
-	log.Println("CreateNewMapping success!")
 	return nil
 }
 
 func UpdateMapping(schema, id, dymiumgroup, directorygroup, comments string) error {
-
 	sql := "update "+schema+".groupmapping set outergroup=$1, innergroup=$2, comment=$3  where id=$4;"
-	log.Printf("sql: %s\n", sql)
+
 	_, err := db.Exec(sql, directorygroup, dymiumgroup, comments, id)
 	if(err != nil) {
 		log.Printf("UpdateMapping error %s\n", err.Error())
@@ -766,7 +762,7 @@ func UpdateMapping(schema, id, dymiumgroup, directorygroup, comments string) err
 func DeleteMapping(schema, id string) error {
 
 	sql := "delete from "+schema+".groupmapping where id=$1;"
-	log.Printf("sql: %s\n", sql)
+
 	_, err := db.Exec(sql, id)
 	if(err != nil) {
 		log.Printf("DeleteMapping error %s\n", err.Error())

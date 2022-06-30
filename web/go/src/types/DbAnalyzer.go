@@ -7,6 +7,16 @@ package types
 
 
 
+type ConnectionDetailRequest struct {
+   ConnectionId string `json:"connectionId"`
+}
+
+type ConnectionDetailResponse struct {
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
+   Database *Database `json:"database"`
+}
+
 type Arc struct {
    From_schema string `json:"from_schema"`
    From_table string `json:"from_table"`

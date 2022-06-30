@@ -42,3 +42,11 @@ arc:
   - to_schema: string
   - to_table: string
   - to_column: string
+
+ConnectionDetailRequest:
+  - connectionId: string
+
+ConnectionDetailResponse:
+  - status: string 
+  - errormessage: string 
+  - database: ?database

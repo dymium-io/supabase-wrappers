@@ -44,18 +44,18 @@ export function getTokenProperty(prop) {
 }
 
 export const databaseTypes = {
-    postgres: "PostgreSQL",
-    mysql: "MySQL",
-    mariadb: "MariaDB",
-    sqlserver: "SQL Server",
-    oracle: "Oracle DB",
+    PostgreSQL: "PostgreSQL",
+    MySQL: "MySQL",
+    MariaDB: "MariaDB",
+    SqlServer: "SQL Server",
+    OracleDB: "Oracle DB",
 }
 export const databasePorts = {
-    postgres: 5432,
-    mysql: 3306,
-    mariadb: 3306,
-    sqlserver: 1433,
-    oracle: 1521,
+    PostgreSQL: 5432,
+    MySQL: 3306,
+    MariaDB: 3306,
+    SqlServer: 1433,
+    OracleDB: 1521,
 }
 
 export function sendToServer(method: string, url: string,
