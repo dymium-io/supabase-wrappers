@@ -16,22 +16,6 @@ import (
 
 var db *sql.DB
 
-func conType(ct string) (types.ConnectionType, error) {
-	switch ct {
-	case "postgres":
-		return types.CT_PostgreSQL, nil
-	case "mysql":
-		return types.CT_MySQL, nil
-	case "mariadb":
-		return types.CT_MariaDB, nil
-	case "sqlserver":
-		return types.CT_SqlServer, nil
-	case "oracle":
-		return types.CT_OracleDB, nil
-	}
-	return "", fmt.Errorf("Connection type %s is not supported yet", ct)
-}
-
 func LambdaHandler(c types.Request) (interface{}, error) {
 
 	var cnf *conf
@@ -57,10 +41,13 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 	}
 
 
-	if db == nil {
+	if db == nil || db.Ping() != nil {
 		if err := openDb(cnf); err != nil {
 			return nil, err
 		}
+	}
+	if err = db.Ping(); err != nil {
+		return nil, err
 	}
 
 	datascopes, err := getDatascopes(db, c.Customer, c.Datascope)
@@ -129,13 +116,9 @@ func getConnections(db *sql.DB, infoSchema string) (*map[string]types.Connection
 	connections := map[string]types.Connection{}
 	for rows.Next() {
 		var c types.Connection
-		var dt string
-		rows.Scan(&c.Id, &c.Address, &c.Port, &c.Name, &dt, &c.Use_tls, &c.Dbname)
-		if c.Database_type, err = conType(dt); err != nil {
-			return nil, err
-		}
+		rows.Scan(&c.Id, &c.Address, &c.Port, &c.Name, &c.Database_type, &c.Use_tls, &c.Dbname)
 		if c.Address == "localhost" {
-			c.Address = "ocker.for.mac.host.internal"
+			c.Address = "docker.for.mac.host.internal"
 		}
 		connections[c.Id] = c
 	}
