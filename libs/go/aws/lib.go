@@ -35,6 +35,11 @@ func init() {
         }
 }
 
+type E struct{
+	ErrorMessage *string `json:"errorMessage"`
+	ErrorType    *string `json:"errorType"`
+}
+
 func Invoke(fname string, qualifier *string, payload []byte) (r []byte, err error) {
 	if fnmap == nil { // running in cloud!
 		sess := session.Must(session.NewSessionWithOptions(session.Options{
@@ -52,6 +57,14 @@ func Invoke(fname string, qualifier *string, payload []byte) (r []byte, err erro
 			return nil, err
 		}
 		r = result.Payload
+		var e E
+		if json.Unmarshal(r, &e) == nil && e.ErrorMessage != nil {
+			if e.ErrorType != nil {
+				return nil, fmt.Errorf("%s: %s",*e.ErrorType,*e.ErrorMessage)
+			} else {
+				return nil, fmt.Errorf("%s",*e.ErrorMessage)
+			}
+		}
 		return r, err
 	} else {
 		hostname, ok := fnmap[fname]
@@ -66,7 +79,17 @@ func Invoke(fname string, qualifier *string, payload []byte) (r []byte, err erro
 			return nil, err
 		}
 		defer resp.Body.Close()
-		r, err = ioutil.ReadAll(resp.Body)
+		if r, err = ioutil.ReadAll(resp.Body); err != nil {
+			return nil, err
+		}
+		var e E
+		if json.Unmarshal(r, &e) == nil && e.ErrorMessage != nil {
+			if e.ErrorType != nil {
+				return nil, fmt.Errorf("%s: %s",*e.ErrorType,*e.ErrorMessage)
+			} else {
+				return nil, fmt.Errorf("%s",*e.ErrorMessage)
+			}
+		}
 		return r, err
 	}
 }
