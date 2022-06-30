@@ -19,6 +19,7 @@ import { tooltip } from '@dymium/common/Components/Tooltip'
 import PasswordField from '@dymium/common/Components/PasswordField'
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Common'
+import * as capi from '../Api/Connections'
 import Spinner from '@dymium/common/Components/Spinner'
 import { useInitialize } from '../Utils/CustomHooks'
 import { useAppDispatch, useAppSelector } from './hooks'
@@ -538,19 +539,19 @@ function EditConnections(props) {
 
                 setSpinner(false)
                 setShowedit(false)
-                com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
+                capi.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
             },
             resp => {
                 console.log("on error")
                 setSpinner(false)
                 setShowedit(false)
-                com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
+                capi.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
             },
             error => {
                 console.log("on exception: " + error)
                 setSpinner(false)
                 setShowedit(false)
-                com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
+                capi.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
             })
     }
 
@@ -580,7 +581,7 @@ function EditConnections(props) {
                     }
                     setSpinner(false)
                     setShowdelete(false)
-                    com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
+                    capi.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
                 }).catch(error => {
                     console.log("Error: " + error.message)
                     setAlert(
@@ -591,7 +592,7 @@ function EditConnections(props) {
                     setSpinner(false)
                     console.log("on exception")
                     setShowdelete(false)
-                    com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
+                    capi.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
                 })
             },
             resp => {
@@ -603,7 +604,7 @@ function EditConnections(props) {
                 )
                 setSpinner(false)
                 setShowdelete(false)
-                com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
+                capi.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
             },
             error => {
                 console.log("on exception: " + error)
@@ -614,12 +615,12 @@ function EditConnections(props) {
                 )
                 setSpinner(false)
                 setShowdelete(false)
-                com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
+                capi.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
             })
     }
 
     useEffect(() => {
-        com.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
+        capi.getConnections(setSpinner, setConns, setAlert, undefined, ()=>{})
     }, [])
     let connectionName = () => {
         let ret = ""

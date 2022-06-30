@@ -1,18 +1,18 @@
 import React, { useEffect } from 'react';
 import LandingPage from './LandingPage'
-import AuthenticatedApp from './app/AuthenticatedApp'
+import AuthenticatedApp from './App/AuthenticatedApp'
 import Error404 from "./Error404"
 import Logout from "./Logout"
 import Error from "./Error"
 import Invitation from "./Invitation"
-import Sticky from "./app/Sticky"
-import Dashboard from "./app/Dashboard"
-import Customers from "./app/Customers"
-import Connections from "./app/Connections"
-import Datascopes from "./app/Datascopes"
-import Groups from "./app/Groups"
-import Rules from "./app/Rules"
-import TestSQL from "./app/TestSQL"
+import Sticky from "./App/Sticky"
+import Dashboard from "./App/Dashboard"
+import Customers from "./App/Customers"
+import Connections from "./App/Connections"
+import Datascopes from "./App/Datascopes"
+import Groups from "./App/Groups"
+import Rules from "./App/Rules"
+import TestSQL from "./App/TestSQL"
 import * as com from './Common'
 
 import "@fontsource/roboto";
@@ -23,7 +23,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 //import Helmet from "react-helmet";
 
 import '@dymium/common/App.scss';
-com.customizeStyleSheet()
+
 
 function App() {
   return (

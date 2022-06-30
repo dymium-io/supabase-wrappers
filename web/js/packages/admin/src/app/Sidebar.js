@@ -10,7 +10,7 @@ import * as com from '../Common'
 import './Sidebar.css';
 
 
-com.customizeStyleSheet() 
+
 export default function Sidebar() {
 
     return (

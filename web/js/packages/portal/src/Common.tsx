@@ -2,36 +2,8 @@ import Alert from 'react-bootstrap/Alert'
 import * as types from '@dymium/common/Types/Common'
 import * as internal from '@dymium/common/Types/Internal'
 
-let appliedColors = `
-:root{
---primary-color: rgb(255, 158, 24);
---primary-color-text: rgb(31, 31, 32);
---primary-color-2: rgb(222, 139, 22);
---primary-color-2-text: #eee;
---primary-color-3: rgb(220, 158, 140); 
---primary-color-3-text: black;
---primary-pale: rgb(183, 114, 17);
---primary-pale-text: #eeeeee;
---secondary-color: rgb(6, 33, 76); 
-}
-`
-function insertStyleSheet(colors) {
 
-    var style = document.createElement('style');
-    style.type = 'text/css';
 
-    style.innerHTML = colors;
-
-    document.getElementsByTagName('head')[0].appendChild(style);
-}
-
-let cssInserted = false
-export function customizeStyleSheet() {
-    if (cssInserted)
-        return
-    cssInserted = true
-    insertStyleSheet(appliedColors)
-}
 export function getTokenProperty(prop) {
     let token = sessionStorage.getItem("Session")
     if (token === "" || token === null)
@@ -94,60 +66,7 @@ export function sendToServer(method: string, url: string,
 }
 
 
-export function getConnections(setSpinner, setConns, setAlert, remap:internal.ConnectionMap|undefined, onSuccess) {
-    setSpinner(true)
-    setConns([])
-    sendToServer("GET", "/api/getconnections",
-        null, "",
-        resp => {
 
-            resp.json().then(_js => {
-                let js = types.ConnectionResponse.fromJson(_js)
-                if (js.status !== "OK") {
-                    setAlert(
-                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                            Error retrieving connections: {js.errormessage} { }
-                        </Alert>
-                    )
-                    setTimeout(() => setSpinner(false), 500)
-                    return
-                }
-            
-                let cc = js.data.map(x => {
-                    let ob = types.ConnectionRecord.fromJson({
-                        id: x.id,
-                        credid: x.credid,
-                        dbtype: x.dbtype,
-                        name: x.name,
-                        dbname: x.dbname,
-                        address: x.address,
-                        port: x.port,
-                        description: x.description,
-                        useTLS: x.useTLS,
-
-                    })
-                    if(undefined != remap && x.name != null)
-                        remap[x.name] = ob
-                    return ob
-                })
-
-                setConns(cc)
-                if(onSuccess != undefined) {
-                    onSuccess()
-                }
-            })
-
-            setTimeout(() => setSpinner(false), 500)
-        },
-        resp => {
-            console.log("on error")
-            setSpinner(false)
-        },
-        error => {
-            console.log("on exception: " + error)
-            setSpinner(false)
-        })
-}
 export function getDatascopes(setSpinner, setAlert, setDatascopes, onSuccess)  {
     setSpinner(true)
     sendToServer("GET", "/api/getdatascopes",

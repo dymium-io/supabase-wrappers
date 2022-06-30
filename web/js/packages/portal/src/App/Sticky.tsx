@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from './hooks'
 import { setActiveMenu } from '../Slices/menuSlice'
 import { Navigate } from 'react-router-dom';
 
-import './Sidebar.css';
+import './Sidebar.scss';
 
 
 

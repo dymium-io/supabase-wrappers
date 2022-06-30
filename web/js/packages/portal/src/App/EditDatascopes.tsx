@@ -14,7 +14,7 @@ import * as com from '../Common'
 import DatascopeForm from './DatascopeForm'
 import * as internal from '@dymium/common/Types/Internal'
 import * as types from '@dymium/common/Types/Common'
-
+import * as capi from '../Api/Connections'
 
 
 let remap = new internal.ConnectionMap();
@@ -46,7 +46,7 @@ export default function EditDatascopes() {
     const appDispatch = useAppDispatch()
 
     useEffect(() => {
-        com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{
+        capi.getConnections(setSpinner, setConns, setAlert, remap, ()=>{
           
             com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{
                 setSelectedDatascope(t)
@@ -120,7 +120,7 @@ export default function EditDatascopes() {
 
                 })
                 setSpinner(false)
-                com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{
+                capi.getConnections(setSpinner, setConns, setAlert, remap, ()=>{
                     com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{
                         setSelectedDatascope(t)
                     }) 
@@ -172,7 +172,7 @@ export default function EditDatascopes() {
                                 Data scope {dbname} updated successfully!
                             </Alert>
                         )
-                        com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{
+                        capi.getConnections(setSpinner, setConns, setAlert, remap, ()=>{
                    
                             com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{
                                 setSelectedDatascope(t)

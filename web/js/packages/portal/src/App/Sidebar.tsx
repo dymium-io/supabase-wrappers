@@ -6,8 +6,8 @@ import { useAppDispatch, useAppSelector } from './hooks'
 import { setActiveMenu } from '../Slices/menuSlice'
 
 
-import './Sidebar.css';
-com.customizeStyleSheet()
+import './Sidebar.scss';
+
 export default function Sidebar() {
   const selected = useAppSelector((state) => {
 

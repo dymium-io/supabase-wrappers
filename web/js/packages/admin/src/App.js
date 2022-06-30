@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import LandingPage from './LandingPage'
-import AuthenticatedApp from './app/AuthenticatedApp'
+import AuthenticatedApp from './App/AuthenticatedApp'
 import Error404 from "./Error404"
 import Logout from "./Logout"
 import Error from "./Error"
 import Invitation from "./Invitation"
-import Dashboard from "./app/Dashboard"
-import Customers from "./app/Customers"
+import Dashboard from "./App/Dashboard"
+import Customers from "./App/Customers"
 import "@fontsource/roboto";
 import 'bootstrap/dist/css/bootstrap.min.css';
 

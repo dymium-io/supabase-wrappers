@@ -1,0 +1,130 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Instantiate sidebar 1`] = `
+<div
+  className="sidenav h-100"
+  id="sidebar"
+>
+  <a
+    className="hover-sidebar navselected "
+    href="/app/dashboard"
+    id="dashboard"
+    onClick={[Function]}
+  >
+     
+    <div
+      className="darkblue"
+    >
+       
+      <i
+        className="fas fa-tachometer-alt mr-2 fa-fw "
+      />
+      Dashboard 
+    </div>
+     
+  </a>
+  <a
+    className="hover-sidebar "
+    href="/app/connections"
+    id="connections"
+    onClick={[Function]}
+  >
+     
+    <div
+      className="darkblue"
+    >
+       
+      <i
+        className="fas fa-database mr-2 fa-fw"
+      />
+      Connections
+    </div>
+     
+  </a>
+  <a
+    className="hover-sidebar "
+    href="/app/datascopes"
+    id="datascopes"
+    onClick={[Function]}
+  >
+     
+    <div
+      className="darkblue"
+    >
+      <i
+        className="fas fa-lock-open mr-2  fa-fw"
+      />
+      Data Scopes
+    </div>
+     
+  </a>
+  <a
+    className="hover-sidebar "
+    href="/app/groups"
+    id="groups"
+    onClick={[Function]}
+  >
+     
+    <div
+      className="darkblue"
+    >
+        
+      <i
+        className="fas fa-users mr-2 fa-fw"
+      />
+      Groups 
+    </div>
+     
+  </a>
+  <a
+    className="hover-sidebar "
+    href="/app/rules"
+    id="rules"
+    onClick={[Function]}
+  >
+     
+    <div
+      className="darkblue"
+    >
+       
+      <i
+        className="fa fa-gavel mr-2 fa-fw"
+      />
+      Rules 
+    </div>
+     
+  </a>
+  <a
+    className="hover-sidebar "
+    href="/app/test"
+    id="test"
+    onClick={[Function]}
+  >
+     
+    <div
+      className="darkblue"
+    >
+        
+      <i
+        className="fa-solid fa-vial mr-2 fa-fw"
+      />
+      Test SQL 
+    </div>
+     
+  </a>
+  <a
+    className="darkblue hover-sidebar "
+    href="/api/logout"
+  >
+    <i
+      aria-hidden="true"
+      className="fas fa-sign-out mr-2 fa-fw "
+    />
+    <span
+      className=""
+    >
+      Logout
+    </span>
+  </a>
+</div>
+`;

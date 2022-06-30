@@ -24,6 +24,7 @@ import {setActiveDatascopeTab} from '../Slices/menuSlice'
 import * as com from '../Common'
 import * as internal from '@dymium/common/Types/Internal'
 import * as types from '@dymium/common/Types/Common'
+import * as capi from '../Api/Connections'
 
 let remap =  new internal.ConnectionMap();
 
@@ -42,7 +43,7 @@ export function AddDatascope(props) {
     const [currentConnectionId, setCurrentConnectionId] = useState<string>("")
 
     useEffect(() => {
-        com.getConnections(setSpinner, setConns, setAlert, remap, ()=>{})
+        capi.getConnections(setSpinner, setConns, setAlert, remap, ()=>{})
     }, [])
 
     let sendConnection = () => {
