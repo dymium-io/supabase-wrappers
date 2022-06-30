@@ -16,6 +16,13 @@ retval=$?
     echo "build failed with error code $retval"
     exit $retval
 }
+./test.sh
+retval=$?
+[ $retval -ne 0 ] && {
+    echo "unit test failed with error code $retval"
+    exit $retval
+}
+
 echo Build main app
 
 cd ../../js/packages/admin/
