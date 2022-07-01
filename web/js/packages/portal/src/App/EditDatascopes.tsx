@@ -15,7 +15,7 @@ import DatascopeForm from './DatascopeForm'
 import * as internal from '@dymium/common/Types/Internal'
 import * as types from '@dymium/common/Types/Common'
 import * as capi from '../Api/Connections'
-
+import * as http from '../Api/Http'
 
 let remap = new internal.ConnectionMap();
 
@@ -60,7 +60,7 @@ export default function EditDatascopes() {
         console.log("selectedDatascope changed to " + selectedDatascope)
         let body = types.DatascopeId.fromJson({ id: selectedDatascope }).toJson()
         setSpinner(true)
-        com.sendToServer("POST", "/api/getdatascopedetails",
+        http.sendToServer("POST", "/api/getdatascopedetails",
             null, body,
             resp => {
                 resp.json().then(fjs => {
@@ -161,7 +161,7 @@ export default function EditDatascopes() {
         setSpinner(true)
         let retob: internal.DataScope = { name: dbname, records: retarray }
         let body = JSON.stringify(retob)
-        com.sendToServer("POST", "/api/updatedatascope",
+        http.sendToServer("POST", "/api/updatedatascope",
             null, body,
             resp => {
 

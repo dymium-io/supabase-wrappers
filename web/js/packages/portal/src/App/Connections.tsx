@@ -20,6 +20,7 @@ import PasswordField from '@dymium/common/Components/PasswordField'
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Common'
 import * as capi from '../Api/Connections'
+import * as http from '../Api/Http'
 import Spinner from '@dymium/common/Components/Spinner'
 import { useInitialize } from '../Utils/CustomHooks'
 import { useAppDispatch, useAppSelector } from './hooks'
@@ -221,7 +222,7 @@ function ConnectionForm(props) {
         </>
     )
 }
-function AddConnection() {
+export function AddConnection() {
     const [validated, setValidated] = useState(false)
     let form = useRef<HTMLFormElement>(null)
 
@@ -240,7 +241,7 @@ function AddConnection() {
     let sendConnection = () => {
         setSpinner(true)
         let body = JSON.stringify({ name, dbtype, address, port: parseInt(port), dbname, useTLS, username, password, description })
-        com.sendToServer("POST", "/api/createnewconnection",
+        http.sendToServer("POST", "/api/createnewconnection",
             null, body,
             resp => {
                 resp.json().then(js => {
@@ -350,7 +351,7 @@ function AddConnection() {
     )
 }
 
-function EditConnections(props) {
+export function EditConnections(props) {
     let [conns, setConns] = useState([])
     const [spinner, setSpinner] = useState(false)
     const [showdelete, setShowdelete] = useState(false)
@@ -494,7 +495,7 @@ function EditConnections(props) {
             isDummyField: true,
             formatter: (cell, row, rowIndex, formatExtraData) => {
 
-                return <i className="fas fa-edit ablue" onClick={onEdit(row["id"])} role="button"></i>
+                return <i className="fas fa-edit ablue" id={"edit"+rowIndex} onClick={onEdit(row["id"])} role="button"></i>
             },
             //formatExtraData: { hoverIdx: this.state.hoverIdx },
             headerStyle: { width: '50px' },
@@ -506,7 +507,7 @@ function EditConnections(props) {
             dataField: 'delete',
             isDummyField: true,
             formatter: (cell, row, rowIndex, formatExtraData) => {
-                return <i className="fas fa-trash ablue" onClick={onDelete(row["id"])} role="button"></i>
+                return <i className="fas fa-trash ablue" id={"delete"+rowIndex} onClick={onDelete(row["id"])} role="button"></i>
             },
             //formatExtraData: { hoverIdx: this.state.hoverIdx },
             headerStyle: { width: '90px' },
@@ -533,7 +534,7 @@ function EditConnections(props) {
         }
         setSpinner(true)
 
-        com.sendToServer("POST", "/api/updateconnection",
+        http.sendToServer("POST", "/api/updateconnection",
             "", JSON.stringify(body),
             resp => {
 
@@ -561,7 +562,7 @@ function EditConnections(props) {
         }
 
         setSpinner(true)
-        com.sendToServer("POST", "/api/deleteconnection",
+        http.sendToServer("POST", "/api/deleteconnection",
             "", JSON.stringify(body),
             resp => {
                 resp.json().then(js => {

@@ -17,6 +17,7 @@ const { SearchBar, ClearSearchButton } = Search;
 
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Internal'
+import * as http from '../Api/Http'
 import { legacy_createStore } from '@reduxjs/toolkit';
 import { getDisplayName } from 'react-bootstrap-typeahead/types/utils';
 
@@ -38,7 +39,7 @@ export default function AssignGroups() {
 
 
     let getGroups = (datascopes) => {
-        com.sendToServer("GET", "/api/getmappings",
+        http.sendToServer("GET", "/api/getmappings",
             null, "",
             resp => {
                 resp.json().then(js => {
@@ -80,7 +81,7 @@ export default function AssignGroups() {
     }
 
     let getMappings = (datascopes) => {
-        com.sendToServer("GET", "/api/getgroupsfordatascopes",
+        http.sendToServer("GET", "/api/getgroupsfordatascopes",
             null, "",
             resp => {
                 resp.json().then(js => {
@@ -146,7 +147,7 @@ export default function AssignGroups() {
             id,
             groups: b
         }
-        com.sendToServer("POST", "/api/savegroups",
+        http.sendToServer("POST", "/api/savegroups",
             null, JSON.stringify(body),
             resp => {
                 resp.json().then(js => {

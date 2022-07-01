@@ -16,6 +16,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Internal'
+import * as http from '../Api/Http'
 
 const PIIs = Object.values(com.PII_civilian)
 
@@ -972,7 +973,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             let body = JSON.stringify({
                 ConnectionId: props.connectionId
             })
-            com.sendToServer("POST", "/api/queryconnection",
+                http.sendToServer("POST", "/api/queryconnection",
                 null, body,
                 resp => {
                     resp.json().then(js => {

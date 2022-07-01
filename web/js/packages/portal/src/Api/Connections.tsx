@@ -2,11 +2,12 @@ import Alert from 'react-bootstrap/Alert'
 import * as types from '@dymium/common/Types/Common'
 import * as internal from '@dymium/common/Types/Internal'
 import * as com from '../Common'
+import * as http from './Http'
 
 export function getConnections(setSpinner, setConns, setAlert, remap:internal.ConnectionMap|undefined, onSuccess) {
     setSpinner(true)
     setConns([])
-    com.sendToServer("GET", "/api/getconnections",
+    http.sendToServer("GET", "/api/getconnections",
         null, "",
         resp => {
 

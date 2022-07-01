@@ -19,6 +19,8 @@ import Spinner from '@dymium/common/Components/Spinner'
 import cloneDeep from 'lodash/cloneDeep';
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Internal'
+import * as http from '../Api/Http'
+
 const { SearchBar, ClearSearchButton } = Search;
 
 function GroupMapping() {
@@ -39,7 +41,7 @@ function GroupMapping() {
     setShow(false)
   }
   let getMappings = () => {
-    com.sendToServer("GET", "/api/getmappings",
+    http.sendToServer("GET", "/api/getmappings",
       null, "",
       resp => {
         resp.json().then(js => {
@@ -76,7 +78,7 @@ function GroupMapping() {
   let sendMapping = () => {
     setSpinner(true)
     let body = JSON.stringify({ dymiumgroup, directorygroup, comments })
-    com.sendToServer("POST", "/api/createmapping",
+    http.sendToServer("POST", "/api/createmapping",
       null, body,
       resp => {
         resp.json().then(js => {
@@ -126,7 +128,7 @@ function GroupMapping() {
   let updateMapping = () => {
     setSpinner(true)
     let body = JSON.stringify({ id, dymiumgroup, directorygroup, comments })
-    com.sendToServer("POST", "/api/updatemapping",
+    http.sendToServer("POST", "/api/updatemapping",
       null, body,
       resp => {
         resp.json().then(js => {
@@ -174,7 +176,7 @@ function GroupMapping() {
   let deleteMapping = () => {
     setSpinner(true)
     let body = JSON.stringify({ id:selectedId })
-    com.sendToServer("POST", "/api/deletemapping",
+    http.sendToServer("POST", "/api/deletemapping",
       null, body,
       resp => {
         resp.json().then(js => {

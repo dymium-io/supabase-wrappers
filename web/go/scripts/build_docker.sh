@@ -40,6 +40,13 @@ retval=$?
     echo "build failed with error code $retval"
     exit $retval
 }
+yarn test --silent
+retval=$?
+[ $retval -ne 0 ] && {
+    echo "jest failed with error code $retval"
+    exit $retval
+}
+
 cd ../../../go/scripts
 
 cp -r ../assets/admin $build_d/

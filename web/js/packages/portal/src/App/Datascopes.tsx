@@ -25,6 +25,7 @@ import * as com from '../Common'
 import * as internal from '@dymium/common/Types/Internal'
 import * as types from '@dymium/common/Types/Common'
 import * as capi from '../Api/Connections'
+import * as http from '../Api/Http'
 
 let remap =  new internal.ConnectionMap();
 
@@ -67,7 +68,7 @@ export function AddDatascope(props) {
         setSpinner(true)
         let retob: types.Datascope = types.Datascope.fromJson({name: dbname, records: retarray})
         let body= retob.toJson()
-        com.sendToServer("POST", "/api/savedatascope",
+        http.sendToServer("POST", "/api/savedatascope",
             null, body,
             resp => {
 

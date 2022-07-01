@@ -1,7 +1,7 @@
 import Alert from 'react-bootstrap/Alert'
 import * as types from '@dymium/common/Types/Common'
 import * as internal from '@dymium/common/Types/Internal'
-
+import * as http from './Api/Http'
 
 
 export function getTokenProperty(prop) {
@@ -30,46 +30,12 @@ export const databasePorts = {
     OracleDB: 1521,
 }
 
-export function sendToServer(method: string, url: string,
-    headers, body: string, onsuccess, onfailure, onexception) {
-    let token = window.sessionStorage.getItem("Session");
-
-    if (token === null) {
-        onfailure(null)
-        return;
-    }
-    let _headers = {
-        Authorization: "Bearer " + token,
-        Cache: "no-cache",
-    }
-    if (headers != null) {
-        _headers = {
-            ..._headers,
-            ...headers
-        }
-    }
-    let params: any = {
-        method,
-        headers: _headers
-    }
-    if (body != "") {
-        params = { ...params, body: body }
-    }
-    fetch(url, params
-    ).then(response => {
-        if (!response.ok) {
-            onfailure(response)
-        } else {
-            onsuccess(response)
-        }
-    }).catch(onexception)
-}
 
 
 
 export function getDatascopes(setSpinner, setAlert, setDatascopes, onSuccess)  {
     setSpinner(true)
-    sendToServer("GET", "/api/getdatascopes",
+    http.sendToServer("GET", "/api/getdatascopes",
       null, "",
       resp => {
 
