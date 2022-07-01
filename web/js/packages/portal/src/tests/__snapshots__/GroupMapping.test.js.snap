@@ -1,0 +1,353 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`test-sql 1`] = `
+Array [
+  <nav
+    className="mb-3 text-left nav nav-tabs"
+    onKeyDown={[Function]}
+    role="tablist"
+  >
+    <a
+      aria-selected={true}
+      className="nav-item nav-link active"
+      data-rb-event-key="groups"
+      href="#"
+      onClick={[Function]}
+      onKeyDown={[Function]}
+      role="tab"
+    >
+      Group Mapping
+    </a>
+  </nav>,
+  <div
+    className="tab-content"
+  >
+    <div
+      aria-hidden={false}
+      aria-labelledby={null}
+      className="fade mx-4 tab-pane active show"
+      id={null}
+      role="tabpanel"
+    >
+      <h5>
+         Group mapping from your directory to Dymium
+        <img
+          className="hiddenspinner"
+          src="/logo.png"
+          style={
+            Object {
+              "width": "28px",
+            }
+          }
+        />
+      </h5>
+      <div
+        className="text-left mt-0 pt-0"
+      >
+        <div
+          className="d-flex"
+        >
+          <div
+            style={
+              Object {
+                "marginLeft": "auto",
+              }
+            }
+          >
+            <label
+              className="search-label"
+              htmlFor="search-bar-0"
+            >
+              <span
+                className="sr-only"
+                id="search-bar-0-label"
+              >
+                Search this table
+              </span>
+              <input
+                aria-labelledby="search-bar-0-label"
+                className="form-control "
+                id="search-bar-0"
+                onChange={[Function]}
+                onKeyUp={[Function]}
+                placeholder="Search"
+                style={Object {}}
+                type="text"
+                value=""
+              />
+            </label>
+            <button
+              className="btn btn-default "
+              onClick={[Function]}
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+        <div
+          className="d-block"
+        >
+          <div
+            className="react-bootstrap-table"
+          >
+            <table
+              className="table table-striped table-sm"
+              id="scaledtable"
+            >
+              <thead>
+                <tr>
+                  <th
+                    aria-label="Directory group: sortable"
+                    className="sortable"
+                    onClick={[Function]}
+                    onKeyUp={[Function]}
+                    tabIndex={0}
+                  >
+                    Directory group:
+                    <span
+                      className="order-4"
+                    />
+                  </th>
+                  <th
+                    aria-label="Dymium group sortable"
+                    className="sortable"
+                    onClick={[Function]}
+                    onKeyUp={[Function]}
+                    tabIndex={0}
+                  >
+                    Dymium group
+                    <span
+                      className="order-4"
+                    />
+                  </th>
+                  <th
+                    aria-label="Description: sortable"
+                    className="sortable"
+                    onClick={[Function]}
+                    onKeyUp={[Function]}
+                    tabIndex={0}
+                  >
+                    Description:
+                    <span
+                      className="order-4"
+                    />
+                  </th>
+                  <th
+                    style={
+                      Object {
+                        "width": "50px",
+                      }
+                    }
+                    tabIndex={0}
+                  >
+                    Edit
+                  </th>
+                  <th
+                    style={
+                      Object {
+                        "width": "90px",
+                      }
+                    }
+                    tabIndex={0}
+                  >
+                    Delete
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  className={null}
+                  style={Object {}}
+                >
+                  <td>
+                    bar
+                  </td>
+                  <td>
+                    foo
+                  </td>
+                  <td>
+                    Admin group fubar
+                  </td>
+                  <td
+                    style={
+                      Object {
+                        "height": "30px",
+                        "textAlign": "center",
+                      }
+                    }
+                  >
+                    <i
+                      className="fas fa-edit ablue"
+                      onClick={[Function]}
+                      role="button"
+                    />
+                  </td>
+                  <td
+                    style={
+                      Object {
+                        "height": "30px",
+                        "textAlign": "center",
+                      }
+                    }
+                  >
+                    <i
+                      className="fas fa-trash ablue"
+                      onClick={[Function]}
+                      role="button"
+                    />
+                  </td>
+                </tr>
+                <tr
+                  className={null}
+                  style={Object {}}
+                >
+                  <td>
+                    production
+                  </td>
+                  <td>
+                    dada
+                  </td>
+                  <td>
+                    Comment changed via test
+                  </td>
+                  <td
+                    style={
+                      Object {
+                        "height": "30px",
+                        "textAlign": "center",
+                      }
+                    }
+                  >
+                    <i
+                      className="fas fa-edit ablue"
+                      onClick={[Function]}
+                      role="button"
+                    />
+                  </td>
+                  <td
+                    style={
+                      Object {
+                        "height": "30px",
+                        "textAlign": "center",
+                      }
+                    }
+                  >
+                    <i
+                      className="fas fa-trash ablue"
+                      onClick={[Function]}
+                      role="button"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div
+            className="row react-bootstrap-table-pagination"
+          >
+            <div
+              className="col-md-6 col-xs-6 col-sm-6 col-lg-6"
+            >
+              <span
+                className="react-bs-table-sizePerPage-dropdown dropdown"
+                style={
+                  Object {
+                    "visibility": "visible",
+                  }
+                }
+              >
+                <button
+                  aria-expanded={false}
+                  className="btn btn-default btn-secondary dropdown-toggle"
+                  data-toggle="dropdown"
+                  id="scaledtable-pageDropDown"
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  type="button"
+                >
+                  10
+                   
+                </button>
+                <ul
+                  aria-labelledby="scaledtable-pageDropDown"
+                  className="dropdown-menu "
+                  role="menu"
+                >
+                  <a
+                    className="dropdown-item"
+                    data-page={10}
+                    href="#"
+                    onMouseDown={[Function]}
+                    role="menuitem"
+                    tabIndex="-1"
+                  >
+                    10
+                  </a>
+                  <a
+                    className="dropdown-item"
+                    data-page={25}
+                    href="#"
+                    onMouseDown={[Function]}
+                    role="menuitem"
+                    tabIndex="-1"
+                  >
+                    25
+                  </a>
+                  <a
+                    className="dropdown-item"
+                    data-page={30}
+                    href="#"
+                    onMouseDown={[Function]}
+                    role="menuitem"
+                    tabIndex="-1"
+                  >
+                    30
+                  </a>
+                  <a
+                    className="dropdown-item"
+                    data-page={50}
+                    href="#"
+                    onMouseDown={[Function]}
+                    role="menuitem"
+                    tabIndex="-1"
+                  >
+                    50
+                  </a>
+                </ul>
+              </span>
+            </div>
+            <div
+              className="react-bootstrap-table-pagination-list col-md-6 col-xs-6 col-sm-6 col-lg-6"
+            >
+              <ul
+                className="pagination react-bootstrap-table-page-btns-ul"
+              >
+                <li
+                  className="active page-item"
+                  title="1"
+                >
+                  <a
+                    className="page-link"
+                    href="#"
+                    onClick={[Function]}
+                  >
+                    1
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button
+        className="mt-4 btn btn-dymium btn-sm"
+        disabled={false}
+        onClick={[Function]}
+        type="button"
+      >
+        Add mapping
+      </button>
+    </div>
+  </div>,
+]
+`;

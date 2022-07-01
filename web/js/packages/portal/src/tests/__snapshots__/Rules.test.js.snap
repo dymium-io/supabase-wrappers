@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`test-sql 1`] = `
+Array [
+  <nav
+    className="mb-3 text-left nav nav-tabs"
+    onKeyDown={[Function]}
+    role="tablist"
+  >
+    <a
+      aria-selected={true}
+      className="nav-item nav-link active"
+      data-rb-event-key="build"
+      href="#"
+      onClick={[Function]}
+      onKeyDown={[Function]}
+      role="tab"
+    >
+      Build Rules
+    </a>
+  </nav>,
+  <div
+    className="tab-content"
+  >
+    <div
+      aria-hidden={false}
+      aria-labelledby={null}
+      className="fade mx-4 tab-pane active show"
+      id={null}
+      role="tabpanel"
+    />
+  </div>,
+]
+`;

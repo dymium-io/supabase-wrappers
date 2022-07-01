@@ -1,0 +1,119 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`test-sql 1`] = `
+Array [
+  <nav
+    className="mb-3 text-left nav nav-tabs"
+    onKeyDown={[Function]}
+    role="tablist"
+  >
+    <a
+      aria-selected={true}
+      className="nav-item nav-link active"
+      data-rb-event-key="test"
+      href="#"
+      onClick={[Function]}
+      onKeyDown={[Function]}
+      role="tab"
+    >
+      Test SQL
+    </a>
+  </nav>,
+  <div
+    className="tab-content"
+  >
+    <div
+      aria-hidden={false}
+      aria-labelledby={null}
+      className="fade mx-4 tab-pane active show"
+      id={null}
+      role="tabpanel"
+    >
+      <div
+        className=" text-left"
+      >
+        <h5>
+           Run SQL statement against Data Scope virtual database
+          <img
+            className="spinner"
+            src="/logo.png"
+            style={
+              Object {
+                "width": "28px",
+              }
+            }
+          />
+        </h5>
+        <div
+          className=" text-left"
+        >
+          <div
+            className="row"
+          >
+            <div
+              className="col-auto"
+            >
+              <div
+                className="mb-3 form-group"
+              >
+                <label
+                  className="form-label"
+                  htmlFor="connection"
+                >
+                  Select Data Scope
+                </label>
+                <select
+                  className="form-control form-control-sm"
+                  id="connection"
+                  onChange={[Function]}
+                  value=""
+                >
+                  return 
+                  <option
+                    value=""
+                  >
+                    ...
+                  </option>
+                  <option
+                    value="50fe96d1-b1a4-48df-87bd-6aced2ab1f5a"
+                  >
+                    test1
+                  </option>
+                  <option
+                    value="b3fddf89-5822-4227-9948-3ecb3c8c2e33"
+                  >
+                    test2
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div
+            className="row"
+          >
+            <div
+              className="col"
+            >
+              <div
+                className="mb-3 form-group"
+              >
+                <label
+                  className="form-label"
+                  htmlFor="sql"
+                >
+                  Enter SQL statement
+                </label>
+                <textarea
+                  className="form-control"
+                  id="sql"
+                  rows={3}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>,
+]
+`;
