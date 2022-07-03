@@ -1,7 +1,7 @@
 
 
 export default async function mockFetch(url, js) {
-    console.log("in mock fetch: ")
+    console.log("in mock fetch: ", url)
     switch (url) {
         case "/api/getconnections": {
             return  new Promise( (resolve, reject) => resolve(
@@ -44,6 +44,38 @@ export default async function mockFetch(url, js) {
               )
             )                     
         }        
+        case "/api/updateconnection" : {
+            expect(js).toEqual({
+                method: 'POST',
+                headers: { Authorization: 'Bearer mockJWT', Cache: 'no-cache' },
+                body: '{"Id":"a2a4fce3-1db5-47ea-a084-4601f880b9ba","Name":"adventureworks","DbType":"PostgreSQL","Address":"docker.for.mac.host.internal","Port":5432,"Dbname":"Adventureworks","Description":"edited test data base from Microsoft"}'
+              });
+            return  new Promise( (resolve, reject) => resolve(
+                {
+                    ok: true,
+                    status: 200,
+                    json:  () => new Promise( (resolve, reject) => resolve(JSON.parse('{"status": "OK", "errormessage": "All is fine"}') ))
+                }
+              )
+            )               
+        }
+        case "/api/deleteconnection": {
+            expect(js).toEqual(
+                {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer mockJWT', Cache: 'no-cache' },
+                    body: '{"Id":"a2a4fce3-1db5-47ea-a084-4601f880b9ba"}'
+                  }
+            );
+            return  new Promise( (resolve, reject) => resolve(
+                {
+                    ok: true,
+                    status: 200,
+                    json:  () => new Promise( (resolve, reject) => resolve(JSON.parse('{"status": "OK", "errormessage": ""}') ))
+                }
+              )
+            )                
+        }
         default: {
             throw new Error(`Unhandled request: ${url}`);
         }
