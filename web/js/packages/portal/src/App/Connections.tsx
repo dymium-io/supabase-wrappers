@@ -495,7 +495,6 @@ export function EditConnections(props) {
             isDummyField: true,
             formatter: (cell, row, rowIndex, formatExtraData) => {
 
-                return <i className="fas fa-edit ablue" id={"edit"+rowIndex} onClick={onEdit(row["id"])} role="button"></i>
                 return <i className="fas fa-edit ablue" aria-label={"edit"+rowIndex} id={"edit"+rowIndex} onClick={onEdit(row["id"])} role="button"></i>
             },
             //formatExtraData: { hoverIdx: this.state.hoverIdx },
