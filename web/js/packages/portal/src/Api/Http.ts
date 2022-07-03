@@ -28,7 +28,6 @@ export function sendToServer(method: string, url: string,
 
     fetch(url, params
     ).then(response => {
-        console.log(response.ok)
 
         if (!response.ok) {
             onfailure(response)

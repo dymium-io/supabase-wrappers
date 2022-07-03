@@ -496,6 +496,7 @@ export function EditConnections(props) {
             formatter: (cell, row, rowIndex, formatExtraData) => {
 
                 return <i className="fas fa-edit ablue" id={"edit"+rowIndex} onClick={onEdit(row["id"])} role="button"></i>
+                return <i className="fas fa-edit ablue" aria-label={"edit"+rowIndex} id={"edit"+rowIndex} onClick={onEdit(row["id"])} role="button"></i>
             },
             //formatExtraData: { hoverIdx: this.state.hoverIdx },
             headerStyle: { width: '50px' },
@@ -507,7 +508,7 @@ export function EditConnections(props) {
             dataField: 'delete',
             isDummyField: true,
             formatter: (cell, row, rowIndex, formatExtraData) => {
-                return <i className="fas fa-trash ablue" id={"delete"+rowIndex} onClick={onDelete(row["id"])} role="button"></i>
+                return <i className="fas fa-trash ablue" aria-label={"delete"+rowIndex} id={"delete"+rowIndex} onClick={onDelete(row["id"])} role="button"></i>
             },
             //formatExtraData: { hoverIdx: this.state.hoverIdx },
             headerStyle: { width: '90px' },
@@ -537,6 +538,28 @@ export function EditConnections(props) {
         http.sendToServer("POST", "/api/updateconnection",
             "", JSON.stringify(body),
             resp => {
+                resp.json().then(js => {
+
+                    if (js.status === "OK") {
+                        setAlert(
+                            <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                                Connection {name} updated successfully!
+                            </Alert>
+                        )
+                    } else {
+                        setAlert(
+                            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                                Error updating connection {name}: {js.errormessage}
+                            </Alert>
+                        )
+                    }
+                } ).catch(error=>{
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error updating connection {name}
+                        </Alert>
+                    )
+                })
 
                 setSpinner(false)
                 setShowedit(false)
@@ -564,9 +587,8 @@ export function EditConnections(props) {
         setSpinner(true)
         http.sendToServer("POST", "/api/deleteconnection",
             "", JSON.stringify(body),
-            resp => {
+            resp => {            
                 resp.json().then(js => {
- 
                     if (js.status === "OK") {
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
@@ -636,15 +658,16 @@ export function EditConnections(props) {
 
         <div className=" text-left">
 
-            <Modal centered show={showdelete} onHide={() => setShowdelete(false)} >
+            <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
                 <Modal.Header closeButton>
                     <Modal.Title>Delete connection {connectionName()}?</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>Are you sure you want to remove the connection? This operation is irreversible.</Modal.Body>
                 <Modal.Footer>
-                    <Button variant="danger" onClick={() => {
-                        deleteConnection()
-                        //setShowdelete(false)
+                    <Button variant="danger"  role="button" id="Delete" data-testid="Delete"
+                         aria-label={"Delete"}
+                        onClick={() => {
+                            deleteConnection()
                     }
                     }>Delete</Button> <Button variant="dymium" onClick={() => {
                         setShowdelete(false)
@@ -652,7 +675,7 @@ export function EditConnections(props) {
                 </Modal.Footer>
             </Modal>
 
-            <Modal size="lg" show={showedit} onHide={() => setShowedit(false)} >
+            <Modal size="lg" show={showedit} onHide={() => setShowedit(false)} data-testid="modal-edit">
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                     <Modal.Header closeButton>
                         <Modal.Title>Edit connection {connectionName()}</Modal.Title>
@@ -686,7 +709,9 @@ export function EditConnections(props) {
 
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="dymium" type="submit" onClick={() => {
+                        <Button variant="dymium" type="submit" role="button" id="Apply"
+                         aria-label={"Apply"}
+                        onClick={() => {
                             
                         }
                         }>Apply</Button> <Button variant="dymium" onClick={() => setShowedit(false)}>Cancel</Button>

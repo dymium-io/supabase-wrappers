@@ -235,6 +235,7 @@ exports[`test-connections 1`] = `
                   }
                 >
                   <i
+                    aria-label="edit0"
                     className="fas fa-edit ablue"
                     id="edit0"
                     onClick={[Function]}
@@ -250,6 +251,7 @@ exports[`test-connections 1`] = `
                   }
                 >
                   <i
+                    aria-label="delete0"
                     className="fas fa-trash ablue"
                     id="delete0"
                     onClick={[Function]}
@@ -295,6 +297,7 @@ exports[`test-connections 1`] = `
                   }
                 >
                   <i
+                    aria-label="edit1"
                     className="fas fa-edit ablue"
                     id="edit1"
                     onClick={[Function]}
@@ -310,6 +313,7 @@ exports[`test-connections 1`] = `
                   }
                 >
                   <i
+                    aria-label="delete1"
                     className="fas fa-trash ablue"
                     id="delete1"
                     onClick={[Function]}
