@@ -985,7 +985,8 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                             //setSpinner(false)
                             return
                         }
-                        setDatabase(js)
+                        
+                        setDatabase(js.database)
                         if (props.table.schema !== undefined && props.table.table !== undefined) {
                             setSchema(props.table.schema)
                             setTable(props.table.table)
@@ -993,7 +994,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         //setSpinner(false)
 
                     }).catch((error) => {
-
+                        console.log("exception: ", error.message)
                     })
                 },
                 resp => {
@@ -1003,7 +1004,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
 
                 },
                 error => {
-                    console.log("on exception")
+                    console.log("on exception: ", error.message)
                     //setSpinner(false)
 
                 })
@@ -1201,11 +1202,11 @@ const AddTable: React.FC<AddTableProps> = (props) => {
 
             <Row>
                 <Col xs="auto">
-                    <Form.Group className="mb-3" controlId="dbname">
+                    <Form.Group className="mb-3" controlId="schemaname">
                         <Form.Label>Schema Name</Form.Label>
-                        <Typeahead id="schemas"
+                        <Typeahead inputProps={{id: "schemaname"}}
                             onChange={selectSchema} size="sm"
-                            selected={schema != undefined ? [schema] : []}
+                            defaultSelected={schema != undefined ? [schema] : []}
                             options={getOptions()}
                             clearButton
                             placeholder="Choose schema..."

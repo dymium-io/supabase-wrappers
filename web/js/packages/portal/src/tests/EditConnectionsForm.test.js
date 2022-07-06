@@ -60,3 +60,36 @@ test('edit-connections-form', async () => {
         fireEvent.click(apply)
     })
 });
+
+test('delete-connections-form', async () => {
+    let component
+    await act(async () => {
+        component = render (
+            <Provider store={store}>
+                <BrowserRouter>
+                    <EditConnections />
+                </BrowserRouter>
+            </Provider >
+        )
+    });
+
+    // click on the edit button
+    let find = component.getByRole("button", {name: "delete0"} )
+    await act(async () => {    
+        fireEvent.click(find)
+    })
+    // wait until Apply shows up
+    await waitFor(() => {
+        expect(screen.getByTestId('Delete')).toBeInTheDocument()
+    }) 
+
+    // take snapshot of the modal component
+    let modal = component.getByTestId("modal-delete")
+    expect(modal).toMatchSnapshot()
+    
+    // click on apply and test the update api call
+    let apply = screen.getByTestId('Delete')
+    await act(async () => {    
+        fireEvent.click(apply)
+    })
+});

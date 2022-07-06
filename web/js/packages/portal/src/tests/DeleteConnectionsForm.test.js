@@ -2,8 +2,7 @@
  * @jest-environment jsdom
  */
 import React from 'react';
-import ReactDOM from 'react-dom';
-import renderer from 'react-test-renderer';
+
 import {render, fireEvent, waitFor, screen } from '@testing-library/react'
 
 import { BrowserRouter } from "react-router-dom";

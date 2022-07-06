@@ -223,7 +223,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
     let available = () => {
         let ret: any[] = []
         ret = props.connections.filter(x => !connections.includes(x.name)).map(x =>
-            <option key={x.name} value={x.name}>{x.name}</option>)
+            <option data-testid={x.name} key={x.name} value={x.name}>{x.name}</option>)
         return ret
     }
 
@@ -369,7 +369,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                 <Col xs="auto" className="d-flex" style={{ alignItems: "center" }}>
                     <Form.Group className="mb-3" controlId="connection" >
                         <Form.Label >Available Connections</Form.Label>
-                        <Form.Control as="select" size="sm"
+                        <Form.Control as="select" size="sm" 
                             onChange={e => {
 
                                 setSelectedConnection(e.target.value)

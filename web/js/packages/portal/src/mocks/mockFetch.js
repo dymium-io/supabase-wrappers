@@ -1,3 +1,4 @@
+import {queryconnection} from './queryconnection'
 
 
 export default async function mockFetch(url, js) {
@@ -75,6 +76,24 @@ export default async function mockFetch(url, js) {
                 }
               )
             )                
+        }
+        case "/api/queryconnection" : {
+            expect(js).toEqual(
+                {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer mockJWT', Cache: 'no-cache' },
+                    body: '{"ConnectionId":"a2a4fce3-1db5-47ea-a084-4601f880b9ba"}'
+                  }
+            );
+            return  new Promise( (resolve, reject) => resolve(
+                {
+                    ok: true,
+                    status: 200,
+                    json:  () => new Promise( (resolve, reject) => resolve(JSON.parse(queryconnection) ))
+                }
+              )
+            )    
+            
         }
         default: {
             throw new Error(`Unhandled request: ${url}`);
