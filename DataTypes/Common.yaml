@@ -55,7 +55,7 @@ DatascopeRecord:
   - action: string
   - col: string
   - semantics: string
-  - dflt: string
+  - dflt: ?string
   - isnullable: bool
 
 DatascopeIdName:
@@ -70,7 +70,7 @@ RequestById:
 
 Datascope:
   - name: string
-  - id:  string		
+  - id:  ?string		
   - records: <|DatascopeRecord|>
 
 OperationStatus:

@@ -112,4 +112,78 @@ exports[`add-datascope 1`] = `
     </div>
   </div>
 </div>
+------------HTML PREVIEW---------------
+<div class=" text-left">
+  <div
+    class="bs-canvas-overlay position-fixed  w-100 h-100"
+    id="bs-offcanvas-overlay"
+  >
+  </div>
+  <div
+    class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim "
+    style="right:-600px;width:0;"
+  >
+    <div>
+      <div class="row">
+        <div class="col">
+           
+          <h5>
+            Register table
+             
+          </h5>
+        </div>
+        <div class="col-auto">
+          <i
+            aria-hidden="true"
+            class="cursor-pointer fa fa-times mr-1 fa-2x close"
+          >
+          </i>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="offcanvas_handle p-0 m-0 px-2 col-auto"></div>
+      <div class="col"></div>
+    </div>
+  </div>
+  <h5>
+     Edit Data Scopes 
+    <img
+      class="spinner"
+      src="/logo.png"
+      style="width:28px;"
+    >
+  </h5>
+  <div class=" text-left">
+    <div class="row">
+       
+      <div class="col-auto">
+        <div class="mb-3 form-group">
+          <label
+            class="form-label"
+            for="connection"
+          >
+            Available Data Scopes
+          </label>
+          <select
+            class="form-control form-control-sm"
+            id="connection"
+            value=""
+          >
+            return 
+            <option value="">
+              ...
+            </option>
+            <option value="50fe96d1-b1a4-48df-87bd-6aced2ab1f5a">
+              test1
+            </option>
+            <option value="b3fddf89-5822-4227-9948-3ecb3c8c2e33">
+              test2
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 `;

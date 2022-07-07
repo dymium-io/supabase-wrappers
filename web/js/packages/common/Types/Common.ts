@@ -347,12 +347,12 @@ export class ConnectionsQuery {
 
 export class Datascope {
   private '_name': string
-  private '_id': string
+  private '_id': string | null
   private '_records': Array<DatascopeRecord>
 
   constructor() {
     this['_name'] = ''
-    this['_id'] = ''
+    this['_id'] = null
     this['_records'] = []
   }
   get name(): string { return this['_name'] }
@@ -363,12 +363,19 @@ export class Datascope {
       this['_name'] = __v__
     }
   }
-  get id(): string { return this['_id'] }
+  get id(): string | null { return this['_id'] }
   set id(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_id'])) {
+    if(__a__ == null) {
+      if(this['_id'] == null) { return }
       setDirtyFlag()
-      this['_id'] = __v__
+      this['_id'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_id'])) {
+        setDirtyFlag()
+        this['_id'] = __v__
+      }
     }
   }
   get records(): Array<DatascopeRecord> { return this['_records'] }
@@ -384,7 +391,7 @@ export class Datascope {
     let cls = new Datascope()
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.name = __a__['name']
-       cls.id = __a__['id']
+       cls.id = __a__['id'] == null ? null : __a__['id']
        cls.records = array1Reader(DatascopeRecord.fromJson)(__a__['records'])
     } else {
        doAlert(`Datascope: an attempt to initialize from ${__a__}`)
@@ -596,7 +603,7 @@ export class DatascopeRecord {
   private '_action': string
   private '_col': string
   private '_semantics': string
-  private '_dflt': string
+  private '_dflt': string | null
   private '_isnullable': boolean
 
   constructor() {
@@ -611,7 +618,7 @@ export class DatascopeRecord {
     this['_action'] = ''
     this['_col'] = ''
     this['_semantics'] = ''
-    this['_dflt'] = ''
+    this['_dflt'] = null
     this['_isnullable'] = false
   }
   get id(): string | null { return this['_id'] }
@@ -720,12 +727,19 @@ export class DatascopeRecord {
       this['_semantics'] = __v__
     }
   }
-  get dflt(): string { return this['_dflt'] }
+  get dflt(): string | null { return this['_dflt'] }
   set dflt(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_dflt'])) {
+    if(__a__ == null) {
+      if(this['_dflt'] == null) { return }
       setDirtyFlag()
-      this['_dflt'] = __v__
+      this['_dflt'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_dflt'])) {
+        setDirtyFlag()
+        this['_dflt'] = __v__
+      }
     }
   }
   get isnullable(): boolean { return this['_isnullable'] }
@@ -754,7 +768,7 @@ export class DatascopeRecord {
        cls.action = __a__['action']
        cls.col = __a__['col']
        cls.semantics = __a__['semantics']
-       cls.dflt = __a__['dflt']
+       cls.dflt = __a__['dflt'] == null ? null : __a__['dflt']
        cls.isnullable = __a__['isnullable']
     } else {
        doAlert(`DatascopeRecord: an attempt to initialize from ${__a__}`)

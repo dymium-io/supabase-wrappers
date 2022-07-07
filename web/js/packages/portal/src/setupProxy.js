@@ -7,7 +7,7 @@ module.exports = function(app) {
     })
   );
 };
-console.log("in proxy")
+
 function onError(err, req, res, target) {
     res.writeHead(500, {
       'Content-Type': 'text/plain',
@@ -18,6 +18,5 @@ function onError(err, req, res, target) {
 
   function onProxyReq(proxyReq, req, res) {
     // add custom header to request
-    console.log("in proxy request")
     // or log the req
   }

@@ -97,7 +97,6 @@ export function AddDatascope(props) {
                 console.log("on exception: " + error)
                 setSpinner(false)
             })        
-        console.log(retarray)
     }
     let handleSubmit = event => {
         if (form.current == null) {
@@ -161,7 +160,7 @@ export function AddDatascope(props) {
                     onAddTableRef={onAddTableRef} connections={conns} setAlert={setAlert} 
                     nameToConnection={remap}/>
 
-                    <Button variant="dymium" size="sm" className="mt-4" type="submit">
+                    <Button data-testid="apply-datascope" variant="dymium" size="sm" className="mt-4" type="submit">
                         Apply
                     </Button>
                 </Form>

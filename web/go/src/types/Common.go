@@ -55,7 +55,7 @@ type ConnectionsQuery struct {
 
 type Datascope struct {
    Name string `json:"name"`
-   Id string `json:"id"`
+   Id *string `json:"id"`
    Records []DatascopeRecord `json:"records"`
 }
 
@@ -93,7 +93,7 @@ type DatascopeRecord struct {
    Action string `json:"action"`
    Col string `json:"col"`
    Semantics string `json:"semantics"`
-   Dflt string `json:"dflt"`
+   Dflt *string `json:"dflt"`
    Isnullable bool `json:"isnullable"`
 }
 

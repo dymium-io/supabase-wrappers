@@ -969,7 +969,6 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             setTable(props.table.table)
             setTableStructure(cloneDeep(props.table.tablescope))
         } else {
-            console.log("connectionId", props.connectionId)
             let body = JSON.stringify({
                 ConnectionId: props.connectionId
             })
@@ -977,9 +976,9 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 null, body,
                 resp => {
                     resp.json().then(js => {
-                        if (js.errorMessage !== undefined) {
+                        if (js.status !== "OK") {
                             props.onAlert(<Alert variant="danger" onClose={() => props.onAlert(<></>)} dismissible>
-                                {js.errorMessage}
+                                {js.errormessage}
                             </Alert>)
                             props.onHide()
                             //setSpinner(false)
@@ -1000,8 +999,6 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 resp => {
                     console.log("on error")
                     //setSpinner(false)
-
-
                 },
                 error => {
                     console.log("on exception: ", error.message)
@@ -1163,7 +1160,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         let ret: any[] = []
 
         Object.keys(Prefills).forEach(key => {
-            ret.push(<option key={key} value={key} >{Prefills[key].name}</option>)
+            ret.push(<option data-testid={key} key={key} value={key} >{Prefills[key].name}</option>)
         }
         )
         return ret
@@ -1203,7 +1200,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             <Row>
                 <Col xs="auto">
                     <Form.Group className="mb-3" controlId="schemaname">
-                        <Form.Label>Schema Name</Form.Label>
+                        <Form.Label>Schema Name:</Form.Label>
                         <Typeahead inputProps={{id: "schemaname"}}
                             onChange={selectSchema} size="sm"
                             defaultSelected={schema != undefined ? [schema] : []}
@@ -1224,14 +1221,14 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         <Form.Group className="mb-3" controlId="connection" >
                             <Form.Label >Select Detect and Prefill Level</Form.Label>
                             <InputGroup>
-                                <Form.Control as="select" size="sm"
+                                <Form.Control as="select" size="sm" role="combobox" data-testid="seclevel"
                                     onChange={onPrefill}
                                 >
                                     <option key="xx" value="">...</option>
 
                                     {prefills()}
                                 </Form.Control>
-                                <Button onClick={applyPrefill} variant="dymium" disabled={level === ""} className="mr-1" style={{ marginTop: '0.0em' }} size="sm"><i className="fa-solid fa-table mr-2"></i>Fill</Button>
+                                <Button data-testid="fill-security" onClick={applyPrefill} variant="dymium" disabled={level === ""} className="mr-1" style={{ marginTop: '0.0em' }} size="sm"><i className="fa-solid fa-table mr-2"></i>Fill</Button>
                             </InputGroup>
                         </Form.Group>
                     }
@@ -1241,7 +1238,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 <Row>
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="dbname">
-                            <Form.Label>Table Name</Form.Label>
+                            <Form.Label>Table Name:</Form.Label>
                             <Typeahead id="tables" onChange={selectTable} size="sm"
                                 clearButton
                                 options={getTables()}
@@ -1275,7 +1272,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     />
 
 
-                    <Button variant="dymium" size="sm" className="mt-4" type="submit">
+                    <Button data-testid="apply-structure" variant="dymium" size="sm" className="mt-4" type="submit">
                         Apply
                     </Button>
                 </>

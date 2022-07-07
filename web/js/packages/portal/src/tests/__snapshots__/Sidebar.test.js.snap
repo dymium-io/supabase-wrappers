@@ -127,4 +127,100 @@ exports[`Instantiate sidebar 1`] = `
     </span>
   </a>
 </div>
+------------HTML PREVIEW---------------
+<div
+  class="sidenav h-100"
+  id="sidebar"
+>
+  <a
+    class="hover-sidebar navselected "
+    href="/app/dashboard"
+    id="dashboard"
+  >
+     
+    <div class="darkblue">
+       
+      <i class="fas fa-tachometer-alt mr-2 fa-fw "></i>
+      Dashboard 
+    </div>
+     
+  </a>
+  <a
+    class="hover-sidebar "
+    href="/app/connections"
+    id="connections"
+  >
+     
+    <div class="darkblue">
+       
+      <i class="fas fa-database mr-2 fa-fw"></i>
+      Connections
+    </div>
+     
+  </a>
+  <a
+    class="hover-sidebar "
+    href="/app/datascopes"
+    id="datascopes"
+  >
+     
+    <div class="darkblue">
+      <i class="fas fa-lock-open mr-2  fa-fw"></i>
+      Data Scopes
+    </div>
+     
+  </a>
+  <a
+    class="hover-sidebar "
+    href="/app/groups"
+    id="groups"
+  >
+     
+    <div class="darkblue">
+        
+      <i class="fas fa-users mr-2 fa-fw"></i>
+      Groups 
+    </div>
+     
+  </a>
+  <a
+    class="hover-sidebar "
+    href="/app/rules"
+    id="rules"
+  >
+     
+    <div class="darkblue">
+       
+      <i class="fa fa-gavel mr-2 fa-fw"></i>
+      Rules 
+    </div>
+     
+  </a>
+  <a
+    class="hover-sidebar "
+    href="/app/test"
+    id="test"
+  >
+     
+    <div class="darkblue">
+        
+      <i class="fa-solid fa-vial mr-2 fa-fw"></i>
+      Test SQL 
+    </div>
+     
+  </a>
+  <a
+    class="darkblue hover-sidebar "
+    href="/api/logout"
+  >
+    <i
+      aria-hidden="true"
+      class="fas fa-sign-out mr-2 fa-fw "
+    >
+    </i>
+    <span class="">
+      Logout
+    </span>
+  </a>
+</div>
 `;

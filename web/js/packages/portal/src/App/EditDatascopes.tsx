@@ -57,7 +57,6 @@ export default function EditDatascopes() {
     useEffect(() => {
         if (selectedDatascope === "")
             return
-        console.log("selectedDatascope changed to " + selectedDatascope)
         let body = types.DatascopeId.fromJson({ id: selectedDatascope }).toJson()
         setSpinner(true)
         http.sendToServer("POST", "/api/getdatascopedetails",

@@ -192,13 +192,11 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
         setCounter(counter + 1)
     }
     useEffect(() => {
-        console.log("on tables change")
         props.onTablesMapUpdate(tables)
     }, [tables]
     )
 
     useEffect(() => {
-        console.log("on initialTables change")
         if (props.initialTables !== undefined) {
             let conns: string[] = []
             Object.keys(props.initialTables).forEach(x => {
@@ -352,7 +350,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                                 pattern=".+"
                                 value={props.dbname}
                                 onChange={e => {
-                                    console.log(e.target.value)
+       
                                     props.onDbname(e.target.value)
                                 }}
                             />

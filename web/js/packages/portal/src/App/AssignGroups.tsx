@@ -265,7 +265,6 @@ export default function AssignGroups() {
         if (form.current.reportValidity() === false) {
             event.preventDefault();
             setValidated(true)
-            //console.log("Form validity false!")
             return false
         }
         event.preventDefault();

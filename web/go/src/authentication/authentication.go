@@ -465,7 +465,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 	}
 
 
-	ds.Id = id
+	ds.Id = &id
 	ds.Name = name
 
 	sql = `select  a.id, b.name, a.connection_id, a.schem, a.tabl, a.col,  a.position, a.typ, a.action, 

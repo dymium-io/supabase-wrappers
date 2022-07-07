@@ -18,7 +18,22 @@ Array [
     >
       Test SQL
     </a>
-  </nav>,
+  </nav>
+------------HTML PREVIEW---------------
+<nav
+    class="mb-3 text-left nav nav-tabs"
+    role="tablist"
+>
+    <a
+        aria-selected
+        class="nav-item nav-link active"
+        data-rb-event-key="test"
+        href="#"
+        role="tab"
+    >
+        Test SQL
+    </a>
+</nav>,
   <div
     className="tab-content"
   >
@@ -114,6 +129,70 @@ Array [
         </div>
       </div>
     </div>
-  </div>,
+  </div>
+------------HTML PREVIEW---------------
+<div class="tab-content">
+    <div
+        class="fade mx-4 tab-pane active show"
+        role="tabpanel"
+    >
+        <div class=" text-left">
+            <h5>
+                 Run SQL statement against Data Scope virtual database
+                <img
+                    class="spinner"
+                    src="/logo.png"
+                    style="width:28px;"
+                >
+            </h5>
+            <div class=" text-left">
+                <div class="row">
+                    <div class="col-auto">
+                        <div class="mb-3 form-group">
+                            <label
+                                class="form-label"
+                                for="connection"
+                            >
+                                Select Data Scope
+                            </label>
+                            <select
+                                class="form-control form-control-sm"
+                                id="connection"
+                                value=""
+                            >
+                                return 
+                                <option value="">
+                                    ...
+                                </option>
+                                <option value="50fe96d1-b1a4-48df-87bd-6aced2ab1f5a">
+                                    test1
+                                </option>
+                                <option value="b3fddf89-5822-4227-9948-3ecb3c8c2e33">
+                                    test2
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="mb-3 form-group">
+                            <label
+                                class="form-label"
+                                for="sql"
+                            >
+                                Enter SQL statement
+                            </label>
+                            <textarea
+                                class="form-control"
+                                id="sql"
+                            >undefined</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>,
 ]
 `;

@@ -466,4 +466,312 @@ exports[`add-connection 1`] = `
     </form>
   </div>
 </div>
+------------HTML PREVIEW---------------
+<div class=" text-left">
+  <h5>
+     Create New Connection 
+    <img
+      class="hiddenspinner"
+      src="/logo.png"
+      style="width:28px;"
+    >
+  </h5>
+  <div class=" text-left">
+    <form
+      class=""
+      noValidate
+    >
+      <div class="row">
+        <div class="col-auto">
+          <div class="mb-3 form-group">
+            <label
+              class="form-label"
+              for="dbtype"
+            >
+              Database type
+            </label>
+            <select
+              class="form-control form-control-sm"
+              id="dbtype"
+              required
+              value=""
+            >
+              <option value="">
+                ...
+              </option>
+              <option value="PostgreSQL">
+                PostgreSQL
+              </option>
+              <option value="MySQL">
+                MySQL
+              </option>
+              <option value="MariaDB">
+                MariaDB
+              </option>
+              <option value="SqlServer">
+                SQL Server
+              </option>
+              <option value="OracleDB">
+                Oracle DB
+              </option>
+            </select>
+            <div class="valid-feedback">
+              Looks good!
+            </div>
+            <div class="invalid-feedback">
+              Select DB type
+            </div>
+          </div>
+        </div>
+        <div class="col-auto">
+          <div class="mb-3 form-group">
+            <label
+              class="form-label"
+              for="dname"
+            >
+              <div class="">
+                <div class=" text-wrap">
+                  Dymium
+                   
+                  <span class="text-nowrap">
+                    name
+                    <i class="ml-1 blue fas fa-question-circle text-newinfo"></i>
+                    :
+                  </span>
+                </div>
+              </div>
+            </label>
+            <input
+              class="form-control form-control-sm"
+              id="dname"
+              pattern="[\\\\w_]+"
+              placeholder="Alpha_Num"
+              required
+              type="text"
+              value=""
+            >
+            <div class="valid-feedback">
+              Looks good!
+            </div>
+            <div class="invalid-feedback">
+              Type systemwide unique name to use in SQL
+            </div>
+          </div>
+        </div>
+        <div class="col-auto">
+          <div class="mb-3 form-group">
+            <label
+              class="form-label"
+              for="dbname"
+            >
+              <div class="">
+                <div class=" text-wrap">
+                  Database
+                   
+                  <span class="text-nowrap">
+                    name
+                    <i class="ml-1 blue fas fa-question-circle text-newinfo"></i>
+                    :
+                  </span>
+                </div>
+              </div>
+            </label>
+            <input
+              class="form-control form-control-sm"
+              id="dbname"
+              pattern="[a-zA-Z0-9_]+"
+              placeholder="Alpha_Num"
+              required
+              type="text"
+              value=""
+            >
+            <div class="valid-feedback">
+              Looks good!
+            </div>
+            <div class="invalid-feedback">
+              Type systemwide unique name to use in SQL
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-auto">
+          <div class="mb-3 form-group">
+            <label
+              class="form-label"
+              for="ipaddress"
+            >
+              Address
+            </label>
+            <input
+              class="form-control form-control-sm"
+              id="ipaddress"
+              pattern="^[a-zA-Z0-9._]+$"
+              placeholder="DB IP address or host name"
+              required
+              type="text"
+              value=""
+            >
+            <div class="valid-feedback">
+              Looks good!
+            </div>
+            <div class="invalid-feedback">
+              Ender DB address for Dymium
+            </div>
+          </div>
+        </div>
+        <div class="col-auto">
+          <div class="mb-3 form-group">
+            <label
+              class="form-label"
+              for="portnumber"
+            >
+              Port
+            </label>
+            <input
+              class="form-control form-control-sm"
+              id="portnumber"
+              pattern=".+"
+              placeholder="DB port number"
+              required
+              type="number"
+              value=""
+            >
+            <div class="valid-feedback">
+              Looks good!
+            </div>
+            <div class="invalid-feedback">
+              Select DB port for Dymium
+            </div>
+          </div>
+        </div>
+        <div
+          class="col-auto"
+          style="align-items:bottom;display:flex;"
+        >
+          <div class="mb-3 form-group">
+            <label
+              class="form-label"
+              for="usetls"
+            >
+               
+            </label>
+            <div
+              class="form-check"
+              style="margin-top:0.2em;"
+            >
+              <input
+                class="form-check-input"
+                id="usetls"
+                type="checkbox"
+              >
+              <label
+                class="form-check-label"
+                for="usetls"
+                title=""
+              >
+                Use TLS
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-auto">
+          <div class="mb-3 form-group">
+            <label
+              class="form-label"
+              for="dbusername"
+            >
+              Username
+            </label>
+            <input
+              class="form-control form-control-sm"
+              id="dbusername"
+              pattern=".+"
+              placeholder="DB username"
+              required
+              type="text"
+              value=""
+            >
+            <div class="valid-feedback">
+              Looks good!
+            </div>
+            <div class="invalid-feedback">
+              Admin name for DB
+            </div>
+          </div>
+        </div>
+        <div class="col-auto">
+          <div class="mb-3 form-group">
+            <label
+              class="form-label"
+              for="dbpassword"
+            >
+              Password
+            </label>
+            <div class="w-12em input-group">
+              <input
+                class="no-background form-control form-control-sm"
+                id="dbpassword"
+                pattern=".+"
+                placeholder="DB password"
+                required
+                style="display:inline;width:100%;"
+                type="password"
+                value=""
+              >
+              <i
+                class="blue fa fa-eye  fa-fw"
+                style="margin-left:-25px;margin-top:6px;z-index:1000;"
+              >
+              </i>
+              <div class="valid-feedback">
+                Looks good!
+              </div>
+              <div
+                class="invalid-feedback"
+                style="width:12em;"
+              >
+                Admin password
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="mb-3 form-group">
+            <label
+              class="form-label"
+              for="description"
+            >
+              Description
+            </label>
+            <textarea
+              class="form-control"
+              id="description"
+              placeholder="Please put in the description of this connection"
+              required
+              style="width:100%;"
+              value=""
+            ></textarea>
+            <div class="valid-feedback">
+              Looks good!
+            </div>
+            <div class="invalid-feedback">
+              Please put in some description
+            </div>
+          </div>
+        </div>
+      </div>
+      <button
+        class="mt-4 btn btn-dymium btn-sm"
+        type="submit"
+      >
+        Apply
+      </button>
+    </form>
+  </div>
+</div>
 `;

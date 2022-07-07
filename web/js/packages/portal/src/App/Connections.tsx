@@ -300,7 +300,6 @@ export function AddConnection() {
         if (form.current.reportValidity() === false) {
             event.preventDefault();
             setValidated(true)
-            //console.log("Form validity false!")
             return false
         }
         event.preventDefault();
@@ -380,7 +379,6 @@ export function EditConnections(props) {
         if (form.current.reportValidity() === false) {
             event.preventDefault();
             setValidated(true)
-            //console.log("Form validity false!")
             return false
         }
         event.preventDefault();
