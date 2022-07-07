@@ -48,7 +48,8 @@ jobs:
           DATABASE_USER: postgres
           DATABASE_ADMIN_USER: postgres
           DATABASE_TLS: disable
-
+          DATABASE_PASSWORD: postgres
+          
           AUTH0_ADMIN_DOMAIN: 'https://dymium-dev-admin.us.auth0.com/'
           AUTH0_ADMIN_CLIENT_ID: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
           AUTH0_ADMIN_CLIENT_SECRET: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
