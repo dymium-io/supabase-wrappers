@@ -31,7 +31,8 @@ jobs:
         with:
           go-version: '^1.18.2' # The Go version to download (if necessary) and use.
       - run: go version    
-
+      - name: ubuntu version
+        run: lsb_release -a
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -49,7 +50,7 @@ jobs:
           DATABASE_ADMIN_USER: postgres
           DATABASE_TLS: disable
           DATABASE_PASSWORD: postgres
-          
+
           AUTH0_ADMIN_DOMAIN: 'https://dymium-dev-admin.us.auth0.com/'
           AUTH0_ADMIN_CLIENT_ID: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
           AUTH0_ADMIN_CLIENT_SECRET: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
