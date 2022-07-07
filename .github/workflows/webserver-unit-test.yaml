@@ -35,6 +35,13 @@ jobs:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
+        
+      - name: Check Wd
+        run: ls -lah
+
+      - name: Check CWd
+        working-directory: ./web/go/scripts
+        run: ls -lah
 
       - name: Run tests
         working-directory: ./web/go/scripts
