@@ -27,8 +27,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - name: Set up GCC
-        run: apt-get install build-essential
               
       - uses: actions/setup-go@v3
         with:
@@ -44,7 +42,8 @@ jobs:
         run: apt-get update
       - name: Install CA list
         run: apt-get install -y ca-certificates
-
+      - name: Set up GCC
+        run: apt-get install -y build-essential
       - name: Run tests
         working-directory: ./web/go/src
         env:
