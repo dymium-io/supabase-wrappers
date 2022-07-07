@@ -27,6 +27,12 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
+      - name: Set up GCC
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: latest
+          platform: x64
+              
       - uses: actions/setup-go@v3
         with:
           go-version: '^1.18.2' # The Go version to download (if necessary) and use.
