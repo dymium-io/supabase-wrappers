@@ -1,0 +1,74 @@
+name: Web server unit test
+on: 
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:    
+  container-job:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+    # Docker Hub image that `container-job` executes in
+    container: node:10.18-jessie
+
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '^1.18.2' # The Go version to download (if necessary) and use.
+      - run: go version    
+
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Run tests
+        working-directory: ./web/go/scripts
+        env:
+          # The hostname used to communicate with the PostgreSQL service container
+          POSTGRES_HOST: postgres
+          # The default PostgreSQL port
+          POSTGRES_PORT: 5432
+          DATABASE_HOST: postgres
+          DATABASE_PORT: 5432
+          DATABASE_USER: postgres
+          DATABASE_ADMIN_USER: postgres
+          DATABASE_TLS: -disable
+
+          AUTH0_ADMIN_DOMAIN: 'https://dymium-dev-admin.us.auth0.com/'
+          AUTH0_ADMIN_CLIENT_ID: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+          AUTH0_ADMIN_CLIENT_SECRET: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+          AUTH0_ADMIN_REDIRECT_URL: 'https://admin.dymium.local:3000/auth/redirect'
+          AUTH0_ADMIN_RETURN_URL: 'https://admin.dymium.local:3000/app/logout'
+          AUTH0_ADMIN_AUDIENCE: 'https://admin.dymium.local/api/handler'
+          AUTH0_ADMIN_ORGANIZATION: "org_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+
+          AUTH0_PORTAL_DOMAIN: 'https://dymium-dev.us.auth0.com/'
+          AUTH0_PORTAL_CLIENT_ID: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+          AUTH0_PORTAL_CLIENT_SECRET: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+          AUTH0_PORTAL_REDIRECT_URL: 'https://portal.dymium.local:3001/auth/redirect'
+          AUTH0_PORTAL_RETURN_URL: 'https://portal.dymium.local:3001/app/logout'
+          AUTH0_PORTAL_AUDIENCE: 'https://portal.dymium.local/api/handler'
+
+
+          SESSION_SECRET: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+          CUSTOMER_HOST: 'portal.dymium.local'
+          ADMIN_HOST: 'admin.dymium.local'
+          FILESYSTEM_ROOT: '../../assets/'
+          AWS_LAMBDAS: '{ "DbAnalyzer": "localhost:9080", "DbSync": "localhost:9081" }'
+        run: go test -v ./...
