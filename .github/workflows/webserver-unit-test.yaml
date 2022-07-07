@@ -45,7 +45,7 @@ jobs:
       - name: Set up GCC
         run: apt-get install -y build-essential
       - name: Set up libpq
-        run: apt-get install -y install libpq
+        run: apt-get install -y libpq
 
       - name: Run tests
         working-directory: ./web/go/src
