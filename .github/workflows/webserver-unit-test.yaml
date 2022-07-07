@@ -71,4 +71,5 @@ jobs:
           ADMIN_HOST: 'admin.dymium.local'
           FILESYSTEM_ROOT: '../../assets/'
           AWS_LAMBDAS: '{ "DbAnalyzer": "localhost:9080", "DbSync": "localhost:9081" }'
+        run: ls -lah
         run: go test -v ./...
