@@ -36,7 +36,9 @@ jobs:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
-
+      - name: Install CA list
+        run: sudo apt-get install -y ca-certificates
+        
       - name: Run tests
         working-directory: ./web/go/src
         env:
