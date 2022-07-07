@@ -47,7 +47,7 @@ jobs:
           DATABASE_PORT: 5432
           DATABASE_USER: postgres
           DATABASE_ADMIN_USER: postgres
-          DATABASE_TLS: -disable
+          DATABASE_TLS: disable
 
           AUTH0_ADMIN_DOMAIN: 'https://dymium-dev-admin.us.auth0.com/'
           AUTH0_ADMIN_CLIENT_ID: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
