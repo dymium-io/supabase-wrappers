@@ -39,32 +39,32 @@ migrate
     -> Path b Dir -- ^ Directory which contains migration scripts.
     -> Text -- ^ Postgres Schema where migrates should be done
     -> Bool -- ^ Apply flag (if False, just print out a plan)
-    -> Bool -- ^ If True, create Schema if it does not exist
     -> Bool -- ^ If True, run test scripts after migration.
     -> m ()
-migrate conn dir postgresSchema applyFlag ensureSchemaFlag runTestsFlag = do
+migrate conn dir postgresSchema applyFlag runTestsFlag = do
     absDir <- makeAbsolute dir
     let initState = AppState conn postgresSchema
 
     void $ flip runStateT initState $ do
       ensureMigratonSchema
-      whenB (ensureSchema postgresSchema ensureSchemaFlag) $ do
-        (mPlanned, mTests) <- importDirectory absDir
-        mApplied <- getAppliedMigrations
-        let mGraph = fromJust $ mkMigrationGraph mPlanned
+      when applyFlag (ensureSchema postgresSchema)
+      (mPlanned, mTests) <- importDirectory absDir
+      mApplied <- getAppliedMigrations
+      let mGraph = fromJust $ mkMigrationGraph mPlanned
 
-        validateAppliedMigrations mPlanned mApplied
+      validateAppliedMigrations mPlanned mApplied
 
-        let unapplied = getUnappliedMigrations mGraph (Map.keys mApplied)
-        toApply <- inflateMigrationIds mPlanned unapplied
+      let unapplied = getUnappliedMigrations mGraph (Map.keys mApplied)
+      toApply <- inflateMigrationIds mPlanned unapplied
 
-        if applyFlag
-        then do
-          applyMigrations True toApply
-          when runTestsFlag $
-            runTests (Map.elems mTests)
-        else do
-          forM_ toApply (printMigration (maximum ((^. migrationName . to (T.length . unMigrationId)) <$> toApply) + 1))
+      if applyFlag
+      then do
+        applyMigrations True toApply
+        when runTestsFlag $
+          runTests (Map.elems mTests)
+      else do
+        forM_ toApply (printMigration (maximum ((^. migrationName . to (T.length . unMigrationId)) <$> toApply) + 1))
+        unless (null toApply) $
           liftIO $ putStrLn "\x1B[31m* These migrations were not applied yet\n* To apply them, add \x1B[1m--apply\x1B[0;31m flag to the command\x1B[0m"
     where
       printMigration l m = liftIO $ putStrLn $
@@ -73,8 +73,3 @@ migrate conn dir postgresSchema applyFlag ensureSchemaFlag runTestsFlag = do
         "-- " <> (m ^. migrationDescription . to T.unpack)
         where
           mid = m ^. migrationName . to unMigrationId
-
-
-      whenB b m = do
-        b' <- b
-        when b' m

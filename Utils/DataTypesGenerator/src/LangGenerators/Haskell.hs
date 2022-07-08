@@ -219,7 +219,7 @@ enumDef nameMappers thisModName eDef = [text|
     cen = enumNameMapper nameMappers thisModName en
     def = T.intercalate "\n| " $
         enumFldMapper nameMappers thisModName <$>
-        C.enPairing en (eValues eDef)
+        C.enPairing en (fst <$> eValues eDef)
 
 structDef :: NameMappers -> Text -> StructDef -> Text
 structDef nameMappers thisModName sDef = [text|
@@ -282,13 +282,13 @@ enumJSON nameMappers thisModName eDef = [text|
   where
     en  = eName eDef
     cen = enumNameMapper nameMappers thisModName en
-    defFrom = mconcat $ fldFrom <$> eValues eDef
+    defFrom = mconcat $ fldFrom . fst <$> eValues eDef
     fldFrom v = [text|"${v}" -> pure ${fv}|]
       where fv = enumFldMapper nameMappers thisModName (en,v)
-    defTo = mconcat $ fldTo <$> eValues eDef
+    defTo = mconcat $ fldTo . fst <$> eValues eDef
     fldTo v = [text|${fv} -> "${v}"|]
       where fv = enumFldMapper nameMappers thisModName (en,v)
-    defEnc = mconcat $ fldEnc <$> eValues eDef
+    defEnc = mconcat $ fldEnc . fst <$> eValues eDef
     fldEnc v = [text|${fv} -> toEncoding ("${v}" :: T.Text)|]
       where fv = enumFldMapper nameMappers thisModName (en,v)
 
@@ -452,7 +452,7 @@ genMappers (RootModule rootModule) mDefs camelizer =
     eFldMapper mDef =
       let m = C.uniqNames (eShortNameGen mDef) (eLongNameGen mDef) $
               mconcat $
-              uncurry C.enPairing . (eName &&& eValues)
+              uncurry C.enPairing . (eName &&& (fst <$>) . eValues)
               <$> enums mDef
       in (\e -> fromMaybe (error "-- IMPOSSIBLE --") $ e `M.lookup` m)
 

@@ -133,5 +133,5 @@ mdsKeys mds =
       mzero
       <> mconcat (fromE <$> enums md)
       <> mconcat (fromS <$> structs md)
-    fromE e = [eName e] <> eValues e
+    fromE e = [eName e] <> (fst <$> eValues e)
     fromS s = [sName s] <> (fst <$> sFields s)

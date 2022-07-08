@@ -75,6 +75,25 @@ uniqNames shortNameGen longNameGen lst =
         (Left  n, _) -> zip n $ longNameGen n
     )  . swap <$> M.toList hm'
 
+checkedUniqNames :: (Ord c) =>
+             ( c -> Text ) ->
+             [ c ] ->
+             Either [(Text, [c])] (M.Map c Text)
+checkedUniqNames shortNameGen lst =
+  let
+    hm' = M.fromListWith merge $ (shortNameGen &&& Right) <$> lst
+    merge = curry $ \case
+      (Right r1, Right r2) -> Left [r1,r2]
+      (Right r,  Left  rl) -> Left (r : rl)
+      (Left  rl, Right r)  -> Left (r : rl)
+      (Left  r1, Left  r2) -> Left (r1 <> r2)
+  in
+   case () of
+     _ | null $ lefts (M.elems hm') ->
+         Right $ M.fromList [ (fromRight (error "* IMPOSSIBLE *") n, v) | (v,n) <- M.toList hm' ]
+       | otherwise ->
+         Left $ [ (v, fromLeft (error "* IMPOSSIBLE *") n) | (v,n) <- M.toList hm', isLeft n ]
+
 hashMapper :: [ModuleDef] -> (T.Text -> T.Text)
 hashMapper mDefs =
   let m = M.fromList $

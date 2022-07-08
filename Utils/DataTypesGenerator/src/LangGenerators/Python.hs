@@ -103,7 +103,7 @@ enumDef nameMappers _mName' eDef = [text|
   |]
   where
     eName' = eName eDef
-    eFlds = mconcat $ f <$> eValues eDef
+    eFlds = mconcat $ f . fst <$> eValues eDef
     f v = [text|${efn} = ${efv}|]
       where
         efn = enumFldMapper nameMappers (eName',v)

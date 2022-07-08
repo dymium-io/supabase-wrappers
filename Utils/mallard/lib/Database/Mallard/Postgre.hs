@@ -10,10 +10,11 @@ module Database.Mallard.Postgre
     , DigestMismatchException (..)
     , ensureMigratonSchema
     , ensureSchema
+    , dropSchema
     , getAppliedMigrations
     , getAppliedMigration
-    , applyMigration
     , applyMigrations
+    , pUnregisterMigrations
     , setChecksum
     , runTests
     , runTest
@@ -35,6 +36,7 @@ import           Data.Int
 import           Data.Maybe
 import           Data.String.Interpolation
 import           Data.Text                   (Text, unpack)
+import qualified Data.Text                   as T
 import qualified Data.Text.Encoding          as T
 import qualified Data.Vector
 import           Database.Mallard.Types
@@ -45,6 +47,7 @@ import           Hasql.TH
 import           Hasql.Transaction           (Transaction)
 import qualified Hasql.Transaction           as HT
 import qualified Hasql.Transaction.Sessions  as HT
+import           System.Exit
 
 class HasPostgreConnection a where
     postgreConnection :: Lens' a Pool.Pool
@@ -74,26 +77,48 @@ ensureMigratonSchema = do
         runDB $ HT.transaction HT.Serializable HT.Write $ applyMigrationSchemaMigraiton a
         liftIO $ putStrLn $ "Migrator Version: " <> show version
 
-ensureSchema ::  (MonadIO m, MonadThrow m, MonadState s m, HasPostgreConnection s) => Text -> Bool -> m Bool
-ensureSchema schema createSchema = do
+ensureSchema ::  (MonadIO m, MonadThrow m, MonadState s m, HasPostgreConnection s) => Text -> m ()
+ensureSchema schema = do
   doesSchemaExist <- runDB $ statement schema [maybeStatement|SELECT true :: bool FROM information_schema.schemata WHERE schema_name = $1 :: text|]
   case doesSchemaExist of
-    Nothing | createSchema -> do
+    Nothing -> do
                 runDB $ sql ("CREATE SCHEMA "<>T.encodeUtf8 schema)
                 liftIO $ putStrLn $ "Schema `"<>unpack schema<>"` created"
-                return True
-            | otherwise -> do
-                liftIO $ putStrLn ("Schema `"<>unpack schema<>"` does not exist")
-                return False
-    Just _ -> return True
+    Just _ -> return ()
 
 runDB :: (MonadIO m, MonadState s m, HasPostgreConnection s) => Session a -> m a
 runDB session = do
     pool <- gets (^. postgreConnection)
     res <- liftIO $ Pool.use pool session
     case res of
-        Left err    -> error $ show err
-        Right value -> return value
+        Left (Pool.ConnectionError (Just e)) -> liftIO $ do
+          putStrLn $ unpack $ T.decodeUtf8 e
+          exitFailure
+        Left (Pool.ConnectionError Nothing) -> liftIO $do
+          putStrLn "runDB: connection error"
+          exitFailure
+        Left (Pool.SessionError (QueryError q params e)) -> liftIO $ do
+          putStrLn $ "Query {"<>unpack (T.decodeUtf8 q)<>"}("<>show params<>") failed:"
+          case e of
+            ClientError (Just es) -> putStrLn $ unpack $ T.decodeUtf8 es
+            ClientError Nothing -> pure ()
+            ResultError (ServerError code message detail hint) -> do
+              putStrLn $ "Return code: "<> unpack (T.decodeUtf8 code)
+              putStrLn $ unpack $ T.decodeUtf8 message
+              case detail of
+                Just d  -> putStrLn . unpack . T.unlines $ ("  "<>) <$> T.lines (T.decodeUtf8 d)
+                Nothing -> pure ()
+              case hint of
+                Just h  -> putStrLn $ unpack $ T.decodeUtf8 h
+                Nothing -> pure ()
+            ResultError (UnexpectedResult r) ->
+                putStrLn $ "Unexpected Result: "<>unpack r
+            ResultError (RowError r c er) ->
+                putStrLn $ "Error at row "<>show r<>" column "<>show c<>": "<>show er
+            ResultError (UnexpectedAmountOfRows r) ->
+                putStrLn $ "Unexpected Amount of Rows: "<>show r
+          exitFailure
+        Right value                   -> return value
 
 getAppliedMigration
     :: (MonadIO m, MonadState s m, HasPostgreConnection s)
@@ -153,7 +178,7 @@ applyMigration doApply m = do
           HT.sql (T.encodeUtf8 $ m ^. migrationScript)
         HT.statement (schema,mId) updateStmt
               | otherwise -> error ("Migration `"<>show mId<>"` was not applied, because of checksum mismatch")
-  liftIO $ putStrLn $ "Applied migration: `"<>unpack schema<>"."<>unpack mId<>"`"
+  liftIO $ putStrLn $ "Applied migration: `"<>unpack schema<>"::"<>unpack mId<>"`"
     where
         mId = m ^. migrationName . to unMigrationId
         insertStmt = [resultlessStatement|INSERT INTO mallard.applied_migrations
@@ -172,6 +197,36 @@ applyMigration doApply m = do
             m ^. migrationChecksum . to toBytes,
             m ^. migrationScript
           )
+
+pUnregisterMigrations :: (MonadIO m, MonadState s m, HasPostgreConnection s, HasPostgreSchema s) => [MigrationId] -> m ()
+pUnregisterMigrations = mapM_ pUnregisterMigration
+
+pUnregisterMigration :: (MonadIO m, MonadState s m, HasPostgreConnection s, HasPostgreSchema s) => MigrationId -> m ()
+pUnregisterMigration mid = do
+  schema <- gets (^. postgreSchema)
+  runDB $ HT.transaction HT.Serializable HT.Write $ do
+    HT.statement (schema, unMigrationId mid)
+      [resultlessStatement|UPDATE mallard.applied_migrations SET schema = array_remove(schema, $1 :: text)
+                           WHERE name = $2 :: text |]
+    HT.sql "DELETE FROM mallard.applied_migrations WHERE schema = '{}'"
+
+
+dropSchema :: (MonadIO m, MonadState s m, HasPostgreConnection s, HasPostgreSchema s) => m ()
+dropSchema = do
+  schema <- gets (^. postgreSchema)
+  doesSchemaExist <- runDB $ statement schema [maybeStatement|SELECT true :: bool FROM information_schema.schemata WHERE schema_name = $1 :: text|]
+  case doesSchemaExist of
+    Nothing ->
+       liftIO $ putStrLn $ "Schema `"<>unpack schema<>"` does not exist."
+    Just _ -> doDrop schema
+  where
+    doDrop schema = do
+      runDB $ HT.transaction HT.Serializable HT.Write $ do
+        HT.sql ("DROP SCHEMA IF EXISTS "<>T.encodeUtf8 schema<>" CASCADE")
+        HT.statement schema
+          [resultlessStatement|UPDATE mallard.applied_migrations SET schema = array_remove(schema, $1 :: text)|]
+        HT.sql "DELETE FROM mallard.applied_migrations WHERE schema = '{}'"
+      liftIO $ putStrLn $ "Schema `"<>unpack schema<>"` dropped"
 
 runTests :: (MonadIO m, MonadState s m, HasPostgreConnection s, HasPostgreSchema s) => [Test] -> m ()
 runTests = mapM_ runTest

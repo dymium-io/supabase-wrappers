@@ -24,8 +24,10 @@ library
 
     exposed-modules:   Database.Mallard.Commands.ConfirmChecksums
                        Database.Mallard.Commands.Migrate
+                       Database.Mallard.Commands.Drop
                        Database.Mallard.Commands.RepairChecksum
                        Database.Mallard.Commands.RegisterMigrations
+                       Database.Mallard.Commands.UnregisterMigrations
                        Database.Mallard.File
                        Database.Mallard.Graph
                        Database.Mallard.Parser

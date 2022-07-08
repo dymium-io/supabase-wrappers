@@ -114,7 +114,7 @@ func TestApiHandlers(t *testing.T){
 		}
 
 		cmd := exec.Command(exe, "migrate", "-s", "global", "-r", path, "--host", dbhost, "--port", dbport, 
-		"--user", dbuser, "--password", dbpassword, "--database", "test", "--create-schema", "--apply")
+		"--user", dbuser, "--password", dbpassword, "--database", "test", "--apply")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
@@ -131,7 +131,7 @@ func TestApiHandlers(t *testing.T){
 		}
 
 		cmd = exec.Command(exe, "migrate", "-s", "spoofcorp", "-r", path, "--host", dbhost, "--port", dbport, 
-			"--user", dbuser, "--password", dbpassword, "--database", "test", "--create-schema", "--apply")
+			"--user", dbuser, "--password", dbpassword, "--database", "test", "--apply")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()

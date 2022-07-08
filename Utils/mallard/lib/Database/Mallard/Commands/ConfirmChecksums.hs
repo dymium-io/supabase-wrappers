@@ -51,7 +51,7 @@ confirmChecksums pool dir postgresSchema = do
 showComparison :: (MonadIO m) => DigestComparison -> m ()
 showComparison (DigestComparison n p _ a match) = liftIO $ do
     putStrLn $ "" <> show n <> " : " <> (if match then "Valid" else "Invalid")
-    putStrLn $ ""
+    putStrLn   ""
     putStrLn $ "    " <> show p
     putStrLn $ "    " <> show a
-    putStrLn $ ""
+    putStrLn   ""

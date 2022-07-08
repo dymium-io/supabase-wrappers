@@ -19,6 +19,7 @@ import           RIO.List.Partial             (head, tail)
 
 import           RIO.Partial                  (read)
 import qualified RIO.Text                     as T
+import qualified RIO.Text.Partial             as T
 import qualified Text.ParserCombinators.ReadP as P
 
 import qualified Common                       as C
@@ -181,13 +182,22 @@ parseEnum (eName', y') =
     "<EMPTY>" ->
       (eName', EnumDef { eName = eName'
                        , eDflt = Nothing
-                       , eValues = tail $ y' ^.. _Array .traverse ._String
+                       , eValues = tail $ y' ^.. _Array .traverse ._String .to parseValue
                        })
     dflt' ->
       (eName', EnumDef { eName = eName'
                        , eDflt = Just dflt'
-                       , eValues = y' ^.. _Array .traverse ._String
+                       , eValues = y' ^.. _Array .traverse ._String .to parseValue
                        })
+  where
+    parseValue :: Text -> (Text, Maybe Text)
+    parseValue s =
+      let (v', descr) = T.breakOn "<*>" s
+          v = T.strip v'
+      in
+      if T.null descr
+      then (v,Nothing)
+      else (v,Just . T.strip . T.drop 3 $ descr)
 
 parseField :: (T.Text -> T.Text -> SearchResult)
               -> T.Text
@@ -245,7 +255,7 @@ parseStr search mName' str
     modSpec = P.option Nothing (Just <$> typeSpec <* P.char '.')
 
     initSpec :: P.ReadP (Maybe String)
-    initSpec = P.option Nothing (Just <$ P.skipSpaces <* P.char '*' <* P.skipSpaces <*> P.many1 P.get)
+    initSpec = P.option Nothing (Just <$ P.skipSpaces <* P.string "<*>" <* P.skipSpaces <*> P.many1 P.get)
 
     listSpec :: P.ReadP (Int, Maybe String, String)
     listSpec = (,,,) <$  P.skipSpaces
@@ -363,8 +373,8 @@ resolveType search mName'  modName typeCandidate containerCandidate dfltCandidat
        case search mName'' t of
           Err e -> Left e
           EnumFound  e -> case () of
-               _ | T.null s -> Right (Enum t (eDflt e) (eValues e), c, NoDflt)
-                 | s `elem` eValues e -> Right (Enum t (eDflt e) (eValues e), c, DfltS s)
+               _ | T.null s -> Right (Enum t (eDflt e) (fst <$> eValues e), c, NoDflt)
+                 | s `elem` (fst <$> eValues e) -> Right (Enum t (eDflt e) (fst <$> eValues e), c, DfltS s)
                  | otherwise ->
                          Left (" default value `"<>s<>"` is not part of the enum `"
                               <>t<>"` in module `"<>mName''<>"`")

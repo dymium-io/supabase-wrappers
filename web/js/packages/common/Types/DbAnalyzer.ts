@@ -306,7 +306,7 @@ export class Connection {
   private '_testOnly': boolean
 
   constructor() {
-    this['_typ'] = 'PostgreSQL'
+    this['_typ'] = 'PostgreSQL <*> PostgreSQL Database'
     this['_address'] = ''
     this['_port'] = 0
     this['_user'] = ''
@@ -317,7 +317,7 @@ export class Connection {
   }
   get typ(): Common_52182865.ConnectionType { return this['_typ'] }
   set typ(__a__: any) {
-    let __v__ = enumReader(['PostgreSQL','MySQL','MariaDB','SqlServer','OracleDB'],'PostgreSQL')(__a__)
+    let __v__ = enumReader(['PostgreSQL','MySQL','MariaDB','SqlServer','OracleDB'],'PostgreSQL <*> PostgreSQL Database')(__a__)
     if(!_.isEqual(__v__,this['_typ'])) {
       setDirtyFlag()
       this['_typ'] = __v__

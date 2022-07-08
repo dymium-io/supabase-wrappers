@@ -1,12 +1,14 @@
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE QuasiQuotes    #-}
+{-# LANGUAGE NamedFieldPuns    #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
 
 module LangGenerators.GoLang where
 
 import           RIO
 import           RIO.FilePath      (joinPath, splitDirectories, (<.>), (</>))
-import           RIO.List          (lastMaybe, nub, sortOn)
+import           RIO.List          (lastMaybe, sortOn)
 import qualified RIO.Map           as M
+import           RIO.Partial       (fromJust)
 import qualified RIO.Text          as T
 
 import           Data.Char         (isUpper)
@@ -27,11 +29,10 @@ run mDefs installPath@(InstallPath installPath') rootModule@(RootModule root) ca
       logError "GoLang generator: \"root module\" parameter must be defined for packages installed in different directories"
       exitFailure
     _ -> pure ()
+  nameMappers <- genMappers rootModule mDefs camelizer
   logInfo $ "Installing GoLang packages to " <> displayShow installPath' <> "..."
   C.createInstallPaths installPath mDefs transformPath
   mapM_ (genModule installPath nameMappers) mDefs
-    where
-      nameMappers = genMappers rootModule mDefs camelizer
 
 data Package
   = Package
@@ -129,7 +130,7 @@ enumDef nameMappers mName' eDef = [text|
   |]
   where
     eName' = eName eDef
-    eFlds = mconcat $ f <$> eValues eDef
+    eFlds = mconcat $ f . fst <$> eValues eDef
     f v = [text|${efn} ${eName'} = ${efv}|]
       where
         efn = enumFldMapper nameMappers mName' (eName',v)
@@ -169,26 +170,68 @@ structDef nameMappers mName' sDef = [text|
               Enum en _ _  -> case moduleName of
                 Nothing -> enumNameMapper nameMappers mName' en
                 Just mn -> case (getPackage nameMappers mName', getPackage nameMappers mn) of
-                  (thisPkg, pkg) | thisPkg == pkg ->  enumNameMapper nameMappers mName' en
+                  (thisPkg, pkg) | thisPkg == pkg ->  enumNameMapper nameMappers mn en
                   (_, Nothing)       -> error "-- IMPOSSIBLE --"
                   (_, Just pkg)      -> pRef pkg<>"."<>enumNameMapper nameMappers mn en
               Struct stn         -> case moduleName of
                 Nothing -> structFldMapper nameMappers mName' (sn,stn)
                 Just mn -> case (getPackage nameMappers mName', getPackage nameMappers mn) of
-                  (thisPkg, pkg) | thisPkg == pkg ->  structFldMapper nameMappers mName' (sn,stn)
+                  (thisPkg, pkg) | thisPkg == pkg ->  structFldMapper nameMappers mn (sn,stn)
                   (_, Nothing)       -> error "-- IMPOSSIBLE --"
                   (_, Just pkg)      -> pRef pkg<>"."<>structFldMapper nameMappers mn (sn,stn)
 
-genMappers :: RootModule -> [ModuleDef] -> Camelizer -> NameMappers
+genMappers :: RootModule -> [ModuleDef] -> Camelizer -> RIO App NameMappers
 genMappers (RootModule rootModule) mDefs camelizer =
-  NameMappers
-    { getRoot
-    , getPackage
-    , enumNameMapper
-    , structNameMapper
-    , enumFldMapper
-    , structFldMapper = const $ C.capitalizeT . camelizer . sanitizer . snd
-    }
+
+  case () of
+    _ | (Right structNameMapper, Right enumNameMapper, Right enumFldMapper) <-
+      (genStructNameMapper, genEnumNameMapper, genEnumFldMapper) ->
+        pure $ NameMappers { getRoot
+                           , getPackage
+                           , enumNameMapper
+                           , structNameMapper
+                           , enumFldMapper
+                           , structFldMapper = const $ C.capitalizeT . camelizer . sanitizer . snd
+                           }
+      | otherwise -> do
+          case genStructNameMapper of
+            Left conflicts -> displayStructNameConflicts conflicts
+            _              -> pure ()
+          case genEnumNameMapper of
+            Left conflicts -> displayEnumNameConflicts conflicts
+            _              -> pure ()
+          case genEnumFldMapper of
+            Left conflicts -> displayEnumFldConflicts conflicts
+            _              -> pure ()
+          exitFailure
+
+           where
+             displayStructNameConflicts ::
+               [(Maybe Package, [(T.Text, [(T.Text,T.Text)])])] ->
+               RIO App ()
+             displayStructNameConflicts = mapM_ $ \(p, c) -> do
+               logError $ display $ "In package "<>maybe "ROOT" (T.pack . joinPath . pPath) p<>":"
+               forM_ c $ \(s, m) ->
+                 logError $ display $ "  struct "<>s<>" is defined in multiple modules: "<>T.pack (show (fst <$> m))
+
+             displayEnumNameConflicts ::
+               [(Maybe Package, [(T.Text, [(T.Text,T.Text)])])] ->
+               RIO App ()
+             displayEnumNameConflicts = mapM_ $ \(p, c) -> do
+               logError $ display $ "In package "<>maybe "ROOT" (T.pack . joinPath . pPath) p<>":"
+               forM_ c $ \(e, m) ->
+                 logError $ display $ "  enum "<>e<>" is defined in multiple modules: "<>T.pack (show (fst <$> m))
+
+             displayEnumFldConflicts ::
+               [(Maybe Package, [(T.Text, [(T.Text,(T.Text, T.Text))])])] ->
+               RIO App ()
+             displayEnumFldConflicts =  mapM_ $ \(p, c) -> do
+               logError $ display $ "In package "<>maybe "ROOT" (T.pack . joinPath . pPath) p<>":"
+               forM_ c $ \(e, m) -> do
+                 logError $ display $ "  conlicting enum field "<>e<>" definition:"
+                 forM_ m $ \(m',(en,ef)) ->
+                   logError $ display $ "    "<>en<>"."<>ef<>" in module "<>m'
+
   where
 
     (getRoot, rootPath) = case rootModule of
@@ -214,82 +257,104 @@ genMappers (RootModule rootModule) mDefs camelizer =
           | otherwise = error "-- IMPOSSIBLE --"
           where path' = rootPath <> path
 
-    enumNameMapper :: T.Text -> (T.Text -> T.Text)
-    enumNameMapper =  const camelizer
+    genEnumNameMapper :: Either
+                         [(Maybe Package, [(T.Text,[(T.Text,T.Text)])])]
+                         (T.Text -> (T.Text -> T.Text))
+    genEnumNameMapper =
+      let enumMap = [ (p, C.checkedUniqNames eNameGen pm) | (p, pm) <- M.assocs packMapper ] in
+      if null . lefts $ snd <$> enumMap
+      then
+        let m = mconcat (M.toList <$> rights (snd <$> enumMap)) <&>
+                (\((mName', eName'), v) -> (mName', [(eName',v)])) &
+                M.fromListWith (<>) &
+                M.map M.fromList &
+                M.map (\mS -> fromJust . (`M.lookup` mS))
+        in Right $ (\x -> fromMaybe (error $ "genEnumNameMapper: can not find module "<>T.unpack x) (x `M.lookup` m))
+      else
+        Left [ (p, fromLeft (error "* IMPOSSIBLE *") c) | (p, c) <- enumMap, isLeft c ]
 
-    enumFldMapper :: T.Text -> ((T.Text, T.Text) -> T.Text)
-    enumFldMapper =
-      let
+      where
+        packMapper = foldl' pMap M.empty mDefs
+          where
+            pMap pm mDef = foldl' (\pm' en ->
+                                    M.insertWith (<>) (getPackage (mName mDef))
+                                    [(mName mDef, en)]
+                                    pm'
+                                  )
+                           pm
+                           (eName <$> enums mDef)
 
+    genEnumFldMapper :: Either
+                        [(Maybe Package, [(T.Text,[(T.Text,(T.Text,T.Text))])])]
+                        (T.Text -> (T.Text, T.Text) -> T.Text)
+    genEnumFldMapper =
+      let fldsMap = [ (p, C.checkedUniqNames eFldNameGen pm) | (p,pm) <- M.assocs packMapper ] in
+      if null . lefts $ snd <$> fldsMap
+      then
+        let m = mconcat (M.toList <$> rights (snd <$> fldsMap)) <&>
+                (\((mName', (eName', fName')), v) -> (mName', [((eName',fName'),v)])) &
+                M.fromListWith (<>) &
+                M.map M.fromList &
+                M.map (\mE -> fromJust . (`M.lookup` mE))
+        in Right $ fromJust . (`M.lookup` m)
+      else
+        Left [ (p, fromLeft (error "* IMPOSSIBLE *") c) | (p, c) <- fldsMap, isLeft c ]
+
+      where
         packMapper = foldl' pMap M.empty mDefs
           where
             pMap pm mDef = foldl' (\pm' (en, ef) ->
-                                    M.insertWith (<>) (pRef <$> getPackage (mName mDef))
+                                    M.insertWith (<>) (getPackage (mName mDef))
                                     [(mName mDef, (en, ef))]
                                     pm'
                                   )
                            pm
-                           (mconcat $ uncurry C.enPairing . (eName &&& eValues) <$> enums mDef)
+                           (mconcat $ uncurry C.enPairing . (eName &&& (fst <$>) . eValues) <$> enums mDef)
 
-        m = mconcat (M.toList <$> (C.uniqNames eShortNameGen eLongNameGen <$> M.elems packMapper)) <&>
-            (\((mName', (eName', fName')), v) -> (mName', [((eName',fName'),v)])) &
-            M.fromListWith (<>) &
-            M.map M.fromList &
-            M.map (\mE -> fromMaybe (error "-- IMPOSSIBLE --") . (`M.lookup` mE))
 
-      in  fromMaybe (error "-- IMPOSSIBLE --") . (`M.lookup` m)
+    genStructNameMapper :: Either
+                           [(Maybe Package, [(T.Text,[(T.Text,T.Text)])])]
+                           (T.Text -> (T.Text -> T.Text))
+    genStructNameMapper =
+      let strctMap = [ (p, C.checkedUniqNames sNameGen pm) | (p, pm) <- M.assocs packMapper ] in
+      if null . lefts $ snd <$> strctMap
+      then
+        let m = mconcat (M.toList <$> rights (snd <$> strctMap)) <&>
+                (\((mName', sName'), v) -> (mName', [(sName',v)])) &
+                M.fromListWith (<>) &
+                M.map M.fromList &
+                M.map (\mS -> fromJust . (`M.lookup` mS))
+        in Right $ fromJust . (`M.lookup` m)
+      else
+        Left [ (p, fromLeft (error "* IMPOSSIBLE *") c) | (p, c) <- strctMap, isLeft c ]
 
-    structNameMapper :: T.Text -> (T.Text -> T.Text)
-    structNameMapper =
-      let
-
+      where
         packMapper = foldl' pMap M.empty mDefs
           where
             pMap pm mDef = foldl' (\pm' sn ->
-                                    M.insertWith (<>) (pRef <$> getPackage (mName mDef))
+                                    M.insertWith (<>) (getPackage (mName mDef))
                                     [(mName mDef, sn)]
                                     pm'
                                   )
                            pm
                            (sName <$> structs mDef)
 
-        m = mconcat (M.toList <$> (C.uniqNames sShortNameGen sLongNameGen <$> M.elems packMapper)) <&>
-            (\((mName', sName'), v) -> (mName', [(sName',v)])) &
-            M.fromListWith (<>) &
-            M.map M.fromList &
-            M.map (\mS -> fromMaybe (error "-- IMPOSSIBLE --") . (`M.lookup` mS))
 
-      in fromMaybe (error "-- IMPOSSIBLE --") . (`M.lookup` m)
+    sNameGen :: (Text, Text) -> Text
+    sNameGen = C.capitalizeT  . camelizer . snd
 
+    eNameGen :: (Text, Text) -> Text
+    eNameGen = C.capitalizeT  . camelizer . snd
 
-    sShortNameGen :: (Text, Text) -> Text
-    sShortNameGen = C.capitalizeT  . camelizer . snd
-
-    sLongNameGen :: [(Text,Text)] -> [Text]
-    sLongNameGen = ((\s@(mName', _) -> C.capitalizeT mName'<>"_"<>sShortNameGen s) <$>)
-
-    eShortNameGen :: (Text, (Text,Text)) -> Text
-    eShortNameGen (mName', (eName', fName')) =
-      let en = enumNameMapper mName' eName'
+    eFldNameGen :: (Text, (Text,Text)) -> Text
+    eFldNameGen (mName', (eName', fName')) =
+      let en = eNameGen (mName', eName')
           prefixCandidate = T.filter isUpper en
           prefix = case () of
             _ | T.null prefixCandidate -> T.toUpper $ T.take 1 en
               | otherwise              -> prefixCandidate
       in
       prefix<>"_"<>sanitize fName'
-
-    eLongNameGen :: [(Text, (Text,Text))] -> [Text]
-    eLongNameGen c =
-      let
-        firstCandidate = (\(mName',(eName',fName')) ->
-                          enumNameMapper mName' eName'<>"_"<>sanitize fName') <$> c
-        secondCandidate = (\e@(mName',_) -> C.capitalizeT mName'<>"_"<>eShortNameGen e) <$> c
-        thirdCandidate = (\(mName',(eName',fName')) ->
-                          C.capitalizeT mName'<>"_"<>enumNameMapper mName' eName'<>"_"<>sanitize fName') <$> c
-      in case () of
-        _ | length firstCandidate == length (nub firstCandidate) -> firstCandidate
-          | length secondCandidate == length (nub secondCandidate) -> secondCandidate
-          | otherwise -> thirdCandidate
 
     sanitize = sanitizeEnumFld camelizer
 

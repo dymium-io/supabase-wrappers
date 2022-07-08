@@ -15,10 +15,23 @@ export type ConnectionType =
   | 'SqlServer'
   | 'OracleDB'
 
+export function humanReadableConnectionType(__a__ : ConnectionType) : string {
+  switch(__a__) {
+    case 'PostgreSQL': return 'PostgreSQL Database';
+    case 'MySQL': return 'MySQL Database';
+    case 'MariaDB': return 'MariaDB Database';
+    case 'SqlServer': return 'Microsoft SQL Server';
+    case 'OracleDB': return 'Oracle Database';
+  }
+  return '';
+}
+
 export type DataSemantics =
   | 'FamilyName'
   | 'Email'
   | 'SSN'
+
+
 
 export class AuthStatus {
   private '_status': string

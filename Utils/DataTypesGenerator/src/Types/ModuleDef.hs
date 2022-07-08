@@ -15,7 +15,7 @@ data ModuleDef
 data EnumDef
   = EnumDef
     { eName   :: !Text
-    , eValues :: ![Text]
+    , eValues :: ![(Text,Maybe Text)]
     , eDflt   :: !(Maybe Text)
     } deriving(Eq, Show)
 eEmptyable :: EnumDef -> Bool

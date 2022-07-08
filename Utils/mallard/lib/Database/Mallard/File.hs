@@ -32,7 +32,7 @@ importFile :: (MonadIO m, MonadThrow m) => Path Abs File -> m (MigrationTable, T
 importFile = fmap sortActions . importFile'
 
 sortActions :: [Action] -> (MigrationTable, TestTable)
-sortActions actions = foldl' sortFn (Map.empty, Map.empty) actions
+sortActions = foldl' sortFn (Map.empty, Map.empty)
     where
         sortFn (mm, tm) (ActionMigration m) = (Map.insert (m ^. migrationName) m mm, tm)
         sortFn (mm, tm) (ActionTest t)      = (mm, Map.insert (t ^. testName) t tm)
@@ -43,4 +43,15 @@ importFile' file = do
     let parseResult = runParser parseActions (toFilePath file) fileContent
     case parseResult of
         Left er -> throw $ ParserException file er
-        Right m -> return m
+        Right m -> return $ adjustDependencies m
+    where
+      adjustDependencies = fst . foldl' ad ([],Nothing)
+      ad (actions,previousMigration) t@(ActionTest _) = (t : actions, previousMigration)
+      ad (actions,Nothing) t@(ActionMigration m) =
+        (t : actions, Just $ m ^. migrationName)
+      ad (actions,Just previousMigration) t@(ActionMigration m) =
+        if previousMigration `elem` m ^. migrationRequires
+        then (t : actions, Just $ m ^. migrationName)
+        else
+          let m' = m & migrationRequires %~ (previousMigration :) in
+          (ActionMigration m' : actions, Just $ m' ^. migrationName)

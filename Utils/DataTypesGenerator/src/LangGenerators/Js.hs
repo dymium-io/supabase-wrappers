@@ -134,14 +134,33 @@ enumDef nameMappers mName' eDef = [text|
   // enum ${eName'}
   ${eFlds}
 
+  ${humanReadable}
   |]
   where
     eName' = eName eDef
-    eFlds = mconcat $ f <$> eValues eDef
+
+    eFlds = mconcat $ f . fst <$> eValues eDef
+
     f v = [text|export const ${efn} = ${efv}|]
       where
         efn = nm_enumFldMapper nameMappers mName' (eName',v)
         efv = jsString v
+
+    humanReadable =
+      case () of
+        _ | any isJust (snd <$> eValues eDef) -> [text|
+       export function humanReadable${eName'}(__a__) {
+         switch(__a__) {
+           ${eCases}
+         }
+         return '';
+       }|]
+          | otherwise -> ""
+
+    eCases = T.concat $
+       (\(v,d) -> let (v',d') = (jsString v,jsString $ fromMaybe v d) in
+                  [text|case ${v'}: return ${d'};|]) <$>
+       eValues eDef
 
 structDef :: NameMappers -> T.Text -> StructDef -> T.Text
 structDef nameMappers mName' sDef = [text|
@@ -681,7 +700,7 @@ genMappers mDefs camelizer =
     eFldMapper mDef =
       let m = C.uniqNames (eShortNameGen mDef) (eLongNameGen mDef) $
               mconcat $
-              uncurry C.enPairing . (eName &&& eValues)
+              uncurry C.enPairing . (eName &&& (fst <$>) . eValues)
               <$> enums mDef
       in (\e -> fromMaybe (error "-- IMPOSSIBLE --") $ e `M.lookup` m)
 

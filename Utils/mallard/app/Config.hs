@@ -3,9 +3,11 @@
 
 module Config
     ( OptsMigrate
+    , OptsDropSchema
     , OptsConfirmChecksums
     , OptsRepairChecksum
     , OptsRegisterMigrations
+    , OptsUnregisterMigrations
     , OptsVersion
     , Command (..)
 
@@ -15,15 +17,15 @@ module Config
     , postgreSchema
 
     -- Migrate Lenses
-    , ensureSchemaFlag
     , applyFlag
     , runTestsFlag
 
     -- Repair Lenses
     , migrationName
 
-    -- Register Migrations Lenses
-    , registerMigrationsFileName
+    -- Register/Unregister Migrations Lenses
+    , registerMigrations
+    , unregisterMigrations
 
     , configParser
     ) where
@@ -44,7 +46,6 @@ data OptsMigrate
         { _omigratePostgreSchema   :: !T.Text
         , _omigrateRootDirectory   :: !T.Text
         , _omigrateApply           :: !Bool
-        , _omigrateCreateSchema    :: !Bool
         , _omigrateRunTests        :: !Bool
         , _omigratePostgreSettings :: !Sql.Settings
         }
@@ -58,9 +59,6 @@ instance HasPostgreSchema OptsMigrate where postgreSchema = omigratePostgreSchem
 
 runTestsFlag :: Lens' OptsMigrate Bool
 runTestsFlag = omigrateRunTests
-
-ensureSchemaFlag :: Lens' OptsMigrate Bool
-ensureSchemaFlag = omigrateCreateSchema
 
 applyFlag :: Lens' OptsMigrate Bool
 applyFlag = omigrateApply
@@ -103,10 +101,10 @@ migrationName = orepairMigrationName
 
 data OptsRegisterMigrations
     = OptsRegisterMigrations
-        { _oregisterFileName        :: !T.Text
-        , _oregisterPostgreSchema   :: !T.Text
+        { _oregisterPostgreSchema   :: !T.Text
         , _oregisterRootDirectory   :: !T.Text
         , _oregisterPostgreSettings :: !Sql.Settings
+        , _oregisterMigrations      :: Either T.Text [T.Text]
         }
     deriving (Show)
 
@@ -116,8 +114,40 @@ instance HasRootDirectory OptsRegisterMigrations where rootDirectory = oregister
 instance HasPostgreSettings OptsRegisterMigrations where postgreSettings = oregisterPostgreSettings
 instance HasPostgreSchema OptsRegisterMigrations where postgreSchema = oregisterPostgreSchema
 
-registerMigrationsFileName :: Lens' OptsRegisterMigrations T.Text
-registerMigrationsFileName = oregisterFileName
+registerMigrations :: Lens' OptsRegisterMigrations (Either T.Text [T.Text])
+registerMigrations = oregisterMigrations
+
+--
+
+data OptsUnregisterMigrations
+    = OptsUnregisterMigrations
+        { _ounregisterPostgreSchema   :: !T.Text
+        , _ounregisterPostgreSettings :: !Sql.Settings
+        , _ounregisterMigrations      :: Either T.Text [T.Text]
+        }
+    deriving (Show)
+
+$(makeClassy ''OptsUnregisterMigrations)
+
+instance HasPostgreSettings OptsUnregisterMigrations where postgreSettings = ounregisterPostgreSettings
+instance HasPostgreSchema OptsUnregisterMigrations where postgreSchema = ounregisterPostgreSchema
+
+unregisterMigrations :: Lens' OptsUnregisterMigrations (Either T.Text [T.Text])
+unregisterMigrations = ounregisterMigrations
+
+--
+
+data OptsDropSchema
+    = OptsDropSchema
+        { _odropPostgreSchema   :: !T.Text
+        , _odropPostgreSettings :: !Sql.Settings
+        }
+    deriving (Show)
+
+$(makeClassy ''OptsDropSchema)
+
+instance HasPostgreSettings OptsDropSchema where postgreSettings = odropPostgreSettings
+instance HasPostgreSchema OptsDropSchema where postgreSchema = odropPostgreSchema
 
 --
 
@@ -127,9 +157,11 @@ data OptsVersion
 
 data Command
     = CmdMigrate OptsMigrate
+    | CmdDropSchema OptsDropSchema
     | CmdConfirmChecksums OptsConfirmChecksums
     | CmdRepairChecksum OptsRepairChecksum
     | CmdRegisterMigrations OptsRegisterMigrations
+    | CmdUnregisterMigrations OptsUnregisterMigrations
     | CmdVersion OptsVersion
     deriving (Show)
 
@@ -140,7 +172,8 @@ configParser = info (commandParser <**> helper)
 
 commandParser :: Parser Command
 commandParser = subparser
-    ( command "migrate" infoMigrateParser
+    (  command "migrate" infoMigrateParser
+    <> command "drop" infoDropSchemaParser
     <> command "confirm-checksums" infoConfirmChecksumsParser
     <> command "hack" infoHackParser
     <> command "version" infoVersionParser
@@ -157,8 +190,18 @@ cmdMigrateParser = CmdMigrate <$> (OptsMigrate
     <$> schemaArgument
     <*> rootArgument
     <*> flag False True (long "apply" <> help "Apply all pending migrations.")
-    <*> flag False True (long "create-schema" <> help "Create SCHEMA if it does not exist.")
     <*> flag False True (long "test" <> short 't' <> help "Run tests after migration.")
+    <*> connectionSettings id)
+
+--
+
+infoDropSchemaParser :: ParserInfo Command
+infoDropSchemaParser = info (cmdDropSchemaParser <**> helper)
+    (progDesc "Drop schema.")
+
+cmdDropSchemaParser :: Parser Command
+cmdDropSchemaParser = CmdDropSchema <$> (OptsDropSchema
+    <$> schemaArgument
     <*> connectionSettings id)
 
 --
@@ -183,6 +226,7 @@ cmdHackParser :: Parser Command
 cmdHackParser = subparser
     (  command "repair-checksum" infoRepairChecksumParser
     <> command "register-migrations" infoRegisterMigrationsParser
+    <> command "unregister-migrations" infoUnregisterMigrationsParser
     )
 --
 
@@ -204,11 +248,46 @@ infoRegisterMigrationsParser = info (cmdRegisterMigrationsParser <**> helper)
 
 cmdRegisterMigrationsParser :: Parser Command
 cmdRegisterMigrationsParser = CmdRegisterMigrations <$> (OptsRegisterMigrations
-    <$> strOption ( short 'f' <> metavar "FILE" <>
-                    help "File name (or '-' for standard input) with a (sub)list of pending migrations to be registered." )
-    <*> schemaArgument
+    <$> schemaArgument
     <*> rootArgument
-    <*> connectionSettings id)
+    <*> connectionSettings id
+    <*> (stdInput <|> fileInput <|> argsInput))
+  where
+    stdInput =
+      flag' (Left "-") (long "from-stdin" <>
+                        help "Read (sub)list of migrations from standard input")
+    fileInput =
+      Left <$>
+      strOption ( long "from-file" <> short 'f' <> metavar "FILE" <>
+                  help "Read (sub)list of migrations from file." )
+    argsInput =
+      Right <$>
+      some (strArgument (metavar "MIGRATION_NAME..." <>
+                         help "List of migrations"))
+
+--
+
+infoUnregisterMigrationsParser :: ParserInfo Command
+infoUnregisterMigrationsParser = info (cmdUnregisterMigrationsParser <**> helper)
+    (progDesc "Unregister migrations supplied by scripts.")
+
+cmdUnregisterMigrationsParser :: Parser Command
+cmdUnregisterMigrationsParser = CmdUnregisterMigrations <$> (OptsUnregisterMigrations
+    <$> schemaArgument
+    <*> connectionSettings id
+    <*> (stdInput <|> fileInput <|> argsInput))
+  where
+    stdInput =
+      flag' (Left "-") (long "from-stdin" <>
+                        help "Read (sub)list of migrations from standard input")
+    fileInput =
+      Left <$>
+      strOption ( long "from-file" <> short 'f' <> metavar "FILE" <>
+                  help "Read (sub)list of migrations from file." )
+    argsInput =
+      Right <$>
+      some (strArgument (metavar "MIGRATION_NAME..." <>
+                         help "List of migrations"))
 
 --
 

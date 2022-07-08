@@ -2,11 +2,11 @@
 module: Common
 
 ConnectionType:
-  - PostgreSQL
-  - MySQL
-  - MariaDB
-  - SqlServer
-  - OracleDB
+  - PostgreSQL <*> PostgreSQL Database
+  - MySQL      <*> MySQL Database
+  - MariaDB    <*> MariaDB Database
+  - SqlServer  <*> Microsoft SQL Server
+  - OracleDB   <*> Oracle Database
 
 DataSemantics:
   - FamilyName
