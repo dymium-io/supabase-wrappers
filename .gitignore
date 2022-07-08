@@ -32,3 +32,5 @@ setup/adventureworks.sql
 setup/northwind.sql
 setup/adventureworks.sql~
 setup/northwind.sql~
+web/js/.yarnclean
+web/js/packages/portal/.yarnclean

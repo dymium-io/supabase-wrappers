@@ -25,6 +25,12 @@
     "sass": "^1.52.2",
     "web-vitals": "^2.1.0"
   },
+  "resolutions": {
+    "autoprefixer": "10.4.5"
+  },
+  "overrides": {
+    "autoprefixer": "10.4.5"
+  },
   "scripts": {
     "start": "HTTPS=true DANGEROUSLY_DISABLE_HOST_CHECK=true SSL_CRT_FILE=../devcerts/dymium.crt SSL_KEY_FILE=../devcerts/dymium.key HOST=admin.dymium.local react-scripts start",
     "build": "react-scripts build && cp -r build/* ../../../go/assets/admin",

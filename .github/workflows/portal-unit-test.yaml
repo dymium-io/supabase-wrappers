@@ -17,6 +17,9 @@ jobs:
           node-version: 16.15.0
       - name: Install
         working-directory: ./web/js/packages/portal
+        # can't overcome a warning from bootstrap
+        env: 
+          CI: false
         run: yarn install
       - name: Run tests
         working-directory: ./web/js/packages/portal
