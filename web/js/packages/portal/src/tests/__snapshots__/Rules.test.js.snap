@@ -18,22 +18,7 @@ Array [
     >
       Build Rules
     </a>
-  </nav>
-------------HTML PREVIEW---------------
-<nav
-    class="mb-3 text-left nav nav-tabs"
-    role="tablist"
->
-    <a
-        aria-selected
-        class="nav-item nav-link active"
-        data-rb-event-key="build"
-        href="#"
-        role="tab"
-    >
-        Build Rules
-    </a>
-</nav>,
+  </nav>,
   <div
     className="tab-content"
   >
@@ -44,14 +29,6 @@ Array [
       id={null}
       role="tabpanel"
     />
-  </div>
-------------HTML PREVIEW---------------
-<div class="tab-content">
-    <div
-        class="fade mx-4 tab-pane active show"
-        role="tabpanel"
-    >
-    </div>
-</div>,
+  </div>,
 ]
 `;
