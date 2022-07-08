@@ -23,6 +23,9 @@ jobs:
         run: yarn install
       - name: Run tests
         working-directory: ./web/js/packages/portal
+        # can't overcome a warning from Typeahead
+        env: 
+          CI: false        
         run: |
           yarn build
           yarn test
