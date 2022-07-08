@@ -6,8 +6,8 @@
 {-# LANGUAGE TemplateHaskell       #-}
 
 
-module Database.Mallard.Commands.RegisterMigrations
-    ( registerMigrations
+module Database.Mallard.Commands.UnregisterMigrations
+    ( unregisterMigrations
     ) where
 
 import           Control.Exception
@@ -22,8 +22,6 @@ import           Data.Text                  (Text)
 import qualified Data.Text                  as T
 import           Database.Mallard
 import qualified Hasql.Pool                 as H
-import           Path
-import           Path.IO
 
 data AppState
     = AppState
@@ -37,40 +35,39 @@ instance HasPostgreConnection AppState where postgreConnection = statePool
 instance HasPostgreSchema AppState where postgreSchema = stateSchema
 
 
-data DependentMigrationMissingException
-  = DependentMigrationMissingException
-      { _dmmeMigrationName :: MigrationId
-      , _dmmeDependsOn     :: MigrationId
+data DependentMigrationException
+  = DependentMigrationException
+      { _dmeMigrationName :: MigrationId
+      , _dmeDependsOn     :: MigrationId
       }
       deriving (Show)
 
-instance Exception DependentMigrationMissingException where
+instance Exception DependentMigrationException where
     displayException e = [str|
-        $tab$Migration: $: _dmmeMigrationName e$ depends on $: _dmmeDependsOn e$, which is missing
+        $tab$Migration: $: _dmeMigrationName e$ depends on $: _dmeDependsOn e$, which is missing
     |]
 
-newtype DuplicateMigrationException
-  = DuplicateMigrationException
-      { _dmeMigrationName :: MigrationId
+newtype MissingMigrationException
+  = MissingMigrationException
+      { _mmeMigrationName :: MigrationId
       }
       deriving (Show)
 
-instance Exception DuplicateMigrationException where
+instance Exception MissingMigrationException where
     displayException e = [str|
-        $tab$Migration: $:_dmeMigrationName e$ was already applied
+        $tab$Migration: $: _mmeMigrationName e$ is missing
     |]
 
 
 -- | Run all unapplied migrations in a directory.
-registerMigrations
+unregisterMigrations
     :: (MonadIO m, MonadThrow m, MonadCatch m)
     => H.Pool -- ^ Connection to the database upon which migrations will be applied.
-    -> Path b Dir -- ^ Directory which contains migration scripts.
     -> Text -- ^ Postgres Schema where migrates should be done
     -> Either Text [Text] -- ^ Standard input or File with MigrationsId
     -> m ()
-registerMigrations conn dir postgresSchema inp = do
-    absDir <- makeAbsolute dir
+unregisterMigrations conn postgresSchema inp = do
+
     toApplyIDs <- case inp of
       Left "-" -> liftIO $ getContents <&> parseToRegister
       Left fn  -> liftIO $ readFile (T.unpack fn) <&> parseToRegister
@@ -79,28 +76,21 @@ registerMigrations conn dir postgresSchema inp = do
     let initState = AppState conn postgresSchema
 
     void $ flip runStateT initState $ do
-      ensureMigratonSchema
-      (mPlanned, _) <- importDirectory absDir
-      mApplied <- getAppliedMigrations
 
-      validateAppliedMigrations mPlanned mApplied
+      mApplied <- getAppliedMigrations
 
       forM_ toApplyIDs $ \mid ->
         case mid `Map.lookup` mApplied of
-          Nothing -> return ()
-          Just _  -> liftIO $ throw $ DuplicateMigrationException mid
+          Nothing -> liftIO $ throw $ MissingMigrationException mid
+          Just _  -> return ()
 
-      let knownIDs = toApplyIDs <> Map.keys mApplied
+      forM_ mApplied $ \m ->
+        unless (m ^. migrationName `elem` toApplyIDs) $ do
+          forM_ (m ^. migrationRequires) $ \mid -> do
+            when (mid `elem` toApplyIDs) $
+              liftIO $ throw $ DependentMigrationException (m ^. migrationName) mid
 
-      toApply <- inflateMigrationIds mPlanned toApplyIDs
-
-      forM_ toApply $ \m ->
-        forM_ (m ^. migrationRequires) $ \mid -> do
-          if mid `elem` knownIDs
-          then return ()
-          else liftIO $ throw $ DependentMigrationMissingException (m ^. migrationName) mid
-
-      applyMigrations False toApply
+      pUnregisterMigrations toApplyIDs
 
     where
       parseToRegister contents = go (lines contents)

@@ -21,10 +21,10 @@ printf 'tzdata tzdata/Areas select US\ntzdata tzdata/Zones/US select LosAngeles\
 rm /etc/timezone
 rm /etc/localtime
 dpkg-reconfigure -f noninteractive tzdata
-apt install -y upx postgresql-all
+apt install -y upx libpq-dev
 cd /z
 stack build --copy-bins --local-bin-path .
-upx --best mallard
+upx --best --color mallard
 EOF
 	retval=$?
 	[ $retval -eq 0 ] || {
