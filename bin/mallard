@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+
+d=$(dirname $0)
+
+if [ "${OSTYPE:0:6}" = "darwin" ]
+then
+    binary="${d}/darwin/mallard"
+else
+    binary="${d}/linux/mallard"
+fi
+
+${binary} "$@"
