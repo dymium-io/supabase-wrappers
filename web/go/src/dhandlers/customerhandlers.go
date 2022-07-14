@@ -217,6 +217,8 @@ func GetDatascopeDetails(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 func UpdateConnection(w http.ResponseWriter, r *http.Request) {
+	var status types.OperationStatus
+
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 
 	body, _ := ioutil.ReadAll(r.Body)
@@ -225,8 +227,59 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 	var t types.ConnectionRecord
 	err := json.Unmarshal(body, &t)
 
+
+	if err == nil {		
+		conn, err := authentication.GetConnection(schema, *t.Id)
+
+		conn.TestOnly = true
+		conn.Typ = types.ConnectionType(t.Dbtype)
+		conn.Address = t.Address
+		conn.Port = t.Port
+		conn.Database = t.Dbname
+		conn.Tls = t.UseTLS 
+		conn.TestOnly = true
+		if(t.Username != nil && t.Password != nil) {
+			conn.User = *t.Username 
+			conn.Password = *t.Password
+		}
+		bconn, err := json.Marshal(conn)
+
+		invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
+		if err != nil {
+			log.Printf("DbAnalyzer Error: %s\n", err.Error())
+			status = types.OperationStatus{"Error", err.Error()}
+			
+		} else {
+			jsonParsed, err := gabs.ParseJSON(invokebody)
+			if(err != nil) {
+				log.Printf("DbSync Error parsing output: %s\n", err.Error())
+			}
+			value, ok := jsonParsed.Path("Errormessage").Data().(string)
+			if(ok) {
+				rr := fmt.Sprintf("Error in Invoke return: %s", value)
+				status = types.OperationStatus{"Error", rr}
+				log.Printf("%s\n", rr)
+			} else {
+				log.Printf("Invoke body: %s\n", string(invokebody))
+			}
+		}
+		if(status.Status == "Error") {
+			js, err := json.Marshal(status) //
+			if err != nil {
+				log.Printf("Error: %s\n", err.Error())
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return
+		}
+	}
+
+
 	error := authentication.UpdateConnection(schema, t)
-	var status types.OperationStatus
+
 	if(error != nil) {
 		status = types.OperationStatus{"Error", error.Error()}
 	} else {
