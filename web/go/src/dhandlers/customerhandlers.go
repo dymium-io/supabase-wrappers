@@ -422,7 +422,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	if(status.Status != "OK") {
+	if(status.Status == "Error") {
 		authentication.DeleteConnection(schema, id)
 	}
 	js, err := json.Marshal(status)

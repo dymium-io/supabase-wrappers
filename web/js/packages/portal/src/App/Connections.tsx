@@ -521,7 +521,7 @@ export function EditConnections(props) {
             Name: name,
             DbType: dbtype,            
             Address: address,
-            Port: port,
+            Port: parseInt(port),
             Dbname: dbname,
             UseTLS: useTLS,
             Description: description
