@@ -338,11 +338,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 	} else {
 		status = types.OperationStatus{"Error", error.Error()}
 	}
-	js, err := json.Marshal(status)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+
 	if(error == nil) {
 		// get the connection details
 		conn, err := authentication.GetConnection(schema, id)
@@ -354,8 +350,8 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 			invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 			if err != nil {
 				log.Printf("DbAnalyzer Error: %s\n", err.Error())
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				status = types.OperationStatus{"Error", err.Error()}
+				log.Println("return error")
 			} else {
 				jsonParsed, err := gabs.ParseJSON(invokebody)
 				if(err != nil) {
@@ -373,7 +369,14 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-
+	if(status.Status != "OK") {
+		authentication.DeleteConnection(schema, id)
+	}
+	js, err := json.Marshal(status)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Cache-Control", common.Nocache)
 	w.Header().Set("Content-Type", "text/html")
 	w.Write(js)
