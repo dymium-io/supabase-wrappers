@@ -11,7 +11,7 @@ function LandingPage() {
         width: '100%', height: '100vh'
       }}>
         <div id="loginbox">
-          <h1 style={{ fontSize: '5em', fontWeight: '300' }} className="logoheader mb-4">Dymium</h1>
+        <img style={{position: 'relative', top: '50%', marginTop: '12em'}} className="text-center mb-5 svgshadow" src="/brand.svg"></img>
           <h4 className="logoheader ">This computer system is intended only for Dymium employees</h4>
    
             <div className="mt-5">

@@ -1,5 +1,15 @@
 /* Fixed sidenav, full height */
 
+$primary-color: rgb(255, 158, 24);
+$primary-color-text: rgb(31, 31, 32);
+$primary-color-2: rgb(222, 139, 22);
+$primary-color-2-text: #eee;
+$primary-color-3: rgb(220, 158, 140); 
+$primary-color-3-text: black;
+$primary-pale: rgb(183, 114, 17);
+$primary-pale-text: #eeeeee;
+$secondary-color: rgb(6, 33, 76); 
+
 .sidenav {
     height: 100% !important;
     
@@ -8,14 +18,14 @@
     z-index: 1;
     top: 0;
     left: 0;
-    background-color: var(--primary-color);
-    color: var(--primary-color-text) !important;
+    background-color: $primary-color;
+    color: $primary-color-text ;
     overflow-x: hidden;
     padding-top: 13px;
   }
   .navselected {
-    background-color: var(--primary-color-2) !important;
-    color: var(--primary-color-2-text) !important;
+    background-color: $primary-color-2 !important;
+    color: $primary-color-2-text !important;
   }
   .sidesection {
     padding: 4px 4px 14px 30px;
@@ -28,7 +38,7 @@
     padding: 5px 7px 5px 8px;
     text-decoration: none;
     font-size: 17px;
-    color: rgba(255,255,255,1);
+  
     display: block;
     border: none;
     background: none;
@@ -36,8 +46,8 @@
     text-align: left;
     cursor: pointer;
     outline: none;
-    border-bottom: 0.5px solid var(--primary-color-3);
-    color: var(--primary-color-text) !important;
+    border-bottom: 0.5px solid $primary-color-3;
+   
   }
 .side-dropdown-btn {
   padding: 6px 2px 6px 8px
@@ -64,8 +74,8 @@
 
 /* On mouse-over */
 .sidenav  a:hover, .side-dropdown-btn:hover {
-  color: var(--primary-pale-text) !important;
-  background-color: var(--primary-pale) !important;
+  color: $primary-pale-text !important;
+  background-color: $primary-pale !important;
 }
 
 
@@ -73,8 +83,8 @@
 /* Dropdown container (hidden by default). Optional: add a lighter background color and some left padding to change the design of the dropdown content */
 .dropdown-container, .side-dropdown-btn:focus {
   display: none;
-  background-color: var(--primary-color-2);
-  color: var(--primary-color-2-text) !important;
+  background-color: $primary-color-2;
+  color: $primary-color-2-text !important;
   outline: none;    
   border: none;    
 }
@@ -85,7 +95,7 @@
 
 }
 .selectsign {
-  background-color: var(--primary-pale) !important;
+  background-color: $primary-pale !important;
   
   padding-left: 0px !important;  
   padding-right: 8px !important;  
@@ -113,7 +123,5 @@ margin-bottom: 0px !important;
 .sidebartext {
   font-size: 13px !important;
   margin-left: 0.3em;
-}
-.foo {
-  color: rgb(222, 139, 22);
+  color: rgb(243, 227, 205);
 }

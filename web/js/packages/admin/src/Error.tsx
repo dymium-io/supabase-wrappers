@@ -3,7 +3,7 @@ import Card from 'react-bootstrap/Card'
 import Button from 'react-bootstrap/Button'
 import {useLocation} from "react-router-dom";
 import Backdrop from "./Backdrop"
-import './App.css';
+import '@dymium/common/App.scss';
 
 function useQuery() {
     const { search } = useLocation();
@@ -21,7 +21,7 @@ export default function Error() {
         position: 'absolute', top: '0px', left: '0px',
         width: '100%', height: '100vh'
       }}>
-        <div id="loginbox" className="d-flex" style={{align: 'right', position: 'relative', 
+        <div id="loginbox" className="d-flex" style={{textAlign: 'right', position: 'relative', 
         marginLeft: 'auto', marginRight: 'auto', 
         alignItems: 'center',
         justifyContent: 'center'}}>
