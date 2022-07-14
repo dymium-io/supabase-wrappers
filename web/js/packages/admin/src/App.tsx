@@ -22,13 +22,13 @@ function App() {
       <BrowserRouter>
         <Routes>
 
-          <Route exact path="/" element={<LandingPage />} />
+          <Route  path="/" element={<LandingPage />} />
 
           <Route path="/app/" element={<AuthenticatedApp />} >
             <Route path="/app/dashboard" element={<Dashboard />} />
             <Route path="/app/customers" element={<Customers />} />
           </Route>
-          <Route exact path="/app/logout" element={<Logout/>} />
+          <Route  path="/app/logout" element={<Logout/>} />
           <Route path="/app/error" element={<Error />} />
           {/*
           <Route path="/login" element={<Invitation />} />

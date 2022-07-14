@@ -1,6 +1,28 @@
 import React, { useEffect } from 'react';
 import { TweenLite, Circ } from "gsap";
 
+class Circle {
+  pos: {}
+  radius:number
+  color: string
+  ctx: any
+  active: boolean
+  constructor(ctx:any, pos:{}, rad:number, color:string) {
+    this.pos=pos; 
+    this.radius=rad;
+    this.color=color
+    this.ctx = ctx
+    this.active=false
+  }
+  draw () {
+    if (!this.active) return;
+    this.ctx.beginPath();
+    this.ctx.arc(this.pos["x"], this.pos["y"], this.radius, 0, 2 * Math.PI, false);
+    this.ctx.fillStyle = 'rgba(156,217,249,' + this.active + ')';
+    this.ctx.fill();
+  };
+}  
+
 function Backdrop() {
     let width, height, canvas, ctx, points, target, animateHeader = true;
     // Similar to componentDidMount and componentDidUpdate:
@@ -36,7 +58,7 @@ function Backdrop() {
   
       // for each point find the 5 closest points
       for (let i = 0; i < points.length; i++) {
-        let closest = [];
+        let closest:any = [];
         let p1 = points[i];
         for (let j = 0; j < points.length; j++) {
           let p2 = points[j]
@@ -66,7 +88,7 @@ function Backdrop() {
   
       // assign a circle to each point
       for (let i in points) {
-        let c = new Circle(points[i], 4 + Math.random() * 4, 'rgba(255,255,255,0.3)');
+        let c = new Circle(ctx, points[i], 4 + Math.random() * 4, 'rgba(255,255,255,0.3)');
         points[i].circle = c;
       }
     }
@@ -153,24 +175,6 @@ function Backdrop() {
       }
     }
   
-    function Circle(pos, rad, color) {
-      let _this = this;
-  
-      // constructor
-      (function () {
-        _this.pos = pos || null;
-        _this.radius = rad || null;
-        _this.color = color || null;
-      })();
-  
-      this.draw = function () {
-        if (!_this.active) return;
-        ctx.beginPath();
-        ctx.arc(_this.pos.x, _this.pos.y, _this.radius, 0, 2 * Math.PI, false);
-        ctx.fillStyle = 'rgba(156,217,249,' + _this.active + ')';
-        ctx.fill();
-      };
-    }
   
     // Util
     function getDistance(p1, p2) {

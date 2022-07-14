@@ -12,17 +12,21 @@
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
-    "bootstrap": "^5.1.3",
-    "bootstrap-react": "^0.5.0-alpha.14",
+    "bootstrap": "4.6.1",
     "gsap": "^3.10.4",
     "http-proxy-middleware": "^2.0.6",
     "react": "^18.1.0",
-    "react-bootstrap": "^2.3.1",
+    "react-bootstrap": "^1.6.1",
+    "react-bootstrap-table-next": "^4.0.3",
+    "react-bootstrap-table2-paginator": "^2.1.2",
+    "react-bootstrap-table2-toolkit": "^2.1.3",
+    "react-bootstrap-typeahead": "^6.0.0-rc.1",
     "react-dom": "^18.1.0",
     "react-router-bootstrap": "^0.26.1",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
     "sass": "^1.52.2",
+    "typescript": "^4.7.4",
     "web-vitals": "^2.1.0"
   },
   "resolutions": {
@@ -32,7 +36,7 @@
     "autoprefixer": "10.4.5"
   },
   "scripts": {
-    "start": "HTTPS=true DANGEROUSLY_DISABLE_HOST_CHECK=true SSL_CRT_FILE=../devcerts/dymium.crt SSL_KEY_FILE=../devcerts/dymium.key HOST=admin.dymium.local react-scripts start",
+    "start": "HTTPS=true DANGEROUSLY_DISABLE_HOST_CHECK=true SSL_CRT_FILE=../../../devcerts/dymium.crt SSL_KEY_FILE=../../../devcerts/dymium.key HOST=portal.dymium.local PORT=3000 react-app-rewired  start",
     "build": "react-scripts build && cp -r build/* ../../../go/assets/admin",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -55,5 +59,8 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://admin.dymium.local"
+  "proxy": "http://admin.dymium.local",
+  "devDependencies": {
+    "@types/bootstrap": "^5.1.12"
+  }
 }
