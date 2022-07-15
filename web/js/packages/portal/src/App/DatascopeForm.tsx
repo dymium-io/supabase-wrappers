@@ -290,7 +290,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                             props.AddNewTable(db.id, schema, table)
                     }
 
-                } size="sm" style={{ marginTop: "-2px" }} variant="dymium">Click to add {schema}.{table}</Button></div>
+                } size="sm" style={{ marginTop: "-2px" }} variant="dymium">Click to link {schema}.{table}</Button></div>
                 lines.push(r)
             })
             return lines
@@ -307,7 +307,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                         if (db.id !== null)
                             props.AddNewTable(db.id)
 
-                    }} size="sm" variant="dymium"><i className="fa fa-table mr-1" aria-hidden="true"></i>Add Table</Button></Col>
+                    }} size="sm" variant="dymium"><i className="fa fa-table mr-1" aria-hidden="true"></i>Link Table</Button></Col>
                     <Col xs="auto" className="text-right"><i onClick={deleteConnection} className="fa fa-trash blue trash" aria-hidden="true"></i></Col>
                 </Row>
             </Card.Header>
@@ -381,7 +381,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                     </Form.Group>
                     <Form.Group>
                         <Form.Label ></Form.Label>
-                        <Button onClick={onAddConnection} variant="dymium" style={{ marginTop: '1.9em' }} size="sm"><i className="fa-solid fa-database mr-2"></i>Add Connection</Button>
+                        <Button onClick={onAddConnection} variant="dymium" style={{ marginTop: '1.9em' }} size="sm"><i className="fa-solid fa-database mr-2"></i>Link Connection</Button>
                     </Form.Group>
                 </Col>
                 <Col className="text-left">

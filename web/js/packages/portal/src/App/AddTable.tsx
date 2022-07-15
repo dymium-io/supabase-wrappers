@@ -1089,7 +1089,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 let pattern = "^(" + PIIs.join("|") + ")$"
                 return <Typeahead
                     id={"semantics" + rowIndex}
-                    inputProps={{ required: true, pattern }}
+                    inputProps={{ required: true, pattern, id:"semantics" + rowIndex }}
                     key={"semantics" + rowIndex + validated}
                     onChange={selectPII(rowIndex)} size="sm"
                     options={PIIs}
@@ -1108,7 +1108,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     id={"action" + rowIndex}
                     inputProps={{
                         required: true,
-                        pattern
+                        pattern, id: "action" + rowIndex
                     }}
                     key={"action" + rowIndex + validated}
                     onChange={selectAction(rowIndex)} size="sm"
@@ -1193,6 +1193,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
 
         setTableStructure(newtablestructure)
     }
+    
     return <div>
 
         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
@@ -1201,9 +1202,9 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 <Col xs="auto">
                     <Form.Group className="mb-3" controlId="schemaname">
                         <Form.Label>Schema Name:</Form.Label>
-                        <Typeahead inputProps={{id: "schemaname"}}
+                        <Typeahead id="schemaname" inputProps={{id: "schemaname"}}
                             onChange={selectSchema} size="sm"
-                            defaultSelected={schema != undefined ? [schema] : []}
+                            defaultSelected={props.table.schema != undefined ? [props.table.schema] : []}
                             options={getOptions()}
                             clearButton
                             placeholder="Choose schema..."
@@ -1239,7 +1240,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="dbname">
                             <Form.Label>Table Name:</Form.Label>
-                            <Typeahead id="tables" onChange={selectTable} size="sm"
+                            <Typeahead id="tables" inputProps={{id: "tables"}} onChange={selectTable} size="sm"
                                 clearButton
                                 options={getTables()}
                                 defaultOpen={false}

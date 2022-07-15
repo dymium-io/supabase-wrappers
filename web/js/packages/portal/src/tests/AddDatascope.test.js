@@ -55,7 +55,7 @@ test('add-datascope', async () => {
     // click on add connection button
     let addconnection =  
     await act( async () => 
-        component.findByText("Add Connection" )
+        component.findByText("Link Connection" )
     )
     await act(async () => {    
         fireEvent.click(addconnection)
@@ -66,7 +66,7 @@ test('add-datascope', async () => {
     // find add table button
     let addtable =  
     await act( async () => 
-        component.findByText("Add Table" )
+        component.findByText("Link Table" )
     )    
     // click on add table
     await act(async () => {    

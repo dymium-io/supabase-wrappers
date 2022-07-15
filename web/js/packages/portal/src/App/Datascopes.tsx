@@ -132,9 +132,12 @@ export function AddDatascope(props) {
         setTable(t)
         setShowOffcanvas(true)
     }
-    let addNewTable = (id:string) => {
+    let addNewTable = (id:string, schema?:string, table?:string) => {
         setCurrentConnectionId(id)
-        setTable({schema: "", table:""})
+        if(schema === undefined || table === undefined)
+            setTable({ schema: "", table: "" })
+        else 
+            setTable({ schema, table})
         setShowOffcanvas(true)
     }
     let onDbname = (e:string) => {

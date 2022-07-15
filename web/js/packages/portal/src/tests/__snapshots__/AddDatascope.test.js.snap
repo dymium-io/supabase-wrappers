@@ -149,7 +149,7 @@ Object {
                     <i
                       class="fa-solid fa-database mr-2"
                     />
-                    Add Connection
+                    Link Connection
                   </button>
                 </div>
               </div>
@@ -188,7 +188,7 @@ Object {
                         aria-hidden="true"
                         class="fa fa-table mr-1"
                       />
-                      Add Table
+                      Link Table
                     </button>
                   </div>
                   <div
@@ -362,7 +362,7 @@ Object {
                   <i
                     class="fa-solid fa-database mr-2"
                   />
-                  Add Connection
+                  Link Connection
                 </button>
               </div>
             </div>
@@ -401,7 +401,7 @@ Object {
                       aria-hidden="true"
                       class="fa fa-table mr-1"
                     />
-                    Add Table
+                    Link Table
                   </button>
                 </div>
                 <div
@@ -722,7 +722,7 @@ Object {
                     <i
                       class="fa-solid fa-database mr-2"
                     />
-                    Add Connection
+                    Link Connection
                   </button>
                 </div>
               </div>
@@ -761,7 +761,7 @@ Object {
                         aria-hidden="true"
                         class="fa fa-table mr-1"
                       />
-                      Add Table
+                      Link Table
                     </button>
                   </div>
                   <div
@@ -1025,7 +1025,7 @@ Object {
                   <i
                     class="fa-solid fa-database mr-2"
                   />
-                  Add Connection
+                  Link Connection
                 </button>
               </div>
             </div>
@@ -1064,7 +1064,7 @@ Object {
                       aria-hidden="true"
                       class="fa fa-table mr-1"
                     />
-                    Add Table
+                    Link Table
                   </button>
                 </div>
                 <div
@@ -1372,6 +1372,7 @@ Object {
                               aria-haspopup="listbox"
                               autocomplete="off"
                               class="rbt-input-main form-control rbt-input form-control-sm"
+                              id="tables"
                               placeholder="Choose table..."
                               role="combobox"
                               type="text"
@@ -1480,6 +1481,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics0"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -1534,6 +1536,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action0"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -1598,6 +1601,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics1"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -1652,6 +1656,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action1"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -1716,6 +1721,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics2"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -1770,6 +1776,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action2"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -1834,6 +1841,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics3"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -1888,6 +1896,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action3"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -1952,6 +1961,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics4"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -2006,6 +2016,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action4"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -2070,6 +2081,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics5"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -2124,6 +2136,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action5"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -2188,6 +2201,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics6"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -2242,6 +2256,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action6"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -2306,6 +2321,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics7"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -2360,6 +2376,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action7"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -2424,6 +2441,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics8"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -2478,6 +2496,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action8"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -2542,6 +2561,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics9"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -2596,6 +2616,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action9"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -2660,6 +2681,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics10"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -2714,6 +2736,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action10"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -2778,6 +2801,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics11"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -2832,6 +2856,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action11"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -2896,6 +2921,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics12"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -2950,6 +2976,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action12"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -3014,6 +3041,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics13"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -3068,6 +3096,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action13"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -3132,6 +3161,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics14"
                                   pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                   placeholder="Data type..."
                                   required=""
@@ -3186,6 +3216,7 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action14"
                                   pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                   placeholder="Access..."
                                   required=""
@@ -3340,7 +3371,7 @@ Object {
                     <i
                       class="fa-solid fa-database mr-2"
                     />
-                    Add Connection
+                    Link Connection
                   </button>
                 </div>
               </div>
@@ -3379,7 +3410,7 @@ Object {
                         aria-hidden="true"
                         class="fa fa-table mr-1"
                       />
-                      Add Table
+                      Link Table
                     </button>
                   </div>
                   <div
@@ -3630,6 +3661,7 @@ Object {
                             aria-haspopup="listbox"
                             autocomplete="off"
                             class="rbt-input-main form-control rbt-input form-control-sm"
+                            id="tables"
                             placeholder="Choose table..."
                             role="combobox"
                             type="text"
@@ -3738,6 +3770,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics0"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -3792,6 +3825,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action0"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -3856,6 +3890,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics1"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -3910,6 +3945,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action1"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -3974,6 +4010,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics2"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -4028,6 +4065,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action2"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -4092,6 +4130,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics3"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -4146,6 +4185,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action3"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -4210,6 +4250,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics4"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -4264,6 +4305,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action4"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -4328,6 +4370,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics5"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -4382,6 +4425,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action5"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -4446,6 +4490,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics6"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -4500,6 +4545,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action6"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -4564,6 +4610,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics7"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -4618,6 +4665,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action7"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -4682,6 +4730,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics8"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -4736,6 +4785,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action8"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -4800,6 +4850,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics9"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -4854,6 +4905,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action9"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -4918,6 +4970,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics10"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -4972,6 +5025,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action10"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -5036,6 +5090,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics11"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -5090,6 +5145,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action11"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -5154,6 +5210,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics12"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -5208,6 +5265,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action12"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -5272,6 +5330,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics13"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -5326,6 +5385,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action13"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -5390,6 +5450,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics14"
                                 pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
                                 placeholder="Data type..."
                                 required=""
@@ -5444,6 +5505,7 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action14"
                                 pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
                                 placeholder="Access..."
                                 required=""
@@ -5598,7 +5660,7 @@ Object {
                   <i
                     class="fa-solid fa-database mr-2"
                   />
-                  Add Connection
+                  Link Connection
                 </button>
               </div>
             </div>
@@ -5637,7 +5699,7 @@ Object {
                       aria-hidden="true"
                       class="fa fa-table mr-1"
                     />
-                    Add Table
+                    Link Table
                   </button>
                 </div>
                 <div
@@ -5868,7 +5930,7 @@ Object {
                     <i
                       class="fa-solid fa-database mr-2"
                     />
-                    Add Connection
+                    Link Connection
                   </button>
                 </div>
               </div>
@@ -5907,7 +5969,7 @@ Object {
                         aria-hidden="true"
                         class="fa fa-table mr-1"
                       />
-                      Add Table
+                      Link Table
                     </button>
                   </div>
                   <div
@@ -6192,7 +6254,7 @@ Object {
                   <i
                     class="fa-solid fa-database mr-2"
                   />
-                  Add Connection
+                  Link Connection
                 </button>
               </div>
             </div>
@@ -6231,7 +6293,7 @@ Object {
                       aria-hidden="true"
                       class="fa fa-table mr-1"
                     />
-                    Add Table
+                    Link Table
                   </button>
                 </div>
                 <div
@@ -6596,7 +6658,7 @@ Object {
                     <i
                       class="fa-solid fa-database mr-2"
                     />
-                    Add Connection
+                    Link Connection
                   </button>
                 </div>
               </div>
@@ -6635,7 +6697,7 @@ Object {
                         aria-hidden="true"
                         class="fa fa-table mr-1"
                       />
-                      Add Table
+                      Link Table
                     </button>
                   </div>
                   <div
@@ -6943,7 +7005,7 @@ Object {
                   <i
                     class="fa-solid fa-database mr-2"
                   />
-                  Add Connection
+                  Link Connection
                 </button>
               </div>
             </div>
@@ -6982,7 +7044,7 @@ Object {
                       aria-hidden="true"
                       class="fa fa-table mr-1"
                     />
-                    Add Table
+                    Link Table
                   </button>
                 </div>
                 <div
