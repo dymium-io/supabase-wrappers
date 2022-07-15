@@ -4,9 +4,11 @@ import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Offcanvas from '@dymium/common/Components/Offcanvas'
-import Modal from 'react-bootstrap/Modal'
 import Alert from 'react-bootstrap/Alert'
 import Spinner from '@dymium/common/Components/Spinner'
+import BootstrapTable from 'react-bootstrap-table-next';
+import paginationFactory from 'react-bootstrap-table2-paginator';
+import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
 import AddTable from './AddTable'
 import { useAppDispatch, useAppSelector } from './hooks'
 import {setSelectedDatascopeDefault} from '../Slices/menuSlice'
