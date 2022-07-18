@@ -625,6 +625,51 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 	return nil
 }
 
+func DeleteDatascope(schema string, id string) error {
+	// Create a new context, and begin a transaction
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Printf("Error in DeleteDatascope: %s\n", err.Error())
+		return err
+	}
+
+	sql := "delete from "+schema+".tables where datascope_id=$1;"
+	_, err = tx.ExecContext(ctx, sql, id)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 0 in DeleteDatascope: %s\n", err.Error())
+		return err
+	}
+
+	sql = "delete from "+schema+".groupsfordatascopes where datascope_id=$1;"
+	_, err = tx.ExecContext(ctx, sql, id)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 1 in DeleteDatascope: %s\n", err.Error())
+		return err
+	}	
+	
+
+
+	sql = "delete from "+schema+".datascopes where id=$1;"
+	_, err = tx.ExecContext(ctx, sql, id)
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 2 in DeleteDatascope: %s\n", err.Error())
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Printf("Error 3 in DeleteDatascope: %s\n", err.Error())
+		return err
+	}	
+	log.Println("DeleteDatascope success!")
+	return nil
+}
+
 func GetMappings(schema string) ([]types.GroupMapping, error) {
 
 	sql := `select id, outergroup, innergroup, comment from ` + schema + `.groupmapping where exists (select schema_name from global.customers where schema_name = $1);`

@@ -448,10 +448,10 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// get the connection details
+
 	error := authentication.UpdateDatascope(schema, t)
 	if error != nil {
-		log.Printf("DbSync Invoke Error: %s\n", error.Error())
+		log.Printf("UpdateDatascope Error: %s\n", error.Error())
 		status = types.OperationStatus{"Error", error.Error()}
 		js, err := json.Marshal(status)
 		if err != nil {
@@ -515,6 +515,77 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Write(js)		
 }
+
+func DeleteDatascope(w http.ResponseWriter, r *http.Request) {
+	var status types.OperationStatus
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	t := types.DatascopeIdName{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		log.Printf("Unmarshaling error: %s\n", err.Error() )
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var rq types.Request
+	rq.Action = types.A_Delete
+
+	rq.Customer = schema
+	rq.Datascope = &t.Name
+	snc, _ := json.Marshal(rq)
+
+	invokebody, err := authentication.Invoke("DbSync", nil, snc)
+	if err != nil {
+		log.Printf("DbSync Invoke Error: %s\n", err.Error())
+		status = types.OperationStatus{"Error", err.Error()}
+
+		js, err := json.Marshal(status)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Cache-Control", common.Nocache)
+		w.Header().Set("Content-Type", "text/html")		
+		w.Write(js)		
+		return
+	} else {
+		log.Printf("DbSync success")
+	}
+
+	jsonParsed, err := gabs.ParseJSON(invokebody)
+	if(err != nil) {
+		log.Printf("DbSync Error parsing output: %s\n", err.Error())
+	}
+	value, ok := jsonParsed.Path("Errormessage").Data().(string)
+	var js []byte
+	if(ok) {
+		rr := fmt.Sprintf("Error in Invoke return: %s", value)
+		status = types.OperationStatus{"Error", rr}
+		log.Printf("%s\n", rr)
+	} else {
+		status = types.OperationStatus{"OK", ""}
+		error := authentication.DeleteDatascope(schema, t.Id)
+		if error != nil {
+			log.Printf("DeleteDatascope Error: %s\n", error.Error())
+			status = types.OperationStatus{"Error", error.Error()}
+		}
+	}
+
+
+	js, err = json.Marshal(status)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "text/html")
+	w.Write(js)		
+}
+
 func SaveGroups(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 

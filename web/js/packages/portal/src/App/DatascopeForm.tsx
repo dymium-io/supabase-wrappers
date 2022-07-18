@@ -87,6 +87,11 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
     }
     let columns = [
         {
+            dataField: 'id',
+            text: 'id:',
+            hidden: true,
+        },        
+        {
             dataField: 'connection',
             text: 'connection:',
             isDummyField: true,
@@ -243,6 +248,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
 
         Object.keys(tables[name]).forEach((x: any) => {
             tables[name][x]["connection"] = name
+            tables[name][x]["id"] = tables[name][x]["connection"] + tables[name][x]["schema"] + tables[name][x]["table"]
             ret.push(tables[name][x])
         })
         return ret
@@ -308,7 +314,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                             props.AddNewTable(db.id)
 
                     }} size="sm" variant="dymium"><i className="fa fa-table mr-1" aria-hidden="true"></i>Link Table</Button></Col>
-                    <Col xs="auto" className="text-right"><i onClick={deleteConnection} className="fa fa-trash blue trash" aria-hidden="true"></i></Col>
+                    <Col xs="auto" className="text-right"><i onClick={deleteConnection} title={"Unlink "+ db.name} className="fa fa-unlink blue trash" style={{marginRight: '18px'}} aria-hidden="true"></i></Col>
                 </Row>
             </Card.Header>
             <Card.Body className="p-0 mx-0">
@@ -317,7 +323,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                         condensed
                         striped bordered={false}
                         bootstrap4
-                        keyField='table'
+                        keyField='id'
                         data={displayTables(db.name)}
                         columns={columns}
                     />
