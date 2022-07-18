@@ -25,6 +25,7 @@ func CustomerHandlers(p *mux.Router) {
 
 	authenticated.HandleFunc("/api/savedatascope", dhandlers.SaveDatascope).Methods("POST")	
 	authenticated.HandleFunc("/api/updatedatascope", dhandlers.UpdateDatascope).Methods("POST")
+	authenticated.HandleFunc("/api/deletedatascope", dhandlers.DeleteDatascope).Methods("POST")	
 	authenticated.HandleFunc("/api/getdatascopedetails", dhandlers.GetDatascopeDetails).Methods("POST")
 	authenticated.HandleFunc("/api/getdatascopes", dhandlers.GetDatascopes).Methods("GET")
 

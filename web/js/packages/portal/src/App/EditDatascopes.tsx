@@ -6,12 +6,13 @@ import Col from 'react-bootstrap/Col'
 import Offcanvas from '@dymium/common/Components/Offcanvas'
 import Alert from 'react-bootstrap/Alert'
 import Spinner from '@dymium/common/Components/Spinner'
+import Modal from 'react-bootstrap/Modal'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
 import AddTable from './AddTable'
 import { useAppDispatch, useAppSelector } from './hooks'
-import {setSelectedDatascopeDefault} from '../Slices/menuSlice'
+import { setSelectedDatascopeDefault } from '../Slices/menuSlice'
 import * as com from '../Common'
 import DatascopeForm from './DatascopeForm'
 import * as internal from '@dymium/common/Types/Internal'
@@ -19,12 +20,16 @@ import * as types from '@dymium/common/Types/Common'
 import * as capi from '../Api/Connections'
 import * as http from '../Api/Http'
 
+const { SearchBar, ClearSearchButton } = Search;
+
 let remap = new internal.ConnectionMap();
 
 export default function EditDatascopes() {
     const [spinner, setSpinner] = useState(false)
     let [conns, setConns] = useState<internal.Connection[]>([])
     const [alert, setAlert] = useState<JSX.Element>(<></>)
+    const [showdelete, setShowdelete] = useState(false)
+    const [slatedToDelete, setSlatedToDelete] = useState("")
     const [datascopes, setDatascopes] = useState<types.DatascopeIdName[]>([])
     const [selectedDatascope, setSelectedDatascope] = useState("")
     const [selectedDatascopeDetails, setSelectedDatascopeDetails] = useState<types.Datascope | null>(null)
@@ -40,24 +45,98 @@ export default function EditDatascopes() {
     const [dbname, setDbname] = useState("")
     const [datascope, setDatascope] = useState({})
     const [currentConnectionId, setCurrentConnectionId] = useState("")
-    const t = useAppSelector((state) => {
-        
+    let t = useAppSelector((state) => {
+
         return state.reducer.selectedDatascope
     }
     )
     const appDispatch = useAppDispatch()
+    let nameById = id => {
+        for(let i = 0; i < datascopes.length; i++) {
+            if(id === datascopes[i].id)
+                return datascopes[i].name
+        }
+        return ""
+    }
+    let onEdit = (id) => {
+        return e => {
+            console.log(id)
+            setSDRef.current(id)
+      
+            appDispatch(setSelectedDatascopeDefault(id))
+        }
+    }
+    let onDelete = (id) => {
+        return e => {
+            setSlatedToDelete(id)
+            setShowdelete(true)
+        }
+    }
+    let columns = [
+        {
+            dataField: 'id',
+            text: 'id',
+            hidden: true,
+        },
 
+        {
+            dataField: 'name',
+            text: 'Name:',
+            sort: true,
+        },
+        {
+            text: 'Edit',
+            dataField: 'edit',
+            isDummyField: false,
+            formatter: (cell, row, rowIndex, formatExtraData) => {
+
+
+                return <i className="fas fa-edit ablue" onClick={onEdit(row["id"])} role="button"></i>
+            },
+            //formatExtraData: { hoverIdx: this.state.hoverIdx },
+            headerStyle: { width: '50px' },
+            style: { height: '30px' },
+            align: 'center'
+        },
+        {
+            text: 'Delete',
+            dataField: 'delete',
+            isDummyField: true,
+            formatter: (cell, row, rowIndex, formatExtraData) => {
+                return <i className="fas fa-trash ablue" onClick={onDelete(row["id"])} role="button"></i>
+            },
+            //formatExtraData: { hoverIdx: this.state.hoverIdx },
+            headerStyle: { width: '90px' },
+            style: { height: '30px' },
+            align: 'center'
+        }
+
+    ]
+
+
+    let selectRow = {
+        mode: 'radio',
+        //clickToSelect: true,
+        style: { backgroundColor: 'rgba(0, 151, 206, 0.3)' },
+        selected: [t],
+        onSelect: (row, isSelect, rowIndex, e) => {
+            console.log("in onselect", row["id"])
+            setSDRef.current(row["id"])
+            appDispatch(setSelectedDatascopeDefault(row["id"]))
+        },
+    };
     useEffect(() => {
-        capi.getConnections(setSpinner, setConns, setAlert, remap, ()=>{
-          
-            com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{
+        capi.getConnections(setSpinner, setConns, setAlert, remap, () => {
+
+            com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
                 setSelectedDatascope(t)
-            }) 
+            })
         })
 
     }, [])
     useEffect(() => {
-        if (selectedDatascope === "")
+        debugger
+        if (selectedDatascope === "" )
             return
         let body = types.DatascopeId.fromJson({ id: selectedDatascope }).toJson()
         setSpinner(true)
@@ -66,27 +145,30 @@ export default function EditDatascopes() {
             resp => {
                 resp.json().then(fjs => {
                     let ojs = types.DatascopeInfoStatus.fromJson(fjs)
-                    if(ojs.status !== "OK") {
+                    if (ojs.status !== "OK") {
                         setSpinner(false)
-                        setAlert(
-                            <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
-                                {ojs.errormessage}                                
-                            </Alert>
-                        )                        
+                        if(ojs.status !== "sql: no rows in result set")
+                            setAlert(
+                                <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                                    {ojs.errormessage}
+                                </Alert>
+                            )
+                        setSelectedDatascope("")
+                        appDispatch(setSelectedDatascopeDefault(""))
                         return
                     }
-                    let js = ojs.record                    
-                    if(js == null) { 
+                    let js = ojs.record
+                    if (js == null) {
                         setSpinner(false)
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
-                                No record returned                               
+                                No record returned
                             </Alert>
-                        )                               
+                        )
                     }
-     
+
                     setSelectedDatascopeDetails(js)
-                    if(js != null)
+                    if (js != null)
                         setDbname(js.name)
                     let ob = {}
                     if (js != null && js.records != null) {
@@ -121,10 +203,10 @@ export default function EditDatascopes() {
 
                 })
                 setSpinner(false)
-                capi.getConnections(setSpinner, setConns, setAlert, remap, ()=>{
-                    com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{
+                capi.getConnections(setSpinner, setConns, setAlert, remap, () => {
+                    com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
                         setSelectedDatascope(t)
-                    }) 
+                    })
                 })
             },
             resp => {
@@ -140,7 +222,7 @@ export default function EditDatascopes() {
     )
 
     let updateConnection = () => {
-        let retarray: internal.DatascopeRecord[] = []        
+        let retarray: internal.DatascopeRecord[] = []
         Object.keys(datascope).forEach(connection => {
             let conn = datascope[connection]
             Object.keys(conn).forEach(schematable => {
@@ -173,11 +255,11 @@ export default function EditDatascopes() {
                                 Data scope {dbname} updated successfully!
                             </Alert>
                         )
-                        capi.getConnections(setSpinner, setConns, setAlert, remap, ()=>{
-                   
-                            com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{
+                        capi.getConnections(setSpinner, setConns, setAlert, remap, () => {
+
+                            com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
                                 setSelectedDatascope(t)
-                            }) 
+                            })
                         })
                     } else {
                         setAlert(
@@ -237,27 +319,86 @@ export default function EditDatascopes() {
         setShowOffcanvas(true)
     }
 
-    let addNewTable = (id: string, schema?:string, table?:string) => {
+    let addNewTable = (id: string, schema?: string, table?: string) => {
         setCurrentConnectionId(id)
-        if(schema === undefined || table === undefined)
+        if (schema === undefined || table === undefined)
             setTable({ schema: "", table: "" })
-        else 
-            setTable({ schema, table})
+        else
+            setTable({ schema, table })
         setShowOffcanvas(true)
     }
-    
+    let deleteDatascope = () => {
+        setShowdelete(false)
+        setSpinner(true)
+        let retob: types.DatascopeIdName = new types.DatascopeIdName()
+        retob.id = slatedToDelete
+        retob.name = nameById(slatedToDelete)
+        let body = retob.toJson()
+
+        http.sendToServer("POST", "/api/deletedatascope",
+            null, body,
+            resp => {
+
+                resp.json().then(js => {
+                    if (js.status === "OK") {
+                        setAlert(
+                            <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                                Data scope {dbname} updated successfully!
+                            </Alert>
+                        )
+                        capi.getConnections(setSpinner, setConns, setAlert, remap, () => {
+
+                            com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
+                                setSelectedDatascope(t)
+                            })
+                        })
+                    } else {
+                        setAlert(
+                            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                                Error updating {dbname}:  {js.errormessage}!
+                            </Alert>
+                        )
+                    }
+                })
+                setSpinner(false)
+            },
+            resp => {
+                console.log("on error")
+                setSpinner(false)
+            },
+            error => {
+                console.log("on exception: " + error)
+                setSpinner(false)
+            })
+
+    }
     return (
         <div className=" text-left">
             {alert}
             <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
                 title={table["connection"] === undefined ? "Register table" : "Edit table"}>
                 {showOffcanvas &&
-                    <AddTable onHide={() => {setShowOffcanvas(false)}} onAlert={setAlert} onAddTable={onAddTable} table={table} connectionId={currentConnectionId} />
+                    <AddTable onHide={() => { setShowOffcanvas(false) }} onAlert={setAlert} onAddTable={onAddTable} table={table} connectionId={currentConnectionId} />
                 }
             </Offcanvas>
-            <h5 > Edit Data Scopes <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+            <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
+                <Modal.Header closeButton>
+                    <Modal.Title>Delete Datascope {nameById(slatedToDelete)}?</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>Are you sure you want to remove the Datascope? This operation is irreversible.</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="danger"  role="button" id="Delete" data-testid="Delete"
+                         aria-label={"Delete"}
+                        onClick={() => {
+                            deleteDatascope()
+                    }
+                    }>Delete</Button> <Button variant="dymium" onClick={() => {
+                        setShowdelete(false)
+                    }}>Cancel</Button>
+                </Modal.Footer>
+            </Modal>
             <div className=" text-left">
-
+                {/*
                 <Row> <Col xs="auto">
                     <Form.Group className="mb-3" controlId="connection" >
                         <Form.Label >Available Data Scopes</Form.Label>
@@ -281,9 +422,51 @@ export default function EditDatascopes() {
                     </Form.Group>
                 </Col>
                 </Row>
+                */}
+                <Row>
+                    <Col>
+                        <ToolkitProvider
+                            bootstrap4
+                       
+                            keyField='id'
+                            data={datascopes}
+                            columns={columns}
+                            search >
+                            {
+                                props => (
+                                    <div className="text-left">
+                                   
+                                        <div className="d-flex">
+                                            <h5 >Edit Datascopes  <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
 
-                {selectedDatascope !== "" &&
-                    <div className=" text-left">
+
+                                            <div style={{ marginLeft: "auto" }}>
+                                                <SearchBar size="sm" {...props.searchProps} />
+                                                <ClearSearchButton {...props.searchProps} />
+                                            </div>
+                                        </div>
+                                        <div className="d-block">
+                                            <BootstrapTable id="datascopetable"
+                                                condensed
+                                                keyField='id'
+                                                selectRow={selectRow}
+                                                striped bootstrap4 bordered={false}
+                                                pagination={paginationFactory({
+                                                    sizePerPage: 4,
+                                                    sizePerPageList: [4, 8, 12, 16]
+                                                })}
+                                                {...props.baseProps}
+                                            />
+                                        </div>
+                                    </div>
+                                )
+                            }
+                        </ToolkitProvider>
+                    </Col>
+                </Row>
+                {(selectedDatascope !== "" && selectedDatascope !== "xxx") &&
+                    <div className=" text-left p-4 mt-4" style={{ backgroundColor: "rgba(255, 255, 255, 0.7)" }}>
+                        <h5>{selectedDatascopeDetails?.name}</h5>
                         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                             <DatascopeForm edit={true} dbname={dbname} onDbname={setDbname}
                                 onTablesMapUpdate={onTablesMapUpdate} onEditTable={onEditTable}

@@ -196,7 +196,9 @@ Object {
                   >
                     <i
                       aria-hidden="true"
-                      class="fa fa-trash blue trash"
+                      class="fa fa-unlink blue trash"
+                      style="margin-right: 18px;"
+                      title="Unlink adventureworks"
                     />
                   </div>
                 </div>
@@ -409,7 +411,9 @@ Object {
                 >
                   <i
                     aria-hidden="true"
-                    class="fa fa-trash blue trash"
+                    class="fa fa-unlink blue trash"
+                    style="margin-right: 18px;"
+                    title="Unlink adventureworks"
                   />
                 </div>
               </div>
@@ -769,7 +773,9 @@ Object {
                   >
                     <i
                       aria-hidden="true"
-                      class="fa fa-trash blue trash"
+                      class="fa fa-unlink blue trash"
+                      style="margin-right: 18px;"
+                      title="Unlink adventureworks"
                     />
                   </div>
                 </div>
@@ -1072,7 +1078,9 @@ Object {
                 >
                   <i
                     aria-hidden="true"
-                    class="fa fa-trash blue trash"
+                    class="fa fa-unlink blue trash"
+                    style="margin-right: 18px;"
+                    title="Unlink adventureworks"
                   />
                 </div>
               </div>
@@ -3418,7 +3426,9 @@ Object {
                   >
                     <i
                       aria-hidden="true"
-                      class="fa fa-trash blue trash"
+                      class="fa fa-unlink blue trash"
+                      style="margin-right: 18px;"
+                      title="Unlink adventureworks"
                     />
                   </div>
                 </div>
@@ -5707,7 +5717,9 @@ Object {
                 >
                   <i
                     aria-hidden="true"
-                    class="fa fa-trash blue trash"
+                    class="fa fa-unlink blue trash"
+                    style="margin-right: 18px;"
+                    title="Unlink adventureworks"
                   />
                 </div>
               </div>
@@ -5977,7 +5989,9 @@ Object {
                   >
                     <i
                       aria-hidden="true"
-                      class="fa fa-trash blue trash"
+                      class="fa fa-unlink blue trash"
+                      style="margin-right: 18px;"
+                      title="Unlink adventureworks"
                     />
                   </div>
                 </div>
@@ -6301,7 +6315,9 @@ Object {
                 >
                   <i
                     aria-hidden="true"
-                    class="fa fa-trash blue trash"
+                    class="fa fa-unlink blue trash"
+                    style="margin-right: 18px;"
+                    title="Unlink adventureworks"
                   />
                 </div>
               </div>
@@ -6705,7 +6721,9 @@ Object {
                   >
                     <i
                       aria-hidden="true"
-                      class="fa fa-trash blue trash"
+                      class="fa fa-unlink blue trash"
+                      style="margin-right: 18px;"
+                      title="Unlink adventureworks"
                     />
                   </div>
                 </div>
@@ -7052,7 +7070,9 @@ Object {
                 >
                   <i
                     aria-hidden="true"
-                    class="fa fa-trash blue trash"
+                    class="fa fa-unlink blue trash"
+                    style="margin-right: 18px;"
+                    title="Unlink adventureworks"
                   />
                 </div>
               </div>
