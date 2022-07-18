@@ -53,60 +53,314 @@ exports[`add-datascope 1`] = `
       />
     </div>
   </div>
-  <h5>
-     Edit Data Scopes 
-    <img
-      className="spinner"
-      src="/logo.png"
-      style={
-        Object {
-          "width": "28px",
-        }
-      }
-    />
-  </h5>
   <div
     className=" text-left"
   >
     <div
       className="row"
     >
-       
       <div
-        className="col-auto"
+        className="col"
       >
         <div
-          className="mb-3 form-group"
+          className="text-left"
         >
-          <label
-            className="form-label"
-            htmlFor="connection"
+          <div
+            className="d-flex"
           >
-            Available Data Scopes
-          </label>
-          <select
-            className="form-control form-control-sm"
-            id="connection"
-            onChange={[Function]}
-            value=""
+            <h5>
+              Edit Datascopes  
+              <img
+                className="spinner"
+                src="/logo.png"
+                style={
+                  Object {
+                    "width": "28px",
+                  }
+                }
+              />
+            </h5>
+            <div
+              style={
+                Object {
+                  "marginLeft": "auto",
+                }
+              }
+            >
+              <label
+                className="search-label"
+                htmlFor="search-bar-0"
+              >
+                <span
+                  className="sr-only"
+                  id="search-bar-0-label"
+                >
+                  Search this table
+                </span>
+                <input
+                  aria-labelledby="search-bar-0-label"
+                  className="form-control "
+                  id="search-bar-0"
+                  onChange={[Function]}
+                  onKeyUp={[Function]}
+                  placeholder="Search"
+                  style={Object {}}
+                  type="text"
+                  value=""
+                />
+              </label>
+              <button
+                className="btn btn-default "
+                onClick={[Function]}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+          <div
+            className="d-block"
           >
-            return 
-            <option
-              value=""
+            <div
+              className="react-bootstrap-table"
             >
-              ...
-            </option>
-            <option
-              value="50fe96d1-b1a4-48df-87bd-6aced2ab1f5a"
+              <table
+                className="table table-striped table-sm"
+                id="datascopetable"
+              >
+                <thead>
+                  <tr>
+                    <th
+                      className="selection-cell-header"
+                      data-row-selection={true}
+                    />
+                    <th
+                      aria-label="Name: sortable"
+                      className="sortable"
+                      onClick={[Function]}
+                      onKeyUp={[Function]}
+                      tabIndex={0}
+                    >
+                      Name:
+                      <span
+                        className="order-4"
+                      />
+                    </th>
+                    <th
+                      style={
+                        Object {
+                          "width": "50px",
+                        }
+                      }
+                      tabIndex={0}
+                    >
+                      Edit
+                    </th>
+                    <th
+                      style={
+                        Object {
+                          "width": "90px",
+                        }
+                      }
+                      tabIndex={0}
+                    >
+                      Delete
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    style={Object {}}
+                  >
+                    <td
+                      className="selection-cell"
+                      onClick={[Function]}
+                    >
+                      <input
+                        checked={false}
+                        className="selection-input-4"
+                        disabled={false}
+                        onChange={[Function]}
+                        type="radio"
+                      />
+                    </td>
+                    <td>
+                      test1
+                    </td>
+                    <td
+                      style={
+                        Object {
+                          "height": "30px",
+                          "textAlign": "center",
+                        }
+                      }
+                    >
+                      <i
+                        className="fas fa-edit ablue"
+                        onClick={[Function]}
+                        role="button"
+                      />
+                    </td>
+                    <td
+                      style={
+                        Object {
+                          "height": "30px",
+                          "textAlign": "center",
+                        }
+                      }
+                    >
+                      <i
+                        className="fas fa-trash ablue"
+                        onClick={[Function]}
+                        role="button"
+                      />
+                    </td>
+                  </tr>
+                  <tr
+                    style={Object {}}
+                  >
+                    <td
+                      className="selection-cell"
+                      onClick={[Function]}
+                    >
+                      <input
+                        checked={false}
+                        className="selection-input-4"
+                        disabled={false}
+                        onChange={[Function]}
+                        type="radio"
+                      />
+                    </td>
+                    <td>
+                      test2
+                    </td>
+                    <td
+                      style={
+                        Object {
+                          "height": "30px",
+                          "textAlign": "center",
+                        }
+                      }
+                    >
+                      <i
+                        className="fas fa-edit ablue"
+                        onClick={[Function]}
+                        role="button"
+                      />
+                    </td>
+                    <td
+                      style={
+                        Object {
+                          "height": "30px",
+                          "textAlign": "center",
+                        }
+                      }
+                    >
+                      <i
+                        className="fas fa-trash ablue"
+                        onClick={[Function]}
+                        role="button"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div
+              className="row react-bootstrap-table-pagination"
             >
-              test1
-            </option>
-            <option
-              value="b3fddf89-5822-4227-9948-3ecb3c8c2e33"
-            >
-              test2
-            </option>
-          </select>
+              <div
+                className="col-md-6 col-xs-6 col-sm-6 col-lg-6"
+              >
+                <span
+                  className="react-bs-table-sizePerPage-dropdown dropdown"
+                  style={
+                    Object {
+                      "visibility": "visible",
+                    }
+                  }
+                >
+                  <button
+                    aria-expanded={false}
+                    className="btn btn-default btn-secondary dropdown-toggle"
+                    data-toggle="dropdown"
+                    id="datascopetable-pageDropDown"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    type="button"
+                  >
+                    4
+                     
+                  </button>
+                  <ul
+                    aria-labelledby="datascopetable-pageDropDown"
+                    className="dropdown-menu "
+                    role="menu"
+                  >
+                    <a
+                      className="dropdown-item"
+                      data-page={4}
+                      href="#"
+                      onMouseDown={[Function]}
+                      role="menuitem"
+                      tabIndex="-1"
+                    >
+                      4
+                    </a>
+                    <a
+                      className="dropdown-item"
+                      data-page={8}
+                      href="#"
+                      onMouseDown={[Function]}
+                      role="menuitem"
+                      tabIndex="-1"
+                    >
+                      8
+                    </a>
+                    <a
+                      className="dropdown-item"
+                      data-page={12}
+                      href="#"
+                      onMouseDown={[Function]}
+                      role="menuitem"
+                      tabIndex="-1"
+                    >
+                      12
+                    </a>
+                    <a
+                      className="dropdown-item"
+                      data-page={16}
+                      href="#"
+                      onMouseDown={[Function]}
+                      role="menuitem"
+                      tabIndex="-1"
+                    >
+                      16
+                    </a>
+                  </ul>
+                </span>
+              </div>
+              <div
+                className="react-bootstrap-table-pagination-list col-md-6 col-xs-6 col-sm-6 col-lg-6"
+              >
+                <ul
+                  className="pagination react-bootstrap-table-page-btns-ul"
+                >
+                  <li
+                    className="active page-item"
+                    title="1"
+                  >
+                    <a
+                      className="page-link"
+                      href="#"
+                      onClick={[Function]}
+                    >
+                      1
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
