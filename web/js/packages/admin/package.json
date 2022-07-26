@@ -37,7 +37,7 @@
   },
   "scripts": {
     "start": "HTTPS=true DANGEROUSLY_DISABLE_HOST_CHECK=true SSL_CRT_FILE=../../../devcerts/dymium.crt SSL_KEY_FILE=../../../devcerts/dymium.key HOST=portal.dymium.local PORT=3000 react-app-rewired  start",
-    "build": "react-scripts build && cp -r build/* ../../../go/assets/admin",
+    "build": "mkdir -p ../../../go/assets/admin && react-scripts build && cp -r build/* ../../../go/assets/admin",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
