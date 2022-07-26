@@ -7,6 +7,9 @@ build_d=BLD
 }
 
 mkdir $build_d
+mkdir -p ../assets/customer
+mkdir -p ../assets/admin
+
 cd ../src
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
            go build -a -tags netgo -ldflags '-w -extldflags "-static"' -o ../scripts/$build_d/server
