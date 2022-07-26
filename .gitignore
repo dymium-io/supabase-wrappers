@@ -34,3 +34,9 @@ setup/adventureworks.sql~
 setup/northwind.sql~
 web/js/.yarnclean
 web/js/packages/portal/.yarnclean
+web/go/assets/admin/index.html
+web/go/assets/admin/asset-manifest.json
+web/go/assets/\#run.sh\#
+web/go/assets/customer/asset-manifest.json
+web/go/assets/customer/index.html
+web/go/assets/admin/logo.png
