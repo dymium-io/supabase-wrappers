@@ -1,9 +1,10 @@
 
 .DS_Store
 web/go/assets/server
-web/go/src/.vscode/temp.sql
-web/go/src/.vscode/temp.sql
-web/go/src/.vscode/temp.sql
+web/go/src/.vscode
+web/go/assets/customer
+web/go/assets/admin
+web/go/scripts/BLD
 web/go/assets/customer/logo.png
 web/go/assets/admin/index.html
 web/go/assets/admin/asset-manifest.json
@@ -40,3 +41,4 @@ web/go/assets/\#run.sh\#
 web/go/assets/customer/asset-manifest.json
 web/go/assets/customer/index.html
 web/go/assets/admin/logo.png
+web/go/assets/admin/asset-manifest.json
