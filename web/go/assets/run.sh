@@ -2,7 +2,7 @@
 
 export DATABASE_HOST=${DATABASE_HOST:-localhost}
 export DATABASE_PORT=${DATABASE_PORT:-5432}
-export DATABASE_NAME=${DATABASE_NAME:-test}
+export DATABASE_NAME=${DATABASE_NAME:-dymium}
 export DATABASE_USER=${DATABASE_USER:-dymium}
 export DATABASE_TLS=${DATABASE_TLS:-disable}
 

@@ -104,14 +104,14 @@ func Init(host string, port, user, password, dbname, tls string) error {
 func GetDB() *sql.DB {
 	return db
 }
-func generateAdminJWT(picture string) (string, error) {
+func generateAdminJWT(picture string, groups []string, org_id string) (string, error) {
 		// generate JWT right header
 		issueTime := time.Now()
 		expirationTime := issueTime.Add(timeOut * time.Minute)
 		
 		claim := &types.AdminClaims{
 			// TODO
-			Roles: []string{},
+			Groups: groups,
 			Picture: picture,
 			StandardClaims: jwt.StandardClaims{
 				// In JWT, the expiry time is expressed as unix milliseconds
@@ -138,7 +138,7 @@ func refreshAdminToken(token string) (string, error) {
 		// update token
 		expirationTime := timeNow.Add(timeOut * time.Minute)
 		newclaim := &types.Claims{
-			Roles: []string{},
+			Groups: claim.Groups,
 			Picture: claim.Picture,
 			StandardClaims: jwt.StandardClaims{
 				// In JWT, the expiry time is expressed as unix milliseconds
@@ -241,14 +241,14 @@ func GetConnections(schema string) ([]types.ConnectionRecord, error ) {
 
 	return conns, nil
 }
-func GeneratePortalJWT(picture, schema, org_id  string) (string, error) {
+func GeneratePortalJWT(picture string, schema string, groups []string, org_id  string) (string, error) {
 	// generate JWT right header
 	issueTime := time.Now()
 	expirationTime := issueTime.Add(timeOut * time.Minute)
 
 	claim := &types.Claims{
 		// TODO
-		Roles: []string{},
+		Groups: groups,
 		Picture: picture ,
 		Schema: schema,
 		Orgid: org_id,
@@ -279,7 +279,7 @@ func refreshPortalToken(token string) (string, error) {
 		// update token
 		expirationTime := timeNow.Add(timeOut * time.Minute)
 		newclaim := &types.Claims{
-			Roles: []string{},
+			Groups: claim.Groups,
 			Picture: claim.Picture,
 			Schema: claim.Schema ,
 			Orgid: claim.Orgid ,	
@@ -329,29 +329,43 @@ func generateError(w http.ResponseWriter, r *http.Request, header string, body s
 
 	return nil
 }
-func  getUserInfoFromToken(admin_domain, token string) ( []byte, error) {
+func  getUserInfoFromToken(admin_domain, token, id_token string) ( string, []string, string, error) {
 	urlStr := fmt.Sprintf("%suserinfo", admin_domain)
 	client := &http.Client{}
 
 	nr, err := http.NewRequest(http.MethodGet, urlStr, nil) // URL-encoded payload
 	if err != nil {
 		log.Printf("Error: %s\n", err.Error()) 
-		return []byte{}, err
+		return "", []string{}, "", err
 
 	}
-
 	nr.Header.Add("Authorization", "Bearer " + token)
 	
 	resp, err := client.Do(nr)
 
 	if err != nil {
 		log.Printf("Error: %s\n", err.Error()) 
-		return []byte{}, err
+		return "", []string{}, "", err
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)	
-	
-	return body, err
+
+	jsonParsed, err := gabs.ParseJSON(body)
+	org_id, _ := jsonParsed.Path("org_id").Data().(string)
+
+	picture, _ := jsonParsed.Path("picture").Data().(string)
+	var groups []string
+
+	mp, err := jsonParsed.ChildrenMap()
+
+	dymium, _ := mp["https://dymium/"]
+
+	gr, err := dymium.Path("groups").Children()
+	for _, child := range  gr {
+		groups = append(groups, child.Data().(string))
+	}
+
+	return picture, groups, org_id, err
 }
 func getTokenFromCode(code, domain, client_id, client_secret, redirect string) ( []byte, error) {
 	// get the token
@@ -934,7 +948,7 @@ func GetFakeAuthentication () []byte{
 
 
 	token, err :=  GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s", 
-	"spoofcorp", "org_nsEsSgfq3IYXe2pu")
+	"spoofcorp", []string{}, "org_nsEsSgfq3IYXe2pu")
 	if(err != nil){
 		log.Printf("Error: %s\n", err.Error() )
 	}
@@ -1016,14 +1030,10 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 
 		}
 		access_token, ok := jsonParsed.Path("access_token").Data().(string)
+		id_token, ok := jsonParsed.Path("id_token").Data().(string)
+		picture, groups, org_id, err := getUserInfoFromToken(auth_admin_domain, access_token, id_token)
 
-		info, err := getUserInfoFromToken(auth_admin_domain, access_token)
-		log.Printf("User info: %s\n", string(info))
-
-		jsonParsed, err = gabs.ParseJSON(info)
-
-		picture, ok := jsonParsed.Path("picture").Data().(string)
-		token, err := generateAdminJWT(picture)
+		token, err := generateAdminJWT(picture, groups, org_id)
 		if(err != nil){
 			log.Printf("Error: %s\n", err.Error() )
 		}
@@ -1128,27 +1138,18 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 
 		}
 		access_token, ok := jsonParsed.Path("access_token").Data().(string)
-
-		info, err := getUserInfoFromToken(auth_portal_domain, access_token)
-		log.Printf("User info: %s\n", string(info))
-
-		jsonParsed, err = gabs.ParseJSON(info)
-
-		picture, ok := jsonParsed.Path("picture").Data().(string)
-		log.Printf("picture: %s, ok: %t\n", picture, ok)
-
-		org_id, ok := jsonParsed.Path("org_id").Data().(string)
-		log.Printf("ord id: %s, ok: %t\n", org_id, ok)
+		id_token, ok := jsonParsed.Path("id_token").Data().(string)
+		picture, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
 
 		sql := fmt.Sprintf("select schema_name from global.customers where organization=$1;")
-
+		log.Printf("sql: %s\n", sql)
 		row := db.QueryRow(sql, org_id)
 		var schema string
 		err = row.Scan(&schema)
 
 
 		if(err != nil){
-			log.Printf("Error: %s\n", err.Error() )
+			log.Printf("Error 1: %s\n", err.Error() )
 			des, _ := jsonParsed.Path("error_description").Data().(string)
 			generateError(w, r, err.Error(), des)	
 			return		
@@ -1156,9 +1157,9 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 			log.Printf("Schema: %s\n", schema )
 		}
 
-		token, err := GeneratePortalJWT(picture, schema, org_id)
+		token, err := GeneratePortalJWT(picture, schema, groups, org_id)
 		if(err != nil){
-			log.Printf("Error: %s\n", err.Error() )
+			log.Printf("Error 2: %s\n", err.Error() )
 		}
 		w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")
@@ -1177,7 +1178,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 
 	p.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
 		newquery := fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&scope=%s", 
-			auth_portal_domain, r.URL.RawQuery, auth_portal_client_id, url.QueryEscape(auth_portal_redirect), url.QueryEscape("openid profile email groups permissions roles"))
+			auth_portal_domain, r.URL.RawQuery, auth_portal_client_id, url.QueryEscape(auth_portal_redirect), url.QueryEscape("openid profile"))
 
 		log.Printf("In /auth/login: redirect to \n%s\n", newquery)
 		http.Redirect(w, r, newquery, http.StatusFound)
