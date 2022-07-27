@@ -33,7 +33,7 @@ case "$1" in
 	;;
     "staging")
 	bastion="bastion.dymium.net"
-	db="customers.comlwgjclrwa.us-west-2.rds.amazonaws.com"
+	db="db.dymium.local"
 	myDbPort=${stagingPort}
 	;;
     "dev")
@@ -61,5 +61,5 @@ then
     }
 else
     set -x
-    ssh -o "StrictHostKeyChecking no" -nNT -i $myPrivateKey -L${myDbPort}:${db}:5432 ${myName}@${bastion}
+    ssh -o "StrictHostKeyChecking no" -nNT -i $myPrivateKey -L${myDbPort}:${db}:5432 ${myName}@${bastion}&
 fi
