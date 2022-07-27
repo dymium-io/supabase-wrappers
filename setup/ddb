@@ -4,35 +4,53 @@
 # use it only as a template!
 
 myName="<your name>"
-stagingPort=5444
-productionPort=5443
-
 myPrivateKey=~/.ssh/"<your ssh key>"
 
 # port where your end of the tunnel will be sitting
 # standard value is 5432, but probably it is better to reserve
 # it for your local DB
+dymiumPort=5442
+productionPort=5443
+stagingPort=5444
+devPort=5445
+
 
 [ "$1" = "-k" ] && {
     k="yes"
     shift    
 }
 
-if [ "$1" = "production" ]
-then
-    echo "Production DB does not exist yet!"
-    exit 255
-    # db="db"
-    # myDbPort=${productionPort}
-elif [ "$1" = "staging" ]
-then
-    # db="customers.chx4y1j1dev2.us-west-2.rds.amazonaws.com"
-    db="db.dymium.internal"
-    myDbPort=${stagingPort}
-else
-    echo "Usage: zdb [-k] staging|production"
-    exit 1
-fi
+case "$1" in
+    "dymium")
+	bastion="bastion.dymium.us"
+	db="db.dymium.internal"
+	myDbPort=${dymiumPort}
+	;;
+    "production")
+	myDbPort=${productionPort}
+	echo "option 'production' is not supported yet"
+	exit 255
+	;;
+    "staging")
+	bastion="bastion.dymium.net"
+	db="customers.comlwgjclrwa.us-west-2.rds.amazonaws.com"
+	myDbPort=${stagingPort}
+	;;
+    "dev")
+	# db="db.dymium.local"
+	myDbPort=${devPort}
+	echo "option '$1' is not supported yet"
+	exit 255
+	;;
+    "")
+	echo "Usage: $0 [-k] [dymium|production|staging|dev]"
+	exit 255
+	;;
+    *)
+	echo "option '$1' is not supported yet"
+	exit 255
+	;;
+esac
 
 if [ "$k" = "yes" ]
 then
@@ -42,5 +60,6 @@ then
 	kill $pid
     }
 else
-    ssh -o "StrictHostKeyChecking no" -nNT -i $myPrivateKey -L${myDbPort}:${db}:5432 ${myName}@bastion.dymium.us&
+    set -x
+    ssh -o "StrictHostKeyChecking no" -nNT -i $myPrivateKey -L${myDbPort}:${db}:5432 ${myName}@${bastion}
 fi

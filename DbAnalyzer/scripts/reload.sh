@@ -1,10 +1,23 @@
 #!/bin/sh
 
 FUNCTION_NAME=DbAnalyzer
-PROFILE=dymium
 REGION=us-west-2
-ARN="411064808315"
 REPO="db-analyzer"
+
+ARN="411064808315"
+PROFILE="dymium"
+
+if [ "$1" = "staging" ]
+then
+    ARN="626593984035"
+    PROFILE="dymium_staging"
+    shift
+elif [ "$1" = "dev" ]
+then
+    ARN="564835066653"
+    PROFILE="dymium_dev"
+    shift
+fi
 
 set -x
 aws lambda update-function-code \
