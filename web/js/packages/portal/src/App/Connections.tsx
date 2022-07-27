@@ -409,7 +409,7 @@ export function EditConnections(props) {
                 setUsername(conn["username"])
                 setPassword("")
                 setCred(false)
-                setUseTLS(conn["usetls"])
+                setUseTLS(conn["useTLS"])
                 setDescription(conn["description"])
             }
             setValidated(false)
@@ -477,7 +477,7 @@ export function EditConnections(props) {
             text: 'Use TLS',
             formatter: (cell, row, rowIndex, formatExtraData) => {
 
-                if (row.usetls)
+                if (row.useTLS)
                     return <i className="fa-solid fa-check blue"></i>
                 else
                     return <></>
