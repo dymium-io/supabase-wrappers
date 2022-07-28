@@ -184,25 +184,50 @@ func configureDatabase(db *sql.DB,
 			for k := range t.Columns {
 				c := &t.Columns[k]
 				if c.Action != "Block" {
+					ract := 0
+					rtyp := 0
+					rnul := 0
 					notNull := " NOT NULL"
 					if c.IsNullable {
 						notNull = ""
+						rnul = 1
 					}
-					redact := '0'
 					switch c.Action {
-					case "Redact": 
-						if strings.HasPrefix(c.Typ, "char") ||
-							strings.HasPrefix(c.Typ, "var") ||
-							c.Typ == "text" ||
-							c.Typ == "bpchar" {
-							redact = '2'
-						} else {
-							redact = '1'
-						}
-					case "Obfuscate": redact = '3'	
+					case "Redact": ract = 0x1
+					case "Obfuscate": ract = 0x2
+					case "Smart Redact": ract = 0x3
 					}
-					defs = append(defs, fmt.Sprintf("  %q %s OPTIONS( redact '%c' )%s",
-						c.Name, c.Typ, redact, notNull))
+					switch {
+					case
+						strings.HasPrefix(c.Typ, "char"),
+						strings.HasPrefix(c.Typ, "var"),
+						c.Typ == "text",
+						c.Typ == "bpchar":
+						rtyp = 0x1
+					case
+						c.Typ == "bigint",
+						strings.HasPrefix(c.Typ, "double"),
+						strings.HasPrefix(c.Typ, "int"),
+						strings.HasPrefix(c.Typ, "numeric"),
+						c.Typ == "real",
+						c.Typ == "smallint",
+						strings.HasPrefix(c.Typ, "float"),
+						strings.HasPrefix(c.Typ, "decimal"):
+						rtyp = 0x2
+					case
+						strings.HasPrefix(c.Typ, "bool"):
+						rtyp = 0x3
+					case
+						c.Typ == "xml": rtyp = 0x4
+					case
+						c.Typ == "bytea": rtyp = 0x5
+					case
+						c.Typ == "json", c.Typ == "jsonb": rtyp = 0x6
+					case
+						c.Typ == "uuid": rtyp = 0x7
+					}
+					defs = append(defs, fmt.Sprintf("  %q %s OPTIONS( redact '%d' )%s",
+						c.Name, c.Typ, ract | (rnul << 2) | (rtyp << 3), notNull))
 				}
 			}
 			e := "CREATE FOREIGN TABLE %q.%q (\n" + strings.Join(defs, ",\n") + "\n)\n" +

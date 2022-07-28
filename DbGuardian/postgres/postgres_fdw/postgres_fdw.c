@@ -1568,7 +1568,7 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 		Oid	 relid;
 		fsstate->rel = node->ss.ss_currentRelation;
 		fsstate->tupdesc = RelationGetDescr(fsstate->rel);
-		fsstate->how_to_redact = (int*)palloc0(fsstate->tupdesc->natts);
+		fsstate->how_to_redact = (int*)palloc0(sizeof(int) * fsstate->tupdesc->natts);
 		/* !Dymium! */
 		relid = RelationGetRelid(fsstate->rel);
 		for(int k = 0; k != fsstate->tupdesc->natts; ++k) {
@@ -1581,12 +1581,7 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 				if (strcmp(def->defname, "redact") == 0)
 				{
 					char *redact = defGetString(def);
-					switch(redact[0]) {
-					case '0': fsstate->how_to_redact[k]=0; break;
-					case '1': fsstate->how_to_redact[k]=1; break;
-					case '2': fsstate->how_to_redact[k]=2; break;
-					case '3': fsstate->how_to_redact[k]=3; break;
-					}
+					fsstate->how_to_redact[k] = atoi(redact);
 					break;
 				}
 			}
@@ -7186,6 +7181,110 @@ complete_pending_request(AsyncRequest *areq)
  * if we're processing a remote join, while fsstate is NULL in a non-query
  * context such as ANALYZE, or if we're processing a non-scan query node.
  */
+
+/*
+  to enable debug
+  #define _D
+ */
+#define _D if (0)
+
+
+static inline void obfuscate(char *valstr) {
+  int k;
+  _D printf("Obfuscate: [%s] => ", valstr);
+  for(k = 0; valstr[k] != 0; ++k) {
+    char c = valstr[k];
+    if(c >= '0' && c <= '9') {
+      valstr[k] = '0' + (((unsigned int)(c - '0')) + 6553*(k+1)) % 10;
+    } else if(c >= 'a' && c <= 'z') {
+      valstr[k] = 'a' + (((unsigned int)(c - 'a')) + 2743*(k+13)) % 26;
+    } else if(c >= 'A' && c <= 'Z') {
+      valstr[k] = 'A' + (((unsigned int)(c - 'A')) + 1483*(k+285)) % 26;
+    }
+  }
+  _D printf("[%s]\n",valstr);
+  _D fflush(stdout);
+}
+
+static inline void redact_text(char *valstr) {
+  int k;
+  _D printf("Redact as string: [%s] => ", valstr);
+  for(k=0; k != 3 && valstr[k] != 0; ++k) { valstr[k] = 'x'; } valstr[k] = 0;
+  _D printf("[%s]\n",valstr);
+  _D fflush(stdout);  
+}
+
+static inline void redact_number(char *valstr) {
+  _D printf("Redact as number: [%s] => ", valstr);
+  if(valstr[0] != 0) {
+    valstr[0] = '0';
+    valstr[1] = 0;
+  }
+  _D printf("[%s]\n",valstr);
+  _D fflush(stdout);
+}
+
+static inline void redact_something(char *valstr) {
+  int k;
+  _D printf("Redact as something: [%s] => ", valstr);
+  for(k = 0; valstr[k] != 0; ++k) {
+    char c = valstr[k];
+    if(c >= '0' && c <= '9') {
+      valstr[k] = '0';
+    } else if(c >= 'a' && c <= 'z') {
+      valstr[k] = 'a';
+    } else if(c >= 'A' && c <= 'Z') {
+      valstr[k] = 'a';
+    }
+  }
+  _D printf("[%s]\n",valstr);
+  _D fflush(stdout);
+}
+
+static inline void redact_xml(char *valstr) {
+  _D printf("Redact as xml: [%s] => ", valstr);
+  if(strlen(valstr) + 1 >= sizeof("<xml version=\"1.0\"><_/>")) {
+    memcpy(valstr, "<xml version=\"1.0\"><_/>", sizeof("<xml version=\"1.0\"><_/>"));
+  } else if(valstr[0] != 0) {
+    valstr[0] = 0;
+  }
+  _D printf("[%s]\n",valstr);
+  _D fflush(stdout);
+}
+
+static inline void redact_json(char *valstr) {
+  _D printf("Redact as json: [%s] => ", valstr);
+  if(strlen(valstr) + 1 >= sizeof("{}")) {
+    memcpy(valstr, "{}", sizeof("{}"));
+  } else if(valstr[0] != 0) {
+    valstr[0] = 0;
+  }
+  _D printf("[%s]\n",valstr);
+  _D fflush(stdout);
+}
+
+static inline void redact_bytea(char *valstr) {
+  _D printf("Redact as bytea: [%s] => ", valstr);
+  if(strlen(valstr) + 1 >= sizeof("\\x")) {
+    memcpy(valstr, "\\x", sizeof("\\x"));
+  } else if(valstr[0] != 0) {
+    valstr[0] = 0;
+  }
+  _D printf("[%s]\n",valstr);
+  _D fflush(stdout);
+}
+
+static inline void redact_bool(char *valstr) {
+  _D printf("Redact as bool: [%s] => ", valstr);
+  if(strlen(valstr) + 1 >= sizeof("f")) {
+    memcpy(valstr, "f", sizeof("f"));
+  } else if(valstr[0] != 0) {
+    valstr[0] = 0;
+  }
+  _D printf("[%s]\n",valstr);
+  _D fflush(stdout);
+}
+
 static HeapTuple
 make_tuple_from_result_row(PGresult *res,
 						   int row,
@@ -7252,45 +7351,28 @@ make_tuple_from_result_row(PGresult *res,
 	{
 		int			i = lfirst_int(lc);
 		char	   *valstr;
-		/* fetch next column's textual value */
-		if (PQgetisnull(res, row, j))
-			valstr = NULL;
+
+		int isNullable = how_to_redact ? (how_to_redact[i-1] >> 2) & 0x1 : 0;
+		int act = how_to_redact ? how_to_redact[i-1] & 0x3 : 0;
+
+                /* fetch next column's textual value */
+		if (PQgetisnull(res, row, j) || (act == 1 && isNullable))
+		  valstr = NULL;
 		else {
-			valstr = PQgetvalue(res, row, j);
-			// !Dymium!
-			if(how_to_redact) {
-				switch (how_to_redact[i-1]) {
-				case 0: /* printf("Don't redact: [%s]\n",valstr); */ break;
-				case 1:
-				  // printf("Redact as number: [%s] => ", valstr);
-				  valstr[0]='0'; valstr[1]='\0';
-				  // printf("[%s]\n",valstr);
-				  break;
-				case 2:
-				  // printf("Redact as string: [%s] => ", valstr);
-				  { int k; for(k=0; k != 3 && valstr[k] != 0; ++k) { valstr[k] = 'x'; } valstr[k] = 0; }
-				  //printf("[%s]\n",valstr);
-				  break;
-				case 3:
-				  // printf("Obfuscate: [%s] => ", valstr);
-				  {
-				    int k;
-				    for(k = 0; valstr[k] != 0; ++k) {
-				      char c = valstr[k];
-				      if(c >= '0' && c <= '9') {
-					valstr[k] = '0' + (c - '0' + 6553*(k+1)) % 10;
-				      } else if(c >= 'a' && c <= 'z') {
-					valstr[k] = 'a' + (c - 'a' + 2743*(k+13)) % 26;
-				      } else if(c >= 'A' && c <= 'Z') {
-					valstr[k] = 'A' + (c - 'A' + 1483*(k+286)) % 26;
-				      }
-				    }
-				    // printf("[%s]\n",valstr);
-				  }
-				  break;
-				}
-				// fflush(stdout);
-			}
+		  valstr = PQgetvalue(res, row, j);
+		  // !Dymium!
+		  if(act != 0) {
+		    switch(how_to_redact[i-1] >> 3) {
+		    case 0x0: if(act == 1) redact_something(valstr); else obfuscate(valstr); break;
+		    case 0x1: if(act == 1) redact_text(valstr); else obfuscate(valstr); break;
+		    case 0x2: if(act == 1) redact_number(valstr); else obfuscate(valstr); break;
+		    case 0x3: redact_bool(valstr); break;
+		    case 0x4: redact_xml(valstr); break;
+		    case 0x5: redact_bytea(valstr); break;
+		    case 0x6: redact_json(valstr); break;
+		    case 0x7: obfuscate(valstr); break;
+		    }
+		  }
 		}
 
 		/*
