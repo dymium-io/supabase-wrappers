@@ -7243,8 +7243,10 @@ static inline void redact_something(char *valstr) {
 
 static inline void redact_xml(char *valstr) {
   _D printf("Redact as xml: [%s] => ", valstr);
-  if(strlen(valstr) + 1 >= sizeof("<xml version=\"1.0\"><_/>")) {
-    memcpy(valstr, "<xml version=\"1.0\"><_/>", sizeof("<xml version=\"1.0\"><_/>"));
+  if(strlen(valstr) + 1 >= sizeof("<?xml version=\"1.0\"?><_/>")) {
+    memcpy(valstr, "<?xml version=\"1.0\"?><_/>", sizeof("<?xml version=\"1.0\"?><_/>"));
+  } else if(strlen(valstr) + 1 >= sizeof("<_/>")) {
+    memcpy(valstr, "<_/>", sizeof("<_/>"));
   } else if(valstr[0] != 0) {
     valstr[0] = 0;
   }
