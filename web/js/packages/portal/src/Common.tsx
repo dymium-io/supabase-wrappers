@@ -10,7 +10,11 @@ export function getTokenProperty(prop) {
         return undefined
 
     let sp = token.split('.')
-    let claims = atob(sp[1])
+    let b64 = sp[1]
+    while(b64.length % 4 !== 0) {
+        b64 += "="
+    }
+    let claims = atob(b64)
     let j = JSON.parse(claims)
     return j[prop]
 }

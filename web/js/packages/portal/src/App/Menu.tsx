@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import Navbar from 'react-bootstrap/Navbar'
+import Button from 'react-bootstrap/Button'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
 import Nav from 'react-bootstrap/Nav'
+import Modal from 'react-bootstrap/Modal'
 import * as com from '../Common'
 
 
@@ -8,13 +12,44 @@ import * as com from '../Common'
 function Menu() {
 
     let [avatar, setAvatar] = useState('/avatar.png') // eslint-disable-line no-unused-vars
+    let [show, setShow] = useState(false) 
 
     let picture = com.getTokenProperty("picture")
+    let onAva = e => {
+        setShow(true)
+    }
+    let handleClose = () => {
+        setShow(false)
+    }
+    let getGroups = () => {
+        let gr = com.getTokenProperty("groups")
+        if(gr === null)
+            return ""
+        return gr.join(", ")
+    }
     if(undefined !== picture && avatar != picture) {
         setAvatar(picture)
     }
         return (
             <div id="home" className="w-100 text-center deepestblue">
+            <Modal show={show} onHide={handleClose}  centered >
+                <Modal.Header closeButton>
+                    <Modal.Title>Current user:</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Row>
+                        <Col xs={2}>Name: </Col>
+                        <Col>{com.getTokenProperty("name")}</Col>
+                    </Row>
+                    <Row>
+                        <Col xs={2}>Groups: </Col>
+                        <Col>{getGroups()}</Col>
+                    </Row>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleClose}>Close</Button>
+                </Modal.Footer>
+            </Modal>                
                 <Navbar id="navb"
                     className="p-0 m-0 navbar-expand-sm"
                     collapseOnSelect expand="lg" variant="light">
@@ -36,7 +71,7 @@ function Menu() {
                         <Nav className="mx-auto " >
                            
                         </Nav>
-                        <img alt="avatar" className="avatar mr-2" src={avatar} />
+                        <img alt="avatar" onClick={onAva} style={{cursor: 'pointer'}}className="avatar mr-2" src={avatar} />
                         <Nav className="pr-3">
                             <Nav.Link id="logout" href="/api/logout">Logout</Nav.Link>
                         </Nav>

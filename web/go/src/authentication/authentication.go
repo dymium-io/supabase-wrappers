@@ -104,13 +104,14 @@ func Init(host string, port, user, password, dbname, tls string) error {
 func GetDB() *sql.DB {
 	return db
 }
-func generateAdminJWT(picture string, groups []string, org_id string) (string, error) {
+func generateAdminJWT(picture string, name string, groups []string, org_id string) (string, error) {
 		// generate JWT right header
 		issueTime := time.Now()
 		expirationTime := issueTime.Add(timeOut * time.Minute)
 		
 		claim := &types.AdminClaims{
 			// TODO
+			Name: name,
 			Groups: groups,
 			Picture: picture,
 			StandardClaims: jwt.StandardClaims{
@@ -138,6 +139,7 @@ func refreshAdminToken(token string) (string, error) {
 		// update token
 		expirationTime := timeNow.Add(timeOut * time.Minute)
 		newclaim := &types.Claims{
+			Name: claim.Name,
 			Groups: claim.Groups,
 			Picture: claim.Picture,
 			StandardClaims: jwt.StandardClaims{
@@ -241,13 +243,14 @@ func GetConnections(schema string) ([]types.ConnectionRecord, error ) {
 
 	return conns, nil
 }
-func GeneratePortalJWT(picture string, schema string, groups []string, org_id  string) (string, error) {
+func GeneratePortalJWT(picture string, schema string, name string, groups []string, org_id  string) (string, error) {
 	// generate JWT right header
 	issueTime := time.Now()
 	expirationTime := issueTime.Add(timeOut * time.Minute)
 
 	claim := &types.Claims{
 		// TODO
+		Name: name,
 		Groups: groups,
 		Picture: picture ,
 		Schema: schema,
@@ -258,6 +261,7 @@ func GeneratePortalJWT(picture string, schema string, groups []string, org_id  s
 			IssuedAt: issueTime.Unix(),
 		},
 	}
+	log.Printf("claim: %v, groups:%v\n", claim, groups)
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 	// Create the JWT string
@@ -277,8 +281,11 @@ func refreshPortalToken(token string) (string, error) {
 
 	if err == nil && tkn.Valid {
 		// update token
+		log.Printf("claim: %v, groups:%v\n", claim, claim.Groups)
+
 		expirationTime := timeNow.Add(timeOut * time.Minute)
 		newclaim := &types.Claims{
+			Name: claim.Name,
 			Groups: claim.Groups,
 			Picture: claim.Picture,
 			Schema: claim.Schema ,
@@ -329,14 +336,14 @@ func generateError(w http.ResponseWriter, r *http.Request, header string, body s
 
 	return nil
 }
-func  getUserInfoFromToken(admin_domain, token, id_token string) ( string, []string, string, error) {
+func  getUserInfoFromToken(admin_domain, token, id_token string) ( string, string, []string, string, error) {
 	urlStr := fmt.Sprintf("%suserinfo", admin_domain)
 	client := &http.Client{}
 
 	nr, err := http.NewRequest(http.MethodGet, urlStr, nil) // URL-encoded payload
 	if err != nil {
 		log.Printf("Error: %s\n", err.Error()) 
-		return "", []string{}, "", err
+		return "", "", []string{}, "", err
 
 	}
 	nr.Header.Add("Authorization", "Bearer " + token)
@@ -345,13 +352,14 @@ func  getUserInfoFromToken(admin_domain, token, id_token string) ( string, []str
 
 	if err != nil {
 		log.Printf("Error: %s\n", err.Error()) 
-		return "", []string{}, "", err
+		return "", "", []string{}, "", err
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)	
-
+log.Printf("%s\n", string(body))
 	jsonParsed, err := gabs.ParseJSON(body)
 	org_id, _ := jsonParsed.Path("org_id").Data().(string)
+	name, _ := jsonParsed.Path("name").Data().(string)
 
 	picture, _ := jsonParsed.Path("picture").Data().(string)
 	var groups []string
@@ -364,8 +372,8 @@ func  getUserInfoFromToken(admin_domain, token, id_token string) ( string, []str
 	for _, child := range  gr {
 		groups = append(groups, child.Data().(string))
 	}
-
-	return picture, groups, org_id, err
+log.Printf("groups: %v\n", groups)
+	return picture, name, groups, org_id, err
 }
 func getTokenFromCode(code, domain, client_id, client_secret, redirect string) ( []byte, error) {
 	// get the token
@@ -948,7 +956,7 @@ func GetFakeAuthentication () []byte{
 
 
 	token, err :=  GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s", 
-	"spoofcorp", []string{}, "org_nsEsSgfq3IYXe2pu")
+	"spoofcorp", "user", []string{}, "org_nsEsSgfq3IYXe2pu")
 	if(err != nil){
 		log.Printf("Error: %s\n", err.Error() )
 	}
@@ -1031,9 +1039,9 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		}
 		access_token, ok := jsonParsed.Path("access_token").Data().(string)
 		id_token, ok := jsonParsed.Path("id_token").Data().(string)
-		picture, groups, org_id, err := getUserInfoFromToken(auth_admin_domain, access_token, id_token)
+		picture, name, groups, org_id, err := getUserInfoFromToken(auth_admin_domain, access_token, id_token)
 
-		token, err := generateAdminJWT(picture, groups, org_id)
+		token, err := generateAdminJWT(picture, name, groups, org_id)
 		if(err != nil){
 			log.Printf("Error: %s\n", err.Error() )
 		}
@@ -1139,7 +1147,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		}
 		access_token, ok := jsonParsed.Path("access_token").Data().(string)
 		id_token, ok := jsonParsed.Path("id_token").Data().(string)
-		picture, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
+		picture, name, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
 
 		sql := fmt.Sprintf("select schema_name from global.customers where organization=$1;")
 		log.Printf("sql: %s\n", sql)
@@ -1157,7 +1165,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 			log.Printf("Schema: %s\n", schema )
 		}
 
-		token, err := GeneratePortalJWT(picture, schema, groups, org_id)
+		token, err := GeneratePortalJWT(picture, schema, name, groups, org_id)
 		if(err != nil){
 			log.Printf("Error 2: %s\n", err.Error() )
 		}
