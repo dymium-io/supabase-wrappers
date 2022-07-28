@@ -2,7 +2,8 @@ package types
 import "github.com/dgrijalva/jwt-go"
 
 type Claims struct {
-	Groups      []string `json:"groups"`
+	Name       string`json:"name"`
+	Groups     []string `json:"groups"`
 	Picture    string `json:"picture"`
 	Schema     string `json:"schema"`
 	Orgid      string `json:"orgid"`
@@ -10,6 +11,7 @@ type Claims struct {
 }
 
 type AdminClaims struct {
+	Name       string`json:"name"`
 	Groups      []string `json:"groups"`
 	Picture    string `json:"picture"`
 	jwt.StandardClaims
