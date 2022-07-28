@@ -83,6 +83,8 @@ jobs:
           ADMIN_HOST: 'admin.dymium.local'
           FILESYSTEM_ROOT: '../../assets/'
           AWS_LAMBDAS: '{ "DbAnalyzer": "localhost:9080", "DbSync": "localhost:9081" }'
-        mkdir -p ../../../go/assets/customer
-        cp ../public/logo.png ../../../go/assets/customer/
-        run: go test -v ./...
+
+        run: |
+          mkdir -p ../assets/customer
+          cp ../../js/packages/portal/public/logo.png ../assets/customer/
+          go test -v ./...
