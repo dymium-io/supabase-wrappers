@@ -85,6 +85,6 @@ jobs:
           AWS_LAMBDAS: '{ "DbAnalyzer": "localhost:9080", "DbSync": "localhost:9081" }'
 
         run: |
-          mkdir -p ../../../go/assets/customer
-          cp ../public/logo.png ../../../go/assets/customer/
+          mkdir -p ../assets/customer
+          cp ../../js/packages/portal/public/logo.png ../assets/customer/
           go test -v ./...
