@@ -1150,7 +1150,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		picture, name, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
 
 		sql := fmt.Sprintf("select schema_name from global.customers where organization=$1;")
-		log.Printf("sql: %s\n", sql)
+		log.Printf("sql: %s, ord_id: '%s'\n", sql, org_id)
 		row := db.QueryRow(sql, org_id)
 		var schema string
 		err = row.Scan(&schema)
