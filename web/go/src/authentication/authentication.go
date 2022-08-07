@@ -493,7 +493,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 	sql = `select  a.id, b.name, a.connection_id, a.schem, a.tabl, a.col,  a.position, a.typ, a.action, 
 	a.semantics, coalesce(a.ref_schem, ''), coalesce(a.ref_tabl, ''), coalesce(a.ref_col, ''), a.dflt, a.is_nullable from ` + schema + 
 	`.tables a join ` + schema + `.connections b on a.connection_id=b.id  where datascope_id=$1;`;
-	rows, err := db.QueryContext(ctx, sql, id)
+	rows, err := tx.QueryContext(ctx, sql, id)
 
 
 	if nil == err {

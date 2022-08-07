@@ -45,9 +45,7 @@ func configureDatabase(db *sql.DB,
 	shortSchemas := map[string]struct{}{}
 	for k := range datascope.Schemas {
 		s := &datascope.Schemas[k]
-		if s.Name != "public" {
-			shortSchemas[s.Name] = struct{}{}
-		}
+		shortSchemas[s.Name] = struct{}{}
 		for m := range s.Tables {
 			t := s.Tables[m]
 			se := tuple{k1: s.Name, k2: t.Name}
@@ -104,13 +102,6 @@ func configureDatabase(db *sql.DB,
 		if err := exec("CREATE TABLE _dymium.schemas ( \"schema\" text )"); err != nil {
 			return err
 		}
-
-		if err := exec("GRANT USAGE ON SCHEMA public TO " + localUser); err != nil {
-			return err
-		}
-		if err := exec("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO " + localUser); err != nil {
-			return err
-		}
 	}
 
 	for k := range datascope.Connections {
@@ -146,7 +137,7 @@ func configureDatabase(db *sql.DB,
 	}
 
 	for k := range shortSchemas {
-		if err := exec("CREATE SCHEMA " + k); err != nil {
+		if err := exec("CREATE SCHEMA IF NOT EXISTS " + k); err != nil {
 			return err
 		}
 		if err := exec("GRANT USAGE ON SCHEMA " + k + " TO " + localUser); err != nil {
@@ -161,7 +152,7 @@ func configureDatabase(db *sql.DB,
 	}
 	for k := range longSchemas {
 		kk := k.k1 + "_" + k.k2
-		if err := exec(fmt.Sprintf("CREATE SCHEMA %q", kk)); err != nil {
+		if err := exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %q", kk)); err != nil {
 			return err
 		}
 		if err := exec(fmt.Sprintf("GRANT USAGE ON SCHEMA %q TO %s", kk, localUser)); err != nil {
@@ -195,7 +186,7 @@ func configureDatabase(db *sql.DB,
 					switch c.Action {
 					case "Redact": ract = 0x1
 					case "Obfuscate": ract = 0x2
-					case "Smart Redact": ract = 0x3
+					case "Smart Redact": ract = 0x0
 					}
 					switch {
 					case
