@@ -16,6 +16,8 @@ func extensionName(connectionType types.ConnectionType) (string, error) {
 	switch connectionType {
 	case types.CT_PostgreSQL:
 		return "postgres_fdw", nil
+	case types.CT_MySQL:
+		return "mysql_fdw", nil
 	}
 	return "", fmt.Errorf("Extension %v is not supported yet", connectionType)
 }
