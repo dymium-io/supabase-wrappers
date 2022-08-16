@@ -1572,7 +1572,7 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 		/* !Dymium! */
 		relid = RelationGetRelid(fsstate->rel);
 		for(int k = 0; k != fsstate->tupdesc->natts; ++k) {
-			List *options = GetForeignColumnOptions(relid, k + 1);
+			List *options = GetForeignColumnOptions(relid, TupleDescAttr(fsstate->tupdesc, k)->attnum);
 			ListCell *lc;
 			foreach(lc, options)
 			{
@@ -7182,7 +7182,7 @@ complete_pending_request(AsyncRequest *areq)
  * context such as ANALYZE, or if we're processing a non-scan query node.
  */
 
-#define _D if(0)
+#define _D /* if(0) */
 #include "../common/obfuscate.c"
 
 static HeapTuple

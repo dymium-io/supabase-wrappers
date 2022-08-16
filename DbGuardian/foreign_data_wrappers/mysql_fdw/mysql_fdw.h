@@ -116,6 +116,9 @@ typedef struct mysql_opt
 								 * format */
 	char	   *ssl_cipher;		/* MySQL SSL: list of permissible ciphers to
 								 * use for SSL encryption */
+
+	/* Dymium */
+	int        *how_to_redact;
 } mysql_opt;
 
 typedef struct mysql_column
