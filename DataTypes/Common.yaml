@@ -113,3 +113,24 @@ DatascopeAndGroups:
   - name: string
   - groupid: string	
   - groupname: string
+
+CustomerIDRequest:
+  - customerid: string
+
+CustomerIDResponse:
+  - loginURL: string
+
+AuthorizationCodeRequest:
+  - customerid: string
+  - code: string
+
+AuthorizationCodeResponse:
+  - token: string
+  - name: string
+  - groups: <|string|>
+
+CertificateRequest:
+  - csr: string
+
+CSRResponse:
+  - certificate: string

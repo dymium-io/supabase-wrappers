@@ -85,6 +85,156 @@ export class AuthStatus {
   }
 }
 
+export class AuthorizationCodeRequest {
+  private '_customerid': string
+  private '_code': string
+
+  constructor() {
+    this['_customerid'] = ''
+    this['_code'] = ''
+  }
+  get customerid(): string { return this['_customerid'] }
+  set customerid(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_customerid'])) {
+      setDirtyFlag()
+      this['_customerid'] = __v__
+    }
+  }
+  get code(): string { return this['_code'] }
+  set code(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_code'])) {
+      setDirtyFlag()
+      this['_code'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): AuthorizationCodeRequest {
+    disableDF()
+    let cls = new AuthorizationCodeRequest()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.customerid = __a__['customerid']
+       cls.code = __a__['code']
+    } else {
+       doAlert(`AuthorizationCodeRequest: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class AuthorizationCodeResponse {
+  private '_token': string
+  private '_name': string
+  private '_groups': Array<string>
+
+  constructor() {
+    this['_token'] = ''
+    this['_name'] = ''
+    this['_groups'] = []
+  }
+  get token(): string { return this['_token'] }
+  set token(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_token'])) {
+      setDirtyFlag()
+      this['_token'] = __v__
+    }
+  }
+  get name(): string { return this['_name'] }
+  set name(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_name'])) {
+      setDirtyFlag()
+      this['_name'] = __v__
+    }
+  }
+  get groups(): Array<string> { return this['_groups'] }
+  set groups(__a__: any) {
+    setDirtyFlag()
+    this['_groups'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): AuthorizationCodeResponse {
+    disableDF()
+    let cls = new AuthorizationCodeResponse()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.token = __a__['token']
+       cls.name = __a__['name']
+       cls.groups = array1Reader(stringReader(''))(__a__['groups'])
+    } else {
+       doAlert(`AuthorizationCodeResponse: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class CSRResponse {
+  private '_certificate': string
+
+  constructor() {
+    this['_certificate'] = ''
+  }
+  get certificate(): string { return this['_certificate'] }
+  set certificate(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_certificate'])) {
+      setDirtyFlag()
+      this['_certificate'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): CSRResponse {
+    disableDF()
+    let cls = new CSRResponse()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.certificate = __a__['certificate']
+    } else {
+       doAlert(`CSRResponse: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class CertificateRequest {
+  private '_csr': string
+
+  constructor() {
+    this['_csr'] = ''
+  }
+  get csr(): string { return this['_csr'] }
+  set csr(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_csr'])) {
+      setDirtyFlag()
+      this['_csr'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): CertificateRequest {
+    disableDF()
+    let cls = new CertificateRequest()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.csr = __a__['csr']
+    } else {
+       doAlert(`CertificateRequest: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class ConnectionRecord {
   private '_name': string
   private '_dbtype': string
@@ -352,6 +502,66 @@ export class ConnectionsQuery {
        cls.records = __a__['records'] == null ? null : array1Reader(ConnectionRecord.fromJson)(__a__['records'])
     } else {
        doAlert(`ConnectionsQuery: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class CustomerIDRequest {
+  private '_customerid': string
+
+  constructor() {
+    this['_customerid'] = ''
+  }
+  get customerid(): string { return this['_customerid'] }
+  set customerid(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_customerid'])) {
+      setDirtyFlag()
+      this['_customerid'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): CustomerIDRequest {
+    disableDF()
+    let cls = new CustomerIDRequest()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.customerid = __a__['customerid']
+    } else {
+       doAlert(`CustomerIDRequest: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class CustomerIDResponse {
+  private '_loginURL': string
+
+  constructor() {
+    this['_loginURL'] = ''
+  }
+  get loginURL(): string { return this['_loginURL'] }
+  set loginURL(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_loginURL'])) {
+      setDirtyFlag()
+      this['_loginURL'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): CustomerIDResponse {
+    disableDF()
+    let cls = new CustomerIDResponse()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.loginURL = __a__['loginURL']
+    } else {
+       doAlert(`CustomerIDResponse: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls
