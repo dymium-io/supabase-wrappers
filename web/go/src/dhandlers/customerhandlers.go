@@ -14,7 +14,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/url"
+	"crypto/rand"
+	"math/big"
+	"time"
 	"errors"
+	"crypto/x509"
+	"encoding/pem"	
 	"io"
 	"log"
 	"net/http"
@@ -762,6 +767,148 @@ func GetLogout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, logoutURL, 302)
 
 }
+
+func AuthByCode(w http.ResponseWriter, r *http.Request) {
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	var t types.AuthorizationCodeRequest
+
+	err := json.Unmarshal(body, &t)
+
+	domain := os.Getenv("AUTH0_PORTAL_DOMAIN")
+	clientid := os.Getenv("AUTH0_PORTAL_CLIENT_ID")
+	clientsecret := os.Getenv("AUTH0_PORTAL_CLIENT_SECRET")
+	redirecturl := os.Getenv("AUTH0_PORTAL_CLI_REDIRECT_URL")
+
+
+	token, name, groups, err :=  authentication.GetTunnelToken(t.Code, domain, clientid, clientsecret, redirecturl) 
+	var ret types.AuthorizationCodeResponse
+	ret.Token = token
+	ret.Groups = groups 
+	ret.Name = name
+	
+	js, err := json.Marshal(ret)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Write(js)
+
+}
+
+func QueryTunnel(w http.ResponseWriter, r *http.Request) {
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	var t types.CustomerIDRequest
+
+	err := json.Unmarshal(body, &t)
+
+	domain := os.Getenv("AUTH0_PORTAL_DOMAIN")
+	clientid := os.Getenv("AUTH0_PORTAL_CLIENT_ID")
+	redirecturl := os.Getenv("AUTH0_PORTAL_CLI_REDIRECT_URL")
+
+
+	tunnellogin := fmt.Sprintf("%sauthorize?response_type=code&client_id=%s&redirect_uri=%s&organization=%s&scope=%s",
+		domain, clientid, redirecturl, t.Customerid,  url.QueryEscape("openid profile") )
+
+	var resp  types.CustomerIDResponse
+	
+	resp.LoginURL = tunnellogin
+	fmt.Printf("Login URL: %s\n", resp.LoginURL)
+	js, err := json.Marshal(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "text/html")
+	w.Write(js)
+
+}
+// convert DER to PEM format
+func pemCert(derBytes []byte) []byte {
+	pemBlock := &pem.Block{
+		Type:    "CERTIFICATE",
+		Headers: nil,
+		Bytes:   derBytes,
+	}
+	out := pem.EncodeToMemory(pemBlock)
+	return out
+}
+
+func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	var t types.CertificateRequest
+
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		log.Printf("Error unmarshalling certificate request %s\n", err.Error())
+	}
+
+    
+	pemBlock, _ := pem.Decode( []byte(t.Csr) )
+    if pemBlock == nil {
+		http.Error(w, "pem.Decode failed", http.StatusInternalServerError)
+		return		
+    }
+
+	clientCSR, err := x509.ParseCertificateRequest(pemBlock.Bytes) 
+    if err = clientCSR.CheckSignature(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return 
+    }
+
+	
+	// create client certificate template
+    clientCRTTemplate := x509.Certificate{
+        Signature:          clientCSR.Signature,
+        SignatureAlgorithm: clientCSR.SignatureAlgorithm,
+
+        PublicKeyAlgorithm: clientCSR.PublicKeyAlgorithm,
+        PublicKey:          clientCSR.PublicKey,
+
+        SerialNumber: big.NewInt(2),
+        Issuer:       authentication.CaCert.Subject,
+        Subject:      clientCSR.Subject,
+        NotBefore:    time.Now(),
+        NotAfter:     time.Now().Add(30 * time.Second),
+        KeyUsage:     x509.KeyUsageDigitalSignature,
+        ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		DNSNames: clientCSR.DNSNames,
+    }
+
+    // create client certificate from template and CA public key
+    clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, authentication.CaCert, 
+		clientCSR.PublicKey, authentication.CaKey)
+
+    if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+
+
+    out := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: clientCRTRaw})
+	log.Printf("certificate: %s\n", string(out))
+	var certout types.CSRResponse 
+	certout.Certificate = string(out)
+	js, err := json.Marshal(certout)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(js))
+
+}
+
 func GetConnections(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 	w.Header().Set("Cache-Control", common.Nocache)

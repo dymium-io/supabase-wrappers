@@ -15,6 +15,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"encoding/pem"	
+	"crypto/x509"
 	"os"
 	"strings"
 	"encoding/json"
@@ -22,7 +24,7 @@ import (
 	"time"
 	"errors"
 	"io"
-	_"golang.org/x/crypto/bcrypt"
+	"crypto/rsa"
 	"github.com/Jeffail/gabs"
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/types"
@@ -47,6 +49,40 @@ var FilesystemRoot string
 
 var Invoke types.Invoke_t
 
+var CaKey *rsa.PrivateKey
+var CaCert *x509.Certificate 
+
+func ParsePEMPrivateKey(pemBytes []byte, passphrase string) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode(pemBytes)
+	if block == nil {
+		return nil, errors.New("no valid private key found")
+	}
+
+	switch block.Type {
+	case "RSA PRIVATE KEY":
+		var privKeyBytes []byte
+		var err error
+
+		if x509.IsEncryptedPEMBlock(block) {
+			privKeyBytes, err = x509.DecryptPEMBlock(block, []byte(passphrase))
+			if err != nil {
+				return nil, errors.New("could not decrypt private key")
+			}
+		} else {
+			privKeyBytes = block.Bytes
+		}
+
+		rsaPrivKey, err := x509.ParsePKCS1PrivateKey(privKeyBytes)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse DER encoded key: %v", err)
+		}
+
+		return rsaPrivKey, nil
+
+	default:
+		return nil, fmt.Errorf("unsupported key type %q", block.Type)
+	}
+}
 func InitInvoke( i types.Invoke_t) {
 	Invoke = i
 }
@@ -98,6 +134,34 @@ func Init(host string, port, user, password, dbname, tls string) error {
 		FilesystemRoot, _ = filepath.Abs(FilesystemRoot)
 	}
 	Invoke = aws.Invoke
+
+	ca_cert := os.Getenv("CA_AUTHORITY")
+	t := struct {
+		Key string
+		Certificate string
+	}{}	
+	err = json.Unmarshal([]byte(ca_cert), &t)
+	if err != nil {
+		log.Printf("Cert unmarshaling error: %s\n", err.Error() )
+		return nil
+	}
+	
+	pemcert, _ := pem.Decode([]byte(t.Certificate))
+
+	CaCert, err = x509.ParseCertificate(pemcert.Bytes)
+	if err != nil {
+		log.Printf("Cert parsing error: %s\n", err.Error() )
+		return nil
+	}
+
+	passphrase := os.Getenv("CA_PASSPHRASE")
+	CaKey, err = ParsePEMPrivateKey([]byte(t.Key), passphrase)
+
+	if err != nil {
+		log.Printf("Key parsing error: %s\n", err.Error() )
+		return nil
+	}
+
 	return nil
 }
 
@@ -974,6 +1038,45 @@ func GetFakeAuthentication () []byte{
 	
 }
 
+func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_portal_redirect string) (string, string, []string, error){
+	body, err := getTokenFromCode(code, auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_portal_redirect)
+
+	log.Printf("returned body: %s\n", string(body))
+
+	jsonParsed, err := gabs.ParseJSON(body)
+
+	value, ok := jsonParsed.Path("error").Data().(string)
+	if ok {
+		log.Printf("Error: %s\n", value) 
+		des, _ := jsonParsed.Path("error_description").Data().(string)
+		
+		return "", "", []string{}, errors.New(des)
+
+	}
+	access_token, ok := jsonParsed.Path("access_token").Data().(string)
+	id_token, ok := jsonParsed.Path("id_token").Data().(string)
+	picture, name, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
+
+	sql := fmt.Sprintf("select schema_name from global.customers where organization=$1;")
+	log.Printf("sql: %s, ord_id: '%s'\n", sql, org_id)
+	row := db.QueryRow(sql, org_id)
+	var schema string
+	err = row.Scan(&schema)
+
+
+	if(err != nil){
+		log.Printf("Error 1: %s\n", err.Error() )		
+		return	"", "", []string{}, err
+	} else{
+		log.Printf("Schema: %s\n", schema )
+	}
+
+	token, err := GeneratePortalJWT(picture, schema, name, groups, org_id)
+	if(err != nil){
+		log.Printf("Error 2: %s\n", err.Error() )
+	}	
+	return token, name, groups, err
+}
 func AuthenticationAdminHandlers(h *mux.Router) error {
 	host := os.Getenv("ADMIN_HOST")
 	log.Printf("ADMIN_HOST: %s\n", host)	

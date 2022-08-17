@@ -42,3 +42,10 @@ web-ts:
     - source: DbAnalyzer.yaml
     - source: DbSyncCommon.yaml
     - source: Common.yaml
+
+tclient:
+  language: GoLang
+  path: ../Tunnels/go/client/types
+  root-module: dymium/types
+  modules:
+    - source: Common.yaml

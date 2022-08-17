@@ -16,3 +16,4 @@ web/js/packages/portal/.yarnclean
 web/go/assets/\#run.sh\#
 DbSync/scripts/localruntest.sh~
 web/go/assets/runtest.sh~
+Tunnels/go/client/client
