@@ -540,9 +540,13 @@ export class CustomerIDRequest {
 
 export class CustomerIDResponse {
   private '_loginURL': string
+  private '_lbaddress': string
+  private '_lbport': number
 
   constructor() {
     this['_loginURL'] = ''
+    this['_lbaddress'] = ''
+    this['_lbport'] = 0
   }
   get loginURL(): string { return this['_loginURL'] }
   set loginURL(__a__: any) {
@@ -550,6 +554,22 @@ export class CustomerIDResponse {
     if(!_.isEqual(__v__,this['_loginURL'])) {
       setDirtyFlag()
       this['_loginURL'] = __v__
+    }
+  }
+  get lbaddress(): string { return this['_lbaddress'] }
+  set lbaddress(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_lbaddress'])) {
+      setDirtyFlag()
+      this['_lbaddress'] = __v__
+    }
+  }
+  get lbport(): number { return this['_lbport'] }
+  set lbport(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_lbport'])) {
+      setDirtyFlag()
+      this['_lbport'] = __v__
     }
   }
 
@@ -560,6 +580,8 @@ export class CustomerIDResponse {
     let cls = new CustomerIDResponse()
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.loginURL = __a__['loginURL']
+       cls.lbaddress = __a__['lbaddress']
+       cls.lbport = __a__['lbport']
     } else {
        doAlert(`CustomerIDResponse: an attempt to initialize from ${__a__}`)
     }

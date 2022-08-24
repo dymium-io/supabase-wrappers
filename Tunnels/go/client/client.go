@@ -3,47 +3,55 @@
 // written by igor@dymium.io
 //
 package main
+
 import (
-	"fmt"
-	"flag"
-	"os"
-	"net/url"
-	"runtime"
-	"net/http"
-	"io"
+	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/pem"
-	_"github.com/Jeffail/gabs"
-	"encoding/json"
+	"dymium.com/client/content"
 	"dymium.com/client/types"
-	"bytes"
-	"github.com/pkg/browser"
+	"encoding/json"
+	"encoding/pem"
+	"flag"
+	"fmt"
 	"github.com/gorilla/mux"
-	"context"
+	"github.com/pkg/browser"
+	"io"
+	"net"
+	"net/http"
+	"net/url"
+	"os"
+	"runtime"
 )
+
 const (
 	csrPEMBlockType = "CERTIFICATE REQUEST"
-	Nocache = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"
+	Nocache         = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"
 )
+
 var certKey *rsa.PrivateKey
-var clientCert *x509.Certificate
+var clientCert tls.Certificate
 var customerid string
 var portalurl string
+var lbaddress string
+var lbport int
+
 func generateError(w http.ResponseWriter, r *http.Request, header string, body string) error {
 	/*
-	Failed to get userinfo: "+err.Error()
+		Failed to get userinfo: "+err.Error()
 	*/
 	fmt.Printf("Error %s: %s\n", header, body)
 	w.Header().Set("Cache-Control", Nocache)
 	w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<html>
+	w.Write([]byte(`<html>
 		<head>
 		<script>
 		 !function() {
-			window.location.href = "/app/error?header=`+url.QueryEscape(header)+`&body=`+url.QueryEscape(body)+`"
+			window.location.href = "/app/error?header=` + url.QueryEscape(header) + `&body=` + url.QueryEscape(body) + `"
 		 }()
 		</script>
 		</head>
@@ -52,6 +60,7 @@ func generateError(w http.ResponseWriter, r *http.Request, header string, body s
 
 	return nil
 }
+
 // convert DER to PEM format
 func pemCSR(derBytes []byte) []byte {
 	pemBlock := &pem.Block{
@@ -62,7 +71,7 @@ func pemCSR(derBytes []byte) []byte {
 	out := pem.EncodeToMemory(pemBlock)
 	return out
 }
-func generateCSR(name string, groups []string) ([]byte, error) { 
+func generateCSR(name string, groups []string) ([]byte, error) {
 	var err error
 	certKey, err = rsa.GenerateKey(rand.Reader, 4096)
 	if err != nil {
@@ -91,102 +100,186 @@ func sendCSR(csr []byte, token string) error {
 	outbody.Csr = string(csr)
 	js, err := json.Marshal(outbody)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error()) 
-		os.Exit(1)		
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(1)
 	}
 
 	urlStr := fmt.Sprintf("%sapi/getclientcertificate", portalurl)
 
 	req, err := http.NewRequest("POST", urlStr, bytes.NewBuffer(js))
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error()) 
-		os.Exit(1)		
-	}		
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(1)
+	}
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer " + token)
+	req.Header.Add("Authorization", "Bearer "+token)
 
 	fmt.Printf("token %s\n", token)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error()) 
-		os.Exit(1)		
-	}	
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(1)
+	}
 
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error()) 
-		os.Exit(1)		
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(1)
 	}
 
 	var back types.CSRResponse
 	err = json.Unmarshal(body, &back)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error()) 
-		os.Exit(1)		
-	}	
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(1)
+	}
 
-	pemBlock, _ := pem.Decode( []byte(back.Certificate) )
-    if pemBlock == nil {
-		fmt.Printf("Certiicate decode failed!")
-		return nil
-    }
+	keyBytes := x509.MarshalPKCS1PrivateKey(certKey)
 
-	clientCert, err = x509.ParseCertificate(pemBlock.Bytes) 
+	pemBlock := &pem.Block{
+		Type:    "RSA PRIVATE KEY",
+		Headers: nil,
+		Bytes:   keyBytes,
+	}
+	keyPem := pem.EncodeToMemory(pemBlock)
+
+	clientCert, err = tls.X509KeyPair([]byte(back.Certificate), keyPem)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error()) 
-		os.Exit(1)		
-	}	
-	
-	fmt.Printf("cert: %v\n", back.Certificate)
+		fmt.Printf("Error in X509KeyPair: %s", err)
+		os.Exit(1)
+	}
+
 	return nil
 }
 
-func main() {
-
-	flag.StringVar( &customerid, "c", "", "Customer ID")
-	flag.StringVar(&portalurl, "p", "", "Portal URL")
-	flag.Parse()
-
-    if len(customerid) == 0 && len(portalurl) == 0  {
-		if runtime.GOOS == "windows" {
-			fmt.Println("Usage: tclient.exe -c <customer ID> -p <portal URL>")
-		} else {
-	        fmt.Println("Usage: tclient -c <customer ID> -p <portal URL>")
-		}
-        os.Exit(1)
-    }
+func getTunnelInfo(customerid, portalurl string) string {
 
 	var outbody types.CustomerIDRequest
 	outbody.Customerid = customerid
 	js, err := json.Marshal(outbody)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error()) 
-		os.Exit(1)		
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(1)
 	}
 
 	urlStr := fmt.Sprintf("%sapi/querytunnel", portalurl)
-	resp, err := http.Post(urlStr, "application/json", bytes.NewBuffer(js) )
+	resp, err := http.Post(urlStr, "application/json", bytes.NewBuffer(js))
 
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error()) 
-		os.Exit(1)		
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(1)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error()) 
-		os.Exit(1)		
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(1)
 	}
 	var back types.CustomerIDResponse
 	err = json.Unmarshal(body, &back)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error()) 
-		os.Exit(1)		
-	}	
-	fmt.Printf("%v\n", back )
-	browser.OpenURL(back.LoginURL)
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	lbaddress = back.Lbaddress
+	lbport = back.Lbport
+
+	return back.LoginURL
+}
+func pipe(inc, outc net.Conn) {
+	buff := make([]byte, 0xffff)
+	for {
+		n, err := inc.Read(buff)
+		if err != nil {
+			fmt.Printf("Read failed '%s'\n", err.Error())
+			outc.Close()
+			return
+		}
+		b := buff[:n]
+		//write out result
+		n, err = outc.Write(b)
+		if err != nil {
+			fmt.Printf("Write failed '%s'\n", err.Error())
+			inc.Close()
+			return
+		}
+		fmt.Printf("transfered %d bytes\n", n)
+
+	}
+}
+func proxyConnection(ingress, egress net.Conn) {
+	go pipe(ingress, egress)
+	go pipe(egress, ingress)
+}
+func runProxy() {
+
+	addr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:24354")
+	listener, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+
+	if err != nil {
+		panic(err)
+	}
+	config := &tls.Config{Certificates: []tls.Certificate{clientCert}}
+	target := fmt.Sprintf("%s:%d", lbaddress, lbport)
+	fmt.Printf("Connect to %s\n", target)
+	for {
+		ingress, err := listener.Accept() //*TCPConn
+		if err != nil {
+			panic(err)
+		}
+
+		// create a counterpart tls connection out
+		egress, err := tls.Dial("tcp", target, config) // *Conn
+
+
+        state := egress.ConnectionState()
+        fmt.Printf("Version: %x\n", state.Version)
+        fmt.Printf("HandshakeComplete: %t\n", state.HandshakeComplete)
+        fmt.Printf("DidResume: %t\n", state.DidResume)
+        fmt.Printf("CipherSuite: %x\n", state.CipherSuite)
+        fmt.Printf("NegotiatedProtocol: %s\n", state.NegotiatedProtocol)
+        fmt.Printf("NegotiatedProtocolIsMutual: %t\n", state.NegotiatedProtocolIsMutual)
+    
+        fmt.Print("Certificate chain:")
+        for i, cert := range state.PeerCertificates {
+            subject := cert.Subject
+            issuer := cert.Issuer
+            fmt.Printf(" %d s:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", i, subject.Country, subject.Province, subject.Locality, subject.Organization, subject.OrganizationalUnit, subject.CommonName)
+            fmt.Printf("   i:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", issuer.Country, issuer.Province, issuer.Locality, issuer.Organization, issuer.OrganizationalUnit, issuer.CommonName)
+        }
+        
+		
+		//egress, err := net.Dial("tcp", target) // *Conn
+		if err != nil {
+			panic(err)
+		}
+		proxyConnection(ingress, egress)
+	}
+}
+func main() {
+
+	flag.StringVar(&customerid, "c", "", "Customer ID")
+	flag.StringVar(&portalurl, "p", "", "Portal URL")
+	flag.Parse()
+
+	if len(customerid) == 0 && len(portalurl) == 0 {
+		if runtime.GOOS == "windows" {
+			fmt.Println("Usage: tclient.exe -c <customer ID> -p <portal URL>")
+		} else {
+			fmt.Println("Usage: tclient -c <customer ID> -p <portal URL>")
+		}
+		os.Exit(1)
+	}
+
+	loginURL := getTunnelInfo(customerid, portalurl)
+	browser.OpenURL(loginURL)
+
 	p := mux.NewRouter()
 	loggingMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -197,16 +290,14 @@ func main() {
 	}
 	p.Use(loggingMiddleware)
 
-
-
 	p.HandleFunc("/auth/redirect", func(w http.ResponseWriter, r *http.Request) {
 		error := mux.Vars(r)["error"]
-		error_description := mux.Vars(r)["error_description"]		
+		error_description := mux.Vars(r)["error_description"]
 
 		generateError(w, r, error, error_description)
 	}).
-	Queries("error", "{error}").
-    Queries("error_description", "{error_description}").Methods("GET")
+		Queries("error", "{error}").
+		Queries("error_description", "{error_description}").Methods("GET")
 	s := http.Server{Addr: "127.0.0.1:63000", Handler: p}
 
 	p.HandleFunc("/auth/redirect", func(w http.ResponseWriter, r *http.Request) {
@@ -218,40 +309,9 @@ func main() {
 			fmt.Printf("Returned code: %s\n", code)
 		}
 		//w.Header().Set("Cache-Control", common.Nocache)
-		w.Header().Set("Content-Type", "text/html")			
-		head := `<html>
-		<head>
-		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
-		<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-+sLIOodYLS7CIrQpBjl+C7nPvqq+FbNUBDunl/OZv93DB7Ln/533i8e/mZXLi/P+" crossorigin="anonymous"></script>
-		<style>
-		#anicanvas {
-			width: 100%;
-			height: 100%;
+		w.Header().Set("Content-Type", "text/html")
 
-			background: linear-gradient(-5deg, #015f81 0%, #0278a2 20%, rgb(0, 151,206) 50%, rgb(255,158,24) 50%, rgb(220, 137, 20)  80%, rgb(199, 124, 18) 100%);
-
-			z-index: 0;
-		  }
-		#divbox {
-			position: absolute;
-			top: 30%;
-			left: 0px;
-			width: 100%;
-			height: 100vh;
-			z-index: 100;
-			text-shadow: 1px 1px #FEFEFE;
-		}
-		</style>
-
-		</head>
-		<body class="text-center">
-		<canvas style={{ position: 'relative', top: '0px', left: '0px', z-index: '0' }} id="anicanvas">
-
-		</canvas>
-		<div id='divbox'>
-		<h3 class="mt-5">Sending authentication code to Dymium...</h3>
-		`
-		w.Write( []byte (head))		
+		w.Write([]byte(content.Head))
 		if f, ok := w.(http.Flusher); ok {
 			f.Flush()
 		}
@@ -262,29 +322,29 @@ func main() {
 
 		js, err := json.Marshal(outbody)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err.Error()) 
-			os.Exit(1)		
+			fmt.Printf("Error: %s\n", err.Error())
+			os.Exit(1)
 		}
-	
+
 		urlStr := fmt.Sprintf("%sapi/authenticatebycode", portalurl)
-		resp, err := http.Post(urlStr, "application/json", bytes.NewBuffer(js) )
-	
+		resp, err := http.Post(urlStr, "application/json", bytes.NewBuffer(js))
+
 		if err != nil {
-			fmt.Printf("Error: %s\n", err.Error()) 
-			os.Exit(1)		
+			fmt.Printf("Error: %s\n", err.Error())
+			os.Exit(1)
 		}
 		defer resp.Body.Close()
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err.Error()) 
-			os.Exit(1)		
+			fmt.Printf("Error: %s\n", err.Error())
+			os.Exit(1)
 		}
 		var groups types.AuthorizationCodeResponse
 		err = json.Unmarshal(body, &groups)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err.Error()) 
-			os.Exit(1)		
-		}	
+			fmt.Printf("Error: %s\n", err.Error())
+			os.Exit(1)
+		}
 
 		obody := `
 
@@ -292,25 +352,19 @@ func main() {
 		<h3 class="mt-5">Creating a short term client certificate...</h3>
 
 		`
-		w.Write( []byte (obody))		
+		w.Write([]byte(obody))
 		if f, ok := w.(http.Flusher); ok {
 			f.Flush()
 		}
 
-		csr, err := generateCSR(groups.Name, groups.Groups) 
+		csr, err := generateCSR(groups.Name, groups.Groups)
 
 		sendCSR(csr, groups.Token)
 
-		tail := `
-		<h3 class="mt-5">Certificate obtained! Now establishing a secure tunnel...</h3>
-			</div>
-			</body>
-			</html>		
-			`
-		w.Write( []byte (tail))		
+		w.Write([]byte(content.Tail))
 		if f, ok := w.(http.Flusher); ok {
 			f.Flush()
-		}	
+		}
 
 		if err := s.Shutdown(context.TODO()); err != nil {
 			panic(err) // failure/timeout shutting down the server gracefully
@@ -318,12 +372,21 @@ func main() {
 
 	}).Methods("GET")
 
-
-
-
 	s.ListenAndServe()
 	fmt.Println("Done with the control channel")
-	
 
+	runProxy()
+	/*
+			cert, err := tls.X509KeyPair("certs/client.pem", "certs/client.key")
+		    if err != nil {
+		        log.Fatalf("server: loadkeys: %s", err)
+		    }
+		    config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+		    conn, err := tls.Dial("tcp", "127.0.0.1:8000", &config)
+		    if err != nil {
+		        log.Fatalf("client: dial: %s", err)
+		    }
+		    defer conn.Close()
+	*/
 
 }

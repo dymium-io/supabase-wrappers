@@ -78,6 +78,8 @@ type CustomerIDRequest struct {
 
 type CustomerIDResponse struct {
    LoginURL string `json:"loginURL"`
+   Lbaddress string `json:"lbaddress"`
+   Lbport int `json:"lbport"`
 }
 
 type Datascope struct {

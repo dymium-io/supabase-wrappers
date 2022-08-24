@@ -23,6 +23,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"os"
 	"strings"
 	"path"
@@ -811,6 +812,8 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 	clientid := os.Getenv("AUTH0_PORTAL_CLIENT_ID")
 	redirecturl := os.Getenv("AUTH0_PORTAL_CLI_REDIRECT_URL")
 
+	lbaddress := os.Getenv("LB_ADDRESS")
+	lbport, _ :=  strconv.Atoi(os.Getenv("LB_PORT") )
 
 	tunnellogin := fmt.Sprintf("%sauthorize?response_type=code&client_id=%s&redirect_uri=%s&organization=%s&scope=%s",
 		domain, clientid, redirecturl, t.Customerid,  url.QueryEscape("openid profile") )
@@ -818,6 +821,9 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 	var resp  types.CustomerIDResponse
 	
 	resp.LoginURL = tunnellogin
+	resp.Lbaddress = lbaddress
+	resp.Lbport = lbport
+
 	fmt.Printf("Login URL: %s\n", resp.LoginURL)
 	js, err := json.Marshal(resp)
 	if err != nil {

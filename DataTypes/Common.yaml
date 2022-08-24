@@ -119,6 +119,8 @@ CustomerIDRequest:
 
 CustomerIDResponse:
   - loginURL: string
+  - lbaddress: string
+  - lbport: int
 
 AuthorizationCodeRequest:
   - customerid: string
