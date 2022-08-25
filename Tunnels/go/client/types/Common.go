@@ -3,165 +3,136 @@
 
 package types
 
-type ConnectionType string
 
+
+type ConnectionType string
 const (
-	CT_PostgreSQL ConnectionType = "PostgreSQL"
-	CT_MySQL      ConnectionType = "MySQL"
-	CT_MariaDB    ConnectionType = "MariaDB"
-	CT_SqlServer  ConnectionType = "SqlServer"
-	CT_OracleDB   ConnectionType = "OracleDB"
+  CT_PostgreSQL ConnectionType = "PostgreSQL"
+  CT_MySQL ConnectionType = "MySQL"
+  CT_MariaDB ConnectionType = "MariaDB"
+  CT_SqlServer ConnectionType = "SqlServer"
+  CT_OracleDB ConnectionType = "OracleDB"
 )
 
 type DataSemantics string
-
 const (
-	DS_FamilyName DataSemantics = "FamilyName"
-	DS_Email      DataSemantics = "Email"
-	DS_SSN        DataSemantics = "SSN"
+  DS_FamilyName DataSemantics = "FamilyName"
+  DS_Email DataSemantics = "Email"
+  DS_SSN DataSemantics = "SSN"
 )
 
 type AuthStatus struct {
-	Status       string `json:"status"`
-	Errormessage string `json:"errormessage"`
-	Token        string `json:"token"`
-}
-
-type AuthorizationCodeRequest struct {
-	Customerid string `json:"customerid"`
-	Code       string `json:"code"`
-}
-
-type AuthorizationCodeResponse struct {
-	Token  string   `json:"token"`
-	Name   string   `json:"name"`
-	Groups []string `json:"groups"`
-}
-
-type CSRResponse struct {
-	Certificate string `json:"certificate"`
-}
-
-type CertificateRequest struct {
-	Csr string `json:"csr"`
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
+   Token string `json:"token"`
 }
 
 type ConnectionRecord struct {
-	Name        string  `json:"name"`
-	Dbtype      string  `json:"dbtype"`
-	Address     string  `json:"address"`
-	Port        int     `json:"port"`
-	Dbname      string  `json:"dbname"`
-	UseTLS      bool    `json:"useTLS"`
-	Description string  `json:"description"`
-	Username    *string `json:"username"`
-	Password    *string `json:"password"`
-	Id          *string `json:"id"`
-	Credid      *string `json:"credid"`
+   Name string `json:"name"`
+   Dbtype string `json:"dbtype"`
+   Address string `json:"address"`
+   Port int `json:"port"`
+   Dbname string `json:"dbname"`
+   UseTLS bool `json:"useTLS"`
+   Description string `json:"description"`
+   Username *string `json:"username"`
+   Password *string `json:"password"`
+   Id *string `json:"id"`
+   Credid *string `json:"credid"`
 }
 
 type ConnectionResponse struct {
-	Status       string             `json:"status"`
-	Errormessage string             `json:"errormessage"`
-	Data         []ConnectionRecord `json:"data"`
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
+   Data []ConnectionRecord `json:"data"`
 }
 
 type ConnectionsQuery struct {
-	Status       string              `json:"status"`
-	Errormessage *string             `json:"errormessage"`
-	Records      *[]ConnectionRecord `json:"records"`
-}
-
-type CustomerIDRequest struct {
-	Customerid string `json:"customerid"`
-}
-
-type CustomerIDResponse struct {
-	LoginURL  string `json:"loginURL"`
-	Lbaddress string `json:"lbaddress"`
-	Lbport    int    `json:"lbport"`
+   Status string `json:"status"`
+   Errormessage *string `json:"errormessage"`
+   Records *[]ConnectionRecord `json:"records"`
 }
 
 type Datascope struct {
-	Name    string            `json:"name"`
-	Id      *string           `json:"id"`
-	Records []DatascopeRecord `json:"records"`
+   Name string `json:"name"`
+   Id *string `json:"id"`
+   Records []DatascopeRecord `json:"records"`
 }
 
 type DatascopeAndGroups struct {
-	Id        string `json:"id"`
-	Name      string `json:"name"`
-	Groupid   string `json:"groupid"`
-	Groupname string `json:"groupname"`
+   Id string `json:"id"`
+   Name string `json:"name"`
+   Groupid string `json:"groupid"`
+   Groupname string `json:"groupname"`
 }
 
 type DatascopeId struct {
-	Id string `json:"id"`
+   Id string `json:"id"`
 }
 
 type DatascopeIdName struct {
-	Name string `json:"name"`
-	Id   string `json:"id"`
+   Name string `json:"name"`
+   Id string `json:"id"`
 }
 
 type DatascopeInfoStatus struct {
-	Status       string     `json:"status"`
-	Errormessage string     `json:"errormessage"`
-	Record       *Datascope `json:"record"`
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
+   Record *Datascope `json:"record"`
 }
 
 type DatascopeRecord struct {
-	Id           *string    `json:"id"`
-	Connection   string     `json:"connection"`
-	ConnectionId *string    `json:"connectionId"`
-	Schema       string     `json:"schema"`
-	Table        string     `json:"table"`
-	Typ          string     `json:"typ"`
-	Position     int        `json:"position"`
-	Reference    *Reference `json:"reference"`
-	Action       string     `json:"action"`
-	Col          string     `json:"col"`
-	Semantics    string     `json:"semantics"`
-	Dflt         *string    `json:"dflt"`
-	Isnullable   bool       `json:"isnullable"`
+   Id *string `json:"id"`
+   Connection string `json:"connection"`
+   ConnectionId *string `json:"connectionId"`
+   Schema string `json:"schema"`
+   Table string `json:"table"`
+   Typ string `json:"typ"`
+   Position int `json:"position"`
+   Reference *Reference `json:"reference"`
+   Action string `json:"action"`
+   Col string `json:"col"`
+   Semantics string `json:"semantics"`
+   Dflt *string `json:"dflt"`
+   Isnullable bool `json:"isnullable"`
 }
 
 type DatascopesStatus struct {
-	Status       string            `json:"status"`
-	Errormessage string            `json:"errormessage"`
-	Records      []DatascopeIdName `json:"records"`
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
+   Records []DatascopeIdName `json:"records"`
 }
 
 type GroupAssignment struct {
-	Name   string            `json:"name"`
-	Id     string            `json:"id"`
-	Groups []DatascopeIdName `json:"groups"`
+   Name string `json:"name"`
+   Id string `json:"id"`
+   Groups []DatascopeIdName `json:"groups"`
 }
 
 type GroupMapping struct {
-	Id             *string `json:"id"`
-	Dymiumgroup    string  `json:"dymiumgroup"`
-	Directorygroup string  `json:"directorygroup"`
-	Comments       string  `json:"comments"`
+   Id *string `json:"id"`
+   Dymiumgroup string `json:"dymiumgroup"`
+   Directorygroup string `json:"directorygroup"`
+   Comments string `json:"comments"`
 }
 
 type GroupMappingStatus struct {
-	Status       string         `json:"status"`
-	Errormessage string         `json:"errormessage"`
-	Records      []GroupMapping `json:"records"`
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
+   Records []GroupMapping `json:"records"`
 }
 
 type OperationStatus struct {
-	Status       string `json:"status"`
-	Errormessage string `json:"errormessage"`
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
 }
 
 type RequestById struct {
-	Id string `json:"id"`
+   Id string `json:"id"`
 }
 
 type Reference struct {
-	Schema string `json:"schema"`
-	Table  string `json:"table"`
-	Column string `json:"column"`
+   Schema string `json:"schema"`
+   Table string `json:"table"`
+   Column string `json:"column"`
 }

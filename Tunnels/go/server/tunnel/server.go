@@ -6,7 +6,11 @@ import (
     "net"
     "fmt"
     "crypto/x509"
+    "encoding/gob"
+    "dymium.com/server/protocol"
 )
+
+
 
 func getTargetConnection() (net.Conn, error) {
     target := "127.0.0.1:5432"
@@ -21,7 +25,6 @@ func Server(address string, port int, certPEMBlock, keyPEMBlock []byte, passphra
         log.Println(err)
         return
     }
-fmt.Printf("cert: %v\n\n", cer)
 
     caCertPool := x509.NewCertPool()
     caCertPool.AppendCertsFromPEM(caCert)
@@ -75,34 +78,80 @@ fmt.Printf("Listen: %v\n", ln)
             }
         }
 
-
-        egress, err := getTargetConnection()
-        go proxyConnection(ingress, egress)
+        go proxyConnection(ingress)
     }
 }
 
-func pipe(inc, outc net.Conn) {
+func pipe(egress net.Conn, messages chan protocol.TransmissionUnit, id int ) {
 	buff := make([]byte, 0xffff)
 	for {
-		n, err := inc.Read(buff)
+		n, err := egress.Read(buff)
 		if err != nil {
 			fmt.Printf("Read failed '%s'\n", err.Error())
-			outc.Close()
+			egress.Close()
 			return
 		}
 		b := buff[:n]
+        out := protocol.TransmissionUnit{protocol.Send, id, b}
 		//write out result
-		n, err = outc.Write(b)
+        messages <- out
+	}
+}
+
+func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) {
+    for {
+        buff, ok := <- messages 
+        if(!ok) {
+            close(messages)
+            return
+        }
+        fmt.Printf("Write %d bytes into SSL tunnel\n", len(buff.Data))
+        enc.Encode(buff)
+    }
+}
+
+func proxyConnection(ingress net.Conn) {
+    var conmap = make( map[int] net.Conn )
+
+
+    dec := gob.NewDecoder(ingress)
+    enc := gob.NewEncoder(ingress)
+    messages := make(chan protocol.TransmissionUnit)
+    go MultiplexWriter(messages, enc)
+
+	for {
+        var buff protocol.TransmissionUnit
+        err := dec.Decode(&buff)
+
 		if err != nil {
-			fmt.Printf("Write failed '%s'\n", err.Error())
-			inc.Close()
+			fmt.Printf("Read failed '%s'\n", err.Error())
+			// close all outgoing connections
+            for key := range conmap {
+                conmap[key].Close()
+                
+                delete(conmap, key)
+           
+            }
 			return
 		}
-		fmt.Printf("transfered %d bytes, %s\n", n, string(b))
+        switch buff.Action {
+        case protocol.Open:
+            egress, err := getTargetConnection()
+            if err != nil {
+                fmt.Printf("Error connecting to target")
+            }
+            fmt.Printf("Connection #%d created\n", buff.Id)
+            conmap[buff.Id] = egress
+            go pipe(egress, messages, buff.Id)
+        case protocol.Close:
+            fmt.Printf("Connection #%d closing\n", buff.Id)
+            conmap[buff.Id].Close()
+            delete(conmap, buff.Id)
+        case protocol.Send:
+            fmt.Printf("Write %d bytes into connection #%d\n", len(buff.Data), buff.Id)
+            conmap[buff.Id].Write(buff.Data)
+        }
 
 	}
 }
-func proxyConnection(ingress, egress net.Conn) {
-	go pipe(ingress, egress)
-	go pipe(egress, ingress)
-}
+

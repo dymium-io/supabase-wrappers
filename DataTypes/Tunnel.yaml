@@ -1,0 +1,27 @@
+---
+module: Tunnel
+  
+  
+CustomerIDRequest:
+  - customerid: string
+
+CustomerIDResponse:
+  - loginURL: string
+  - lbaddress: string
+  - lbport: int
+
+AuthorizationCodeRequest:
+  - customerid: string
+  - code: string
+
+AuthorizationCodeResponse:
+  - token: string
+  - name: string
+  - groups: <|string|>
+
+CertificateRequest:
+  - csr: string
+
+CSRResponse:
+  - certificate: string
+

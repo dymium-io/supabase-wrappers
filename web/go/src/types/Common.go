@@ -27,25 +27,6 @@ type AuthStatus struct {
    Token string `json:"token"`
 }
 
-type AuthorizationCodeRequest struct {
-   Customerid string `json:"customerid"`
-   Code string `json:"code"`
-}
-
-type AuthorizationCodeResponse struct {
-   Token string `json:"token"`
-   Name string `json:"name"`
-   Groups []string `json:"groups"`
-}
-
-type CSRResponse struct {
-   Certificate string `json:"certificate"`
-}
-
-type CertificateRequest struct {
-   Csr string `json:"csr"`
-}
-
 type ConnectionRecord struct {
    Name string `json:"name"`
    Dbtype string `json:"dbtype"`
@@ -70,16 +51,6 @@ type ConnectionsQuery struct {
    Status string `json:"status"`
    Errormessage *string `json:"errormessage"`
    Records *[]ConnectionRecord `json:"records"`
-}
-
-type CustomerIDRequest struct {
-   Customerid string `json:"customerid"`
-}
-
-type CustomerIDResponse struct {
-   LoginURL string `json:"loginURL"`
-   Lbaddress string `json:"lbaddress"`
-   Lbport int `json:"lbport"`
 }
 
 type Datascope struct {

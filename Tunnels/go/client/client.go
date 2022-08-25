@@ -16,6 +16,7 @@ import (
 	"dymium.com/client/types"
 	"encoding/json"
 	"encoding/pem"
+	"encoding/gob"
 	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -26,6 +27,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+    "dymium.com/server/protocol"	
 )
 
 const (
@@ -189,31 +191,68 @@ func getTunnelInfo(customerid, portalurl string) string {
 
 	return back.LoginURL
 }
-func pipe(inc, outc net.Conn) {
+
+func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int] net.Conn, id int ) {
+	out := protocol.TransmissionUnit{protocol.Open, id, []byte{}}
+	//write out result
+	messages <- out
+
 	buff := make([]byte, 0xffff)
 	for {
-		n, err := inc.Read(buff)
+		n, err := ingress.Read(buff)
 		if err != nil {
 			fmt.Printf("Read failed '%s'\n", err.Error())
-			outc.Close()
+			ingress.Close()
 			return
 		}
 		b := buff[:n]
-		//write out result
-		n, err = outc.Write(b)
-		if err != nil {
-			fmt.Printf("Write failed '%s'\n", err.Error())
-			inc.Close()
-			return
-		}
-		fmt.Printf("transfered %d bytes\n", n)
+		fmt.Printf("Read %d bytes from connection #%d\n", len(b), id)
 
+		out := protocol.TransmissionUnit{protocol.Send, id, b}
+		//write out result
+        messages <- out
 	}
 }
-func proxyConnection(ingress, egress net.Conn) {
-	go pipe(ingress, egress)
-	go pipe(egress, ingress)
+
+func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) {
+    for {
+        buff, ok := <- messages 
+        if(!ok) {
+			fmt.Printf("Error reading from SSL channel\n")
+            close(messages)
+            return
+        }
+		fmt.Printf("Encode %d bytes into SSL channel\n", len(buff.Data) )
+
+		enc.Encode(buff)
+    }
 }
+func MultiplexReader(egress net.Conn, conmap map[int] net.Conn, dec *gob.Decoder) {
+	for {
+        var buff protocol.TransmissionUnit
+        err := dec.Decode(&buff)
+		if(err != nil) {
+			fmt.Printf("In MultiplexReader - read error, cleaning up\n")
+            for key := range conmap {
+                conmap[key].Close()
+                delete(conmap, key)
+            }			
+			egress.Close()
+			return
+		}
+		switch buff.Action {
+		case protocol.Close:
+			fmt.Printf("In MultiplexReader - close connection %d\n", buff.Id)
+
+			conmap[buff.Id].Close()
+			delete(conmap, buff.Id)
+		case protocol.Send:
+			fmt.Printf("Send %d bytes\n", len(buff.Data) )
+			conmap[buff.Id].Write(buff.Data)
+		}
+	}
+}
+
 func runProxy() {
 
 	addr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:24354")
@@ -228,38 +267,46 @@ func runProxy() {
 	config := &tls.Config{Certificates: []tls.Certificate{clientCert}}
 	target := fmt.Sprintf("%s:%d", lbaddress, lbport)
 	fmt.Printf("Connect to %s\n", target)
+	// create a counterpart tls connection out
+	egress, err := tls.Dial("tcp", target, config) // *Conn
+
+
+	state := egress.ConnectionState()
+	fmt.Printf("Version: %x\n", state.Version)
+	fmt.Printf("HandshakeComplete: %t\n", state.HandshakeComplete)
+	fmt.Printf("DidResume: %t\n", state.DidResume)
+	fmt.Printf("CipherSuite: %x\n", state.CipherSuite)
+	fmt.Printf("NegotiatedProtocol: %s\n", state.NegotiatedProtocol)
+	fmt.Printf("NegotiatedProtocolIsMutual: %t\n", state.NegotiatedProtocolIsMutual)
+
+	fmt.Print("Certificate chain:")
+	for i, cert := range state.PeerCertificates {
+		subject := cert.Subject
+		issuer := cert.Issuer
+		fmt.Printf(" %d s:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", i, subject.Country, subject.Province, subject.Locality, subject.Organization, subject.OrganizationalUnit, subject.CommonName)
+		fmt.Printf("   i:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", issuer.Country, issuer.Province, issuer.Locality, issuer.Organization, issuer.OrganizationalUnit, issuer.CommonName)
+	}
+	
+	var conmap = make( map[int] net.Conn )	
+	connectionCounter := 0
+    dec := gob.NewDecoder(egress)
+    enc := gob.NewEncoder(egress)
+    messages := make(chan protocol.TransmissionUnit)
+    go MultiplexWriter(messages, enc)
+	go MultiplexReader(egress, conmap, dec)
 	for {
 		ingress, err := listener.Accept() //*TCPConn
 		if err != nil {
 			panic(err)
 		}
-
-		// create a counterpart tls connection out
-		egress, err := tls.Dial("tcp", target, config) // *Conn
-
-
-        state := egress.ConnectionState()
-        fmt.Printf("Version: %x\n", state.Version)
-        fmt.Printf("HandshakeComplete: %t\n", state.HandshakeComplete)
-        fmt.Printf("DidResume: %t\n", state.DidResume)
-        fmt.Printf("CipherSuite: %x\n", state.CipherSuite)
-        fmt.Printf("NegotiatedProtocol: %s\n", state.NegotiatedProtocol)
-        fmt.Printf("NegotiatedProtocolIsMutual: %t\n", state.NegotiatedProtocolIsMutual)
-    
-        fmt.Print("Certificate chain:")
-        for i, cert := range state.PeerCertificates {
-            subject := cert.Subject
-            issuer := cert.Issuer
-            fmt.Printf(" %d s:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", i, subject.Country, subject.Province, subject.Locality, subject.Organization, subject.OrganizationalUnit, subject.CommonName)
-            fmt.Printf("   i:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", issuer.Country, issuer.Province, issuer.Locality, issuer.Organization, issuer.OrganizationalUnit, issuer.CommonName)
-        }
-        
 		
 		//egress, err := net.Dial("tcp", target) // *Conn
 		if err != nil {
 			panic(err)
 		}
-		proxyConnection(ingress, egress)
+		conmap[connectionCounter] = ingress
+		go pipe(ingress, messages, conmap, connectionCounter)
+		connectionCounter++
 	}
 }
 func main() {
