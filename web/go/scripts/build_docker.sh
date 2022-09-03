@@ -27,7 +27,6 @@ retval=$?
 }
 
 echo Build main app
-
 cd ../../js/packages/admin/
 yarn run build
 retval=$?
@@ -51,6 +50,33 @@ retval=$?
 }
 
 cd ../../../go/scripts
+echo Build tunneling clients
+cd ../../../Tunnels/go/client
+
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+           go build -a -tags netgo -ldflags '-w -extldflags "-static"' -o tunnel
+chmod a+x tunnel
+tar -zcvf tunnel.tar.gz tunnel
+cp tunnel.tar.gz ../../../web/go/assets/customer/
+mv tunnel.tar.gz ../../../web/js/packages/portal/public
+
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
+           go build -a -tags netgo -ldflags '-w -extldflags "-static"' -o tunnel.exe
+
+zip tunnel_win.zip  tunnel.exe 
+cp tunnel_win.zip ../../../web/go/assets/customer/
+mv tunnel_win.zip ../../../web/js/packages/portal/public
+
+CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
+           go build -a -tags netgo -ldflags '-w -extldflags "-static"' -o tunnel
+chmod a+x tunnel
+zip tunnel_mac.zip  tunnel
+cp tunnel_mac.zip ../../../web/go/assets/customer/
+mv tunnel_mac.zip ../../../web/js/packages/portal/public
+
+echo "Moved the client binaries"
+
+cd ../../../web/go/scripts/
 
 cp -r ../assets/admin $build_d/
 cp -r ../assets/customer $build_d/

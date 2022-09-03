@@ -114,3 +114,8 @@ DatascopeAndGroups:
   - groupid: string	
   - groupname: string
 
+
+UserDatascopes:
+  - username: string 
+  - password: string 
+  - datascopes: <|DatascopeIdName|>

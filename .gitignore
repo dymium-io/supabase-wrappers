@@ -17,3 +17,6 @@ web/go/assets/\#run.sh\#
 DbSync/scripts/localruntest.sh~
 web/go/assets/runtest.sh~
 Tunnels/go/client/client
+Tunnels/go/server/server
+Tunnels/go/client/tunnel.exe
+Tunnels/go/client/tunnel

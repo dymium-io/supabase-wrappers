@@ -12,6 +12,7 @@ import Connections from "./App/Connections"
 import Datascopes from "./App/Datascopes"
 import Groups from "./App/Groups"
 import Rules from "./App/Rules"
+import Access from "./App/Access"
 import TestSQL from "./App/TestSQL"
 import * as com from './Common'
 
@@ -39,7 +40,8 @@ function App() {
             <Route path="/app/connections" element={<Connections />} />     
             <Route path="/app/datascopes" element={<Datascopes />} />                
             <Route path="/app/groups" element={<Groups />} />    
-            <Route path="/app/rules" element={<Rules />} />         
+            <Route path="/app/rules" element={<Rules />} />   
+            <Route path="/app/access" element={<Access />} />                     
             <Route path="/app/test" element={<TestSQL />} />                                             
             <Route path="/app/" element={<Sticky />} />          
           </Route>

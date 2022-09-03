@@ -16,7 +16,18 @@ Array [
       onKeyDown={[Function]}
       role="tab"
     >
-      Group Mapping
+      Datascope Group Mapping
+    </a>
+    <a
+      aria-selected={false}
+      className="nav-item nav-link"
+      data-rb-event-key="admins"
+      href="#"
+      onClick={[Function]}
+      onKeyDown={[Function]}
+      role="tab"
+    >
+      Admin Access
     </a>
   </nav>,
   <div

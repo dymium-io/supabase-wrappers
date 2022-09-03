@@ -1079,6 +1079,55 @@ export class RequestById {
   }
 }
 
+export class UserDatascopes {
+  private '_username': string
+  private '_password': string
+  private '_datascopes': Array<DatascopeIdName>
+
+  constructor() {
+    this['_username'] = ''
+    this['_password'] = ''
+    this['_datascopes'] = []
+  }
+  get username(): string { return this['_username'] }
+  set username(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_username'])) {
+      setDirtyFlag()
+      this['_username'] = __v__
+    }
+  }
+  get password(): string { return this['_password'] }
+  set password(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_password'])) {
+      setDirtyFlag()
+      this['_password'] = __v__
+    }
+  }
+  get datascopes(): Array<DatascopeIdName> { return this['_datascopes'] }
+  set datascopes(__a__: any) {
+    setDirtyFlag()
+    this['_datascopes'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): UserDatascopes {
+    disableDF()
+    let cls = new UserDatascopes()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.username = __a__['username']
+       cls.password = __a__['password']
+       cls.datascopes = array1Reader(DatascopeIdName.fromJson)(__a__['datascopes'])
+    } else {
+       doAlert(`UserDatascopes: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class Reference {
   private '_schema': string
   private '_table': string

@@ -20,6 +20,9 @@ import cloneDeep from 'lodash/cloneDeep';
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Internal'
 import * as http from '../Api/Http'
+import { useInitialize } from '../Utils/CustomHooks'
+import { useAppDispatch, useAppSelector } from './hooks'
+import {setActiveGroupsTab} from '../Slices/menuSlice'
 
 const { SearchBar, ClearSearchButton } = Search;
 
@@ -465,17 +468,34 @@ function GroupMapping() {
     </>
   )
 }
+
+export function AdminAccess() {
+
+  return (
+<></>
+  )
+}
+
 export default function Groups() {
+  const t = useAppSelector((state) => {
+        
+    return state.reducer.activeGroupsTab}
+    )
+    const appDispatch = useAppDispatch()
 
   return (
     <Tabs
-
+    defaultActiveKey={t} id="groups" 
+    onSelect={(k) => appDispatch( setActiveGroupsTab(k) )}
 
       unmountOnExit={true} className="mb-3 text-left">
-
-      <Tab eventKey="groups" title="Group Mapping" className="mx-4">
+      <Tab eventKey="groups" title="Datascope Group Mapping" className="mx-4">
         <GroupMapping />
       </Tab>
+      <Tab eventKey="admins" title="Admin Access" className="mx-4">
+        <AdminAccess />
+      </Tab>
+
     </Tabs>
 
   )

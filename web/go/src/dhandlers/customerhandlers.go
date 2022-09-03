@@ -799,6 +799,34 @@ func AuthByCode(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 
 }
+func GetDatascopesAccess(w http.ResponseWriter, r *http.Request) {
+	token := common.TokenFromHTTPRequest(r)
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email, groups, _ := authentication.GetIdentityFromToken(token)
+
+	out, _ := authentication.GetDatascopesForGroups(schema, email, groups)
+
+	js, _ := json.Marshal(out)
+
+	log.Printf("In GetDatascopesAccess: %s, %v\n", email, groups)
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Write(js)
+}
+
+func RegenerateDatascopePassword(w http.ResponseWriter, r *http.Request) {
+	token := common.TokenFromHTTPRequest(r)
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email, groups, _ := authentication.GetIdentityFromToken(token)
+
+	out, _ := authentication.RegenerateDatascopePassword(schema, email, groups)
+
+	js, _ := json.Marshal(out)
+
+	log.Printf("In GetDatascopesAccess: %s, %v\n", email, groups)
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Write(js)
+}
+
 
 func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 

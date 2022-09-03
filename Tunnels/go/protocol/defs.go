@@ -1,8 +1,10 @@
 package protocol
 
-const Close = 0
-const Open = 1 
-const Send = 2
+const (
+	Close = iota
+ 	Open
+	Send
+)
 
 type TransmissionUnit struct {
 	Action int

@@ -27,6 +27,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"sync"
     "dymium.com/server/protocol"	
 )
 
@@ -41,6 +42,8 @@ var customerid string
 var portalurl string
 var lbaddress string
 var lbport int
+var connectionError = false 
+var wg sync.WaitGroup
 
 func generateError(w http.ResponseWriter, r *http.Request, header string, body string) error {
 	/*
@@ -253,23 +256,27 @@ func MultiplexReader(egress net.Conn, conmap map[int] net.Conn, dec *gob.Decoder
 	}
 }
 
-func runProxy() {
+func runProxy(back chan string) {
+	defer wg.Done()
 
 	addr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:24354")
 	listener, err := net.ListenTCP("tcp", addr)
 	if err != nil {
-		panic(err)
+		back <- err.Error()
 	}
 
-	if err != nil {
-		panic(err)
-	}
 	config := &tls.Config{Certificates: []tls.Certificate{clientCert}}
 	target := fmt.Sprintf("%s:%d", lbaddress, lbport)
-	fmt.Printf("Connect to %s\n", target)
+	back <- fmt.Sprintf("Connect to %s\n", target)
 	// create a counterpart tls connection out
 	egress, err := tls.Dial("tcp", target, config) // *Conn
-
+	if err != nil {
+		back <- err.Error()
+		back <- "error"
+		return
+	}
+	back <- "Connected successfully"
+	fmt.Printf("Wrote to back Connected")
 
 	state := egress.ConnectionState()
 	fmt.Printf("Version: %x\n", state.Version)
@@ -294,13 +301,15 @@ func runProxy() {
     messages := make(chan protocol.TransmissionUnit)
     go MultiplexWriter(messages, enc)
 	go MultiplexReader(egress, conmap, dec)
+
+	back <- "end"
+
 	for {
 		ingress, err := listener.Accept() //*TCPConn
 		if err != nil {
 			panic(err)
 		}
 		
-		//egress, err := net.Dial("tcp", target) // *Conn
 		if err != nil {
 			panic(err)
 		}
@@ -314,6 +323,7 @@ func main() {
 	flag.StringVar(&customerid, "c", "", "Customer ID")
 	flag.StringVar(&portalurl, "p", "", "Portal URL")
 	flag.Parse()
+	wg.Add(1)
 
 	if len(customerid) == 0 && len(portalurl) == 0 {
 		if runtime.GOOS == "windows" {
@@ -395,8 +405,8 @@ func main() {
 
 		obody := `
 
-		<h3 class="mt-5">Authenticated!</h3>
-		<h3 class="mt-5">Creating a short term client certificate...</h3>
+		<div class="line">Authenticated!</div>
+		<div class="line">Creating a short term client certificate...</div>
 
 		`
 		w.Write([]byte(obody))
@@ -408,11 +418,39 @@ func main() {
 
 		sendCSR(csr, groups.Token)
 
-		w.Write([]byte(content.Tail))
-		if f, ok := w.(http.Flusher); ok {
-			f.Flush()
+
+		message := make(chan string)
+		go runProxy(message)
+		for {
+			msg := <-message
+			fmt.Printf("read from channel: %s\n", msg)
+			if msg == "end"{
+				break
+			}
+			if msg == "error"{
+				connectionError = true
+				break
+			}
+			hbody := fmt.Sprintf(`
+			<div class='line'>%s</div>`, 
+			msg)
+			fmt.Printf("%s\n", hbody)
+			w.Write([]byte(hbody))
+			if f, ok := w.(http.Flusher); ok {
+				f.Flush()
+			}			
 		}
 
+		if connectionError {
+			w.Write([]byte(content.ErrorTail))
+		} else {
+			tail := fmt.Sprintf(content.Tail, portalurl, groups.Token)
+			w.Write([]byte(tail))
+		}
+		if f, ok := w.(http.Flusher); ok {
+			f.Flush()
+		}		
+		fmt.Printf("Shutdown the web server...\n")
 		if err := s.Shutdown(context.TODO()); err != nil {
 			panic(err) // failure/timeout shutting down the server gracefully
 		}
@@ -422,18 +460,7 @@ func main() {
 	s.ListenAndServe()
 	fmt.Println("Done with the control channel")
 
-	runProxy()
-	/*
-			cert, err := tls.X509KeyPair("certs/client.pem", "certs/client.key")
-		    if err != nil {
-		        log.Fatalf("server: loadkeys: %s", err)
-		    }
-		    config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
-		    conn, err := tls.Dial("tcp", "127.0.0.1:8000", &config)
-		    if err != nil {
-		        log.Fatalf("client: dial: %s", err)
-		    }
-		    defer conn.Close()
-	*/
+	
+	wg.Wait()
 
 }
