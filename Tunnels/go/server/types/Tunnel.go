@@ -34,4 +34,7 @@ type CustomerIDResponse struct {
    LoginURL string `json:"loginURL"`
    Lbaddress string `json:"lbaddress"`
    Lbport int `json:"lbport"`
+   ProtocolVersion string `json:"protocolVersion"`
+   ClientMajorVersion string `json:"clientMajorVersion"`
+   ClientMinorVersion string `json:"clientMinorVersion"`
 }

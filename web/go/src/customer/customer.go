@@ -47,6 +47,8 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/api/logout", dhandlers.GetLogout).Methods("GET")
 	nonauthenticated.HandleFunc("/api/querytunnel", dhandlers.QueryTunnel).Methods("POST")
 	nonauthenticated.HandleFunc("/api/authenticatebycode", dhandlers.AuthByCode).Methods("POST")
+	
+	nonauthenticated.HandleFunc("/api/downloadupdate", dhandlers.DownloadUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")
 
 	
 	// For React to work properly, ensure that the URLs going into the React router return index.html

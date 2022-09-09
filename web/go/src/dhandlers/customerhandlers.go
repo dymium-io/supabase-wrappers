@@ -11,6 +11,7 @@ import (
 	_"github.com/gorilla/mux"
 	"golang.org/x/net/context"
 	"github.com/Jeffail/gabs"	
+	"github.com/gorilla/mux"
 	"encoding/json"
 	"io/ioutil"
 	"net/url"
@@ -827,6 +828,16 @@ func RegenerateDatascopePassword(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
+
+func DownloadUpdate(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	os, _ := vars["os"]
+	arch, _ := vars["arch"]	
+
+	fil := fmt.Sprintf("./customer/update/%s/%s/client", os, arch)
+	log.Printf("path: %s\n", fil)
+	http.ServeFile(w, r, fil)
+}
 
 func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 

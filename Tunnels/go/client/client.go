@@ -13,10 +13,13 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"dymium.com/client/content"
+	"dymium.com/client/selfupdate"
 	"dymium.com/client/types"
+	"dymium.com/server/protocol"
+	"encoding/gob"
 	"encoding/json"
 	"encoding/pem"
-	"encoding/gob"
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -26,9 +29,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	_ "path/filepath"
 	"runtime"
 	"sync"
-    "dymium.com/server/protocol"	
+	"time"
 )
 
 const (
@@ -42,14 +46,20 @@ var customerid string
 var portalurl string
 var lbaddress string
 var lbport int
-var connectionError = false 
+var connectionError = false
 var wg sync.WaitGroup
+
+var (
+	MajorVersion    string
+	MinorVersion    string
+	ProtocolVersion string
+)
 
 func generateError(w http.ResponseWriter, r *http.Request, header string, body string) error {
 	/*
 		Failed to get userinfo: "+err.Error()
 	*/
-	fmt.Printf("Error %s: %s\n", header, body)
+
 	w.Header().Set("Cache-Control", Nocache)
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(`<html>
@@ -90,7 +100,7 @@ func generateCSR(name string, groups []string) ([]byte, error) {
 		Subject:            pkix.Name{CommonName: name},
 		DNSNames:           groups,
 	}
-	fmt.Println("Generating CSR")
+	fmt.Println("Generating certificate request...")
 	csrDER, err := x509.CreateCertificateRequest(rand.Reader, template, certKey)
 	if err != nil {
 		return []byte{}, err
@@ -119,7 +129,6 @@ func sendCSR(csr []byte, token string) error {
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+token)
 
-	fmt.Printf("token %s\n", token)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -158,8 +167,38 @@ func sendCSR(csr []byte, token string) error {
 
 	return nil
 }
+func restart() {
 
-func getTunnelInfo(customerid, portalurl string) string {
+	ex, _ := os.Executable()
+
+	procAttr := new(os.ProcAttr)
+	procAttr.Files = []*os.File{nil, os.Stdout, os.Stderr}
+	dir, _ := os.Getwd()
+	procAttr.Dir = dir
+	procAttr.Env = os.Environ()
+	args := []string{}
+
+	for _, v := range os.Args {
+		if v == "-u" {
+			continue
+		}
+		args = append(args, v)
+	}
+	args[0] = ex
+	args = append(args, "-r")
+	time.Sleep(time.Second)
+	proc, err := os.StartProcess(ex, args, procAttr)
+	if err != nil {
+		fmt.Printf("StartProcess Error: %s\n", err.Error())
+	}
+	_, err = proc.Wait()
+	if err != nil {
+		fmt.Printf("proc.Wait error: %s\n", err.Error())
+	}
+	os.Exit(0)
+}
+
+func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bool) {
 
 	var outbody types.CustomerIDRequest
 	outbody.Customerid = customerid
@@ -192,10 +231,21 @@ func getTunnelInfo(customerid, portalurl string) string {
 	lbaddress = back.Lbaddress
 	lbport = back.Lbport
 
-	return back.LoginURL
+	if !forcenoupdate {
+		if ProtocolVersion < back.ProtocolVersion {
+			fmt.Println("The tunneling utility must be updated, downloading the new binary...")
+		} else {
+			if(ProtocolVersion >= back.ProtocolVersion) {
+				fmt.Printf("A new version %s.%s is available, to install restart with the -u option\n",
+					back.ClientMajorVersion, back.ClientMinorVersion)
+			}
+
+		}
+	}
+	return back.LoginURL, true //ProtocolVersion < back.ProtocolVersion
 }
 
-func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int] net.Conn, id int ) {
+func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, id int) {
 	out := protocol.TransmissionUnit{protocol.Open, id, []byte{}}
 	//write out result
 	messages <- out
@@ -204,42 +254,42 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 	for {
 		n, err := ingress.Read(buff)
 		if err != nil {
-			fmt.Printf("Read failed '%s'\n", err.Error())
+			//fmt.Printf("Read failed '%s'\n", err.Error())
 			ingress.Close()
 			return
 		}
 		b := buff[:n]
-		fmt.Printf("Read %d bytes from connection #%d\n", len(b), id)
+		//fmt.Printf("Read %d bytes from connection #%d\n", len(b), id)
 
 		out := protocol.TransmissionUnit{protocol.Send, id, b}
 		//write out result
-        messages <- out
+		messages <- out
 	}
 }
 
 func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) {
-    for {
-        buff, ok := <- messages 
-        if(!ok) {
-			fmt.Printf("Error reading from SSL channel\n")
-            close(messages)
-            return
-        }
-		fmt.Printf("Encode %d bytes into SSL channel\n", len(buff.Data) )
+	for {
+		buff, ok := <-messages
+		if !ok {
+			//fmt.Printf("Error reading from SSL channel\n")
+			close(messages)
+			return
+		}
+		//fmt.Printf("Encode %d bytes into SSL channel\n", len(buff.Data))
 
 		enc.Encode(buff)
-    }
+	}
 }
-func MultiplexReader(egress net.Conn, conmap map[int] net.Conn, dec *gob.Decoder) {
+func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder) {
 	for {
-        var buff protocol.TransmissionUnit
-        err := dec.Decode(&buff)
-		if(err != nil) {
+		var buff protocol.TransmissionUnit
+		err := dec.Decode(&buff)
+		if err != nil {
 			fmt.Printf("In MultiplexReader - read error, cleaning up\n")
-            for key := range conmap {
-                conmap[key].Close()
-                delete(conmap, key)
-            }			
+			for key := range conmap {
+				conmap[key].Close()
+				delete(conmap, key)
+			}
 			egress.Close()
 			return
 		}
@@ -250,7 +300,7 @@ func MultiplexReader(egress net.Conn, conmap map[int] net.Conn, dec *gob.Decoder
 			conmap[buff.Id].Close()
 			delete(conmap, buff.Id)
 		case protocol.Send:
-			fmt.Printf("Send %d bytes\n", len(buff.Data) )
+			//fmt.Printf("Send %d bytes\n", len(buff.Data))
 			conmap[buff.Id].Write(buff.Data)
 		}
 	}
@@ -260,9 +310,15 @@ func runProxy(back chan string) {
 	defer wg.Done()
 
 	addr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:24354")
+	if err != nil {
+		fmt.Printf("Error resolving address: %s\n", err.Error())
+		panic(err)
+	}
 	listener, err := net.ListenTCP("tcp", addr)
 	if err != nil {
+		fmt.Printf("Error in ListenTCP: %s, can't continue\n", err.Error())
 		back <- err.Error()
+		os.Exit(1)
 	}
 
 	config := &tls.Config{Certificates: []tls.Certificate{clientCert}}
@@ -276,9 +332,10 @@ func runProxy(back chan string) {
 		return
 	}
 	back <- "Connected successfully"
-	fmt.Printf("Wrote to back Connected")
+	//fmt.Printf("Wrote to back Connected")
 
-	state := egress.ConnectionState()
+	/* state  := egress.ConnectionState()
+
 	fmt.Printf("Version: %x\n", state.Version)
 	fmt.Printf("HandshakeComplete: %t\n", state.HandshakeComplete)
 	fmt.Printf("DidResume: %t\n", state.DidResume)
@@ -287,19 +344,21 @@ func runProxy(back chan string) {
 	fmt.Printf("NegotiatedProtocolIsMutual: %t\n", state.NegotiatedProtocolIsMutual)
 
 	fmt.Print("Certificate chain:")
+
 	for i, cert := range state.PeerCertificates {
 		subject := cert.Subject
 		issuer := cert.Issuer
 		fmt.Printf(" %d s:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", i, subject.Country, subject.Province, subject.Locality, subject.Organization, subject.OrganizationalUnit, subject.CommonName)
 		fmt.Printf("   i:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", issuer.Country, issuer.Province, issuer.Locality, issuer.Organization, issuer.OrganizationalUnit, issuer.CommonName)
 	}
-	
-	var conmap = make( map[int] net.Conn )	
+	*/
+
+	var conmap = make(map[int]net.Conn)
 	connectionCounter := 0
-    dec := gob.NewDecoder(egress)
-    enc := gob.NewEncoder(egress)
-    messages := make(chan protocol.TransmissionUnit)
-    go MultiplexWriter(messages, enc)
+	dec := gob.NewDecoder(egress)
+	enc := gob.NewEncoder(egress)
+	messages := make(chan protocol.TransmissionUnit)
+	go MultiplexWriter(messages, enc)
 	go MultiplexReader(egress, conmap, dec)
 
 	back <- "end"
@@ -307,40 +366,86 @@ func runProxy(back chan string) {
 	for {
 		ingress, err := listener.Accept() //*TCPConn
 		if err != nil {
+			fmt.Printf("Error in Accept: %s\n", err.Error())
 			panic(err)
 		}
-		
-		if err != nil {
-			panic(err)
-		}
+
 		conmap[connectionCounter] = ingress
 		go pipe(ingress, messages, conmap, connectionCounter)
 		connectionCounter++
 	}
 }
-func main() {
+func doUpdate(portalUrl string) error {
 
+	url := fmt.Sprintf("%sapi/downloadupdate?os=%s&arch=%s", portalUrl, runtime.GOOS, runtime.GOARCH)
+	fmt.Println("Downloading new version...")
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return errors.New(fmt.Sprintf("Error downloading update, status %d", resp.StatusCode))
+	}
+	ex, _ := os.Executable()
+	fmt.Println("Updating the client...")
+	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, ex + ".old"})
+	if err != nil {
+		fmt.Printf("Error updating: %s\n", err.Error())
+		if rerr := selfupdate.RollbackError(err); rerr != nil {
+			fmt.Println("Failed to rollback from bad update: %s", rerr.Error())
+		}
+		// error handling
+	} else {
+		fmt.Println("Utility successfully updated, restarting...")
+	}
+	return err
+}
+func main() {
+	forcenoupdate := flag.Bool("r", false, "Don't update")
+	forceupdate := flag.Bool("u", false, "Force update")
 	flag.StringVar(&customerid, "c", "", "Customer ID")
 	flag.StringVar(&portalurl, "p", "", "Portal URL")
 	flag.Parse()
+	if !*forcenoupdate {
+		fmt.Printf("Dymium secure tunnel, version %s.%s, protocol iteration %s\n", MajorVersion, MinorVersion, ProtocolVersion)
+	}
+	if *forcenoupdate && *forceupdate {
+		fmt.Printf("Can't force update and no update!")
+		os.Exit(1)
+	}
+
 	wg.Add(1)
 
 	if len(customerid) == 0 && len(portalurl) == 0 {
 		if runtime.GOOS == "windows" {
-			fmt.Println("Usage: tclient.exe -c <customer ID> -p <portal URL>")
+			fmt.Println("Usage: client.exe -c <customer ID> -p <portal URL>\n")
 		} else {
-			fmt.Println("Usage: tclient -c <customer ID> -p <portal URL>")
+			fmt.Println("Usage: client -c <customer ID> -p <portal URL>\n")
 		}
 		os.Exit(1)
 	}
 
-	loginURL := getTunnelInfo(customerid, portalurl)
-	browser.OpenURL(loginURL)
+	loginURL, needsUpdate := getTunnelInfo(customerid, portalurl, *forcenoupdate)
+	if !*forcenoupdate {
+		if *forceupdate || needsUpdate {
+			// runtime.Breakpoint()
+			err := doUpdate(portalurl)
+			if err != nil {
+				os.Exit(1)
+			}
+			restart()
+		}
+	}
 
+	err := browser.OpenURL(loginURL)
+	if err != nil {
+		fmt.Printf("OpenURL failed: %s\n", err.Error())
+	}
 	p := mux.NewRouter()
 	loggingMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Printf("%s%s\n", r.Host, r.RequestURI)
+			// fmt.Printf("%s%s\n", r.Host, r.RequestURI)
 			// Call the next handler, which can be another middleware in the chain, or the final handler.
 			next.ServeHTTP(w, r)
 		})
@@ -363,7 +468,7 @@ func main() {
 			generateError(w, r, "Error: ", r.URL.Query().Get("error_description"))
 			return
 		} else {
-			fmt.Printf("Returned code: %s\n", code)
+			// fmt.Printf("Returned code: %s\n", code)
 		}
 		//w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")
@@ -418,27 +523,26 @@ func main() {
 
 		sendCSR(csr, groups.Token)
 
-
 		message := make(chan string)
 		go runProxy(message)
 		for {
 			msg := <-message
-			fmt.Printf("read from channel: %s\n", msg)
-			if msg == "end"{
+			// fmt.Printf("read from channel: %s\n", msg)
+			if msg == "end" {
 				break
 			}
-			if msg == "error"{
+			if msg == "error" {
 				connectionError = true
 				break
 			}
 			hbody := fmt.Sprintf(`
-			<div class='line'>%s</div>`, 
-			msg)
-			fmt.Printf("%s\n", hbody)
+			<div class='line'>%s</div>`,
+				msg)
+
 			w.Write([]byte(hbody))
 			if f, ok := w.(http.Flusher); ok {
 				f.Flush()
-			}			
+			}
 		}
 
 		if connectionError {
@@ -449,8 +553,8 @@ func main() {
 		}
 		if f, ok := w.(http.Flusher); ok {
 			f.Flush()
-		}		
-		fmt.Printf("Shutdown the web server...\n")
+		}
+
 		if err := s.Shutdown(context.TODO()); err != nil {
 			panic(err) // failure/timeout shutting down the server gracefully
 		}
@@ -458,9 +562,8 @@ func main() {
 	}).Methods("GET")
 
 	s.ListenAndServe()
-	fmt.Println("Done with the control channel")
+	fmt.Println("Ready to pass traffic securely!")
 
-	
 	wg.Wait()
 
 }
