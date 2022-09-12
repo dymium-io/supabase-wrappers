@@ -49,7 +49,9 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/api/authenticatebycode", dhandlers.AuthByCode).Methods("POST")
 	
 	nonauthenticated.HandleFunc("/api/downloadupdate", dhandlers.DownloadUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")
+	nonauthenticated.HandleFunc("/api/datascopehelp", dhandlers.DatascopeHelp).Queries("token", "{token}", "port", "{port}").Methods("GET")
 
+	
 	
 	// For React to work properly, ensure that the URLs going into the React router return index.html
 	nonauthenticated.PathPrefix("/app/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

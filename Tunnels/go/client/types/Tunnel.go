@@ -38,3 +38,9 @@ type CustomerIDResponse struct {
    ClientMajorVersion string `json:"clientMajorVersion"`
    ClientMinorVersion string `json:"clientMinorVersion"`
 }
+
+type RequestUpdate struct {
+   ProtocolVersion string `json:"protocolVersion"`
+   ClientMajorVersion string `json:"clientMajorVersion"`
+   ClientMinorVersion string `json:"clientMinorVersion"`
+}

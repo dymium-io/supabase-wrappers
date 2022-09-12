@@ -132,6 +132,7 @@ type RequestById struct {
 }
 
 type UserDatascopes struct {
+   Schema string `json:"schema"`
    Username string `json:"username"`
    Password string `json:"password"`
    Datascopes []DatascopeIdName `json:"datascopes"`

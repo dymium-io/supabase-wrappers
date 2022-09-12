@@ -7,6 +7,7 @@ type Claims struct {
 	Groups     []string `json:"groups"`
 	Picture    string `json:"picture"`
 	Schema     string `json:"schema"`
+	Port       int  `json:"port"`
 	Orgid      string `json:"orgid"`
 	jwt.StandardClaims
 }

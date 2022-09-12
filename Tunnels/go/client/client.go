@@ -22,6 +22,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/pkg/browser"
 	"io"
@@ -235,7 +236,7 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 		if ProtocolVersion < back.ProtocolVersion {
 			fmt.Println("The tunneling utility must be updated, downloading the new binary...")
 		} else {
-			if(ProtocolVersion >= back.ProtocolVersion) {
+			if ProtocolVersion >= back.ProtocolVersion {
 				fmt.Printf("A new version %s.%s is available, to install restart with the -u option\n",
 					back.ClientMajorVersion, back.ClientMinorVersion)
 			}
@@ -306,10 +307,10 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder)
 	}
 }
 
-func runProxy(back chan string) {
+func runProxy(listener *net.TCPListener, back chan string, token int) {
 	defer wg.Done()
-
-	addr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:24354")
+/*
+	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", token))
 	if err != nil {
 		fmt.Printf("Error resolving address: %s\n", err.Error())
 		panic(err)
@@ -320,7 +321,7 @@ func runProxy(back chan string) {
 		back <- err.Error()
 		os.Exit(1)
 	}
-
+*/
 	config := &tls.Config{Certificates: []tls.Certificate{clientCert}}
 	target := fmt.Sprintf("%s:%d", lbaddress, lbport)
 	back <- fmt.Sprintf("Connect to %s\n", target)
@@ -400,6 +401,20 @@ func doUpdate(portalUrl string) error {
 		fmt.Println("Utility successfully updated, restarting...")
 	}
 	return err
+}
+func getListener(port int, back chan string) (*net.TCPListener, error) {
+	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+	if err != nil {
+		fmt.Printf("Error resolving address: %s\n", err.Error())
+		panic(err)
+	}
+	listener, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		fmt.Printf("Error in ListenTCP: %s, can't continue\n", err.Error())
+		back <- err.Error()
+		os.Exit(1)
+	}
+	return listener, err
 }
 func main() {
 	forcenoupdate := flag.Bool("r", false, "Don't update")
@@ -524,7 +539,18 @@ func main() {
 		sendCSR(csr, groups.Token)
 
 		message := make(chan string)
-		go runProxy(message)
+		var claim types.Claims
+		var p jwt.Parser
+		fmt.Printf("token: %s\n", groups.Token)
+		_, _, err = p.ParseUnverified(groups.Token, &claim)
+		if err != nil {
+			fmt.Printf("Error: token invalid, can't continue %s\n", err.Error())
+			os.Exit(1)
+		}
+
+		listener, err := getListener(claim.Port, message) 
+
+		go runProxy(listener, message, claim.Port)
 		for {
 			msg := <-message
 			// fmt.Printf("read from channel: %s\n", msg)
@@ -548,7 +574,7 @@ func main() {
 		if connectionError {
 			w.Write([]byte(content.ErrorTail))
 		} else {
-			tail := fmt.Sprintf(content.Tail, portalurl, groups.Token)
+			tail := fmt.Sprintf(content.Tail, portalurl, groups.Token, claim.Port)
 			w.Write([]byte(tail))
 		}
 		if f, ok := w.(http.Flusher); ok {
