@@ -185,7 +185,6 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Invoke body: %s\n", string(invokebody))
 	}
 
-
 	js, err := json.Marshal(status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -283,7 +282,6 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
 
 	error := authentication.UpdateConnection(schema, t)
 
@@ -974,6 +972,36 @@ func GetConnections(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.Write(js)
+}
+
+func DatascopeHelp(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	token, _ := vars["token"]
+	sport, _ := vars["port"]
+	
+	newtoken, error := authentication.CheckAndRefreshToken(token, sport)
+
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "text/html")
+
+	if(error != nil) {
+		http.Error(w, error.Error(), http.StatusNotFound)
+		return
+	}
+
+	js := []byte(`<html>
+	<head>
+	<script>
+	 !function() {
+		sessionStorage.setItem("Session", "`+newtoken+`")
+		window.location.href = "/app/access?key=datascopes"
+	 }()
+	</script>
+	</head>
+	<body>Callback arrived</body>
+	</html>`)
 
 	w.Write(js)
 }

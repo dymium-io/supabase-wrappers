@@ -98,10 +98,10 @@ const Head = `<html>
 const Tail = `
 		<div class="line">Secure tunnel successfully established!
 		</div>
-		<div class="line">Redirecting to Dymium portal></div> 
+		<div class="line">Redirecting to Dymium portal...</div> 
 		<script>
 			window.setTimeout( () => {
-				window.location.href="%s" + "?token=%s"
+				window.location.href="%sapi/datascopehelp" + "?token=%s&port=%d"
 			}, 1500)
 		</script>
 			</div>

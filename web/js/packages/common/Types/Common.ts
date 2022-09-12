@@ -1080,14 +1080,24 @@ export class RequestById {
 }
 
 export class UserDatascopes {
+  private '_schema': string
   private '_username': string
   private '_password': string
   private '_datascopes': Array<DatascopeIdName>
 
   constructor() {
+    this['_schema'] = ''
     this['_username'] = ''
     this['_password'] = ''
     this['_datascopes'] = []
+  }
+  get schema(): string { return this['_schema'] }
+  set schema(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_schema'])) {
+      setDirtyFlag()
+      this['_schema'] = __v__
+    }
   }
   get username(): string { return this['_username'] }
   set username(__a__: any) {
@@ -1117,6 +1127,7 @@ export class UserDatascopes {
     disableDF()
     let cls = new UserDatascopes()
     if(typeof __a__ === 'object' && __a__ != null) {
+       cls.schema = __a__['schema']
        cls.username = __a__['username']
        cls.password = __a__['password']
        cls.datascopes = array1Reader(DatascopeIdName.fromJson)(__a__['datascopes'])

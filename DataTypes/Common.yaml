@@ -116,6 +116,7 @@ DatascopeAndGroups:
 
 
 UserDatascopes:
+  - schema: string
   - username: string 
   - password: string 
   - datascopes: <|DatascopeIdName|>

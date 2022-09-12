@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/Jeffail/gabs v1.4.0 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/kr/binarydist v0.1.0 // indirect

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
+import { useLocation, useNavigate } from "react-router-dom";
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
@@ -35,17 +36,16 @@ function YourDatascopes() {
       conn = psycopg2.connect("host=localhost port=25432 dbname={scope.name} user={datascopes !== undefined && datascopes.username} password={datascopes !== undefined && datascopes.password}")
     </div>
   }
+  let j = `
+  String url = "jdbc:postgresql://localhost/test";
+  Properties props = new Properties();
+  props.setProperty("user","${datascopes !== undefined && datascopes.username}");
+  props.setProperty("password","${datascopes !== undefined && datascopes.password}");
+  
+  `
   let java = scope => {
-    return <div className="tabcmd"> <code>
-      String url = "jdbc:postgresql://localhost/test";
-      Properties props = new Properties();
-      props.setProperty("user","fred");
-      props.setProperty("password","secret");    
-      Connection conn = DriverManager.getConnection(url, props);
-
-      String url = "jdbc:postgresql://localhost/test?user=fred&password=secret&ssl=true";
-      Connection conn = DriverManager.getConnection(url);
-    </code>
+    return <div className="tabcmd"> <pre><code>{j}
+    </code></pre>
     </div>
   }
   let displayDatascopes = () => {
@@ -244,18 +244,34 @@ function Downloads() {
     </div>
   )
 }
+function useQuery() {
+  const { search } = useLocation();
 
+  return React.useMemo(() => new URLSearchParams(search), [search]);
+}
 export default function Access() {
-  const t = useAppSelector((state) => {
+  const navigate = useNavigate();
+  let t = useAppSelector((state) => {
 
     return state.reducer.activeAccessTab
   }
   )
+  console.log("t=", t)
   const appDispatch = useAppDispatch()
+  let query = useQuery();
 
+  useEffect(() => {
+    if (query.get("key") !== undefined) {
+
+      appDispatch(setActiveAccessTab(query.get("key")))
+      navigate("/app/access")
+    }  }, [])
+    let tt = query.get("key")
+    if (tt !== null) {
+      t = tt
+    }
   return (
-    <Tabs
-      defaultActiveKey={t} id="access"
+    <Tabs defaultActiveKey={t} 
       onSelect={(k) => appDispatch(setActiveAccessTab(k))}
 
       unmountOnExit={true} className="mb-3 text-left">
