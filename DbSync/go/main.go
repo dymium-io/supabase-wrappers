@@ -6,8 +6,8 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq"
 
-	"github.com/aclements/go-gg/generic/slice"
 	"fmt"
+	"github.com/aclements/go-gg/generic/slice"
 
 	"golang.org/x/exp/maps"
 
@@ -35,11 +35,15 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 		if cnf, err = getConf(c.Customer, false); err != nil {
 			return nil, err
 		}
+	case types.A_ConfUser:
+		if cnf, err = getConf(c.Customer, true); err != nil {
+			return nil, err
+		}
+		return confUser(c.UserConf, &cnf.GuardianConf)
 	}
 	if cnf == nil {
-		return nil, fmt.Errorf("Wrong request: %v",c)
+		return nil, fmt.Errorf("Wrong request: %v", c)
 	}
-
 
 	if db == nil || db.Ping() != nil {
 		if err := openDb(cnf); err != nil {
@@ -66,17 +70,18 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 	}
 
 	switch c.Action {
-	case types.A_Update: {
-		if datascopes == nil || len(*datascopes) != 1 {
-			return nil, fmt.Errorf("No data for datascope %q",*c.Datascope)
-		} else {
-			return doUpdate(
-				&cnf.GuardianConf,
-				&(*datascopes)[0],
-				connections,
-				credentials)
+	case types.A_Update:
+		{
+			if datascopes == nil || len(*datascopes) != 1 {
+				return nil, fmt.Errorf("No data for datascope %q", *c.Datascope)
+			} else {
+				return doUpdate(
+					&cnf.GuardianConf,
+					&(*datascopes)[0],
+					connections,
+					credentials)
+			}
 		}
-	}
 	case types.A_Return:
 		return &types.CustomerData{
 			Credentials: maps.Values(*credentials),
@@ -84,7 +89,7 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 			Datascopes:  *datascopes}, nil
 	}
 
-	return nil, fmt.Errorf("Undefined action %v",c.Action)
+	return nil, fmt.Errorf("Undefined action %v", c.Action)
 }
 
 func getCredentials(db *sql.DB, infoSchema string) (*map[string]types.Credential, error) {
@@ -216,10 +221,12 @@ func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]typ
 }
 
 func openDb(cnf *conf) (err error) {
-	
+
 	sslmode_ := "disable"
-	if cnf.DymiumTls { sslmode_ = "require" }
-	
+	if cnf.DymiumTls {
+		sslmode_ = "require"
+	}
+
 	psqlconn := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password='%s' sslmode=%s",
 		cnf.DymiumHost, cnf.DymiumPort, cnf.DymiumDatabase, cnf.DymiumUser, cnf.DymiumPassword, sslmode_)
 	db, err = sql.Open("postgres", psqlconn)

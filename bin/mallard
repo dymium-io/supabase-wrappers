@@ -6,6 +6,7 @@ d=$(dirname $0)
 
 if [ "${OSTYPE:0:6}" = "darwin" ]
 then
+    export DYLD_LIBRARY_PATH=/usr/local/lib/postgresql@14
     binary="${d}/darwin/mallard"
 else
     binary="${d}/linux/mallard"

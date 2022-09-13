@@ -5,8 +5,15 @@ Action:
   - return
   - update
   - delete
+  - confUser
 
 request:
   - action: Action
   - customer: string
   - datascope: ?string
+  - userConf: ?userConf
+
+userConf:
+  - name: string
+  - password: string
+  - datascopes: <|string|> 
