@@ -302,9 +302,19 @@ func UsernameFromEmail(email string) string {
 
 func RegenerateDatascopePassword(schema string, email string, groups []string) (types.UserDatascopes, error) {
 	var out types.UserDatascopes
+	var conf types.UserConf
+
+	var rq types.Request
+	rq.Action = types.A_ConfUser
+	rq.Customer = schema
+	rq.UserConf = &conf
 
 	username := UsernameFromEmail(email)
 	password := generatePassword(10) 
+
+	rq.UserConf.Name = username
+	rq.UserConf.Password = password
+
 	sqlName := `update ` + schema + `.users set password=$1, lastchanged=now() where username=$2;`
 	_, err := db.Exec(sqlName, password, username)
 	if(err != nil) {
@@ -329,12 +339,16 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 				out.Datascopes = append(out.Datascopes, ds)
 				
 			}
+			rq.UserConf.Datascopes = append(rq.UserConf.Datascopes, ds.Name)
 			
 		}
 	} else { 
 		log.Printf("Error: %s\n", err.Error())
 	}
-	snc, _ := json.Marshal(out)
+
+
+
+	snc, _ := json.Marshal(rq)	
 	_, err = Invoke("DbSync", nil, snc)
 	if(err != nil) {
 		// TODO - pass this error
@@ -345,6 +359,11 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 
 func GetDatascopesForGroups(schema string, email string, groups []string) (types.UserDatascopes, error) {
 	var out types.UserDatascopes
+	var conf types.UserConf
+	var rq types.Request
+	rq.Action = types.A_ConfUser
+	rq.Customer = schema
+	rq.UserConf = &conf
 
 	username := UsernameFromEmail(email)
 	var password string
@@ -352,6 +371,8 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 	sqlName := `select password, EXTRACT(epoch from (now() - lastchanged)) from ` + schema + `.users where username=$1;`
 	row := db.QueryRow(sqlName, username)
 	err := row.Scan(&password, &age)
+
+
 	if err != nil {
 		fmt.Printf("Error: %s\n", err.Error())
 		password = generatePassword(10) 
@@ -370,6 +391,10 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
     out.Username = username
 	out.Password = password
 	out.Schema = schema
+
+	rq.UserConf.Name = username
+	rq.UserConf.Password = password
+
 	rows, err := db.Query(sql, pq.Array(groups))
 	if nil == err {
 		defer rows.Close()
@@ -383,15 +408,16 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 				out.Datascopes = append(out.Datascopes, ds)
 				
 			}
-			
+			rq.UserConf.Datascopes = append(rq.UserConf.Datascopes, ds.Name)			
 		}
 	} else { 
 		log.Printf("Error: %s\n", err.Error())
 	}
 
 
-	snc, _ := json.Marshal(out)
+	snc, _ := json.Marshal(rq)	
 	_, err = Invoke("DbSync", nil, snc)
+
 	if(err != nil) {
 		// TODO - pass this error
 		fmt.Printf("Error syncing datascopes: %s\n", err.Error())
