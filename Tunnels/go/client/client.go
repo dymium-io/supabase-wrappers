@@ -322,7 +322,12 @@ func runProxy(listener *net.TCPListener, back chan string, token int) {
 		os.Exit(1)
 	}
 */
-	config := &tls.Config{Certificates: []tls.Certificate{clientCert}}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM( []byte(RootCApem))
+
+	config := &tls.Config{
+		RootCAs: caCertPool,
+		Certificates: []tls.Certificate{clientCert}}
 	target := fmt.Sprintf("%s:%d", lbaddress, lbport)
 	back <- fmt.Sprintf("Connect to %s\n", target)
 	// create a counterpart tls connection out
@@ -414,6 +419,7 @@ func getListener(port int, back chan string) (*net.TCPListener, error) {
 		back <- err.Error()
 		os.Exit(1)
 	}
+	fmt.Printf("Listener listening on port %d\n", port)
 	return listener, err
 }
 func main() {
@@ -547,7 +553,7 @@ func main() {
 			fmt.Printf("Error: token invalid, can't continue %s\n", err.Error())
 			os.Exit(1)
 		}
-
+	
 		listener, err := getListener(claim.Port, message) 
 
 		go runProxy(listener, message, claim.Port)

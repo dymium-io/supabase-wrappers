@@ -11,14 +11,21 @@ import (
 )
 
 
+var iprecords []net.IP
+var ipindex = 0
+func getTargetConnection(customer string) (net.Conn, error) {
+    index := ipindex % len(iprecords)
+    ipindex = (ipindex + 1) % len(iprecords)
 
-func getTargetConnection() (net.Conn, error) {
-    target := "127.0.0.1:5432"
+    target := iprecords[index].String() + ":5432"
     return net.Dial("tcp", target)
 }
 
-func Server(address string, port int, certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte) {
-
+func Server(address string, port int, customer string, certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte) {
+	iprecords, _ = net.LookupIP(customer + ".guardian.local")
+	for _, ip := range iprecords {
+		fmt.Println(ip)
+	}
 
     cer, err := tls.X509KeyPair(certPEMBlock, keyPEMBlock ) 
     if err != nil {
@@ -35,14 +42,9 @@ func Server(address string, port int, certPEMBlock, keyPEMBlock []byte, passphra
         ClientAuth: tls.RequireAndVerifyClientCert,
     }
     connect := fmt.Sprintf("%s:%d", address, port)
-    fmt.Printf("Connect to %s\n", connect)
+    fmt.Printf("Listen on %s\n", connect)
     ln, err := tls.Listen("tcp", connect, config) 
-    /*
-    connect := fmt.Sprintf("%s:%d", address, port)
 
-
-    ln, err := net.Listen("tcp", connect) 
-    */
     if err != nil {
         log.Println(err)
         return
@@ -78,7 +80,7 @@ fmt.Printf("Listen: %v\n", ln)
             }
         }
 
-        go proxyConnection(ingress)
+        go proxyConnection(ingress, customer)
     }
 }
 
@@ -110,7 +112,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
     }
 }
 
-func proxyConnection(ingress net.Conn) {
+func proxyConnection(ingress net.Conn, customer string) {
     var conmap = make( map[int] net.Conn )
 
 
@@ -136,7 +138,7 @@ func proxyConnection(ingress net.Conn) {
 		}
         switch buff.Action {
         case protocol.Open:
-            egress, err := getTargetConnection()
+            egress, err := getTargetConnection(customer)
             if err != nil {
                 fmt.Printf("Error connecting to target")
             }
