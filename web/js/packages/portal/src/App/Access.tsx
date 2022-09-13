@@ -21,23 +21,23 @@ function YourDatascopes() {
   const [spinner, setSpinner] = useState(false)
   const [alert, setAlert] = useState<JSX.Element>(<></>)
   const [datascopes, setDatascopes] = useState<types.UserDatascopes>()
-
+  let port = com.getTokenProperty("port")
   //"/api/getdatascopesaccess"
   let displayDatascope = (index) => {
 
   }
   let commandLine = (scope) => {
     return <div className="tabcmd">
-      &gt;psql -h localhost -p 25432 -d {scope.name} -U {datascopes !== undefined && datascopes.username}
+      &gt;psql -h localhost -p {port} -d {scope.name} -U {datascopes !== undefined && datascopes.username}
     </div>
   }
   let python = scope => {
     return <div className="tabcmd">
-      conn = psycopg2.connect("host=localhost port=25432 dbname={scope.name} user={datascopes !== undefined && datascopes.username} password={datascopes !== undefined && datascopes.password}")
+      conn = psycopg2.connect("host=localhost port={port} dbname={scope.name} user={datascopes !== undefined && datascopes.username} password={datascopes !== undefined && datascopes.password}")
     </div>
   }
   let j = `
-  String url = "jdbc:postgresql://localhost/test";
+  String url = "jdbc:postgresql://localhost:`+port+`/test";
   Properties props = new Properties();
   props.setProperty("user","${datascopes !== undefined && datascopes.username}");
   props.setProperty("password","${datascopes !== undefined && datascopes.password}");

@@ -4,6 +4,6 @@ LABEL com.dymium.vendor="Dymium" \
       product="Dymium Tunneling Server"
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*      
 COPY server /server
-EXPOSE 46791
+EXPOSE 443
 ENV TZ=PST8PDT
 ENTRYPOINT ["/server"]

@@ -4,27 +4,43 @@ import (
 	"flag"
 	"os"
 	"log"
-	"runtime"	
+	"io"
+	"net/http"
 	"encoding/json"
 	"dymium.com/server/tunnel"
+	"github.com/gorilla/mux"
 )
 
+const Nocache = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"
 var address string
 var port int
+
+func health() {
+	p := mux.NewRouter()
+
+	p.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", Nocache)
+		w.Header().Set("Content-Type", "text/html")
+
+		io.WriteString(w, "<html><body>OK</body></html>")
+	}).Methods("GET")
+
+	http.ListenAndServe("localhost:80", p)
+}
 func main() {
 
 	flag.IntVar( &port, "p", 0, "Port")
 	flag.StringVar(&address, "a", "", "Address")
 	flag.Parse()
-	fmt.Printf("port %d, address %s\n", port, address)
+	fmt.Printf("Args %v\n", os.Args)
 
-    if len(address) == 0 && port == 0  {
-		if runtime.GOOS == "windows" {
-			fmt.Println("Usage: tserver.exe -c <customer ID> -p <portal URL>")
-		} else {
-	        fmt.Println("Usage: tserver -c <customer ID> -p <portal URL>")
-		}
-        os.Exit(1)
+	go health()
+
+	if len(address) == 0 {
+		address = "localhost"
+	}
+    if port == 0  {
+		port = 443
     }
 	certificatejson := os.Getenv("CERTIFICATE")
 	t := struct {
@@ -49,5 +65,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	tunnel.Server(address, port, []byte(t.Certificate), []byte(t.Key), passphrase, []byte(tt.Certificate))
+	customer := os.Getenv("CUSTOMER")
+	tunnel.Server(address, port, customer, []byte(t.Certificate), []byte(t.Key), passphrase, []byte(tt.Certificate))
 }
