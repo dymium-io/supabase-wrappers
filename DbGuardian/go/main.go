@@ -57,18 +57,12 @@ func main() {
 
 func createDatabases(datascopes []types.Scope) error {
 
-	var user, password, testUser, testPassword string
+	var user, password string
 	if user = os.Getenv("DATABASE_USER"); user == "" {
 		return fmt.Errorf("Env var [DATABASE_USER] not defined")
 	}
 	if password = os.Getenv("DATABASE_PASSWORD"); password == "" {
 		return fmt.Errorf("Env var [DATABASE_PASSWORD] not defined")
-	}
-	if testUser = os.Getenv("TEST_USER"); testUser == "" {
-		return fmt.Errorf("Env var [TEST_USER] not defined")
-	}
-	if testPassword = os.Getenv("TEST_PASSWORD"); testPassword == "" {
-		return fmt.Errorf("Env var [TEST_PASSWORD] not defined")
 	}
 
 	db, err := sql.Open("postgres", "host=/var/run/postgresql dbname=postgres user=postgres sslmode=disable")
@@ -81,12 +75,12 @@ func createDatabases(datascopes []types.Scope) error {
 		return err
 	}
 
-	if _, err = db.Exec(fmt.Sprintf("CREATE USER %s PASSWORD '"+esc(testPassword)+"'", testUser)); err != nil {
-		return err
-	}
-
 	for k := range datascopes {
 		sql := fmt.Sprintf("CREATE DATABASE %q OWNER %s", datascopes[k].Name, user)
+		if _, err = db.Exec(sql); err != nil {
+			return err
+		}
+		sql = fmt.Sprintf("CREATE ROLE %s", datascopes[k].Name)
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}

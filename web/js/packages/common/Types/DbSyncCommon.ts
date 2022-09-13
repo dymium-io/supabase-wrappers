@@ -12,6 +12,7 @@ export type Action =
   | 'return'
   | 'update'
   | 'delete'
+  | 'confUser'
 
 
 
@@ -19,15 +20,17 @@ export class Request {
   private '_action': Action
   private '_customer': string
   private '_datascope': string | null
+  private '_userConf': UserConf | null
 
   constructor() {
     this['_action'] = 'return'
     this['_customer'] = ''
     this['_datascope'] = null
+    this['_userConf'] = null
   }
   get action(): Action { return this['_action'] }
   set action(__a__: any) {
-    let __v__ = enumReader(['return','update','delete'],'return')(__a__)
+    let __v__ = enumReader(['return','update','delete','confUser'],'return')(__a__)
     if(!_.isEqual(__v__,this['_action'])) {
       setDirtyFlag()
       this['_action'] = __v__
@@ -56,6 +59,18 @@ export class Request {
       }
     }
   }
+  get userConf(): UserConf | null { return this['_userConf'] }
+  set userConf(__a__: any) {
+    if(__a__ == null) {
+      if(this['_userConf'] == null) { return }
+      setDirtyFlag()
+      this['_userConf'] = null
+      return
+    } else {
+      setDirtyFlag()
+      this['_userConf'] = __a__
+    }
+  }
 
   toJson(): string { return JSON.stringify(this).split('"_').join('"') }
 
@@ -66,8 +81,58 @@ export class Request {
        cls.action = __a__['action']
        cls.customer = __a__['customer']
        cls.datascope = __a__['datascope'] == null ? null : __a__['datascope']
+       cls.userConf = __a__['userConf'] == null ? null : UserConf.fromJson(__a__['userConf'])
     } else {
        doAlert(`Request: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class UserConf {
+  private '_name': string
+  private '_password': string
+  private '_datascopes': Array<string>
+
+  constructor() {
+    this['_name'] = ''
+    this['_password'] = ''
+    this['_datascopes'] = []
+  }
+  get name(): string { return this['_name'] }
+  set name(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_name'])) {
+      setDirtyFlag()
+      this['_name'] = __v__
+    }
+  }
+  get password(): string { return this['_password'] }
+  set password(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_password'])) {
+      setDirtyFlag()
+      this['_password'] = __v__
+    }
+  }
+  get datascopes(): Array<string> { return this['_datascopes'] }
+  set datascopes(__a__: any) {
+    setDirtyFlag()
+    this['_datascopes'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): UserConf {
+    disableDF()
+    let cls = new UserConf()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.name = __a__['name']
+       cls.password = __a__['password']
+       cls.datascopes = array1Reader(stringReader(''))(__a__['datascopes'])
+    } else {
+       doAlert(`UserConf: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls
@@ -81,6 +146,15 @@ function stringReader(__dflt__) {
     }
     doAlert(`stringReader: ${__a__} is not a string`)
     return __dflt__
+  })
+}
+function array1Reader(__r__) {
+  return ((__a__) => {
+    if(!_.isArray(__a__)) {
+      doAlert(`arrayReader: ${__a__} is not an array`)
+      return []
+    }
+    return __a__.map(__r__)
   })
 }
 function enumReader(__v__,__dflt__) {

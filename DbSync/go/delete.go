@@ -24,7 +24,11 @@ func doDelete(datascope string, cnf *guardianConf) (empty struct{}, err error) {
 			defer db.Close()
 			if _, err = db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %q WITH ( FORCE )", datascope)); err != nil {
 				log.Printf("Cannot drop database %q at %s. Ignoring error: %v",
-					datascope, a, err)				
+					datascope, a, err)
+			}
+			if _, err = db.Exec(fmt.Sprintf("DROP ROLE IF EXISTS %s", datascope)); err != nil {
+				log.Printf("Cannot drop role %s. Ignoring error: %v",
+					datascope, err)
 			}
 		}
 	}

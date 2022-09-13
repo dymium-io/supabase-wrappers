@@ -39,6 +39,9 @@ func doUpdate(
 					if _, err = db.Exec(fmt.Sprintf("CREATE DATABASE %q OWNER %s", datascope.Name, cnf.GuardianUser)); err != nil {
 						return empty, fmt.Errorf("%s connection: Can not create database %q: %v", a, datascope.Name, err)
 					}
+					if _, err = db.Exec(fmt.Sprintf("CREATE ROLE %s", datascope.Name)); err != nil {
+						return empty, fmt.Errorf("%s connection: Can not create role %q: %v", a, datascope.Name, err)
+					}
 				}
 			}
 		}

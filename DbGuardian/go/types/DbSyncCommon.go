@@ -10,10 +10,18 @@ const (
   A_Return Action = "return"
   A_Update Action = "update"
   A_Delete Action = "delete"
+  A_ConfUser Action = "confUser"
 )
 
 type Request struct {
    Action Action `json:"action"`
    Customer string `json:"customer"`
    Datascope *string `json:"datascope"`
+   UserConf *UserConf `json:"userConf"`
+}
+
+type UserConf struct {
+   Name string `json:"name"`
+   Password string `json:"password"`
+   Datascopes []string `json:"datascopes"`
 }
