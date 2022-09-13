@@ -8,7 +8,6 @@ DATABASE_DB=${DATABASE_DB:-dymium}
 DATABASE_USER=${DATABASE_USER:-dymium}
 DATABASE_PAASSWORD=${DATABASE_PASSWORD:-$kdvnMsp4o}
 DATABASE_TLS=${DATABASE_TLS:-false}
-TEST_USER=${TEST_USER:-schwinger}
 
 [ -z "$DATABASE_PASSWORD" ] && {
     DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )
@@ -26,7 +25,6 @@ docker run --rm  --name db-sync                \
        -e DATABASE_USER=$DATABASE_USER         \
        -e DATABASE_PASSWORD=$DATABASE_PASSWORD \
        -e DATABASE_TLS=$DATABASE_TLS           \
-       -e TEST_USER=$TEST_USER                 \
        -e GUARDIAN_CONF="{ \"DEFAULT\": {
              \"guardian_address\": [\"localhost\"],
              \"guardian_port\": 9090,

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"database/sql"
@@ -26,10 +25,7 @@ func configureDatabase(db *sql.DB,
 	credentials map[string]types.Credential,
 	createDymiumTables bool) error {
 
-	localUser := os.Getenv("TEST_USER")
-	if localUser == "" {
-		return fmt.Errorf("Environment variable TEST_USER is not defined")
-	}
+	localUser := datascope.Name
 
 	connectionTypes := map[types.ConnectionType]struct{}{}
 	for k := range datascope.Connections {
@@ -184,9 +180,12 @@ func configureDatabase(db *sql.DB,
 						rnul = 1
 					}
 					switch c.Action {
-					case "Redact": ract = 0x1
-					case "Obfuscate": ract = 0x2
-					case "Smart Redact": ract = 0x0
+					case "Redact":
+						ract = 0x1
+					case "Obfuscate":
+						ract = 0x2
+					case "Smart Redact":
+						ract = 0x0
 					}
 					switch {
 					case
@@ -209,16 +208,20 @@ func configureDatabase(db *sql.DB,
 						strings.HasPrefix(c.Typ, "bool"):
 						rtyp = 0x3
 					case
-						c.Typ == "xml": rtyp = 0x4
+						c.Typ == "xml":
+						rtyp = 0x4
 					case
-						c.Typ == "bytea": rtyp = 0x5
+						c.Typ == "bytea":
+						rtyp = 0x5
 					case
-						c.Typ == "json", c.Typ == "jsonb": rtyp = 0x6
+						c.Typ == "json", c.Typ == "jsonb":
+						rtyp = 0x6
 					case
-						c.Typ == "uuid": rtyp = 0x7
+						c.Typ == "uuid":
+						rtyp = 0x7
 					}
 					defs = append(defs, fmt.Sprintf("  %q %s OPTIONS( redact '%d' )%s",
-						c.Name, c.Typ, ract | (rnul << 2) | (rtyp << 3), notNull))
+						c.Name, c.Typ, ract|(rnul<<2)|(rtyp<<3), notNull))
 				}
 			}
 			e := "CREATE FOREIGN TABLE %q.%q (\n" + strings.Join(defs, ",\n") + "\n)\n" +
