@@ -42,7 +42,7 @@ func Server(address string, port int, customer string, certPEMBlock, keyPEMBlock
         ClientAuth: tls.RequireAndVerifyClientCert,
     }
     connect := fmt.Sprintf("%s:%d", address, port)
-    fmt.Printf("Listen on %s\n", connect)
+    fmt.Printf("TLS isten on %s\n", connect)
     ln, err := tls.Listen("tcp", connect, config) 
 
     if err != nil {
@@ -64,12 +64,12 @@ fmt.Printf("Listen: %v\n", ln)
 		tlsConn, ok := ingress.(*tls.Conn)
 		if !ok {
 			fmt.Println("server: erm, this is not a tls conn")
-			return
+			continue
 		}
 		// perform handshake
 		if err := tlsConn.Handshake(); err != nil {
 			fmt.Println("client: error during handshake, error:", err)
-			return
+			continue
 		}
 
 		// get connection state and print some stuff

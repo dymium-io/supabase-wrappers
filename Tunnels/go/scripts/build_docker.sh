@@ -19,7 +19,8 @@ retval=$?
     exit $retval
 }
 cd ../scripts
+
 docker build --compress -f Dockerfile \
        --label "git.branch=$(git branch --show-current)" \
        --label "git.commit=$(git rev-parse HEAD)" \
-       -t dymium $build_d
+       -t tunnel $build_d

@@ -309,24 +309,24 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder)
 
 func runProxy(listener *net.TCPListener, back chan string, token int) {
 	defer wg.Done()
-/*
-	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", token))
-	if err != nil {
-		fmt.Printf("Error resolving address: %s\n", err.Error())
-		panic(err)
-	}
-	listener, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		fmt.Printf("Error in ListenTCP: %s, can't continue\n", err.Error())
-		back <- err.Error()
-		os.Exit(1)
-	}
-*/
+	/*
+		addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", token))
+		if err != nil {
+			fmt.Printf("Error resolving address: %s\n", err.Error())
+			panic(err)
+		}
+		listener, err := net.ListenTCP("tcp", addr)
+		if err != nil {
+			fmt.Printf("Error in ListenTCP: %s, can't continue\n", err.Error())
+			back <- err.Error()
+			os.Exit(1)
+		}
+	*/
 	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM( []byte(RootCApem))
+	caCertPool.AppendCertsFromPEM([]byte(RootCApem))
 
 	config := &tls.Config{
-		RootCAs: caCertPool,
+		RootCAs:      caCertPool,
 		Certificates: []tls.Certificate{clientCert}}
 	target := fmt.Sprintf("%s:%d", lbaddress, lbport)
 	back <- fmt.Sprintf("Connect to %s\n", target)
@@ -553,8 +553,8 @@ func main() {
 			fmt.Printf("Error: token invalid, can't continue %s\n", err.Error())
 			os.Exit(1)
 		}
-	
-		listener, err := getListener(claim.Port, message) 
+
+		listener, err := getListener(claim.Port, message)
 
 		go runProxy(listener, message, claim.Port)
 		for {

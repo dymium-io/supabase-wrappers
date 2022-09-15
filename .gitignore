@@ -24,3 +24,8 @@ Tunnels/go/client/.vscode/__debug_bin
 Tunnels/go/client/.vscode/launch.json
 Tunnels/go/client/__debug_bin.old
 Tunnels/go/client/client.old
+Tunnels/go/scripts/BLD/server
+Tunnels/go/server/server
+web/js/packages/portal/public/tunnel.tar.gz
+web/js/packages/portal/public/tunnel_mac.zip
+web/js/packages/portal/public/tunnel_win.zip
