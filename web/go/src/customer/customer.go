@@ -65,6 +65,8 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/{name:.*\\.svg}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.jpg}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.ico}", dhandlers.GetImages)
+	nonauthenticated.HandleFunc("/{name:.*\\.zip}", dhandlers.GetImages)
+	nonauthenticated.HandleFunc("/{name:.*\\.gz}", dhandlers.GetImages)
 
 	nonauthenticated.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./customer/index.html")

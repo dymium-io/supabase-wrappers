@@ -53,18 +53,20 @@ cd ../../../go/scripts
 echo Build tunneling clients
 cd ../../../Tunnels/go/client
 
--ldflags="-X 'main.Version=v1.0.0' -X 'app/build.User=
 
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
            go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=1' -X 'main.ProtocolVersion=1' -w -extldflags "-static"' -o tunnel
 chmod a+x tunnel
+mkdir -p ../../../web/go/assets/customer/update/linux/amd64/
+cp tunnel ../../../web/go/assets/customer/update/linux/amd64/
 tar -zcvf tunnel.tar.gz tunnel
-cp tunnel.tar.gz ../../../web/go/assets/customer/
+cp tunnel.tar.gz ../../../web/go/assets/customer/update/
 mv tunnel.tar.gz ../../../web/js/packages/portal/public
 
 CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
            go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=1' -X 'main.ProtocolVersion=1' -w -extldflags "-static"' -o tunnel.exe
-
+mkdir -p ../../../web/go/assets/customer/update/windows/amd64/
+cp tunnel ../../../web/go/assets/customer/update/windows/amd64/
 zip tunnel_win.zip  tunnel.exe 
 cp tunnel_win.zip ../../../web/go/assets/customer/
 mv tunnel_win.zip ../../../web/js/packages/portal/public
@@ -72,6 +74,8 @@ mv tunnel_win.zip ../../../web/js/packages/portal/public
 CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
            go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=1' -X 'main.ProtocolVersion=1' -w -extldflags "-static"' -o tunnel
 chmod a+x tunnel
+mkdir -p ../../../web/go/assets/customer/update/darwin/amd64/
+cp tunnel ../../../web/go/assets/customer/update/darwin/amd64/
 zip tunnel_mac.zip  tunnel
 cp tunnel_mac.zip ../../../web/go/assets/customer/
 mv tunnel_mac.zip ../../../web/js/packages/portal/public

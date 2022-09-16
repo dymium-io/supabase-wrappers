@@ -222,7 +222,7 @@ function Downloads() {
               <div className="terminal">
                 &gt;tunnel {params}
               </div>
-              <i onClick={copy("tunnel " + params)} className="fas fa-copy clipbtn"></i>
+              <i onClick={copy("./tunnel " + params)} className="fas fa-copy clipbtn"></i>
             </div>
           </div>
         </div>
@@ -236,7 +236,7 @@ function Downloads() {
               <div className="terminal">
                 &gt;tunnel {params}
               </div>
-              <i onClick={copy("tunnel " + params)} className="fas fa-copy clipbtn"></i>
+              <i onClick={copy("./tunnel " + params)} className="fas fa-copy clipbtn"></i>
             </div>
           </div>
         </div>
@@ -270,6 +270,9 @@ export default function Access() {
     if (tt !== null) {
       t = tt
     }
+  if(t == null) { 
+    t = "datascopes"
+  }
   return (
     <Tabs defaultActiveKey={t} 
       onSelect={(k) => appDispatch(setActiveAccessTab(k))}

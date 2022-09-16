@@ -80,7 +80,7 @@ func main() {
 	p.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")
-
+	
 		io.WriteString(w, "<html><body>OK</body></html>")
 	}).Methods("GET")
 

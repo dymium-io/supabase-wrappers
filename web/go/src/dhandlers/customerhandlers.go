@@ -832,7 +832,7 @@ func DownloadUpdate(w http.ResponseWriter, r *http.Request) {
 	os, _ := vars["os"]
 	arch, _ := vars["arch"]	
 
-	fil := fmt.Sprintf("./customer/update/%s/%s/client", os, arch)
+	fil := fmt.Sprintf("./customer/update/%s/%s/tunnel", os, arch)
 	log.Printf("path: %s\n", fil)
 	http.ServeFile(w, r, fil)
 }
@@ -849,8 +849,18 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 	clientid := os.Getenv("AUTH0_PORTAL_CLIENT_ID")
 	redirecturl := os.Getenv("AUTH0_PORTAL_CLI_REDIRECT_URL")
 
-	lbaddress := os.Getenv("LB_ADDRESS")
-	lbport, _ :=  strconv.Atoi(os.Getenv("LB_PORT") )
+	schema, err := authentication.GetSchemaFromClientId(t.Customerid)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	lbaddress := schema + os.Getenv("LB_DOMAIN")
+	port := os.Getenv("LB_PORT")
+	if(port == "") {
+		port = "443"
+	}
+	lbport, _ :=  strconv.Atoi(port) 
 
 	tunnellogin := fmt.Sprintf("%sauthorize?response_type=code&client_id=%s&redirect_uri=%s&organization=%s&scope=%s",
 		domain, clientid, redirecturl, t.Customerid,  url.QueryEscape("openid profile") )
@@ -861,8 +871,14 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 	resp.Lbaddress = lbaddress
 	resp.Lbport = lbport
 
+	resp.ProtocolVersion = os.Getenv("PROTOCOL_VERSION")
+	resp.ClientMajorVersion = os.Getenv("MAJOR_VERSION")
+	resp.ClientMinorVersion = os.Getenv("MINOR_VERSION")
+
 	fmt.Printf("Login URL: %s\n", resp.LoginURL)
 	js, err := json.Marshal(resp)
+
+	fmt.Printf("send back %s\n", string(js))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -885,16 +901,18 @@ func pemCert(derBytes []byte) []byte {
 }
 
 func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
-
+	log.Println("in GetClientCertificate")
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	var t types.CertificateRequest
+	log.Printf("body: %s\n", string(body))
 
 	err := json.Unmarshal(body, &t)
 	if err != nil {
 		log.Printf("Error unmarshalling certificate request %s\n", err.Error())
 	}
 
+	log.Println("unmarshaled")
     
 	pemBlock, _ := pem.Decode( []byte(t.Csr) )
     if pemBlock == nil {
@@ -902,13 +920,14 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
 		return		
     }
 
+	log.Println("Before ParseCertificateRequest")
 	clientCSR, err := x509.ParseCertificateRequest(pemBlock.Bytes) 
     if err = clientCSR.CheckSignature(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return 
     }
 
-	
+	log.Println("ParseCertificateRequest ready")
 	// create client certificate template
     clientCRTTemplate := x509.Certificate{
         Signature:          clientCSR.Signature,
@@ -927,15 +946,20 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
 		DNSNames: clientCSR.DNSNames,
     }
 
+	log.Printf("authentication.CaCert: %v\n", authentication.CaCert)
+	log.Printf("authentication.CaKey: %v\n", authentication.CaKey)
+
     // create client certificate from template and CA public key
     clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, authentication.CaCert, 
 		clientCSR.PublicKey, authentication.CaKey)
 
+	log.Println("past x509.CreateCertificate")		
     if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
     }
 
 
+	log.Println("EncodeToMemory")	
     out := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: clientCRTRaw})
 	log.Printf("certificate: %s\n", string(out))
 	var certout types.CSRResponse 
