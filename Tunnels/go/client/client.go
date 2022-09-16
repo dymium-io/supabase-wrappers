@@ -217,11 +217,17 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
+	if(resp.StatusCode != 200) {
+		fmt.Printf("Error retrieving the tunnel information. Please check your parameters.\n")
+		os.Exit(1)
+	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("Error: %s\n", err.Error())
 		os.Exit(1)
 	}
+	bd := string(body)
+	fmt.Printf("body: %s\n", bd)
 	var back types.CustomerIDResponse
 	err = json.Unmarshal(body, &back)
 	if err != nil {
@@ -243,7 +249,7 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 
 		}
 	}
-	return back.LoginURL, true //ProtocolVersion < back.ProtocolVersion
+	return back.LoginURL, ProtocolVersion < back.ProtocolVersion
 }
 
 func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, id int) {
@@ -309,6 +315,7 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder)
 
 func runProxy(listener *net.TCPListener, back chan string, token int) {
 	defer wg.Done()
+
 	/*
 		addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", token))
 		if err != nil {
@@ -384,6 +391,7 @@ func runProxy(listener *net.TCPListener, back chan string, token int) {
 func doUpdate(portalUrl string) error {
 
 	url := fmt.Sprintf("%sapi/downloadupdate?os=%s&arch=%s", portalUrl, runtime.GOOS, runtime.GOARCH)
+	fmt.Printf("url: %s\n", url)
 	fmt.Println("Downloading new version...")
 	resp, err := http.Get(url)
 	if err != nil {
@@ -437,7 +445,7 @@ func main() {
 	}
 
 	wg.Add(1)
-
+	
 	if len(customerid) == 0 && len(portalurl) == 0 {
 		if runtime.GOOS == "windows" {
 			fmt.Println("Usage: client.exe -c <customer ID> -p <portal URL>\n")
@@ -453,6 +461,7 @@ func main() {
 			// runtime.Breakpoint()
 			err := doUpdate(portalurl)
 			if err != nil {
+				fmt.Printf("Error: %s\n", err.Error())
 				os.Exit(1)
 			}
 			restart()
@@ -547,7 +556,7 @@ func main() {
 		message := make(chan string)
 		var claim types.Claims
 		var p jwt.Parser
-		fmt.Printf("token: %s\n", groups.Token)
+	
 		_, _, err = p.ParseUnverified(groups.Token, &claim)
 		if err != nil {
 			fmt.Printf("Error: token invalid, can't continue %s\n", err.Error())
@@ -555,7 +564,10 @@ func main() {
 		}
 
 		listener, err := getListener(claim.Port, message)
-
+		if(err != nil) {
+			fmt.Printf("Error: %s\n", err.Error())
+		}
+fmt.Println("go runProxy")
 		go runProxy(listener, message, claim.Port)
 		for {
 			msg := <-message

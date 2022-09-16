@@ -28,8 +28,11 @@ export SESSION_SECRET="b<Qu9K)q}Ksh+R)JzlJJ'X1sHMp$UI@t&OCjDYTEmVe6WZe,rdJ}!I=4N
 export CUSTOMER_HOST='portal.dymium.local'
 export ADMIN_HOST='admin.dymium.local'
 
-export LB_ADDRESS='portal.dymium.local'
+export LB_DOMAIN='.dymium.local'
 export LB_PORT=15654
+export PROTOCOL_VERSION = 3
+export MAJOR_VERSION = 0
+export MINOR_VERSION = 1
 
 export AWS_LAMBDAS='{ "DbAnalyzer": "localhost:9080",
                       "DbSync": "localhost:9081"

@@ -273,7 +273,7 @@ func GetSchemaFromToken(token string) (string, error) {
 
 func UsernameFromEmail(email string) string {
 	username := strings.Split(email, "@")[0]
-	fmt.Printf("username: %s\n", username)
+	
 //!#$%&'*+-/=?^_`{|}~
 	replacer := strings.NewReplacer(
 		"!", "_", 
@@ -295,7 +295,7 @@ func UsernameFromEmail(email string) string {
 		"~", "_")
 
 	username = replacer.Replace(username)
-	fmt.Printf("username: %s\n", username)
+	
 	return username
 }
 
@@ -352,7 +352,7 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	_, err = Invoke("DbSync", nil, snc)
 	if(err != nil) {
 		// TODO - pass this error
-		fmt.Printf("Error syncing datascopes: %s\n", err.Error())
+		log.Printf("Error: syncing datascopes: %s\n", err.Error())
 	}
 	return out, nil
 }
@@ -374,7 +374,7 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 
 
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		log.Printf("Error: %s\n", err.Error())
 		password = generatePassword(10) 
 		sqlName := `insert into ` + schema + `.users (username,password)  values($1, $2);`
 		_, err = db.Exec(sqlName, username, password)
@@ -420,7 +420,7 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 
 	if(err != nil) {
 		// TODO - pass this error
-		fmt.Printf("Error syncing datascopes: %s\n", err.Error())
+		log.Printf("Error syncing datascopes: %s\n", err.Error())
 	}
 	return out, nil
 }
@@ -716,6 +716,15 @@ func getTokenFromCode(code, domain, client_id, client_secret, redirect string) (
 	return body, err
 }
 
+func GetSchemaFromClientId(clientid string) (string, error) {
+	sql := `select schema_name from global.customers where organization=$1;`
+	log.Printf("sql: %s, org: %s\n", sql, clientid)
+	row := db.QueryRow(sql, clientid)
+	var schema string
+	err := row.Scan(&schema)
+	return schema, err
+
+}
 func UpdateConnection(schema string, con types.ConnectionRecord) error {
 	// Create a new context, and begin a transaction
     ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)

@@ -4,7 +4,7 @@ import (
 	"dymium.com/server/tunnel"
 	"encoding/json"
 	"flag"
-	"fmt"
+	_"fmt"
 	"github.com/gorilla/mux"
 	"io"
 	"log"
@@ -25,7 +25,7 @@ func health() {
 		w.Header().Set("Content-Type", "text/html")
 
 		io.WriteString(w, "<html><body>OK</body></html>")
-		log.Println("Healthcheck")
+		//log.Println("Healthcheck")
 	}).Methods("GET")
 
 	p.HandleFunc("/healthshellcheck", func(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +33,7 @@ func health() {
 		w.Header().Set("Content-Type", "text/html")
 
 		io.WriteString(w, "<html><body>OK</body></html>")
-		log.Println("Shell Healthcheck")
+		//log.Println("Shell Healthcheck")
 	}).Methods("GET")
 
 	
@@ -46,10 +46,8 @@ func main() {
 	flag.IntVar(&port, "p", 0, "Port")
 	flag.StringVar(&address, "a", "", "Address")
 	flag.Parse()
-	fmt.Printf("Args %v\n", os.Args)
 
 	go health()
-	log.Printf("args: %v\n", os.Args)
 
 	if port == 0 {
 		port = 443
@@ -71,7 +69,7 @@ func main() {
 	tt := struct {
 		Certificate string
 	}{}
-	fmt.Printf("%s\n", cajson)
+	
 	err = json.Unmarshal([]byte(cajson), &tt)
 	if err != nil {
 		log.Printf("CA Cert unmarshaling error: %s\n", err.Error())

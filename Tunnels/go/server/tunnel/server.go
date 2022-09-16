@@ -8,23 +8,26 @@ import (
     "crypto/x509"
     "encoding/gob"
     "dymium.com/server/protocol"
+    
 )
 
 
 var iprecords []net.IP
 var ipindex = 0
 func getTargetConnection(customer string) (net.Conn, error) {
+    log.Printf("in getTargetConnection, len(iprecords): %d\n", len(iprecords))
     index := ipindex % len(iprecords)
     ipindex = (ipindex + 1) % len(iprecords)
-
+ 
     target := iprecords[index].String() + ":5432"
+    log.Printf("target: %s\n", target)
     return net.Dial("tcp", target)
 }
 
 func Server(address string, port int, customer string, certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte) {
 	iprecords, _ = net.LookupIP(customer + ".guardian.local")
 	for _, ip := range iprecords {
-		fmt.Println(ip)
+		log.Printf("db endpoint: %s\n", ip)
 	}
 
     cer, err := tls.X509KeyPair(certPEMBlock, keyPEMBlock ) 
@@ -42,33 +45,32 @@ func Server(address string, port int, customer string, certPEMBlock, keyPEMBlock
         ClientAuth: tls.RequireAndVerifyClientCert,
     }
     connect := fmt.Sprintf("%s:%d", address, port)
-    fmt.Printf("TLS isten on %s\n", connect)
+    log.Printf("TLS listen on %s\n", connect)
     ln, err := tls.Listen("tcp", connect, config) 
 
     if err != nil {
-        log.Println(err)
+        log.Printf("Error in tls.Listen: %s\n",err.Error() )
         return
     }
     defer ln.Close()
 
 
-fmt.Printf("Listen: %v\n", ln)
     for {
         ingress, err := ln.Accept()
-        //fmt.Printf("accepted: %T\n", ingress)
+ 
         if err != nil {
-            log.Println(err)
+            log.Printf("Error in tls.Accept: %s\n", err.Error() )
             continue
         }
 		// get the underlying tls connection
 		tlsConn, ok := ingress.(*tls.Conn)
 		if !ok {
-			fmt.Println("server: erm, this is not a tls conn")
+			log.Println("server: erm, this is not a tls conn")
 			continue
 		}
 		// perform handshake
 		if err := tlsConn.Handshake(); err != nil {
-			fmt.Println("client: error during handshake, error:", err)
+			log.Printf("client: error during handshake, error: %s\n", err.Error() )
 			continue
 		}
 
@@ -76,7 +78,7 @@ fmt.Printf("Listen: %v\n", ln)
 		state := tlsConn.ConnectionState()
         for _, cert := range state.PeerCertificates {
             for _, name := range cert.DNSNames {
-                fmt.Printf("%s\n", name)
+                log.Printf("Group: %s\n", name)
             }
         }
 
@@ -89,7 +91,7 @@ func pipe(egress net.Conn, messages chan protocol.TransmissionUnit, id int ) {
 	for {
 		n, err := egress.Read(buff)
 		if err != nil {
-			fmt.Printf("Read failed '%s'\n", err.Error())
+			log.Printf("Read failed '%s'\n", err.Error())
 			egress.Close()
 			return
 		}
@@ -107,7 +109,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
             close(messages)
             return
         }
-        fmt.Printf("Write %d bytes into SSL tunnel\n", len(buff.Data))
+        log.Printf("Write %d bytes into SSL tunnel\n", len(buff.Data))
         enc.Encode(buff)
     }
 }
@@ -126,7 +128,7 @@ func proxyConnection(ingress net.Conn, customer string) {
         err := dec.Decode(&buff)
 
 		if err != nil {
-			fmt.Printf("Read failed '%s'\n", err.Error())
+			log.Printf("Read failed '%s'\n", err.Error())
 			// close all outgoing connections
             for key := range conmap {
                 conmap[key].Close()
@@ -136,21 +138,23 @@ func proxyConnection(ingress net.Conn, customer string) {
             }
 			return
 		}
+        log.Printf("Read TransmissionUnit %v\n", buff.Action)
         switch buff.Action {
         case protocol.Open:
+            log.Println("open")
             egress, err := getTargetConnection(customer)
             if err != nil {
-                fmt.Printf("Error connecting to target")
+                log.Printf("Error connecting to target")
             }
-            fmt.Printf("Connection #%d created\n", buff.Id)
+            log.Printf("Connection #%d created\n", buff.Id)
             conmap[buff.Id] = egress
             go pipe(egress, messages, buff.Id)
         case protocol.Close:
-            fmt.Printf("Connection #%d closing\n", buff.Id)
+            log.Printf("Connection #%d closing\n", buff.Id)
             conmap[buff.Id].Close()
             delete(conmap, buff.Id)
         case protocol.Send:
-            fmt.Printf("Write %d bytes into connection #%d\n", len(buff.Data), buff.Id)
+            log.Printf("Write %d bytes into connection #%d\n", len(buff.Data), buff.Id)
             conmap[buff.Id].Write(buff.Data)
         }
 
