@@ -55,7 +55,7 @@ cd ../../../Tunnels/go/client
 
 
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-           go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=1' -X 'main.ProtocolVersion=1' -w -extldflags "-static"' -o tunnel
+           go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=1' -X 'main.ProtocolVersion=3' -w -extldflags "-static"' -o tunnel
 chmod a+x tunnel
 mkdir -p ../../../web/go/assets/customer/update/linux/amd64/
 cp tunnel ../../../web/go/assets/customer/update/linux/amd64/
@@ -64,15 +64,15 @@ cp tunnel.tar.gz ../../../web/go/assets/customer/update/
 mv tunnel.tar.gz ../../../web/js/packages/portal/public
 
 CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-           go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=1' -X 'main.ProtocolVersion=1' -w -extldflags "-static"' -o tunnel.exe
+           go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=1' -X 'main.ProtocolVersion=3' -extldflags "-static"' -o tunnel.exe
 mkdir -p ../../../web/go/assets/customer/update/windows/amd64/
-cp tunnel ../../../web/go/assets/customer/update/windows/amd64/
+cp tunnel.exe ../../../web/go/assets/customer/update/windows/amd64/tunnel
 zip tunnel_win.zip  tunnel.exe 
 cp tunnel_win.zip ../../../web/go/assets/customer/
 mv tunnel_win.zip ../../../web/js/packages/portal/public
 
 CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
-           go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=1' -X 'main.ProtocolVersion=1' -w -extldflags "-static"' -o tunnel
+           go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=1' -X 'main.ProtocolVersion=3' -w -extldflags "-static"' -o tunnel
 chmod a+x tunnel
 mkdir -p ../../../web/go/assets/customer/update/darwin/amd64/
 cp tunnel ../../../web/go/assets/customer/update/darwin/amd64/

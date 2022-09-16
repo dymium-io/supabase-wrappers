@@ -227,7 +227,7 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 		os.Exit(1)
 	}
 	bd := string(body)
-	fmt.Printf("body: %s\n", bd)
+
 	var back types.CustomerIDResponse
 	err = json.Unmarshal(body, &back)
 	if err != nil {
@@ -391,7 +391,7 @@ func runProxy(listener *net.TCPListener, back chan string, token int) {
 func doUpdate(portalUrl string) error {
 
 	url := fmt.Sprintf("%sapi/downloadupdate?os=%s&arch=%s", portalUrl, runtime.GOOS, runtime.GOARCH)
-	fmt.Printf("url: %s\n", url)
+
 	fmt.Println("Downloading new version...")
 	resp, err := http.Get(url)
 	if err != nil {
