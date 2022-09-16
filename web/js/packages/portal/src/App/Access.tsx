@@ -220,7 +220,7 @@ function Downloads() {
             Usage:
             <div style={{ display: "flex" }}>
               <div className="terminal">
-                &gt;tunnel {params}
+                &gt;./tunnel {params}
               </div>
               <i onClick={copy("./tunnel " + params)} className="fas fa-copy clipbtn"></i>
             </div>
@@ -234,7 +234,7 @@ function Downloads() {
             Usage:
             <div style={{ display: "flex" }}>
               <div className="terminal">
-                &gt;tunnel {params}
+                &gt;./tunnel {params}
               </div>
               <i onClick={copy("./tunnel " + params)} className="fas fa-copy clipbtn"></i>
             </div>

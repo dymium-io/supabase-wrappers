@@ -20,14 +20,15 @@ const Head = `<html>
 			z-index: 100;
 			color: #7AFB4C;
 			background: #000000;
-			left: 20em; 
-			right: 20em;
+			left: 15em; 
+			right: 15em;
 			text-align: left;
 		}
 		* { margin: 0; padding: 0; }
 		.terminal {
 			border-radius: 8px;
 			position: relative;
+			min-width: 300px;
 		}
 		.terminal .top {
 			background: #E8E6E8;
@@ -72,7 +73,7 @@ const Head = `<html>
 			padding-left: 4px; 
 			padding-right: 4px; 
 			font-face: monospace;
-			font-size: 1.2em;
+			font-size: 1.0em;
 		}
 		</style>
 
