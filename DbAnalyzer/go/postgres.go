@@ -94,7 +94,7 @@ func getPostgresInfo(c types.Connection) (interface{},error) {
 			if cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)",*cCharMaxLen)
 			} else {
-				t = "dpchar"
+				t = "bpchar"
 			}
 		case "ARRAY":
 			switch *eTyp {

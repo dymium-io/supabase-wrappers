@@ -21,7 +21,7 @@ type conf struct {
 	DymiumHost     string `json:"dymium_host"`
 	DymiumPort     int    `json:"dymium_port"`
 	DymiumTls      bool   `json:"dymium_tls"`
-	DymiumDatabase string `json:"dymium_databse"`
+	DymiumDatabase string `json:"dymium_database"`
 	DymiumUser     string `json:"dymium_user"`
 	DymiumPassword string `json:"dymium_password"`
 	GuardianConf   guardianConf
@@ -93,21 +93,21 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 		if cnf.GuardianConf.GuardianPort <= 0 || cnf.GuardianConf.GuardianPort >= 0xFFFF {
 			return returnError(fmt.Errorf("Wrong guardian port number %d", cnf.GuardianConf.GuardianPort))
 		}
-		
+
 		if r.GuardianDatabase != "" {
 			cnf.GuardianConf.GuardianDatabase = r.GuardianDatabase
 		}
 		if r.GuardianDatabase == "" {
 			return returnError(fmt.Errorf("Guardian database name is not defined"))
 		}
-		
+
 		if r.GuardianUser != "" {
 			cnf.GuardianConf.GuardianUser = r.GuardianUser
 		}
 		if cnf.GuardianConf.GuardianUser == "" {
 			return returnError(fmt.Errorf("Guardian user is not defined"))
 		}
-		
+
 		if r.GuardianAdminPassword != "" {
 			cnf.GuardianConf.GuardianAdminPassword = r.GuardianAdminPassword
 		}
@@ -131,7 +131,7 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 			for k, ip := range ipsIP {
 				cnf.GuardianConf.GuardianAddress[k] = ip.String()
 			}
-		}		
+		}
 	} else {
 		for k := range cnf.GuardianConf.GuardianAddress {
 			if cnf.GuardianConf.GuardianAddress[k] == "localhost" {

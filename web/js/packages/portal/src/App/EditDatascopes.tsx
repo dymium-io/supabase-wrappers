@@ -89,8 +89,6 @@ export default function EditDatascopes() {
             dataField: 'edit',
             isDummyField: false,
             formatter: (cell, row, rowIndex, formatExtraData) => {
-
-
                 return <i className="fas fa-edit ablue" onClick={onEdit(row["id"])} role="button"></i>
             },
             //formatExtraData: { hoverIdx: this.state.hoverIdx },
@@ -110,9 +108,7 @@ export default function EditDatascopes() {
             style: { height: '30px' },
             align: 'center'
         }
-
     ]
-
 
     let selectRow = {
         mode: 'radio',
@@ -135,7 +131,6 @@ export default function EditDatascopes() {
 
     }, [])
     useEffect(() => {
-        debugger
         if (selectedDatascope === "" )
             return
         let body = types.DatascopeId.fromJson({ id: selectedDatascope }).toJson()

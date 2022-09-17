@@ -34,6 +34,7 @@ web-go:
     - source: DbAnalyzer.yaml
     - source: DbSyncCommon.yaml
     - source: Common.yaml
+    - source: Tunnel.yaml
 
 web-ts:
   language: TypeScript
@@ -42,3 +43,18 @@ web-ts:
     - source: DbAnalyzer.yaml
     - source: DbSyncCommon.yaml
     - source: Common.yaml
+
+tclient:
+  language: GoLang
+  path: ../Tunnels/go/client/types
+  root-module: dymium/types
+  modules:
+    - source: Tunnel.yaml
+    - source: Common.yaml
+tserver:
+  language: GoLang
+  path: ../Tunnels/go/server/types
+  root-module: dymium/types
+  modules:
+    - source: Tunnel.yaml    
+

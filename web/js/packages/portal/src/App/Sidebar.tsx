@@ -44,6 +44,11 @@ export default function Sidebar() {
         id: 'rules'
       },      
       {
+        item: <div className='darkblue'> <i className="fa fa-key mr-2 fa-fw"></i>Access </div>,
+        to: '/app/access',
+        id: 'access'
+      },            
+      {
         item:  <div className='darkblue'>  <i className="fa-solid fa-vial mr-2 fa-fw"></i>Test SQL </div>,
         to: '/app/test',
         id: 'test'

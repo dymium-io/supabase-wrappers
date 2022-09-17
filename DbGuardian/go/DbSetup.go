@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"database/sql"
@@ -28,10 +27,7 @@ func configureDatabase(db *sql.DB,
 	credentials map[string]types.Credential,
 	createDymiumTables bool) error {
 
-	localUser := os.Getenv("TEST_USER")
-	if localUser == "" {
-		return fmt.Errorf("Environment variable TEST_USER is not defined")
-	}
+	localUser := datascope.Name
 
 	connectionTypes := map[types.ConnectionType]struct{}{}
 	for k := range datascope.Connections {
@@ -47,9 +43,7 @@ func configureDatabase(db *sql.DB,
 	shortSchemas := map[string]struct{}{}
 	for k := range datascope.Schemas {
 		s := &datascope.Schemas[k]
-		if s.Name != "public" {
-			shortSchemas[s.Name] = struct{}{}
-		}
+		shortSchemas[s.Name] = struct{}{}
 		for m := range s.Tables {
 			t := s.Tables[m]
 			se := tuple{k1: s.Name, k2: t.Name}
@@ -106,13 +100,6 @@ func configureDatabase(db *sql.DB,
 		if err := exec("CREATE TABLE _dymium.schemas ( \"schema\" text )"); err != nil {
 			return err
 		}
-
-		if err := exec("GRANT USAGE ON SCHEMA public TO " + localUser); err != nil {
-			return err
-		}
-		if err := exec("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO " + localUser); err != nil {
-			return err
-		}
 	}
 
 	for k := range datascope.Connections {
@@ -148,7 +135,7 @@ func configureDatabase(db *sql.DB,
 	}
 
 	for k := range shortSchemas {
-		if err := exec("CREATE SCHEMA " + k); err != nil {
+		if err := exec("CREATE SCHEMA IF NOT EXISTS " + k); err != nil {
 			return err
 		}
 		if err := exec("GRANT USAGE ON SCHEMA " + k + " TO " + localUser); err != nil {
@@ -163,7 +150,7 @@ func configureDatabase(db *sql.DB,
 	}
 	for k := range longSchemas {
 		kk := k.k1 + "_" + k.k2
-		if err := exec(fmt.Sprintf("CREATE SCHEMA %q", kk)); err != nil {
+		if err := exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %q", kk)); err != nil {
 			return err
 		}
 		if err := exec(fmt.Sprintf("GRANT USAGE ON SCHEMA %q TO %s", kk, localUser)); err != nil {
@@ -195,9 +182,12 @@ func configureDatabase(db *sql.DB,
 						rnul = 1
 					}
 					switch c.Action {
-					case "Redact": ract = 0x1
-					case "Obfuscate": ract = 0x2
-					case "Smart Redact": ract = 0x3
+					case "Redact":
+						ract = 0x1
+					case "Obfuscate":
+						ract = 0x2
+					case "Smart Redact":
+						ract = 0x0
 					}
 					switch {
 					case
@@ -220,16 +210,20 @@ func configureDatabase(db *sql.DB,
 						strings.HasPrefix(c.Typ, "bool"):
 						rtyp = 0x3
 					case
-						c.Typ == "xml": rtyp = 0x4
+						c.Typ == "xml":
+						rtyp = 0x4
 					case
-						c.Typ == "bytea": rtyp = 0x5
+						c.Typ == "bytea":
+						rtyp = 0x5
 					case
-						c.Typ == "json", c.Typ == "jsonb": rtyp = 0x6
+						c.Typ == "json", c.Typ == "jsonb":
+						rtyp = 0x6
 					case
-						c.Typ == "uuid": rtyp = 0x7
+						c.Typ == "uuid":
+						rtyp = 0x7
 					}
 					defs = append(defs, fmt.Sprintf("  %q %s OPTIONS( redact '%d' )%s",
-						c.Name, c.Typ, ract | (rnul << 2) | (rtyp << 3), notNull))
+						c.Name, c.Typ, ract|(rnul<<2)|(rtyp<<3), notNull))
 				}
 			}
 			e := "CREATE FOREIGN TABLE %q.%q (\n" + strings.Join(defs, ",\n") + "\n)\n" +

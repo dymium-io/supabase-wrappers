@@ -200,8 +200,8 @@ exports[`edit-connections-form 1`] = `
               <input
                 class="form-control form-control-sm"
                 id="dname"
-                pattern="[\\\\w_]+"
-                placeholder="Alpha_Num"
+                pattern="[a-z0-9_]+"
+                placeholder="alpha_num, small caps"
                 required=""
                 type="text"
                 value="adventureworks"

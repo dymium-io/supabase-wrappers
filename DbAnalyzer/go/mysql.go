@@ -92,7 +92,7 @@ func getMysqlInfo(c types.Connection) (interface{}, error) {
 			if cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)", *cCharMaxLen)
 			} else {
-				t = "dpchar"
+				t = "bpchar"
 			}
 		default:
 			t = cTyp

@@ -96,6 +96,24 @@ exports[`Instantiate sidebar 1`] = `
   </a>
   <a
     className="hover-sidebar "
+    href="/app/access"
+    id="access"
+    onClick={[Function]}
+  >
+     
+    <div
+      className="darkblue"
+    >
+       
+      <i
+        className="fa fa-key mr-2 fa-fw"
+      />
+      Access 
+    </div>
+     
+  </a>
+  <a
+    className="hover-sidebar "
     href="/app/test"
     id="test"
     onClick={[Function]}

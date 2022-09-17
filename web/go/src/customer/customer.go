@@ -36,11 +36,23 @@ func CustomerHandlers(p *mux.Router) {
 
 	authenticated.HandleFunc("/api/savegroups", dhandlers.SaveGroups).Methods("POST")
 	authenticated.HandleFunc("/api/getgroupsfordatascopes", dhandlers.GetGroupsForDatascopes).Methods("GET")
+	authenticated.HandleFunc("/api/getclientcertificate", dhandlers.GetClientCertificate).Methods("POST")
+	authenticated.HandleFunc("/api/getdatascopesaccess", dhandlers.GetDatascopesAccess).Methods("GET")
+	authenticated.HandleFunc("/api/regenpassword", dhandlers.RegenerateDatascopePassword).Methods("GET")
 
+
+	
 	nonauthenticated.HandleFunc("/api/fakelogin", dhandlers.FakeLogin).Methods("GET")
 	nonauthenticated.HandleFunc("/api/getlogin", dhandlers.GetLogin).Methods("GET")
 	nonauthenticated.HandleFunc("/api/logout", dhandlers.GetLogout).Methods("GET")
+	nonauthenticated.HandleFunc("/api/querytunnel", dhandlers.QueryTunnel).Methods("POST")
+	nonauthenticated.HandleFunc("/api/authenticatebycode", dhandlers.AuthByCode).Methods("POST")
+	
+	nonauthenticated.HandleFunc("/api/downloadupdate", dhandlers.DownloadUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")
+	nonauthenticated.HandleFunc("/api/datascopehelp", dhandlers.DatascopeHelp).Queries("token", "{token}", "port", "{port}").Methods("GET")
 
+	
+	
 	// For React to work properly, ensure that the URLs going into the React router return index.html
 	nonauthenticated.PathPrefix("/app/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		dhandlers.Commonheaders(w, r)
@@ -53,6 +65,8 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/{name:.*\\.svg}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.jpg}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.ico}", dhandlers.GetImages)
+	nonauthenticated.HandleFunc("/{name:.*\\.zip}", dhandlers.GetImages)
+	nonauthenticated.HandleFunc("/{name:.*\\.gz}", dhandlers.GetImages)
 
 	nonauthenticated.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./customer/index.html")

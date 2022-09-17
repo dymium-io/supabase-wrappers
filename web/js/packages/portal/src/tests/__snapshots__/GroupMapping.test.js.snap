@@ -8,15 +8,30 @@ Array [
     role="tablist"
   >
     <a
+      aria-controls="groups-tabpane-groups"
       aria-selected={true}
       className="nav-item nav-link active"
       data-rb-event-key="groups"
       href="#"
+      id="groups-tab-groups"
       onClick={[Function]}
       onKeyDown={[Function]}
       role="tab"
     >
-      Group Mapping
+      Datascope Group Mapping
+    </a>
+    <a
+      aria-controls="groups-tabpane-admins"
+      aria-selected={false}
+      className="nav-item nav-link"
+      data-rb-event-key="admins"
+      href="#"
+      id="groups-tab-admins"
+      onClick={[Function]}
+      onKeyDown={[Function]}
+      role="tab"
+    >
+      Admin Access
     </a>
   </nav>,
   <div
@@ -24,9 +39,9 @@ Array [
   >
     <div
       aria-hidden={false}
-      aria-labelledby={null}
+      aria-labelledby="groups-tab-groups"
       className="fade mx-4 tab-pane active show"
-      id={null}
+      id="groups-tabpane-groups"
       role="tabpanel"
     >
       <h5>
