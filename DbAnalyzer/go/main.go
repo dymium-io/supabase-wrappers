@@ -110,7 +110,7 @@ func getDbInfo(db *sql.DB, dbName *string) (*types.Database,error) {
 			if cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)",*cCharMaxLen)
 			} else {
-				t = "dpchar"
+				t = "bpchar"
 			}
 		case "ARRAY":
 			switch *eTyp {

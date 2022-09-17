@@ -80,10 +80,12 @@ func createDatabases(datascopes []types.Scope) error {
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
+		log.Println(sql)
 		sql = fmt.Sprintf("CREATE ROLE %s", datascopes[k].Name)
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
+		log.Println(sql)
 	}
 
 	return nil
