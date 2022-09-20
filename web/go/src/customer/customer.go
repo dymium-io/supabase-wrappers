@@ -16,7 +16,7 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated := p.Host(host).Subrouter()
 	authenticated := nonauthenticated.Host(host).Subrouter()
 	authenticated.Use(dhandlers.AuthMiddleware)
-
+	
 	authenticated.HandleFunc("/api/createnewconnection", dhandlers.CreateNewConnection).Methods("POST")
 	authenticated.HandleFunc("/api/queryconnection", dhandlers.QueryConnection).Methods("POST")
 	authenticated.HandleFunc("/api/updateconnection", dhandlers.UpdateConnection).Methods("POST")

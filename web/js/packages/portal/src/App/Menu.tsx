@@ -23,7 +23,7 @@ function Menu() {
     }
     let getGroups = () => {
         let gr = com.getTokenProperty("groups")
-        if(gr === null)
+        if(gr === null || gr === undefined)
             return ""
         return gr.join(", ")
     }

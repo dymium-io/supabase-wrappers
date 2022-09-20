@@ -27,158 +27,170 @@ function YourDatascopes() {
 
   }
   let commandLine = (scope) => {
-    return <div className="tabcmd">
-      &gt;psql -h localhost -p {port} -d {scope.name} -U {datascopes !== undefined && datascopes.username}
+    let c = `psql -h localhost -p ${port} -d ${scope.name} -U ${datascopes !== undefined && datascopes.username}`
+
+    return <div style={{ display: "flex" }}> <div className=" terminal">
+      &gt;{c}
+      </div>
+      <i onClick={copy(c)} className="fas fa-copy clipbtn"></i>
     </div>
   }
   let python = scope => {
-    return <div className="tabcmd">
-      conn = psycopg2.connect("host=localhost port={port} dbname={scope.name} user={datascopes !== undefined && datascopes.username} password={datascopes !== undefined && datascopes.password}")
+    let p = `conn = psycopg2.connect("host=localhost port=${port} dbname=${scope.name} user=${datascopes !== undefined && datascopes.username} password=${datascopes !== undefined && datascopes.password}")`
+
+  return <div style={{ display: "flex" }}> <div className=" terminal">
+        {p}
+      </div>
+      <i onClick={copy(p)} className="fas fa-copy clipbtn"></i>
     </div>
   }
+let java = scope => {
   let j = `
-  String url = "jdbc:postgresql://localhost:`+port+`/test";
+  String url = "jdbc:postgresql://localhost:`+ port + `/`+scope.name+`";
   Properties props = new Properties();
   props.setProperty("user","${datascopes !== undefined && datascopes.username}");
   props.setProperty("password","${datascopes !== undefined && datascopes.password}");
   
   `
-  let java = scope => {
-    return <div className="tabcmd"> <pre><code>{j}
-    </code></pre>
-    </div>
-  }
-  let displayDatascopes = () => {
-    let copy = () => {
-      return e => {
-        if (datascopes !== undefined)
-          navigator.clipboard.writeText(datascopes.password);
-      }
+
+return <div style={{ display: "flex" }}> 
+  <div><div className=" terminal"> <pre><code>{j}
+  </code></pre></div>
+  </div> 
+  <i onClick={copy(j)} className="fas fa-copy clipbtn"></i>  
+  </div>
+}
+let displayDatascopes = () => {
+  let copy = () => {
+    return e => {
+      if (datascopes !== undefined)
+        navigator.clipboard.writeText(datascopes.password);
     }
+  }
 
-    return <div>
-      <div className="viewport">
-        <div className="thickblue mb-2" style={{ fontWeight: 'bold' }}><i className="fa fa-key mr-2" aria-hidden="true"></i>Credentials:</div>
-        <div>Username: {datascopes !== undefined && datascopes.username}</div>
-        <div>Password: {datascopes !== undefined && datascopes.password} {datascopes !== undefined && datascopes.password === `**********` ?
-          <Button onClick={regenerate} style={{ paddingBottom: '0.1em', paddingTop: '0.1em' }} variant="dymium" className="ml-3" size="sm">Regenerate</Button>
-          :
-          <i onClick={copy()} className="fas fa-copy clipbtn"></i>
+  return <div>
+    <div className="viewport">
+      <div className="thickblue mb-2" style={{ fontWeight: 'bold' }}><i className="fa fa-key mr-2" aria-hidden="true"></i>Credentials:</div>
+      <div>Username: {datascopes !== undefined && datascopes.username}</div>
+      <div>Password: {datascopes !== undefined && datascopes.password} {datascopes !== undefined && datascopes.password === `**********` ?
+        <Button onClick={regenerate} style={{ paddingBottom: '0.1em', paddingTop: '0.1em' }} variant="dymium" className="ml-3" size="sm">Regenerate</Button>
+        :
+        <i onClick={copy()} className="fas fa-copy clipbtn"></i>
 
-        }</div>
-        <div className="mt-3" style={{ fontSize: '0.8em' }}>Password is only visible to you for a day. You can always generate a new one.</div>
-      </div>
-      {datascopes !== undefined && datascopes.datascopes.map(x => {
-        return <div className="my-5">
-          <h5 className="mb-2"><i className="fa fa-unlock mr-2" aria-hidden="true"></i>Datascope: {x.name}</h5>
-          <div className="datascopeuse">
-            <Tabs
-              id="datascope"
+      }</div>
+      <div className="mt-3" style={{ fontSize: '0.8em' }}>Password is only visible to you for a day. You can always generate a new one.</div>
+    </div>
+    {datascopes !== undefined && datascopes.datascopes.map(x => {
+      return <div className="my-5">
+        <h5 className="mb-2"><i className="fa fa-unlock mr-2" aria-hidden="true"></i>Datascope: {x.name}</h5>
+        <div className="datascopeuse">
+          <Tabs
+            id="datascope"
 
 
-              unmountOnExit={true} className=" mt-0 text-left ">
-              <Tab eventKey="cmd" title="Command Line" className=" mx-4">
-                {commandLine(x)}
-              </Tab>
-              <Tab eventKey="python" title="Python" className=" mx-4">
-                {python(x)}
-              </Tab>
-              <Tab eventKey="java" title="Java" className=" mx-4">
-                {java(x)}
-              </Tab>
+            unmountOnExit={true} className=" mt-0 text-left ">
+            <Tab eventKey="cmd" title="Command Line" className=" mx-2">
+              {commandLine(x)}
+            </Tab>
+            <Tab eventKey="python" title="Python" className=" mx-2">
+              {python(x)}
+            </Tab>
+            <Tab eventKey="java" title="Java" className=" mx-2">
+              {java(x)}
+            </Tab>
 
-            </Tabs>
-          </div>
+          </Tabs>
         </div>
-      })}
-    </div>
-  }
-  let getDatascopeAccess = () => {
-    let error = <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-      Error retrieving datascopes.
-    </Alert>
-    setSpinner(true)
-    http.sendToServer("GET", "/api/getdatascopesaccess",
-      null, "",
-      resp => {
-        resp.json().then(js => {
-          setDatascopes(types.UserDatascopes.fromJson(js))
-          setSpinner(false)
-        }).catch((error) => {
-          setAlert(
-            error
-          )
-          setSpinner(false)
-        })
-      },
-      resp => {
-        setSpinner(false)
-        setAlert(
-          error
-        )
-        setSpinner(false)
-      },
-      error => {
-        console.log("on exception")
-        setSpinner(false)
-        setAlert(
-          error
-        )
-        setSpinner(false)
-      })
-  }
-
-  let regenerate = () => {
-    let error = <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-      Error regenerating password.
-    </Alert>
-    setSpinner(true)
-    http.sendToServer("GET", "/api/regenpassword",
-      null, "",
-      resp => {
-        resp.json().then(js => {
-          setDatascopes(types.UserDatascopes.fromJson(js))
-          setSpinner(false)
-        }).catch((error) => {
-          setAlert(
-            error
-          )
-          setSpinner(false)
-        })
-      },
-      resp => {
-        setSpinner(false)
-        setAlert(
-          error
-        )
-        setSpinner(false)
-      },
-      error => {
-        console.log("on exception")
-        setSpinner(false)
-        setAlert(
-          error
-        )
-        setSpinner(false)
-      })
-  }
-
-  useEffect(() => {
-    getDatascopeAccess()
-  }, [])
-
-  return (
-    <div className=" text-left">
-      {alert}
-      <h5 > Your Datascopes <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
-      <div className=" text-left">
-
-        {datascopes !== undefined && displayDatascopes()}
-
-
       </div>
+    })}
+  </div>
+}
+let getDatascopeAccess = () => {
+  let error = <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+    Error retrieving datascopes.
+  </Alert>
+  setSpinner(true)
+  http.sendToServer("GET", "/api/getdatascopesaccess",
+    null, "",
+    resp => {
+      resp.json().then(js => {
+        setDatascopes(types.UserDatascopes.fromJson(js))
+        setSpinner(false)
+      }).catch((error) => {
+        setAlert(
+          error
+        )
+        setSpinner(false)
+      })
+    },
+    resp => {
+      setSpinner(false)
+      setAlert(
+        error
+      )
+      setSpinner(false)
+    },
+    error => {
+      console.log("on exception")
+      setSpinner(false)
+      setAlert(
+        error
+      )
+      setSpinner(false)
+    })
+}
+
+let regenerate = () => {
+  let error = <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+    Error regenerating password.
+  </Alert>
+  setSpinner(true)
+  http.sendToServer("GET", "/api/regenpassword",
+    null, "",
+    resp => {
+      resp.json().then(js => {
+        setDatascopes(types.UserDatascopes.fromJson(js))
+        setSpinner(false)
+      }).catch((error) => {
+        setAlert(
+          error
+        )
+        setSpinner(false)
+      })
+    },
+    resp => {
+      setSpinner(false)
+      setAlert(
+        error
+      )
+      setSpinner(false)
+    },
+    error => {
+      console.log("on exception")
+      setSpinner(false)
+      setAlert(
+        error
+      )
+      setSpinner(false)
+    })
+}
+
+useEffect(() => {
+  getDatascopeAccess()
+}, [])
+
+return (
+  <div className=" text-left">
+    {alert}
+    <h5 > Your Datascopes <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+    <div className=" text-left">
+
+      {datascopes !== undefined && displayDatascopes()}
+
+
     </div>
-  )
+  </div>
+)
 }
 let orgid = com.getTokenProperty("orgid")
 let url = window.location.protocol + "//" + window.location.host + "/"
@@ -265,16 +277,17 @@ export default function Access() {
 
       appDispatch(setActiveAccessTab(query.get("key")))
       navigate("/app/access")
-    }  }, [])
-    let tt = query.get("key")
-    if (tt !== null) {
-      t = tt
     }
-  if(t == null) { 
+  }, [])
+  let tt = query.get("key")
+  if (tt !== null) {
+    t = tt
+  }
+  if (t == null) {
     t = "datascopes"
   }
   return (
-    <Tabs defaultActiveKey={t} 
+    <Tabs defaultActiveKey={t}
       onSelect={(k) => appDispatch(setActiveAccessTab(k))}
 
       unmountOnExit={true} className="mb-3 text-left">

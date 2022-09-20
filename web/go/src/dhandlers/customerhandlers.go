@@ -758,7 +758,7 @@ func GetLogout(w http.ResponseWriter, r *http.Request) {
 	clientid := os.Getenv("AUTH0_PORTAL_CLIENT_ID")
 	returnurl := os.Getenv("AUTH0_PORTAL_RETURN_URL")
 
-	logoutURL := fmt.Sprintf("%sv2/logout?returnTo=%s&client_id=%s",
+	logoutURL := fmt.Sprintf("%sv2/logout?returnTo=%s&client_id=%s&federated",
 		domain, url.QueryEscape(returnurl), clientid)
 	log.Printf("%s\n", logoutURL)
 
