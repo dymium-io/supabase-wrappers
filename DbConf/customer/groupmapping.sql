@@ -15,3 +15,10 @@ CREATE TABLE groupmapping (
 -- description: "make outer group unique";
 
 ALTER TABLE groupmapping ADD UNIQUE (outergroup);
+
+-- #!migration
+-- name: "customer/groupmapping-adminaccess",
+-- requires: ["customer/groupmapping", "customer/groupmapping-unique"],
+-- description: "mark group as granting admin access";
+
+ALTER TABLE groupmapping ADD column adminaccess boolean NOT NULL default false;

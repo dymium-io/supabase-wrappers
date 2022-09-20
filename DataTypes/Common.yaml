@@ -18,6 +18,7 @@ GroupMapping:
   - dymiumgroup: string
   - directorygroup: string
   - comments: string
+  - adminaccess: bool
 
 ConnectionRecord:
   - name: string

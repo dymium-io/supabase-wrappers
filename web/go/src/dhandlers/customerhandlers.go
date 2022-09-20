@@ -339,7 +339,7 @@ func UpdateMapping(w http.ResponseWriter, r *http.Request) {
 	var t types.GroupMapping
 	err := json.Unmarshal(body, &t)
 
-	error := authentication.UpdateMapping(schema, *t.Id, t.Dymiumgroup, t.Directorygroup, t.Comments)
+	error := authentication.UpdateMapping(schema, *t.Id, t.Dymiumgroup, t.Directorygroup, t.Comments, t.Adminaccess)
 	var status types.OperationStatus
 	if(error == nil) {
 		status = types.OperationStatus{"OK", "Connection created"}

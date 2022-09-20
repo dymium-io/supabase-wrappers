@@ -114,6 +114,7 @@ type GroupMapping struct {
    Dymiumgroup string `json:"dymiumgroup"`
    Directorygroup string `json:"directorygroup"`
    Comments string `json:"comments"`
+   Adminaccess bool `json:"adminaccess"`
 }
 
 type GroupMappingStatus struct {

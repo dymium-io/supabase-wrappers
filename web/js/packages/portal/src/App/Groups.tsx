@@ -14,7 +14,7 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
-
+import Multiselect from 'multiselect-react-dropdown';
 import Spinner from '@dymium/common/Components/Spinner'
 import cloneDeep from 'lodash/cloneDeep';
 import * as com from '../Common'
@@ -22,7 +22,7 @@ import * as types from '@dymium/common/Types/Internal'
 import * as http from '../Api/Http'
 import { useInitialize } from '../Utils/CustomHooks'
 import { useAppDispatch, useAppSelector } from './hooks'
-import {setActiveGroupsTab} from '../Slices/menuSlice'
+import { setActiveGroupsTab } from '../Slices/menuSlice'
 
 const { SearchBar, ClearSearchButton } = Search;
 
@@ -30,12 +30,13 @@ function GroupMapping() {
   const [validated, setValidated] = useState(false)
   let form = useRef<HTMLFormElement>(null)
   const [show, setShow] = useState(false)
-  const [showdelete, setShowdelete] = useState(false)  
-  const [selectedId, setSelectedId] = useState(0)  
-  const [selectedName, setSelectedName] = useState("")  
+  const [showdelete, setShowdelete] = useState(false)
+  const [selectedId, setSelectedId] = useState(0)
+  const [selectedName, setSelectedName] = useState("")
   const [comments, setComments] = useState("")
   const [directorygroup, setDirectorygroup] = useState("")
   const [dymiumgroup, setDymiumgroup] = useState("")
+  const [adminaccess, setAdminaccess] = useState(false)
   const [spinner, setSpinner] = useState(false)
   const [id, setId] = useState("")
   const [alert, setAlert] = useState<JSX.Element>(<></>)
@@ -48,7 +49,7 @@ function GroupMapping() {
       null, "",
       resp => {
         resp.json().then(js => {
-          
+
           setMappings(js.records)
           setSpinner(false)
           setShow(false)
@@ -80,7 +81,7 @@ function GroupMapping() {
 
   let sendMapping = () => {
     setSpinner(true)
-    let body = JSON.stringify({ dymiumgroup, directorygroup, comments })
+    let body = JSON.stringify({ dymiumgroup, directorygroup, comments, adminaccess })
     http.sendToServer("POST", "/api/createmapping",
       null, body,
       resp => {
@@ -130,7 +131,8 @@ function GroupMapping() {
 
   let updateMapping = () => {
     setSpinner(true)
-    let body = JSON.stringify({ id, dymiumgroup, directorygroup, comments })
+    
+    let body = JSON.stringify({ id, dymiumgroup, directorygroup, comments, adminaccess })
     http.sendToServer("POST", "/api/updatemapping",
       null, body,
       resp => {
@@ -178,7 +180,7 @@ function GroupMapping() {
 
   let deleteMapping = () => {
     setSpinner(true)
-    let body = JSON.stringify({ id:selectedId })
+    let body = JSON.stringify({ id: selectedId })
     http.sendToServer("POST", "/api/deletemapping",
       null, body,
       resp => {
@@ -240,7 +242,7 @@ function GroupMapping() {
     event.preventDefault();
     setValidated(false)
     event.stopPropagation();
-    if(id === "")
+    if (id === "")
       sendMapping()
     else
       updateMapping()
@@ -248,12 +250,13 @@ function GroupMapping() {
     setComments("")
     setId("")
     setDymiumgroup("")
+    setAdminaccess(false)
     setDirectorygroup("")
     setValidated(false)
 
     return false
   }
-  let onEdit = (id, dymiumgroup, directorygroup, comments) => {
+  let onEdit = (id, dymiumgroup, directorygroup, comments, adminaccess) => {
 
     return e => {
 
@@ -261,6 +264,7 @@ function GroupMapping() {
       setId(id)
       setComments(comments)
       setDymiumgroup(dymiumgroup)
+      setAdminaccess(adminaccess)
       setValidated(false)
       setShow(true)
     }
@@ -297,13 +301,28 @@ function GroupMapping() {
       sort: true
     },
     {
+      text: 'Admin Role',
+      dataField: 'adminaccess',
+
+      formatter: (cell, row, rowIndex, formatExtraData) => {
+        if(row["adminaccess"] ) {
+          return <i className="fas fa-check blue" ></i>
+        } else {
+          return <></>
+        }
+      },
+      //formatExtraData: { hoverIdx: this.state.hoverIdx },
+      headerStyle: { width: '140px' },
+      style: { height: '30px' },
+      align: 'center'
+    },    {
       text: 'Edit',
       dataField: 'edit',
       isDummyField: true,
       formatter: (cell, row, rowIndex, formatExtraData) => {
 
         return <i className="fas fa-edit ablue" onClick={onEdit(row["id"],
-          row["dymiumgroup"], row["directorygroup"], row["comments"])} role="button"></i>
+          row["dymiumgroup"], row["directorygroup"], row["comments"], row["adminaccess"])} role="button"></i>
       },
       //formatExtraData: { hoverIdx: this.state.hoverIdx },
       headerStyle: { width: '50px' },
@@ -316,7 +335,7 @@ function GroupMapping() {
       isDummyField: true,
       formatter: (cell, row, rowIndex, formatExtraData) => {
         return <i className="fas fa-trash ablue" onClick={onDelete(row["id"],
-        row["dymiumgroup"], row["directorygroup"], row["comments"])} role="button"></i>
+          row["dymiumgroup"], row["directorygroup"], row["comments"])} role="button"></i>
       },
       //formatExtraData: { hoverIdx: this.state.hoverIdx },
       headerStyle: { width: '90px' },
@@ -340,7 +359,7 @@ function GroupMapping() {
             <Row>
               <Col xs="auto">
                 <Form.Group className="mb-3" controlId="dbname">
-                  <Form.Label>Directory group</Form.Label>
+                  <Form.Label>Directory group:</Form.Label>
                   <Form.Control size="sm" type="text" placeholder="alphanumeric"
                     required
                     pattern=".+"
@@ -360,7 +379,7 @@ function GroupMapping() {
               </Col>
               <Col xs="auto">
                 <Form.Group className="mb-3" controlId="dbname">
-                  <Form.Label>Dymium group</Form.Label>
+                  <Form.Label>Dymium group:</Form.Label>
                   <Form.Control size="sm" type="text" placeholder="alphanumeric"
                     required
                     pattern=".+"
@@ -376,7 +395,20 @@ function GroupMapping() {
                 </Form.Group>
 
               </Col>
+                <Col  style={{ marginTop: '1.7em' }}>
 
+                <Form.Check
+                                style={{ marginTop: '0.2em' }}
+                                type="checkbox"
+                                label="Admin access"
+                                id="adminaccess"
+                                defaultChecked={adminaccess}
+                                onChange={e => {
+                                   setAdminaccess(e.target.checked)
+                                }}
+                            />
+
+                </Col>
             </Row>
             <Row>
               <Col>
@@ -392,8 +424,8 @@ function GroupMapping() {
           </Modal.Body>
           <Modal.Footer>
             <Button variant="dymium" type="submit"
-            >{id === "" ? "Add" :  "Update"}</Button> <Button variant="dymium" onClick={() => {
-              
+            >{id === "" ? "Add" : "Update"}</Button> <Button variant="dymium" onClick={() => {
+
               setComments("")
               setId("")
               setDymiumgroup("")
@@ -405,54 +437,54 @@ function GroupMapping() {
         </Form>
       </Modal>
       <Modal centered show={showdelete} onHide={() => setShowdelete(false)} >
-                <Modal.Header closeButton>
-                    <Modal.Title>Delete mapping?</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>Are you sure you want to remove the mapping {selectedName}? This operation is irreversible.</Modal.Body>
-                <Modal.Footer>
-                    <Button variant="danger" size="sm"  onClick={() => {
-                        deleteMapping()
-                        setShowdelete(false)
-                    }
-                    }>Delete</Button> <Button size="sm" variant="dymium" onClick={() => {
-                        setShowdelete(false)
-                     
-                    }}>Cancel</Button>
-                </Modal.Footer>
-            </Modal>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete mapping?</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to remove the mapping {selectedName}? This operation is irreversible.</Modal.Body>
+        <Modal.Footer>
+          <Button variant="danger" size="sm" onClick={() => {
+            deleteMapping()
+            setShowdelete(false)
+          }
+          }>Delete</Button> <Button size="sm" variant="dymium" onClick={() => {
+            setShowdelete(false)
+
+          }}>Cancel</Button>
+        </Modal.Footer>
+      </Modal>
 
       {mappings.length > 0 &&
-                    <ToolkitProvider
-                   
-                    bootstrap4
-                    keyField='Dymiumgroup'
-                    data={mappings}
-                    columns={columns}
-                    search >
-                    {
-                        props => (
-                            <div className="text-left mt-0 pt-0">
-                                {alert}
-                                <div className="d-flex">
+        <ToolkitProvider
 
-                                    <div style={{ marginLeft: "auto" }}>
-                                        <SearchBar size="sm" {...props.searchProps} />
-                                        <ClearSearchButton {...props.searchProps} />
-                                    </div>
-                                </div>
-                                <div className="d-block">
-                                    <BootstrapTable id="scaledtable"
-                                     size="sm"
-                                        condensed
-                                        striped bootstrap4 bordered={false}
-                                        pagination={paginationFactory()}
-                                        {...props.baseProps}
-                                    />
-                                </div>
-                            </div>
-                        )
-                    }
-                </ToolkitProvider>
+          bootstrap4
+          keyField='Dymiumgroup'
+          data={mappings}
+          columns={columns}
+          search >
+          {
+            props => (
+              <div className="text-left mt-0 pt-0">
+                {alert}
+                <div className="d-flex">
+
+                  <div style={{ marginLeft: "auto" }}>
+                    <SearchBar size="sm" {...props.searchProps} />
+                    <ClearSearchButton {...props.searchProps} />
+                  </div>
+                </div>
+                <div className="d-block">
+                  <BootstrapTable id="scaledtable"
+                    size="sm"
+                    condensed
+                    striped bootstrap4 bordered={false}
+                    pagination={paginationFactory()}
+                    {...props.baseProps}
+                  />
+                </div>
+              </div>
+            )
+          }
+        </ToolkitProvider>
 
 
       }
@@ -469,31 +501,24 @@ function GroupMapping() {
   )
 }
 
-export function AdminAccess() {
 
-  return (
-<></>
-  )
-}
 
 export default function Groups() {
   const t = useAppSelector((state) => {
-        
-    return state.reducer.activeGroupsTab}
-    )
-    const appDispatch = useAppDispatch()
+
+    return state.reducer.activeGroupsTab
+  }
+  )
+  const appDispatch = useAppDispatch()
 
   return (
     <Tabs
-    defaultActiveKey={t} id="groups" 
-    onSelect={(k) => appDispatch( setActiveGroupsTab(k) )}
+      defaultActiveKey={t} id="groups"
+      onSelect={(k) => appDispatch(setActiveGroupsTab(k))}
 
       unmountOnExit={true} className="mb-3 text-left">
-      <Tab eventKey="groups" title="Datascope Group Mapping" className="mx-4">
+      <Tab eventKey="groups" title="Group Mapping" className="mx-4">
         <GroupMapping />
-      </Tab>
-      <Tab eventKey="admins" title="Admin Access" className="mx-4">
-        <AdminAccess />
       </Tab>
 
     </Tabs>
