@@ -270,6 +270,24 @@ func GetSchemaFromToken(token string) (string, error) {
 	return claim.Schema, err
 
 }
+func GetSchemaRolesFromToken(token string) (string, []string, error) {
+	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
+	claim := &types.Claims{}
+
+	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+	if nil == err {
+		if !tkn.Valid {
+			err = errors.New("No error, but invalid token")
+		}
+	}
+	if claim.Schema == "" {
+		err = errors.New("Empty schema")
+	}
+	return claim.Schema, claim.Roles, err
+
+}
 
 func UsernameFromEmail(email string) string {
 	username := strings.Split(email, "@")[0]

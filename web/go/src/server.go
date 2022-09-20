@@ -20,6 +20,7 @@ import (
 	"dymium.com/dymium/admin"
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/authentication"
+	"dymium.com/dymium/dhandlers"
 )
 
 
@@ -42,7 +43,8 @@ func main() {
 	if(dbname == "") {
 		dbname = "dymium"
 	}
-	err := authentication.Init(dbhost, dbport, dbuser, dbpassword, dbname, dbtls)
+	dhandlers.InitRBAC()
+	err := authentication.Init(dbhost, dbport, dbuser, dbpassword, dbname, dbtls)	
 	if(err != nil) {
 		log.Panicln(err)
 	}

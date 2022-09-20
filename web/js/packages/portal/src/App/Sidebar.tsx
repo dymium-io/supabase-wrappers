@@ -9,63 +9,70 @@ import { setActiveMenu } from '../Slices/menuSlice'
 import './Sidebar.scss';
 
 export default function Sidebar() {
-  const selected = useAppSelector((state) => {
+  let selected = useAppSelector((state) => {
 
     return state.reducer.activeMenu
   })
   const appDispatch = useAppDispatch()
+  let roles = com.getTokenProperty("roles")
+  if (roles === undefined) {
+    roles = ["user"]
+  }
+  let isadmin = roles.includes("admin")
+  let isuser = roles.includes("user")
+  if(!isadmin) {
+    if( ["dashboard", "connections", "datascopes", "groups", "rules"].includes(selected) ) {
+      selected = "access"
+      appDispatch(setActiveMenu(selected))
+    }
+  }
 
   let getMenuItems = () => {
-    let roles = com.getTokenProperty("roles")
-    if(roles === undefined) {
-      roles = ["user"]
-    }
-    let isadmin = roles.includes("admin")
-    let isuser = roles.includes("user")
+
 
     let items: any[] = []
-    if(isadmin)
-    items.push(
-      {
-        item: <div className='darkblue'> <i className="fas fa-tachometer-alt mr-2 fa-fw "></i>Dashboard </div>,
-        to: '/app/dashboard',
-        id: 'dashboard'
-      })
-      if(isadmin)
-    items.push(
-      {
-        item: <div className='darkblue'> <i className="fas fa-database mr-2 fa-fw"></i>Connections</div>,
-        to: '/app/connections',
-        id: 'connections'
-      })
-      if(isadmin)
-    items.push(
-      {
-        item: <div className='darkblue'><i className="fas fa-lock-open mr-2  fa-fw"></i>Data Scopes</div>,
-        to: '/app/datascopes',
-        id: 'datascopes'
-      })
-      if(isadmin)
-    items.push(
-      {
-        item: <div className='darkblue'>  <i className="fas fa-users mr-2 fa-fw"></i>Groups </div>,
-        to: '/app/groups',
-        id: 'groups'
-      })
-      if(isadmin)
-    items.push(
-      {
-        item: <div className='darkblue'> <i className="fa fa-gavel mr-2 fa-fw"></i>Rules </div>,
-        to: '/app/rules',
-        id: 'rules'
-      })
-      if(isuser)
-    items.push(
-      {
-        item: <div className='darkblue'> <i className="fa fa-key mr-2 fa-fw"></i>Access </div>,
-        to: '/app/access',
-        id: 'access'
-      })
+    if (isadmin)
+      items.push(
+        {
+          item: <div className='darkblue'> <i className="fas fa-tachometer-alt mr-2 fa-fw "></i>Dashboard </div>,
+          to: '/app/dashboard',
+          id: 'dashboard'
+        })
+    if (isadmin)
+      items.push(
+        {
+          item: <div className='darkblue'> <i className="fas fa-database mr-2 fa-fw"></i>Connections</div>,
+          to: '/app/connections',
+          id: 'connections'
+        })
+    if (isadmin)
+      items.push(
+        {
+          item: <div className='darkblue'><i className="fas fa-lock-open mr-2  fa-fw"></i>Data Scopes</div>,
+          to: '/app/datascopes',
+          id: 'datascopes'
+        })
+    if (isadmin)
+      items.push(
+        {
+          item: <div className='darkblue'>  <i className="fas fa-users mr-2 fa-fw"></i>Groups </div>,
+          to: '/app/groups',
+          id: 'groups'
+        })
+    if (isadmin)
+      items.push(
+        {
+          item: <div className='darkblue'> <i className="fa fa-gavel mr-2 fa-fw"></i>Rules </div>,
+          to: '/app/rules',
+          id: 'rules'
+        })
+    if (isuser)
+      items.push(
+        {
+          item: <div className='darkblue'> <i className="fa fa-key mr-2 fa-fw"></i>Access </div>,
+          to: '/app/access',
+          id: 'access'
+        })
 
     items.push(
       {

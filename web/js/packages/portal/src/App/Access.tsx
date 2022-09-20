@@ -72,12 +72,15 @@ let displayDatascopes = () => {
     <div className="viewport">
       <div className="thickblue mb-2" style={{ fontWeight: 'bold' }}><i className="fa fa-key mr-2" aria-hidden="true"></i>Credentials:</div>
       <div>Username: {datascopes !== undefined && datascopes.username}</div>
-      <div>Password: {datascopes !== undefined && datascopes.password} {datascopes !== undefined && datascopes.password === `**********` ?
-        <Button onClick={regenerate} style={{ paddingBottom: '0.1em', paddingTop: '0.1em' }} variant="dymium" className="ml-3" size="sm">Regenerate</Button>
-        :
-        <i onClick={copy()} className="fas fa-copy clipbtn"></i>
+      <div>Password: {datascopes !== undefined && datascopes.password} 
+      <Button onClick={regenerate} style={{ marginTop: '-4px', paddingBottom: '0.1em', paddingTop: '0.0em' }} variant="dymium" className="mx-2" size="sm">Regenerate</Button> 
 
-      }</div>
+       {datascopes !== undefined && datascopes.password !== `**********` &&
+        
+     
+        <i onClick={copy()}  className="fas fa-copy clipbtn"></i>
+
+      } </div>
       <div className="mt-3" style={{ fontSize: '0.8em' }}>Password is only visible to you for a day. You can always generate a new one.</div>
     </div>
     {datascopes !== undefined && datascopes.datascopes.map(x => {

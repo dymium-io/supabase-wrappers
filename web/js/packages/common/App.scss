@@ -333,6 +333,9 @@ input:-internal-autofill-selected {
   font-family: monospace;
   margin-bottom: 0.5em;
 }
+pre {
+  color: #7AFB4C;
+}
 .clipbtn {
   background-color: $main-blue;
   padding-left: 8px; 
@@ -343,7 +346,7 @@ input:-internal-autofill-selected {
   border-left: 1px solid #efefef;
   border-bottom: 2px solid $dark-blue;
   border-right: 2px solid $dark-blue;  
-  margin-bottom: 0.5em;
+  margin-bottom: 0px;
   color: white;
   height: 28px;
   &:hover {
@@ -358,7 +361,7 @@ input:-internal-autofill-selected {
     border-right: 1px solid $dark-blue;      
     padding-left: 9px; 
     padding-right: 7px;    
-    padding-top: 7px;
+    padding-top: 5px;
   }
 }
 

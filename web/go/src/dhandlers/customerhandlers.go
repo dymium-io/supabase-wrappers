@@ -33,12 +33,62 @@ import (
 type contextKey int
 const authenticatedSchemaKey contextKey = 0
 
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
+
+
+var admins = make(map[string]int)
+var users = make(map[string]int)
+func InitRBAC() {
+	adminnames :=  []string{"createnewconnection", "queryconnection","updateconnection","deleteconnection",
+	"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
+	"getdatascopes", "createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
+	"getgroupsfordatascopes"}
+	usernames :=  []string{"getclientcertificate", "getdatascopesaccess", "regenpassword"}	
+
+	for _, v := range adminnames {
+		admins[v] = 1
+	}
+	for _, v := range usernames {
+		users[v] = 1
+	}
+
+}
+
+func Authorized(r *http.Request, roles []string) bool {
+	name:=mux.CurrentRoute(r).GetName()
+	log.Printf("Name: %s\n", name)
+	
+
+
+	for _, v := range roles {
+		if(v == "admin") {
+			if _, ok := admins[name]; ok {
+				return true
+			}
+		}
+		if(v == "user") {
+			if _, ok := users[name]; ok {
+				return true
+			}
+		}
+	}
+	log.Printf("Error:%s  not authorized\n", name)
+	return false
+}
 
 func AuthMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// do stuff
 		token := common.TokenFromHTTPRequest(r)
-		schema, error := authentication.GetSchemaFromToken(token)
+		schema, roles, error := authentication.GetSchemaRolesFromToken(token)
 		if error != nil {
 			log.Printf("Error: %s\n", error.Error())
 			status := types.OperationStatus{"AuthError", error.Error()}
@@ -58,6 +108,21 @@ func AuthMiddleware(h http.Handler) http.Handler {
 		//create a new request using that new context
 		rWithSchema := r.WithContext(ctxWithSchema)
 
+		use := Authorized(r, roles)
+		if !use {
+
+			status := types.OperationStatus{"AuthError", "Role is not authorized for this resource"}
+			js, err := json.Marshal(status)
+		
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Cache-Control", common.Nocache)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write(js)
+			return			
+		}
 		h.ServeHTTP(w, rWithSchema)
 	})
 }
