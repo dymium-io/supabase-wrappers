@@ -894,12 +894,14 @@ export class GroupMapping {
   private '_dymiumgroup': string
   private '_directorygroup': string
   private '_comments': string
+  private '_adminaccess': boolean
 
   constructor() {
     this['_id'] = null
     this['_dymiumgroup'] = ''
     this['_directorygroup'] = ''
     this['_comments'] = ''
+    this['_adminaccess'] = false
   }
   get id(): string | null { return this['_id'] }
   set id(__a__: any) {
@@ -940,6 +942,14 @@ export class GroupMapping {
       this['_comments'] = __v__
     }
   }
+  get adminaccess(): boolean { return this['_adminaccess'] }
+  set adminaccess(__a__: any) {
+    let __v__ = boolReader(false)(__a__)
+    if(!_.isEqual(__v__,this['_adminaccess'])) {
+      setDirtyFlag()
+      this['_adminaccess'] = __v__
+    }
+  }
 
   toJson(): string { return JSON.stringify(this).split('"_').join('"') }
 
@@ -951,6 +961,7 @@ export class GroupMapping {
        cls.dymiumgroup = __a__['dymiumgroup']
        cls.directorygroup = __a__['directorygroup']
        cls.comments = __a__['comments']
+       cls.adminaccess = __a__['adminaccess']
     } else {
        doAlert(`GroupMapping: an attempt to initialize from ${__a__}`)
     }

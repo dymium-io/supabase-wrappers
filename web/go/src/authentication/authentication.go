@@ -521,6 +521,7 @@ func  CheckAndRefreshToken(token string, sport string) (string, error) {
 			Name: claim.Name,
 			Email: claim.Email,
 			Groups: claim.Groups,
+			Roles: claim.Roles,
 			Picture: claim.Picture,
 			Schema: claim.Schema ,
 			Port: nport,
@@ -550,7 +551,44 @@ func  CheckAndRefreshToken(token string, sport string) (string, error) {
 // log.Printf("Invalid session, expired at %v, time now: %v ", claim.StandardClaims.ExpiresAt, timeNow.Unix())
 return "", err
 }
+func GetRoles(schema string, groups []string) []string {
+	var roles []string
+	roles = append(roles, types.RoleUser)
+	var count int	
+	if(len(groups) == 0) {
+		log.Printf("No groups specified")
+		// let's see if mapping is present at all
+		sql := `select count(*) from ` + schema + `.groupmapping;`;
+		row := db.QueryRow(sql)
+		err := row.Scan(&count)
+		if(err != nil) {
+			log.Printf("Error quering mapping: %s\n", err.Error())
+			return roles;
+		} else {
+			if(count > 0) {
+				return roles
+			}
+			roles = append(roles, types.RoleAdmin)
+			return roles
+		}
+	}
+	sql := `select count(*) from ` + schema + `.groupmapping where innergroup = any ($1) and adminaccess=true;`;
 
+
+	row := db.QueryRow(sql, pq.Array(groups))
+	err := row.Scan(&count)
+	if(err != nil) {
+		log.Printf("Error quering mapping: %s\n", err.Error())
+		return roles;
+	} else {
+		log.Printf("count of admin groups: %d\n", count)
+		if(count > 0) {
+			roles = append(roles, types.RoleAdmin)
+		}
+	}
+
+	return roles;
+}
 func GeneratePortalJWT(picture string, schema string, name string, email string, groups []string, org_id  string) (string, error) {
 	// generate JWT right header
 	issueTime := time.Now()
@@ -560,6 +598,7 @@ func GeneratePortalJWT(picture string, schema string, name string, email string,
 		// TODO
 		Name: name,
 		Groups: groups,
+		Roles: GetRoles(schema, groups),
 		Email: email,
 		Picture: picture ,
 		Schema: schema,
@@ -598,6 +637,7 @@ func refreshPortalToken(token string) (string, error) {
 			Name: claim.Name,
 			Email: claim.Email,
 			Groups: claim.Groups,
+			Roles: GetRoles(claim.Schema, claim.Groups),
 			Picture: claim.Picture,
 			Schema: claim.Schema ,
 			Port: claim.Port,
@@ -1015,7 +1055,7 @@ func DeleteDatascope(schema string, id string) error {
 
 func GetMappings(schema string) ([]types.GroupMapping, error) {
 
-	sql := `select id, outergroup, innergroup, comment from ` + schema + `.groupmapping where exists (select schema_name from global.customers where schema_name = $1);`
+	sql := `select id, outergroup, innergroup, comment, adminaccess from ` + schema + `.groupmapping where exists (select schema_name from global.customers where schema_name = $1);`
 	rows, err := db.Query(sql, schema)
 
 	var mps = []types.GroupMapping{}
@@ -1024,7 +1064,7 @@ func GetMappings(schema string) ([]types.GroupMapping, error) {
 
 		for rows.Next() {
 			var mp = types.GroupMapping{}
-			err = rows.Scan(&mp.Id, &mp.Directorygroup, &mp.Dymiumgroup, &mp.Comments)
+			err = rows.Scan(&mp.Id, &mp.Directorygroup, &mp.Dymiumgroup, &mp.Comments, &mp.Adminaccess)
 
 			if nil != err {
 				log.Printf("Error in GetMappings:  %s\n", err.Error())
@@ -1138,10 +1178,10 @@ func CreateNewMapping(schema, dymiumgroup, directorygroup, comments string) erro
 	return nil
 }
 
-func UpdateMapping(schema, id, dymiumgroup, directorygroup, comments string) error {
-	sql := "update "+schema+".groupmapping set outergroup=$1, innergroup=$2, comment=$3  where id=$4;"
-
-	_, err := db.Exec(sql, directorygroup, dymiumgroup, comments, id)
+func UpdateMapping(schema, id, dymiumgroup, directorygroup, comments string, adminaccess bool) error {
+	sql := "update "+schema+".groupmapping set outergroup=$1, innergroup=$2, comment=$3, adminaccess=$4  where id=$5;"
+log.Printf("UpdateMapping, adminaccess: %v\n", adminaccess)
+	_, err := db.Exec(sql, directorygroup, dymiumgroup, comments, adminaccess, id)
 	if(err != nil) {
 		log.Printf("UpdateMapping error %s\n", err.Error())
 	}

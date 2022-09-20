@@ -215,7 +215,7 @@ function Downloads() {
 
         <div className="viewport">
           <div>On Mac OS X:</div>
-          <a href="/tunnel_mac.zip" download="tunnel_mac.zip"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Mac OS X Client</a>
+          <a href="/tunnel_mac.tar.gz" download="tunnel_mac.tar.gz"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Mac OS X Client</a>
           <div>
             Usage:
             <div style={{ display: "flex" }}>
