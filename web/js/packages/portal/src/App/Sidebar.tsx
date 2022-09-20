@@ -17,6 +17,9 @@ export default function Sidebar() {
 
   let getMenuItems = () => {
     let roles = com.getTokenProperty("roles")
+    if(roles === undefined) {
+      roles = ["user"]
+    }
     let isadmin = roles.includes("admin")
     let isuser = roles.includes("user")
 
@@ -63,7 +66,7 @@ export default function Sidebar() {
         to: '/app/access',
         id: 'access'
       })
-      
+
     items.push(
       {
         item: <div className='darkblue'>  <i className="fa-solid fa-vial mr-2 fa-fw"></i>Test SQL </div>,
