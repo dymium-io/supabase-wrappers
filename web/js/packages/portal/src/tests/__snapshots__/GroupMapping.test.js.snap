@@ -18,20 +18,7 @@ Array [
       onKeyDown={[Function]}
       role="tab"
     >
-      Datascope Group Mapping
-    </a>
-    <a
-      aria-controls="groups-tabpane-admins"
-      aria-selected={false}
-      className="nav-item nav-link"
-      data-rb-event-key="admins"
-      href="#"
-      id="groups-tab-admins"
-      onClick={[Function]}
-      onKeyDown={[Function]}
-      role="tab"
-    >
-      Admin Access
+      Group Mapping
     </a>
   </nav>,
   <div
@@ -150,6 +137,16 @@ Array [
                   <th
                     style={
                       Object {
+                        "width": "140px",
+                      }
+                    }
+                    tabIndex={0}
+                  >
+                    Admin Role
+                  </th>
+                  <th
+                    style={
+                      Object {
                         "width": "50px",
                       }
                     }
@@ -183,6 +180,14 @@ Array [
                   <td>
                     Admin group fubar
                   </td>
+                  <td
+                    style={
+                      Object {
+                        "height": "30px",
+                        "textAlign": "center",
+                      }
+                    }
+                  />
                   <td
                     style={
                       Object {
@@ -225,6 +230,14 @@ Array [
                   <td>
                     Comment changed via test
                   </td>
+                  <td
+                    style={
+                      Object {
+                        "height": "30px",
+                        "textAlign": "center",
+                      }
+                    }
+                  />
                   <td
                     style={
                       Object {

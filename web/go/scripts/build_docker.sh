@@ -76,9 +76,9 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
 chmod a+x tunnel
 mkdir -p ../../../web/go/assets/customer/update/darwin/amd64/
 cp tunnel ../../../web/go/assets/customer/update/darwin/amd64/
-zip tunnel_mac.zip  tunnel
-cp tunnel_mac.zip ../../../web/go/assets/customer/
-mv tunnel_mac.zip ../../../web/js/packages/portal/public
+tar -zcvf tunnel.tar.gz tunnel
+cp tunnel.tar.gz ../../../web/go/assets/customer/
+mv tunnel.tar.gz ../../../web/js/packages/portal/public
 
 echo "Moved the client binaries"
 

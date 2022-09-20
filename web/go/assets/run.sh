@@ -30,9 +30,9 @@ export ADMIN_HOST='admin.dymium.local'
 
 export LB_DOMAIN='.dymium.local'
 export LB_PORT=15654
-export PROTOCOL_VERSION = 3
-export MAJOR_VERSION = 0
-export MINOR_VERSION = 1
+export PROTOCOL_VERSION=3
+export MAJOR_VERSION=0
+export MINOR_VERSION=1
 
 export AWS_LAMBDAS='{ "DbAnalyzer": "localhost:9080",
                       "DbSync": "localhost:9081"
