@@ -6,7 +6,7 @@ exports[`Instantiate sidebar 1`] = `
   id="sidebar"
 >
   <a
-    className="hover-sidebar "
+    className="hover-sidebar navselected "
     href="/app/access"
     id="access"
     onClick={[Function]}

@@ -35,6 +35,47 @@ import (
 )
 
 
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
+var admins = make(map[string]int)
+var users = make(map[string]int)
+func initRBAC() {
+	adminnames :=  []string{"createnewconnection", "queryconnection","updateconnection","deleteconnection",
+	"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
+	"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
+	"getgroupsfordatascopes"}
+	usernames :=  []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword"}	
+
+	for _, v := range adminnames {
+		admins["/api/" + v] = 1
+	}
+	for _, v := range usernames {
+		users["/api/" + v] = 1
+	}
+}
+func Authorized(r *http.Request, roles []string) bool {	
+	name := r.URL.Path
+	for _, v := range roles {
+		if(v == "admin") {
+			if _, ok := admins[name]; ok {
+				return true
+			}
+		}
+		if(v == "user") {
+			if _, ok := users[name]; ok {
+				return true
+			}
+		}
+	}
+	log.Printf("Error:%s  not authorized\n", name)
+	return false
+}
 
 var psqlInfo string
 var db *sql.DB
@@ -107,6 +148,7 @@ func InitInvoke( i types.Invoke_t) {
 }
 //aws.Invoke("DbAnalyzer", nil, bconn)
 func Init(host string, port, user, password, dbname, tls string) error {
+	initRBAC()
 	nport := 5432
 	if port != "" {
 		nport, _ = strconv.Atoi(port)
@@ -607,7 +649,7 @@ func GetRoles(schema string, groups []string) []string {
 
 	return roles;
 }
-func GeneratePortalJWT(picture string, schema string, name string, email string, groups []string, org_id  string) (string, error) {
+func GeneratePortalJWT(picture string, schema string, name string, email string, groups []string, roles []string, org_id  string) (string, error) {
 	// generate JWT right header
 	issueTime := time.Now()
 	expirationTime := issueTime.Add(timeOut * time.Minute)
@@ -616,7 +658,7 @@ func GeneratePortalJWT(picture string, schema string, name string, email string,
 		// TODO
 		Name: name,
 		Groups: groups,
-		Roles: GetRoles(schema, groups),
+		Roles: roles,
 		Email: email,
 		Picture: picture ,
 		Schema: schema,
@@ -1335,7 +1377,7 @@ func GetFakeAuthentication () []byte{
 
 
 	token, err :=  GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s", 
-	"spoofcorp", "user@spoofcorp.com", "user", []string{}, "org_nsEsSgfq3IYXe2pu")
+	"spoofcorp", "user@spoofcorp.com", "user", []string{"Admins", "Users"}, []string{"user", "admin"}, "org_nsEsSgfq3IYXe2pu")
 	if(err != nil){
 		log.Printf("Error: %s\n", err.Error() )
 	}
@@ -1386,7 +1428,7 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id, auth_portal
 		log.Printf("Schema: %s\n", schema )
 	}
 
-	token, err := GeneratePortalJWT(picture, schema, name, email, groups, org_id)
+	token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups), org_id)
 	if(err != nil){
 		log.Printf("Error 2: %s\n", err.Error() )
 	}	
@@ -1583,7 +1625,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 			log.Printf("Schema: %s\n", schema )
 		}
 
-		token, err := GeneratePortalJWT(picture, schema, name, email, groups, org_id)
+		token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups), org_id)
 		if(err != nil){
 			log.Printf("Error 2: %s\n", err.Error() )
 		}

@@ -53,6 +53,7 @@ func TestApiHandlers(t *testing.T){
 		if(dbtls == "")	{
 			dbtls = "disable"
 		}
+	
 		err := authentication.Init(dbhost, dbport, dbadminuser, dbpassword, "postgres", dbtls)
 		if(err != nil) {
 			t.Errorf("Error: %s\n", err.Error() )
@@ -154,12 +155,12 @@ func TestApiHandlers(t *testing.T){
 
 //------------------- get JWT ------------------------
 	token, err :=  authentication.GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s", 
-	"spoofcorp", "user", "xxx@xxx.com", []string{}, "org_nsEsSgfq3IYXe2pu")
+	"spoofcorp", "user", "xxx@xxx.com", []string{"Admins", "Users"}, []string{"admin", "user"}, "org_nsEsSgfq3IYXe2pu")
 	if(err != nil){
 		t.Errorf("Error creating token: %s\n", err.Error())
 		return		
 	}
-
+fmt.Println(token)
 	//---- test static file	
 	func () {
 		req, err := http.NewRequest("GET", "/logo.png", nil)
