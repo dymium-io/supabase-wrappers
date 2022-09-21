@@ -53,12 +53,17 @@ static int dec_bin(int number);
 static int bin_dec(int binarynumber);
 
 
+/* Dymium */
+#define _D /* if(0) */
+#include "../common/obfuscate.c"
+
 /*
  * convert_mysql_to_pg:
  * 		Convert MySQL data into PostgreSQL's compatible data types
  */
 Datum
-mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column)
+mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column,
+					int isNullable, int act, int how_to_redact)
 {
 	Datum		value_datum;
 	Datum		valueDatum;
@@ -76,6 +81,22 @@ mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column)
 	typeinput = ((Form_pg_type) GETSTRUCT(tuple))->typinput;
 	ReleaseSysCache(tuple);
 
+	/* Dymium */
+#define obf(valstr) do {												\
+	if(act != 0) {														\
+	  switch(how_to_redact) {											\
+	  case 0x0: if(act == 1) redact_something(valstr); else obfuscate(valstr); break; \
+	  case 0x1: if(act == 1) redact_text(valstr); else obfuscate(valstr); break; \
+	  case 0x2: if(act == 1) redact_number(valstr); else obfuscate(valstr); break; \
+	  case 0x3: redact_bool(valstr); break;								\
+	  case 0x4: redact_xml(valstr); break;								\
+	  case 0x5: redact_bytea(valstr); break;							\
+	  case 0x6: redact_json(valstr); break;								\
+	  case 0x7: obfuscate(valstr); break;								\
+	  }																	\
+	}																	\
+} while(0)
+		
 	switch (pgtyp)
 	{
 		/*
@@ -106,6 +127,7 @@ mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column)
 
 		case BITOID:
 			sprintf(str, "%d", dec_bin(*((int *) column->value)));
+			obf((char*)str);
 			valueDatum = CStringGetDatum((char *) str);
 			break;
 
@@ -113,11 +135,13 @@ mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column)
 			text_result = (char *) palloc(column->length + 1);
 			memcpy(text_result, (char *) column->value, column->length);
 			text_result[column->length] = '\0';
+			obf((char*)text_result);
 			valueDatum = CStringGetDatum((char *) text_result);
 			break;
 
 		default:
-			valueDatum = CStringGetDatum((char *) column->value);
+		  obf((char*)column->value);
+		  valueDatum = CStringGetDatum((char *) column->value);
 	}
 
 	value_datum = OidFunctionCall3(typeinput, valueDatum,

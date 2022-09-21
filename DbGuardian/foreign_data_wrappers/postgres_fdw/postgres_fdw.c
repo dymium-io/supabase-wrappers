@@ -1563,6 +1563,8 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 	 * Get info we'll need for converting data fetched from the foreign server
 	 * into local representation and error reporting during that process.
 	 */
+	/* Dymium */
+	/* TBD: what should happen in JOIN case? */
 	if (fsplan->scan.scanrelid > 0)
 	{
 		Oid	 relid;

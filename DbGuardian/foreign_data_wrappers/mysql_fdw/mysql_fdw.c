@@ -391,7 +391,7 @@ static char *mysql_remove_quotes(char *s1);
 bool
 mysql_load_library(void)
 {
-#if defined(__APPLE__) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(__FreeBSD__) || 1
 	/*
 	 * Mac OS/BSD does not support RTLD_DEEPBIND, but it still works without
 	 * the RTLD_DEEPBIND
@@ -663,6 +663,28 @@ mysqlBeginForeignScan(ForeignScanState *node, int eflags)
 	/* Fetch the options */
 	options = mysql_get_options(rte->relid, true);
 
+	/* Dymium */
+	if (fsplan->scan.scanrelid > 0)
+	{
+		festate->how_to_redact = (int*)palloc0(sizeof(int) * tupleDescriptor->natts);
+		/* !Dymium! */
+		for(int k = 0; k != tupleDescriptor->natts; ++k) {
+			List *options = GetForeignColumnOptions(rte->relid, TupleDescAttr(tupleDescriptor, k)->attnum);
+			ListCell *lc;
+			foreach(lc, options)
+			{
+				DefElem    *def = (DefElem *) lfirst(lc);
+
+				if (strcmp(def->defname, "redact") == 0)
+				{
+					char *redact = defGetString(def);
+					festate->how_to_redact[k] = atoi(redact);
+					break;
+				}
+			}
+		}
+	}
+
 	/*
 	 * Get the already connected connection, otherwise connect and get the
 	 * connection handle.
@@ -839,9 +861,14 @@ mysqlIterateForeignScan(ForeignScanState *node)
 			int32		pgtypmod = TupleDescAttr(attinmeta->tupdesc, attnum)->atttypmod;
 
 			nulls[attnum] = festate->table->column[attid].is_null;
-			if (!festate->table->column[attid].is_null)
+			if (!festate->table->column[attid].is_null) {
+			    int *how_to_redact = festate -> how_to_redact;
+			    int isNullable = how_to_redact ? (how_to_redact[attnum] >> 2) & 0x1 : 0;
+				int act = how_to_redact ? how_to_redact[attnum] & 0x3 : 0;
 				dvalues[attnum] = mysql_convert_to_pg(pgtype, pgtypmod,
-													  &festate->table->column[attid]);
+													  &festate->table->column[attid],
+													  isNullable, act, how_to_redact[attnum] >> 3);
+			}
 
 			attid++;
 		}

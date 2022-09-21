@@ -25,12 +25,12 @@ fdw=':'
 cp_args=''
 for f in postgres_fdw mysql_fdw; do
     fdw="$fdw; cd /fdw/$f; make USE_PGXS=true"
-    cp_args="$cp_args $f/$f.so"
+    cp_args="$cp_args $f/$f.so $f/$f.control $f/$f--*.sql"
 done
 set -x
 (
     cd $script_d/../foreign_data_wrappers
-    docker run -it --rm -v $PWD:/fdw postgres-dev /bin/bash -c "$fdw"
+    docker run -it --rm -v $PWD:/fdw postgres-dev /bin/sh -c "$fdw"
     eval cp "$cp_args $build_d"
 )
 

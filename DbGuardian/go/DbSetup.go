@@ -21,6 +21,48 @@ func extensionName(connectionType types.ConnectionType) (string, error) {
 	return "", fmt.Errorf("Extension %v is not supported yet", connectionType)
 }
 
+type iOptions struct {
+	server func(host string, port int, dbname string) string;
+	userMapping func(user, password string) string;
+	table func(remoteSchema, remoteTable string) string;
+}
+
+func options(connectionType types.ConnectionType) iOptions {
+	switch connectionType {
+	case types.CT_PostgreSQL:
+		return iOptions{
+			server: func(host string, port int, dbname string) string {
+				return fmt.Sprintf("host '%s', port '%d', dbname '%s'",
+					esc(host), port, esc(dbname))
+			},
+			userMapping: func(user, password string) string{
+				return fmt.Sprintf("user '%s', password '%s'",
+					esc(user), esc(password))
+			},
+			table: func(remoteSchema, remoteTable string) string{
+				return fmt.Sprintf("schema_name '%s', table_name '%s'",
+					esc(remoteSchema), esc(remoteTable))
+			},
+		}
+	case types.CT_MySQL:
+		return iOptions{
+			server: func(host string, port int, dbname string) string {
+				return fmt.Sprintf("host '%s', port '%d'",
+					esc(host), port)
+			},
+			userMapping: func(user, password string) string{
+				return fmt.Sprintf("username '%s', password '%s'",
+					esc(user), esc(password))
+			},
+			table: func(remoteSchema, remoteTable string) string{
+				return fmt.Sprintf("dbname '%s', table_name '%s'",
+					esc(remoteSchema), esc(remoteTable))
+			},
+		}
+	}
+	panic("impossible")
+}
+
 func configureDatabase(db *sql.DB,
 	datascope *types.Scope,
 	connections map[string]types.Connection,
@@ -110,11 +152,11 @@ func configureDatabase(db *sql.DB,
 		}
 		e, _ := extensionName(c.Database_type)
 
-		if err := exec(fmt.Sprintf(`
-                                      CREATE SERVER `+c.Name+`_server
-                                      FOREIGN DATA WRAPPER `+e+`
-                                      OPTIONS (host '%s', port '%d', dbname '%s')`,
-			esc(c.Address), c.Port, esc(c.Dbname))); err != nil {
+		opts := options(c.Database_type)
+
+		sql := `CREATE SERVER `+c.Name+`_server FOREIGN DATA WRAPPER `+e+` OPTIONS (`+
+			opts.server(c.Address, c.Port, c.Dbname)+`)`
+		if err := exec(sql); err != nil {
 			return err
 		}
 		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.servers (server) VALUES ( $1 )", c.Name+"_server"); err != nil {
@@ -128,8 +170,8 @@ func configureDatabase(db *sql.DB,
 		if err := exec(fmt.Sprintf(`
                                       CREATE USER MAPPING FOR `+localUser+`
                                       SERVER `+c.Name+`_server
-                                      OPTIONS (user '%s', password '%s')`,
-			esc(cred.User_name), esc(cred.Password))); err != nil {
+                                      OPTIONS (%s)`,
+			opts.userMapping(cred.User_name, cred.Password))); err != nil {
 			return err
 		}
 	}
@@ -227,9 +269,10 @@ func configureDatabase(db *sql.DB,
 				}
 			}
 			e := "CREATE FOREIGN TABLE %q.%q (\n" + strings.Join(defs, ",\n") + "\n)\n" +
-				"  SERVER %s_server OPTIONS(schema_name '%s', table_name '%s')"
+				"  SERVER %s_server OPTIONS(%s)"
 
 			con := connections[t.Connection]
+			opts := options(con.Database_type)
 			schs := []string{con.Name + "_" + s.Name}
 			if _, ok := shortEntries[tuple{k1: s.Name, k2: t.Name}]; ok {
 				if s.Name == "public" {
@@ -239,7 +282,7 @@ func configureDatabase(db *sql.DB,
 				}
 			}
 			for _, sch := range schs {
-				if err := exec(fmt.Sprintf(e, sch, t.Name, con.Name, esc(s.Name), esc(t.Name))); err != nil {
+				if err := exec(fmt.Sprintf(e, sch, t.Name, con.Name, opts.table(s.Name, t.Name))); err != nil {
 					return err
 				}
 			}

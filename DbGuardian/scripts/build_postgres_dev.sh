@@ -1,10 +1,7 @@
 #!/bin/sh
 
 cat <<\EOF | docker build -t postgres-dev -
-FROM ubuntu:latest
+FROM alpine:3.16
 
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y build-essential \
-      postgresql-server-dev-all \
-      libmysqlclient-dev
+RUN apk add build-base postgresql14-dev mysql-client mariadb-connector-c-dev
+EOF
