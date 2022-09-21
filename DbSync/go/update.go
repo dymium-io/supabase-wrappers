@@ -53,7 +53,7 @@ func doUpdate(
 				return empty, fmt.Errorf("%s connection: Clearing %q: %v", a, datascope.Name, err)
 			}
 			if err = configureDatabase(db, datascope, *connections, *credentials, false); err != nil {
-				return empty, fmt.Errorf("%s connection: Clearing %q: %v", a, datascope.Name, err)
+				return empty, fmt.Errorf("%s connection: Configuring %q: %v", a, datascope.Name, err)
 			}
 		}
 	}
@@ -99,7 +99,9 @@ func clearDatabase(db *sql.DB) error {
 					if err = rsch.Scan(&schema); err != nil {
 						return fmt.Errorf("Getting list of schemas: %v", err)
 					}
-					exec(fmt.Sprintf("DROP SCHEMA %q CASCADE", schema))
+					if schema != "public" {
+						exec(fmt.Sprintf("DROP SCHEMA %q CASCADE", schema))
+					}
 				}
 				if _, err := db.Exec("DELETE FROM _dymium.schemas"); err != nil {
 					return fmt.Errorf("DELETE FROM _dymium.schemas: %v", err)

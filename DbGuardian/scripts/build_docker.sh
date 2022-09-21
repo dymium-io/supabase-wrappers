@@ -21,14 +21,21 @@ retval=$?
     exit $retval
 }
 
+fdw=':'
+cp_args=''
+for f in postgres_fdw mysql_fdw; do
+    fdw="$fdw; cd /fdw/$f; make USE_PGXS=true"
+    cp_args="$cp_args $f/$f.so $f/$f.control $f/$f--*.sql"
+done
+set -x
 (
-    cd $script_d/../postgres/postgres_fdw
-    docker run -it --rm -v $PWD:/postgres_fdw postgres-dev /bin/bash -c "cd /postgres_fdw; USE_PGXS=true make"
+    cd $script_d/../foreign_data_wrappers
+    docker run -it --rm -v $PWD:/fdw postgres-dev /bin/sh -c "$fdw"
+    eval cp "$cp_args $build_d"
 )
 
 
 cd $build_d
-cp $script_d/../postgres/postgres_fdw/postgres_fdw.so .
 
 # creating docker
 DataGuardian=$(docker images data-guardian -q)
