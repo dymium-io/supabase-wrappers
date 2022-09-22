@@ -226,7 +226,6 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 		fmt.Printf("Error: %s\n", err.Error())
 		os.Exit(1)
 	}
-	bd := string(body)
 
 	var back types.CustomerIDResponse
 	err = json.Unmarshal(body, &back)
@@ -292,23 +291,26 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder)
 		var buff protocol.TransmissionUnit
 		err := dec.Decode(&buff)
 		if err != nil {
-			fmt.Printf("In MultiplexReader - read error, cleaning up\n")
+			fmt.Printf("Еrror %s, closing the tunnel\n", err.Error() )
 			for key := range conmap {
 				conmap[key].Close()
 				delete(conmap, key)
 			}
 			egress.Close()
+			os.Exit(1)
 			return
 		}
 		switch buff.Action {
 		case protocol.Close:
-			fmt.Printf("In MultiplexReader - close connection %d\n", buff.Id)
-
 			conmap[buff.Id].Close()
 			delete(conmap, buff.Id)
 		case protocol.Send:
 			//fmt.Printf("Send %d bytes\n", len(buff.Data))
-			conmap[buff.Id].Write(buff.Data)
+			_, err = conmap[buff.Id].Write(buff.Data)
+			if(err != nil) {
+				fmt.Printf("Write error: %s, closing the tunnel", err.Error() )
+				os.Exit(1)
+			}
 		}
 	}
 }
@@ -567,7 +569,7 @@ func main() {
 		if(err != nil) {
 			fmt.Printf("Error: %s\n", err.Error())
 		}
-fmt.Println("go runProxy")
+
 		go runProxy(listener, message, claim.Port)
 		for {
 			msg := <-message

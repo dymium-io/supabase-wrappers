@@ -79,6 +79,7 @@ function ConnectionForm(props) {
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
+                    {props.dbtype !== 'MySQL' && props.dbtype !== 'MariaDB' &&
                     <Form.Group className="mb-3" controlId="dbname">
                         <Form.Label>{tooltip('Database name',
                             <div className="d-block">
@@ -88,7 +89,7 @@ function ConnectionForm(props) {
                             , 'auto', '', false)}</Form.Label>
                         <Form.Control size="sm" type="text" placeholder="Alpha_Num"
                             required
-                            pattern="[a-zA-Z0-9_]+"
+                            pattern=".+"
                             value={props.dbname}
                             onChange={e => props.setDbName(e.target.value)}
                         />
@@ -97,6 +98,7 @@ function ConnectionForm(props) {
                             Type systemwide unique name to use in SQL
                         </Form.Control.Feedback>
                     </Form.Group>
+        }
                 </Col>                
             </Row>
             <Row>

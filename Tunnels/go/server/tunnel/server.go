@@ -11,21 +11,20 @@ import (
     
 )
 
-
 var iprecords []net.IP
 var ipindex = 0
-func getTargetConnection(customer string) (net.Conn, error) {
+func getTargetConnection(customer, postgresPort string) (net.Conn, error) {
     log.Printf("in getTargetConnection, len(iprecords): %d\n", len(iprecords))
     index := ipindex % len(iprecords)
     ipindex = (ipindex + 1) % len(iprecords)
  
-    target := iprecords[index].String() + ":5432"
+    target := iprecords[index].String() + ":" + postgresPort
     log.Printf("target: %s\n", target)
     return net.Dial("tcp", target)
 }
 
-func Server(address string, port int, customer string, certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte) {
-	iprecords, _ = net.LookupIP(customer + ".guardian.local")
+func Server(address string, port int, customer, postgressDomain, postgresPort string, certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte) {
+	iprecords, _ = net.LookupIP(customer + postgressDomain)
 	for _, ip := range iprecords {
 		log.Printf("db endpoint: %s\n", ip)
 	}
@@ -82,7 +81,7 @@ func Server(address string, port int, customer string, certPEMBlock, keyPEMBlock
             }
         }
 
-        go proxyConnection(ingress, customer)
+        go proxyConnection(ingress, customer, postgresPort)
     }
 }
 
@@ -114,7 +113,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
     }
 }
 
-func proxyConnection(ingress net.Conn, customer string) {
+func proxyConnection(ingress net.Conn, customer, postgresPort string) {
     var conmap = make( map[int] net.Conn )
 
 
@@ -132,9 +131,7 @@ func proxyConnection(ingress net.Conn, customer string) {
 			// close all outgoing connections
             for key := range conmap {
                 conmap[key].Close()
-                
                 delete(conmap, key)
-           
             }
 			return
 		}
@@ -142,7 +139,7 @@ func proxyConnection(ingress net.Conn, customer string) {
         switch buff.Action {
         case protocol.Open:
             log.Println("open")
-            egress, err := getTargetConnection(customer)
+            egress, err := getTargetConnection(customer, postgresPort)
             if err != nil {
                 log.Printf("Error connecting to target")
             }
@@ -154,8 +151,12 @@ func proxyConnection(ingress net.Conn, customer string) {
             conmap[buff.Id].Close()
             delete(conmap, buff.Id)
         case protocol.Send:
-            log.Printf("Write %d bytes into connection #%d\n", len(buff.Data), buff.Id)
-            conmap[buff.Id].Write(buff.Data)
+            _, err = conmap[buff.Id].Write(buff.Data)
+            if err != nil {
+                log.Printf("Write Error: %s\n", err.Error())
+                conmap[buff.Id].Close()
+            }
+
         }
 
 	}
