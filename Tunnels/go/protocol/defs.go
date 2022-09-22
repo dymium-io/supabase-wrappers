@@ -4,6 +4,7 @@ const (
 	Close = iota
  	Open
 	Send
+	Ping
 )
 
 type TransmissionUnit struct {

@@ -77,5 +77,16 @@ func main() {
 	}
 
 	customer := os.Getenv("CUSTOMER")
-	tunnel.Server(address, port, customer, []byte(t.Certificate), []byte(t.Key), passphrase, []byte(tt.Certificate))
+	postgresPort := os.Getenv("POSTGRES_PORT")
+	postgressDomain := os.Getenv("POSTGRES_DOMAIN")
+	if postgresPort == "" {
+		postgresPort = "5432"
+	}
+	if postgressDomain == "" {
+		postgressDomain = "5432"
+	}
+
+
+
+	tunnel.Server(address, port, customer, postgressDomain, postgresPort, []byte(t.Certificate), []byte(t.Key), passphrase, []byte(tt.Certificate))
 }
