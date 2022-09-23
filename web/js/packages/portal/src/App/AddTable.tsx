@@ -919,6 +919,7 @@ const Prefills = {
 export interface AddTableProps {
     table: types.TableScope,
     connectionId: string,
+    currentConnectionType: string,
     onAddTable: (ar: types.TableScope) => void,
     onAlert: (ar: JSX.Element) => void,
     onHide: () => void
@@ -1193,7 +1194,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
 
         setTableStructure(newtablestructure)
     }
-    
+    let correctname = ["MariaDB", "MySQL"].includes(props.currentConnectionType)? "Database" : "Schema" 
     return <div>
 
         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
@@ -1201,13 +1202,13 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             <Row>
                 <Col xs="auto">
                     <Form.Group className="mb-3" controlId="schemaname">
-                        <Form.Label>Schema Name:</Form.Label>
+                        <Form.Label>{correctname} Name:</Form.Label>
                         <Typeahead id="schemaname" inputProps={{id: "schemaname"}}
                             onChange={selectSchema} size="sm"
                             defaultSelected={props.table.schema != undefined ? [props.table.schema] : []}
                             options={getOptions()}
                             clearButton
-                            placeholder="Choose schema..."
+                            placeholder={`Choose ${correctname}...`}
                             disabled={props.table.connection !== undefined && props.table.connection !== ""}
                         />
 

@@ -553,7 +553,8 @@ Object {
                           class="form-label"
                           for="schemaname"
                         >
-                          Schema Name:
+                          Schema
+                           Name:
                         </label>
                         <div
                           class="rbt has-aux"
@@ -570,7 +571,7 @@ Object {
                               autocomplete="off"
                               class="rbt-input-main form-control rbt-input form-control-sm"
                               id="schemaname"
-                              placeholder="Choose schema..."
+                              placeholder="Choose Schema..."
                               role="combobox"
                               type="text"
                               value=""
@@ -858,7 +859,8 @@ Object {
                         class="form-label"
                         for="schemaname"
                       >
-                        Schema Name:
+                        Schema
+                         Name:
                       </label>
                       <div
                         class="rbt has-aux"
@@ -875,7 +877,7 @@ Object {
                             autocomplete="off"
                             class="rbt-input-main form-control rbt-input form-control-sm"
                             id="schemaname"
-                            placeholder="Choose schema..."
+                            placeholder="Choose Schema..."
                             role="combobox"
                             type="text"
                             value=""
@@ -1220,7 +1222,8 @@ Object {
                           class="form-label"
                           for="schemaname"
                         >
-                          Schema Name:
+                          Schema
+                           Name:
                         </label>
                         <div
                           class="rbt has-aux"
@@ -1237,7 +1240,7 @@ Object {
                               autocomplete="off"
                               class="rbt-input-main form-control rbt-input form-control-sm"
                               id="schemaname"
-                              placeholder="Choose schema..."
+                              placeholder="Choose Schema..."
                               role="combobox"
                               type="text"
                               value="humanresources"
@@ -3511,7 +3514,8 @@ Object {
                         class="form-label"
                         for="schemaname"
                       >
-                        Schema Name:
+                        Schema
+                         Name:
                       </label>
                       <div
                         class="rbt has-aux"
@@ -3528,7 +3532,7 @@ Object {
                             autocomplete="off"
                             class="rbt-input-main form-control rbt-input form-control-sm"
                             id="schemaname"
-                            placeholder="Choose schema..."
+                            placeholder="Choose Schema..."
                             role="combobox"
                             type="text"
                             value="humanresources"

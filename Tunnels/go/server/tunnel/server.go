@@ -101,15 +101,19 @@ func pipe(egress net.Conn, messages chan protocol.TransmissionUnit, id int ) {
 	}
 }
 
-func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) {
+func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder, ingress net.Conn, conmap map[int] net.Conn) {
     for {
         buff, ok := <- messages 
         if(!ok) {
             close(messages)
             return
         }
-        log.Printf("Write %d bytes into SSL tunnel\n", len(buff.Data))
-        enc.Encode(buff)
+       
+        err := enc.Encode(buff)
+        if(err != nil) {
+            log.Printf("Error in encoder: %s\n", err.Error() )
+            ingress.Close()
+        }
     }
 }
 
@@ -119,8 +123,9 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 
     dec := gob.NewDecoder(ingress)
     enc := gob.NewEncoder(ingress)
+
     messages := make(chan protocol.TransmissionUnit)
-    go MultiplexWriter(messages, enc)
+    go MultiplexWriter(messages, enc, ingress, conmap)
 
 	for {
         var buff protocol.TransmissionUnit
@@ -133,12 +138,12 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
                 conmap[key].Close()
                 delete(conmap, key)
             }
+            ingress.Close()
 			return
 		}
-        log.Printf("Read TransmissionUnit %v\n", buff.Action)
+        // log.Printf("Read TransmissionUnit %v\n", buff.Action)
         switch buff.Action {
         case protocol.Open:
-            log.Println("open")
             egress, err := getTargetConnection(customer, postgresPort)
             if err != nil {
                 log.Printf("Error connecting to target")
@@ -156,7 +161,6 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
                 log.Printf("Write Error: %s\n", err.Error())
                 conmap[buff.Id].Close()
             }
-
         }
 
 	}
