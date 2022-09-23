@@ -42,7 +42,8 @@ export function AddDatascope(props) {
     const [dbname, setDbname] = useState<string>("")
     const [datascope, setDatascope] = useState<internal.TablesMap>({})
     const [currentConnectionId, setCurrentConnectionId] = useState<string>("")
-
+    const [currentConnectionType, setCurrentConnectionType] = useState<string>("")
+    
     useEffect(() => {
         capi.getConnections(setSpinner, setConns, setAlert, remap, ()=>{})
     }, [])
@@ -132,8 +133,9 @@ export function AddDatascope(props) {
         setTable(t)
         setShowOffcanvas(true)
     }
-    let addNewTable = (id:string, schema?:string, table?:string) => {
+    let addNewTable = (id:string, dbtype:string, schema?:string, table?:string) => {
         setCurrentConnectionId(id)
+        setCurrentConnectionType(dbtype)
         if(schema === undefined || table === undefined)
             setTable({ schema: "", table: "" })
         else 
@@ -152,7 +154,7 @@ export function AddDatascope(props) {
             <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
                 title={table["connection"] === undefined ? "Register table" : "Edit table" }>
                 {showOffcanvas &&
-                <AddTable onHide={() => {setShowOffcanvas(false)}} onAlert={setAlert} onAddTable={onAddTable} table={table} connectionId={currentConnectionId}/>
+                <AddTable onHide={() => {setShowOffcanvas(false)}} onAlert={setAlert} onAddTable={onAddTable} table={table} currentConnectionType={currentConnectionType} connectionId={currentConnectionId}/>
                 }
             </Offcanvas>
             <h5 > Create New Data Scope <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>

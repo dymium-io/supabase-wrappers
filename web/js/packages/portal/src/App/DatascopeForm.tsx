@@ -36,7 +36,7 @@ export interface DatascopeFormProps {
     onTablesMapUpdate: (ar: internal.TablesMap) => void,
     onAddTableRef: (ar: any) => void,
     connections: internal.Connection[],
-    AddNewTable: (ar: string, schema?: string, table?: string) => void,
+    AddNewTable: (ar: string, dbtype: string, schema?: string, table?: string) => void,
     nameToConnection: internal.ConnectionMap,
     dbname: string,
     onDbname: (ar: string) => void,
@@ -62,7 +62,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
     refs.current["tables"] = tables
     refs.current["setTables"] = setTables
     refs.current["setCounter"] = setCounter
-
+debugger
     let onEdit = (connection, schema, table) => {
         return e => {
             let ob: internal.TableScope = refs.current["tables"][connection]
@@ -293,7 +293,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                 let r = <div className="m-1">Table {refby} refers to {schema}.{table}. <Button onClick={
                     e => {
                         if (db.id !== null)
-                            props.AddNewTable(db.id, schema, table)
+                            props.AddNewTable(db.id, props.nameToConnection[db.name].dbtype, schema, table)
                     }
 
                 } size="sm" style={{ marginTop: "-2px" }} variant="dymium">Click to link {schema}.{table}</Button></div>
@@ -310,8 +310,9 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                     <Col><Button onClick={e => {
 
                         editedConnection.current = db.name
-                        if (db.id !== null)
-                            props.AddNewTable(db.id)
+                        if (db.id !== null) {
+                            props.AddNewTable(db.id, props.nameToConnection[db.name].dbtype)
+                        }
 
                     }} size="sm" variant="dymium"><i className="fa fa-table mr-1" aria-hidden="true"></i>Link Table</Button></Col>
                     <Col xs="auto" className="text-right"><i onClick={deleteConnection} title={"Unlink "+ db.name} className="fa fa-unlink blue trash" style={{marginRight: '18px'}} aria-hidden="true"></i></Col>
