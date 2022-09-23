@@ -108,8 +108,10 @@ func getMysqlInfo(c types.Connection) (interface{}, error) {
 		}
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
 			switch schema {
-			case "information_schema", "mysql", "sys", "performance_schema": isSystem = true
-			default: isSystem = false
+			case "information_schema", "mysql", "sys", "performance_schema":
+				isSystem = true
+			default:
+				isSystem = false
 			}
 			database.Schemas = append(database.Schemas, types.Schema{
 				Name:     schema,

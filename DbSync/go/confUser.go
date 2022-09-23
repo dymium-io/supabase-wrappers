@@ -20,6 +20,11 @@ func confUser(
 		return empty, fmt.Errorf("User conf is not defined")
 	}
 
+	log.Printf("confUser: { Name: %s, Datascopes: %v }\n",
+		userCnf.Name, userCnf.Datascopes)
+	log.Printf("guardianCnf: { Address: %v:%d, Database: %s}\n",
+		cnf.GuardianAddress, cnf.GuardianPort, cnf.GuardianDatabase)
+
 	sslmode_ := "disable"
 	if *cnf.GuardianTls {
 		sslmode_ = "require"
@@ -37,19 +42,25 @@ func confUser(
 			log.Printf("Cannot open connection to %s. Ignoring error: %v", a, err)
 		} else {
 			defer db.Close()
-			if rows, err := db.Query(`
-WITH RECURSIVE cte AS (
-   SELECT oid FROM pg_roles WHERE rolname = $1
-   UNION ALL
-   SELECT m.roleid
-   FROM   cte
-   JOIN   pg_auth_members m ON m.member = cte.oid
-   )
-SELECT oid::regrole::text AS rolename FROM cte ORDER BY rolename;`, userCnf.Name); err != nil {
+			userExists := false
+			if rows, err := db.Query(`select true from pg_roles where oid::regrole::text = $1`,
+				userCnf.Name); err != nil {
+				return empty, fmt.Errorf("Getting role: %v", err)
+			} else {
+				defer rows.Close()
+				if rows.Next() {
+					userExists = true
+				}
+			}
+			if rows, err := db.Query(`select r.oid::regrole::text as rolename from pg_roles r
+                                                  join  pg_auth_members m on m.roleid = oid
+                                                  join pg_roles u on u.oid = m.member
+                                                  and u.oid::regrole::text = $1
+                                                  ORDER BY rolename`,
+				userCnf.Name); err != nil {
 				return empty, err
 			} else {
 				defer rows.Close()
-				userExists := false
 				toAdd, toDelete := []string{}, []string{}
 				k := 0
 				for rows.Next() {
@@ -69,10 +80,13 @@ SELECT oid::regrole::text AS rolename FROM cte ORDER BY rolename;`, userCnf.Name
 						case userCnf.Name:
 							userExists = true
 						case ds[k]:
+							k += 1
 						default:
 							if d < ds[k] {
+								log.Printf("toDelete: d=%s ds[%d]=%s\n", d, k, ds[k])
 								toDelete = append(toDelete, d)
 							} else {
+								log.Printf("toAdd: d=%s ds[%d]=%s\n", d, k, ds[k])
 								toAdd = append(toAdd, d)
 								k += 1
 							}
@@ -82,18 +96,19 @@ SELECT oid::regrole::text AS rolename FROM cte ORDER BY rolename;`, userCnf.Name
 				if k < len(ds) {
 					toAdd = append(toAdd, ds[k:]...)
 				}
+				log.Println("toAdd:", toAdd, "toDelete:", toDelete)
 				if !userExists {
 					_, err = db.Exec(fmt.Sprintf("CREATE USER %s WITH ENCRYPTED PASSWORD '%s'", userCnf.Name, userCnf.Password))
 					if err != nil {
 						return empty, err
 					}
-					log.Printf("CREATE USER %s", userCnf.Name)
+					log.Printf("CREATing USER %s", userCnf.Name)
 				} else {
 					_, err = db.Exec(fmt.Sprintf("ALTER USER %s WITH ENCRYPTED PASSWORD '%s'", userCnf.Name, userCnf.Password))
 					if err != nil {
 						return empty, err
 					}
-					log.Printf("ALTER USER %s", userCnf.Name)
+					log.Printf("ALTERing USER %s", userCnf.Name)
 				}
 				for _, d := range toDelete {
 					_, err = db.Exec(fmt.Sprintf("REVOKE %s FROM %s", d, userCnf.Name))

@@ -81,7 +81,6 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 
 	if r, ok := cnfM["DEFAULT"]; ok {
 		cnf.GuardianConf = r
-		fmt.Println(r)
 	} else {
 		return returnError(fmt.Errorf("GUARDIAN_CONF[%q] nor GUARDIAN_CONF[\"DEFAULT\"] are not defined", customer))
 	}
@@ -139,8 +138,6 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 			}
 		}
 	}
-
-	fmt.Println(cnf)
 
 	return &cnf, nil
 
