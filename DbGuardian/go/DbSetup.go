@@ -15,7 +15,7 @@ func extensionName(connectionType types.ConnectionType) (string, error) {
 	switch connectionType {
 	case types.CT_PostgreSQL:
 		return "postgres_fdw", nil
-	case types.CT_MySQL:
+	case types.CT_MySQL, types.CT_MariaDB:
 		return "mysql_fdw", nil
 	}
 	return "", fmt.Errorf("Extension %v is not supported yet", connectionType)
@@ -44,7 +44,7 @@ func options(connectionType types.ConnectionType) iOptions {
 					esc(remoteSchema), esc(remoteTable))
 			},
 		}
-	case types.CT_MySQL:
+	case types.CT_MySQL, types.CT_MariaDB:
 		return iOptions{
 			server: func(host string, port int, dbname string) string {
 				return fmt.Sprintf("host '%s', port '%d'",
