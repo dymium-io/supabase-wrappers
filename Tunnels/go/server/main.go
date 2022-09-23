@@ -83,10 +83,10 @@ func main() {
 		postgresPort = "5432"
 	}
 	if postgressDomain == "" {
-		postgressDomain = "5432"
+		postgressDomain = ".guardian.local"
 	}
 
-
+	log.Printf("proxy domain: %s, port %s\n", postgressDomain, postgresPort)
 
 	tunnel.Server(address, port, customer, postgressDomain, postgresPort, []byte(t.Certificate), []byte(t.Key), passphrase, []byte(tt.Certificate))
 }
