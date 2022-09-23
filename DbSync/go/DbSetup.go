@@ -22,9 +22,9 @@ func extensionName(connectionType types.ConnectionType) (string, error) {
 }
 
 type iOptions struct {
-	server func(host string, port int, dbname string) string;
-	userMapping func(user, password string) string;
-	table func(remoteSchema, remoteTable string) string;
+	server      func(host string, port int, dbname string) string
+	userMapping func(user, password string) string
+	table       func(remoteSchema, remoteTable string) string
 }
 
 func options(connectionType types.ConnectionType) iOptions {
@@ -35,11 +35,11 @@ func options(connectionType types.ConnectionType) iOptions {
 				return fmt.Sprintf("host '%s', port '%d', dbname '%s'",
 					esc(host), port, esc(dbname))
 			},
-			userMapping: func(user, password string) string{
+			userMapping: func(user, password string) string {
 				return fmt.Sprintf("user '%s', password '%s'",
 					esc(user), esc(password))
 			},
-			table: func(remoteSchema, remoteTable string) string{
+			table: func(remoteSchema, remoteTable string) string {
 				return fmt.Sprintf("schema_name '%s', table_name '%s'",
 					esc(remoteSchema), esc(remoteTable))
 			},
@@ -50,11 +50,11 @@ func options(connectionType types.ConnectionType) iOptions {
 				return fmt.Sprintf("host '%s', port '%d'",
 					esc(host), port)
 			},
-			userMapping: func(user, password string) string{
+			userMapping: func(user, password string) string {
 				return fmt.Sprintf("username '%s', password '%s'",
 					esc(user), esc(password))
 			},
-			table: func(remoteSchema, remoteTable string) string{
+			table: func(remoteSchema, remoteTable string) string {
 				return fmt.Sprintf("dbname '%s', table_name '%s'",
 					esc(remoteSchema), esc(remoteTable))
 			},
@@ -154,8 +154,8 @@ func configureDatabase(db *sql.DB,
 
 		opts := options(c.Database_type)
 
-		sql := `CREATE SERVER `+c.Name+`_server FOREIGN DATA WRAPPER `+e+` OPTIONS (`+
-			opts.server(c.Address, c.Port, c.Dbname)+`)`
+		sql := `CREATE SERVER ` + c.Name + `_server FOREIGN DATA WRAPPER ` + e + ` OPTIONS (` +
+			opts.server(c.Address, c.Port, c.Dbname) + `)`
 		if err := exec(sql); err != nil {
 			return err
 		}
@@ -167,12 +167,17 @@ func configureDatabase(db *sql.DB,
 			return rollback(fmt.Errorf("misconfiguration!"),
 				fmt.Sprintf("Can not find credentials for "+c.Id))
 		}
-		if err := exec(fmt.Sprintf(`
+
+		{
+			// Don't use exec(), because sql contains password
+			sql := fmt.Sprintf(`
                                       CREATE USER MAPPING FOR `+localUser+`
                                       SERVER `+c.Name+`_server
                                       OPTIONS (%s)`,
-			opts.userMapping(cred.User_name, cred.Password))); err != nil {
-			return err
+				opts.userMapping(cred.User_name, cred.Password))
+			if _, err := tx.ExecContext(ctx, sql); err != nil {
+				return rollback(err, "["+sql+"] failed")
+			}
 		}
 	}
 

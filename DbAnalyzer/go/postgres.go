@@ -1,36 +1,39 @@
 package main
 
 import (
-
 	"database/sql"
 	_ "github.com/lib/pq"
 
-	"strings"
 	"fmt"
-	
+	"strings"
+
 	"DbAnalyzer/types"
 )
 
+func getPostgresInfo(c types.Connection) (interface{}, error) {
 
-func getPostgresInfo(c types.Connection) (interface{},error) {
-	
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Address, c.Port, c.User, c.Password, c.Database,
-		func () string { if c.Tls { return "require" } else {return "disable" } }())
-	
+		func() string {
+			if c.Tls {
+				return "require"
+			} else {
+				return "disable"
+			}
+		}())
+
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	defer db.Close()
 	if err := db.Ping(); err != nil {
-		return nil,err
+		return nil, err
 	}
 	if c.TestOnly {
 		return struct{}{}, nil
 	}
 
-	
 	rows, err := db.Query(`SELECT c.table_schema, c.table_name, c.ordinal_position, c.column_name,
                                       c.data_type,
                                       c.character_maximum_length,
@@ -45,14 +48,14 @@ func getPostgresInfo(c types.Connection) (interface{},error) {
                                   = (e.object_catalog, e.object_schema, e.object_name, e.object_type, e.collection_type_identifier))
                                ORDER BY c.table_schema, c.table_name, c.ordinal_position`)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	defer rows.Close()
 
 	database := types.Database{
-		Name: c.Database,
+		Name:    c.Database,
 		Schemas: []types.Schema{},
-		Refs: []types.Arc{},
+		Refs:    []types.Arc{},
 	}
 	curSchema := -1
 	curTbl := -1
@@ -71,28 +74,33 @@ func getPostgresInfo(c types.Connection) (interface{},error) {
 			&eTyp, &eCharMaxLen, &ePrecision, &eScale,
 			&cIsNullable, &dflt)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
-		isNullable := false; if cIsNullable == "YES" { isNullable = true }
+		isNullable := false
+		if cIsNullable == "YES" {
+			isNullable = true
+		}
 		var t string
 		switch cTyp {
 		case "numeric":
 			if cPrecision != nil {
 				if cScale != nil {
-					t = fmt.Sprintf("numeric(%d,%d)",*cPrecision,*cScale)
+					t = fmt.Sprintf("numeric(%d,%d)", *cPrecision, *cScale)
 				} else {
-					t = fmt.Sprintf("numeric(%d)",*cPrecision)
+					t = fmt.Sprintf("numeric(%d)", *cPrecision)
 				}
-			} else { t = "numeric" }
+			} else {
+				t = "numeric"
+			}
 		case "character varying":
 			if cCharMaxLen != nil {
-				t = fmt.Sprintf("varchar(%d)",*cCharMaxLen)
+				t = fmt.Sprintf("varchar(%d)", *cCharMaxLen)
 			} else {
 				t = "varchar"
 			}
 		case "character":
 			if cCharMaxLen != nil {
-				t = fmt.Sprintf("character(%d)",*cCharMaxLen)
+				t = fmt.Sprintf("character(%d)", *cCharMaxLen)
 			} else {
 				t = "bpchar"
 			}
@@ -101,37 +109,39 @@ func getPostgresInfo(c types.Connection) (interface{},error) {
 			case "numeric":
 				if ePrecision != nil {
 					if cScale != nil {
-						t = fmt.Sprintf("numeric(%d,%d)[]",*ePrecision,*eScale)
+						t = fmt.Sprintf("numeric(%d,%d)[]", *ePrecision, *eScale)
 					} else {
-						t = fmt.Sprintf("numeric(%d)[]",*ePrecision)
+						t = fmt.Sprintf("numeric(%d)[]", *ePrecision)
 					}
-				} else { t = "numeric[]" }
+				} else {
+					t = "numeric[]"
+				}
 			case "character varying":
 				if eCharMaxLen != nil {
-					t = fmt.Sprintf("varchar(%d)[]",*eCharMaxLen)
+					t = fmt.Sprintf("varchar(%d)[]", *eCharMaxLen)
 				} else {
 					t = "varchar[]"
 				}
 			case "character":
 				if eCharMaxLen != nil {
-					t = fmt.Sprintf("character(%d)[]",*eCharMaxLen)
+					t = fmt.Sprintf("character(%d)[]", *eCharMaxLen)
 				} else {
 					t = "character[]"
 				}
 			default:
-				t = *eTyp+"[]"
+				t = *eTyp + "[]"
 			}
 		default:
 			t = cTyp
 		}
 		c := types.Column{
-			Name: cName,
-			Position: pos,
-			Typ: t,
+			Name:       cName,
+			Position:   pos,
+			Typ:        t,
 			IsNullable: isNullable,
-			Default: dflt,
-			Reference: nil,
-			Semantics: nil,
+			Default:    dflt,
+			Reference:  nil,
+			Semantics:  nil,
 		}
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
 			if strings.HasPrefix(schema, "pg_") || schema == "information_schema" {
@@ -140,13 +150,13 @@ func getPostgresInfo(c types.Connection) (interface{},error) {
 				isSystem = false
 			}
 			database.Schemas = append(database.Schemas, types.Schema{
-				Name: schema,
+				Name:     schema,
 				IsSystem: isSystem,
 				Tables: []types.Table{
 					{
-						Name: tblName,
+						Name:     tblName,
 						IsSystem: isSystem,
-						Columns: []types.Column{ c },
+						Columns:  []types.Column{c},
 					},
 				},
 			})
@@ -155,9 +165,9 @@ func getPostgresInfo(c types.Connection) (interface{},error) {
 		} else if tblName != database.Schemas[curSchema].Tables[curTbl].Name {
 			database.Schemas[curSchema].Tables = append(database.Schemas[curSchema].Tables,
 				types.Table{
-					Name: tblName,
+					Name:     tblName,
 					IsSystem: isSystem,
-					Columns: []types.Column{ c },
+					Columns:  []types.Column{c},
 				})
 			curTbl += 1
 		} else {
@@ -167,9 +177,9 @@ func getPostgresInfo(c types.Connection) (interface{},error) {
 	}
 
 	if err = resolvePostgresRefs(db, &database); err != nil {
-		return nil,err
+		return nil, err
 	}
-	
+
 	return &database, nil
 }
 
@@ -215,17 +225,17 @@ func resolvePostgresRefs(db *sql.DB, database *types.Database) error {
 							if c.Name == columnName {
 								c.Reference = &types.Reference{
 									Schema: fSchema,
-									Table: fTblName,
+									Table:  fTblName,
 									Column: fColumnName,
 								}
 								database.Refs = append(database.Refs,
 									types.Arc{
 										From_schema: schema,
-										From_table: tblName,
+										From_table:  tblName,
 										From_column: columnName,
-										To_schema: fSchema,
-										To_table: fTblName,
-										To_column: fColumnName,
+										To_schema:   fSchema,
+										To_table:    fTblName,
+										To_column:   fColumnName,
 									})
 								break Loop
 							}
