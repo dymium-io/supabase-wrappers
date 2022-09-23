@@ -593,13 +593,16 @@ func main() {
 
 		if connectionError {
 			w.Write([]byte(content.ErrorTail))
+			fmt.Println("Error detected, exiting...")
 		} else {
 			tail := fmt.Sprintf(content.Tail, portalurl, groups.Token, claim.Port)
 			w.Write([]byte(tail))
+			fmt.Println("Ready to pass traffic securely!")
 		}
 		if f, ok := w.(http.Flusher); ok {
 			f.Flush()
 		}
+
 
 		if err := s.Shutdown(context.TODO()); err != nil {
 			panic(err) // failure/timeout shutting down the server gracefully
@@ -608,7 +611,6 @@ func main() {
 	}).Methods("GET")
 
 	s.ListenAndServe()
-	fmt.Println("Ready to pass traffic securely!")
 
 	wg.Wait()
 

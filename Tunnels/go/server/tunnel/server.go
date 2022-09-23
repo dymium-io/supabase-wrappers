@@ -24,7 +24,14 @@ func getTargetConnection(customer, postgresPort string) (net.Conn, error) {
 }
 
 func Server(address string, port int, customer, postgressDomain, postgresPort string, certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte) {
-	iprecords, _ = net.LookupIP(customer + postgressDomain)
+    var err error
+    targetHost := customer + postgressDomain
+    iprecords, err = net.LookupIP(targetHost)
+    log.Printf("target postgress: %s\n", targetHost)
+    if err != nil {
+        log.Printf("Error: %s\n", err.Error())
+        // what to do here?
+    }
 	for _, ip := range iprecords {
 		log.Printf("db endpoint: %s\n", ip)
 	}
