@@ -260,7 +260,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 	for {
 		n, err := ingress.Read(buff)
 		if err != nil {
-			//fmt.Printf("Read failed '%s'\n", err.Error())
+			fmt.Printf("Read failed '%s'\n", err.Error())
 			ingress.Close()
 			return
 		}
@@ -277,11 +277,11 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
 	for {
 		buff, ok := <-messages
 		if !ok {
-			//fmt.Printf("Error reading from SSL channel\n")
+			fmt.Printf("Error reading from SSL channel\n")
 			close(messages)
 			return
 		}
-		//fmt.Printf("Encode %d bytes into SSL channel\n", len(buff.Data))
+		fmt.Printf("Encode %d bytes into SSL channel\n", len(buff.Data))
 
 		enc.Encode(buff)
 	}

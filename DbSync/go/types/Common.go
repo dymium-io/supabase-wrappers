@@ -97,6 +97,18 @@ type DatascopeRecord struct {
    Isnullable bool `json:"isnullable"`
 }
 
+type DatascopeTable struct {
+   Database string `json:"database"`
+   Schema string `json:"schema"`
+   Table string `json:"table"`
+}
+
+type DatascopeTables struct {
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
+   Tables []DatascopeTable `json:"tables"`
+}
+
 type DatascopesStatus struct {
    Status string `json:"status"`
    Errormessage string `json:"errormessage"`

@@ -10,25 +10,101 @@ import Alert from 'react-bootstrap/Alert'
 import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Internal'
+import * as ctypes from '@dymium/common/Types/Common'
+import * as http from '../Api/Http'
+import { debugPort } from 'process';
 
  function Test() {
   const [spinner, setSpinner] = useState(false)
   const [alert, setAlert] = useState<JSX.Element>(<></>)
   const [datascopes, setDatascopes] = useState<types.DataScopeInfo[]>([])
   const [selectedDatascope, setSelectedDatascope] = useState("")
-
+  const [tables, setTables] = useState<string[]>([])
+  const [selectedTable, setSelectedTable] = useState("")
+  
   useEffect(() => {
-    com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{}) 
+    com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{
+
+    }) 
 
   }, [])
+  useEffect( () => {
+    if(selectedDatascope !== "") {
+      setSelectedTable("")
+      getTables()
+    }
+  }, [selectedDatascope])
+  let getTables = () => {
+    setSpinner(true)
+    let id:ctypes.DatascopeId = new ctypes.DatascopeId();
+    id.id = selectedDatascope
+
+    let body:string = id.toJson()
+    http.sendToServer("POST", "/api/getdatascopetables",
+        null, body,
+        resp => {
+            resp.json().then(js => {
+                if (js.status == "OK") {
+                    let t : string[] = []
+                    console.log(js.tables)
+                    js.tables.forEach( (x) => {
+                      let db, sc, tb 
+                      if(x != null && x["database"] !== undefined) db = x.database 
+                      if(x != null && x["schema"] !== undefined) sc = x.schema 
+                      if(x != null && x["table"] !== undefined) tb = x.table 
+                      t.push(`${db}_${sc}_${tb}`)
+
+                    })
+                    setTables(t)
+                
+
+      
+                } else {
+                    setAlert(
+                        < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
+                            Error: {js.errormessage} !
+                        </Alert >)
+                }
+                setTimeout( () => setSpinner(false), 500)
+
+            }).catch((error) => {
+
+            })
+        },
+        resp => {
+            setSpinner(false)
+            setAlert(
+                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                    Error creating connection.
+                </Alert>
+            )
+
+        },
+        error => {
+            console.log("on exception")
+            setSpinner(false)
+            setAlert(
+                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                    Error creating connection: {error.message} { }
+                </Alert>
+            )
+        })
+}
+
+  let handleSubmit = event => {
+
+    event.preventDefault();
+    event.stopPropagation();
+    return false
+  }
   return (
     <div className=" text-left">
       {alert}
 
-      <h5 > Run SQL statement against Data Scope virtual database<Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+      <h5 > Test data access and transformation<Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
       <div className=" text-left">
-
-        <Row>
+      <Form onSubmit={handleSubmit}  noValidate >
+      <Row>
           <Col xs="auto">
             <Form.Group className="mb-3" controlId="connection" >
               <Form.Label >Select Data Scope</Form.Label>
@@ -36,6 +112,7 @@ import * as types from '@dymium/common/Types/Internal'
                 onChange={e => {
 
                   setSelectedDatascope(e.target.value)
+                  setSelectedTable("")
                   //appDispatch(setSelectedDatascopeDefault(e.target.value))
 
                 }}
@@ -53,23 +130,48 @@ import * as types from '@dymium/common/Types/Internal'
           </Col>
         </Row>
         <Row>
-          <Col>
-            <Form.Group className="mb-3" controlId="sql">
-              <Form.Label>Enter SQL statement</Form.Label>
-              <Form.Control as="textarea" rows={3} />
+
+        <Col xs="auto">
+          <div style={{marginTop: '3px',fontFamily: 'monospace'}}>Select * from</div>
+          
+          </Col>
+          <Col xs="auto">
+            <Form.Group className="mb-3" controlId="connection" >
+            
+              <Form.Control as="select" size="sm" style={{fontFamily: 'monospace'}}
+                onChange={e => {
+
+                  setSelectedTable(e.target.value)
+                  //appDispatch(setSelectedDatascopeDefault(e.target.value))
+
+                }}
+                value={selectedTable}
+              >
+                return <option value="">...</option>
+                {tables.map(x => {
+
+                  return <option key={x} value={x}>{x}</option>
+                })
+                }
+              </Form.Control>
+
             </Form.Group>
           </Col>
-        </Row>
-        {selectedDatascope !== "" &&
+          <Col xs="auto">
+          <div style={{marginTop: '3px',fontFamily: 'monospace'}}> limit 100;</div>
+          
+          </Col>     
+          <Col>        {selectedDatascope !== "" && selectedTable !== "" &&
           <div className=" text-left">
 
-            <Button variant="dymium" size="sm" className="mt-1" type="submit">
+            <Button variant="dymium" size="sm" className="" type="submit">
               Apply
             </Button>
 
           </div>
-        }
-
+        }</Col>     
+        </Row>
+        </Form>
 
       </div>
     </div>

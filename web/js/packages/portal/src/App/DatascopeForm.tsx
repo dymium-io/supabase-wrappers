@@ -62,7 +62,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
     refs.current["tables"] = tables
     refs.current["setTables"] = setTables
     refs.current["setCounter"] = setCounter
-debugger
+
     let onEdit = (connection, schema, table) => {
         return e => {
             let ob: internal.TableScope = refs.current["tables"][connection]

@@ -210,6 +210,36 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Write(js)		
 }
+
+func GetDatascapeTables(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	var t types.DatascopeId
+
+	err := json.Unmarshal(body, &t)
+
+	var status types.DatascopeTables
+	ds, err := authentication.GetDatascopeTables(schema, t.Id)
+
+	if(err != nil) {
+		status = types.DatascopeTables{"Error", err.Error(), nil} 
+	} else {
+		status = types.DatascopeTables{"OK", "", ds} 
+	}
+	js, err := json.Marshal(status)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}	
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "text/html")
+	w.Write(js)
+}
+
 func GetDatascopeDetails(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 
@@ -954,8 +984,8 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
         SerialNumber: big.NewInt(2),
         Issuer:       authentication.CaCert.Subject,
         Subject:      clientCSR.Subject,
-        NotBefore:    time.Now(),
-        NotAfter:     time.Now().Add(30 * time.Second),
+        NotBefore:    time.Now().Add(-90 * time.Second), // grace time
+        NotAfter:     time.Now().Add(90 * time.Second),
         KeyUsage:     x509.KeyUsageDigitalSignature,
         ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		DNSNames: clientCSR.DNSNames,

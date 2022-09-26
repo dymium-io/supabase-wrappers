@@ -66,6 +66,16 @@ DatascopeIdName:
 DatascopeId:
   - id: string
 
+DatascopeTable:
+  - database: string
+  - schema: string
+  - table: string
+
+DatascopeTables:
+  - status: string
+  - errormessage:   string  
+  - tables: <|DatascopeTable|>
+
 RequestById:
   - id: string
 

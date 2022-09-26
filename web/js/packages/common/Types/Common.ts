@@ -791,6 +791,107 @@ export class DatascopeRecord {
   }
 }
 
+export class DatascopeTable {
+  private '_database': string
+  private '_schema': string
+  private '_table': string
+
+  constructor() {
+    this['_database'] = ''
+    this['_schema'] = ''
+    this['_table'] = ''
+  }
+  get database(): string { return this['_database'] }
+  set database(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_database'])) {
+      setDirtyFlag()
+      this['_database'] = __v__
+    }
+  }
+  get schema(): string { return this['_schema'] }
+  set schema(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_schema'])) {
+      setDirtyFlag()
+      this['_schema'] = __v__
+    }
+  }
+  get table(): string { return this['_table'] }
+  set table(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_table'])) {
+      setDirtyFlag()
+      this['_table'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): DatascopeTable {
+    disableDF()
+    let cls = new DatascopeTable()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.database = __a__['database']
+       cls.schema = __a__['schema']
+       cls.table = __a__['table']
+    } else {
+       doAlert(`DatascopeTable: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class DatascopeTables {
+  private '_status': string
+  private '_errormessage': string
+  private '_tables': Array<DatascopeTable>
+
+  constructor() {
+    this['_status'] = ''
+    this['_errormessage'] = ''
+    this['_tables'] = []
+  }
+  get status(): string { return this['_status'] }
+  set status(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_status'])) {
+      setDirtyFlag()
+      this['_status'] = __v__
+    }
+  }
+  get errormessage(): string { return this['_errormessage'] }
+  set errormessage(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_errormessage'])) {
+      setDirtyFlag()
+      this['_errormessage'] = __v__
+    }
+  }
+  get tables(): Array<DatascopeTable> { return this['_tables'] }
+  set tables(__a__: any) {
+    setDirtyFlag()
+    this['_tables'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): DatascopeTables {
+    disableDF()
+    let cls = new DatascopeTables()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.status = __a__['status']
+       cls.errormessage = __a__['errormessage']
+       cls.tables = array1Reader(DatascopeTable.fromJson)(__a__['tables'])
+    } else {
+       doAlert(`DatascopeTables: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class DatascopesStatus {
   private '_status': string
   private '_errormessage': string

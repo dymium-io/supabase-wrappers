@@ -50,7 +50,7 @@ func initRBAC() {
 	"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
 	"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
 	"getgroupsfordatascopes"}
-	usernames :=  []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword"}	
+	usernames :=  []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getdatascopetables"}	
 
 	for _, v := range adminnames {
 		admins["/api/" + v] = 1
@@ -416,7 +416,23 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	}
 	return out, nil
 }
-
+func GetDatascopeTables(schema, id string) ([]types.DatascopeTable, error) {
+	var out []types.DatascopeTable
+	sql := `select distinct b.name, a.schem, tabl from `+schema+`.tables as a join `+schema+`.connections as b on a.connection_id=b.id where datascope_id=$1;`
+	rows, err := db.Query(sql, id)
+	if nil == err {
+		defer rows.Close()
+		var dt types.DatascopeTable
+		for rows.Next() {
+			err = rows.Scan(&dt.Database, &dt.Schema, &dt.Table) 
+			if err != nil {
+				return out, err
+			}
+			out = append(out, dt)
+		}
+	}	
+	return out, err
+}
 func GetDatascopesForGroups(schema string, email string, groups []string) (types.UserDatascopes, error) {
 	var out types.UserDatascopes
 	var conf types.UserConf
