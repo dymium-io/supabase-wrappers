@@ -7184,7 +7184,7 @@ complete_pending_request(AsyncRequest *areq)
  * context such as ANALYZE, or if we're processing a non-scan query node.
  */
 
-#define _D /* if(0) */
+#define _D if(0)  
 #include "../common/obfuscate.c"
 
 static HeapTuple

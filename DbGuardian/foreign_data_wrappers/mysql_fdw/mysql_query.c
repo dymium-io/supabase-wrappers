@@ -54,7 +54,7 @@ static int bin_dec(int binarynumber);
 
 
 /* Dymium */
-#define _D /* if(0) */
+#define _D if(0)  
 #include "../common/obfuscate.c"
 
 /*
