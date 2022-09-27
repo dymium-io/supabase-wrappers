@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 
+	"crypto/md5"
+
 	"DbSync/types"
 )
 
@@ -24,6 +26,8 @@ func doUpdate(
 	connectStr := fmt.Sprintf("host=%%s port=%d dbname='%%s' user=%s password='%s' sslmode=%s",
 		cnf.GuardianPort, cnf.GuardianUser, cnf.GuardianAdminPassword, sslmode_)
 
+	localUser := fmt.Sprintf(`_%x_`,md5.Sum([]byte(datascope.Name+"_dymium")))
+
 	for _, a := range cnf.GuardianAddress {
 		if db, err := sql.Open("postgres", fmt.Sprintf(connectStr, a, esc(cnf.GuardianDatabase))); err != nil {
 			log.Printf("%s connection: Cannot open connection. Ignoring error: %v", a, err)
@@ -36,11 +40,18 @@ func doUpdate(
 				defer rows.Close()
 
 				if !rows.Next() {
-					if _, err = db.Exec(fmt.Sprintf("CREATE DATABASE %q OWNER %s", datascope.Name, cnf.GuardianUser)); err != nil {
+					if _, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s OWNER %s", datascope.Name, cnf.GuardianUser)); err != nil {
 						return empty, fmt.Errorf("%s connection: Can not create database %q: %v", a, datascope.Name, err)
 					}
-					if _, err = db.Exec(fmt.Sprintf("CREATE ROLE %s", datascope.Name)); err != nil {
-						return empty, fmt.Errorf("%s connection: Can not create role %q: %v", a, datascope.Name, err)
+					if _, err = db.Exec(fmt.Sprintf("REVOKE CONNECT ON DATABASE %s FROM PUBLIC", datascope.Name)); err != nil {
+						return empty, fmt.Errorf("%s connection: Can not revoke access to database %s: %v", a, datascope.Name, err)
+					}
+					if _, err = db.Exec(fmt.Sprintf("CREATE ROLE %s", localUser)); err != nil {
+						return empty, fmt.Errorf("%s connection: Can not create role %s: %v", a, localUser, err)
+					}
+					if _, err = db.Exec(fmt.Sprintf("GRANT CONNECT ON DATABASE %s TO %s", datascope.Name, localUser)); err != nil {
+						return empty, fmt.Errorf("%s connection: Can not grant connect on %s to %s: %v",
+							a, datascope.Name, localUser, err)
 					}
 				}
 			}

@@ -23,7 +23,7 @@ type Request struct {
 }
 
 type SqlTestConf struct {
-   Database *string `json:"database"`
+   Database string `json:"database"`
    Schema string `json:"schema"`
    Table string `json:"table"`
 }

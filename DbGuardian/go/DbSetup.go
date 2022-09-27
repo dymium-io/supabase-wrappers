@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
-
+	
 	"database/sql"
+
+	"crypto/md5"
 
 	"initializer/types"
 )
@@ -69,7 +71,7 @@ func configureDatabase(db *sql.DB,
 	credentials map[string]types.Credential,
 	createDymiumTables bool) error {
 
-	localUser := datascope.Name
+	localUser := fmt.Sprintf(`_%x_`,md5.Sum([]byte(datascope.Name+"_dymium")))
 
 	connectionTypes := map[types.ConnectionType]struct{}{}
 	for k := range datascope.Connections {

@@ -7,6 +7,8 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq"
 
+	"crypto/md5"
+
 	"fmt"
 	"log"
 
@@ -76,16 +78,31 @@ func createDatabases(datascopes []types.Scope) error {
 	}
 
 	for k := range datascopes {
-		sql := fmt.Sprintf("CREATE DATABASE %q OWNER %s", datascopes[k].Name, user)
+		sql := fmt.Sprintf("CREATE DATABASE %s OWNER %s", datascopes[k].Name, user)
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
 		log.Println(sql)
-		sql = fmt.Sprintf("CREATE ROLE %s", datascopes[k].Name)
+		
+		sql = fmt.Sprintf("REVOKE CONNECT ON DATABASE %s FROM PUBLIC", datascopes[k].Name)
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
 		log.Println(sql)
+		
+		localUser := fmt.Sprintf(`_%x_`,md5.Sum([]byte(datascopes[k].Name+"_dymium")))
+
+		sql = fmt.Sprintf("CREATE ROLE %s", localUser)
+		if _, err = db.Exec(sql); err != nil {
+			return err
+		}
+		log.Println(sql)
+
+		sql = fmt.Sprintf("GRANT CONNECT ON DATABASE %s TO %s", datascopes[k].Name, localUser)
+		if _, err = db.Exec(sql); err != nil {
+			return err
+		}
+		log.Println(sql)		
 	}
 
 	return nil

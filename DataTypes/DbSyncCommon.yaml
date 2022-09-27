@@ -21,7 +21,7 @@ userConf:
   - datascopes: <|string|>
 
 sqlTestConf:
-  - database: ?string
+  - database: string
   - schema: string
   - table: string
 
