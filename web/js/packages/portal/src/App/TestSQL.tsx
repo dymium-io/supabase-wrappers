@@ -95,7 +95,9 @@ function Test() {
     }
     setSpinner(true)
 
-    let body: string = JSON.stringify( selectedTable.toJson() )
+    //let jj = {database: selectedTable.database, schema: selectedTable.schema, table: selectedTable.table}
+    let jj = selectedTable.toJson()
+    let body: string = jj 
     http.sendToServer("POST", "/api/getselect",
       null, body,
       resp => {
@@ -196,7 +198,7 @@ function Test() {
                 >
                   return <option value="">...</option>
                   {tables.map((x, i) => {
-                    debugger
+                    
                     return <option key={i} value={i}>{x.database + '_' + x.schema + '.' + x.table}</option>
                   })
                   }

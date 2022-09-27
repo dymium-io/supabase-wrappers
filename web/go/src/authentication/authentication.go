@@ -49,7 +49,7 @@ func initRBAC() {
 	adminnames :=  []string{"createnewconnection", "queryconnection","updateconnection","deleteconnection",
 	"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
 	"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
-	"getgroupsfordatascopes"}
+	"getgroupsfordatascopes", "getselect"}
 	usernames :=  []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getdatascopetables"}	
 
 	for _, v := range adminnames {
@@ -416,6 +416,26 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	}
 	return out, nil
 }
+
+func GetSelect(schema string, ds *types.DatascopeTable) (types.SqlTestResult, error) {
+	log.Printf("ds: %v\n", ds)
+
+	var out types.SqlTestResult
+	var conf types.SqlTestConf
+	conf.Database = &ds.Database
+	conf.Schema = ds.Schema
+	conf.Table = ds.Table
+	snc, _ := json.Marshal(conf)	
+log.Printf("snc: %s\n", string(snc))
+	data, err := Invoke("DbSync", nil, snc)
+	if err != nil {
+		return out, err
+	}
+	err = json.Unmarshal(data, &out)
+
+	return out, err
+}
+
 func GetDatascopeTables(schema, id string) ([]types.DatascopeTable, error) {
 	var out []types.DatascopeTable
 	sql := `select distinct b.name, a.schem, tabl from `+schema+`.tables as a join `+schema+`.connections as b on a.connection_id=b.id where datascope_id=$1;`
