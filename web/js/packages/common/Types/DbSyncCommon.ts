@@ -13,6 +13,7 @@ export type Action =
   | 'update'
   | 'delete'
   | 'confUser'
+  | 'sqlTest'
 
 
 
@@ -21,16 +22,18 @@ export class Request {
   private '_customer': string
   private '_datascope': string | null
   private '_userConf': UserConf | null
+  private '_sqlTest': SqlTestConf | null
 
   constructor() {
     this['_action'] = 'return'
     this['_customer'] = ''
     this['_datascope'] = null
     this['_userConf'] = null
+    this['_sqlTest'] = null
   }
   get action(): Action { return this['_action'] }
   set action(__a__: any) {
-    let __v__ = enumReader(['return','update','delete','confUser'],'return')(__a__)
+    let __v__ = enumReader(['return','update','delete','confUser','sqlTest'],'return')(__a__)
     if(!_.isEqual(__v__,this['_action'])) {
       setDirtyFlag()
       this['_action'] = __v__
@@ -71,6 +74,18 @@ export class Request {
       this['_userConf'] = __a__
     }
   }
+  get sqlTest(): SqlTestConf | null { return this['_sqlTest'] }
+  set sqlTest(__a__: any) {
+    if(__a__ == null) {
+      if(this['_sqlTest'] == null) { return }
+      setDirtyFlag()
+      this['_sqlTest'] = null
+      return
+    } else {
+      setDirtyFlag()
+      this['_sqlTest'] = __a__
+    }
+  }
 
   toJson(): string { return JSON.stringify(this).split('"_').join('"') }
 
@@ -82,8 +97,103 @@ export class Request {
        cls.customer = __a__['customer']
        cls.datascope = __a__['datascope'] == null ? null : __a__['datascope']
        cls.userConf = __a__['userConf'] == null ? null : UserConf.fromJson(__a__['userConf'])
+       cls.sqlTest = __a__['sqlTest'] == null ? null : SqlTestConf.fromJson(__a__['sqlTest'])
     } else {
        doAlert(`Request: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class SqlTestConf {
+  private '_database': string | null
+  private '_schema': string
+  private '_table': string
+
+  constructor() {
+    this['_database'] = null
+    this['_schema'] = ''
+    this['_table'] = ''
+  }
+  get database(): string | null { return this['_database'] }
+  set database(__a__: any) {
+    if(__a__ == null) {
+      if(this['_database'] == null) { return }
+      setDirtyFlag()
+      this['_database'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_database'])) {
+        setDirtyFlag()
+        this['_database'] = __v__
+      }
+    }
+  }
+  get schema(): string { return this['_schema'] }
+  set schema(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_schema'])) {
+      setDirtyFlag()
+      this['_schema'] = __v__
+    }
+  }
+  get table(): string { return this['_table'] }
+  set table(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_table'])) {
+      setDirtyFlag()
+      this['_table'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): SqlTestConf {
+    disableDF()
+    let cls = new SqlTestConf()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.database = __a__['database'] == null ? null : __a__['database']
+       cls.schema = __a__['schema']
+       cls.table = __a__['table']
+    } else {
+       doAlert(`SqlTestConf: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class SqlTestResult {
+  private '_columns': Array<string>
+  private '_records': Array<Array<string>>
+
+  constructor() {
+    this['_columns'] = []
+    this['_records'] = []
+  }
+  get columns(): Array<string> { return this['_columns'] }
+  set columns(__a__: any) {
+    setDirtyFlag()
+    this['_columns'] = __a__
+  }
+  get records(): Array<Array<string>> { return this['_records'] }
+  set records(__a__: any) {
+    setDirtyFlag()
+    this['_records'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): SqlTestResult {
+    disableDF()
+    let cls = new SqlTestResult()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.columns = array1Reader(stringReader(''))(__a__['columns'])
+       cls.records = array2Reader(stringReader(''))(__a__['records'])
+    } else {
+       doAlert(`SqlTestResult: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls
@@ -155,6 +265,15 @@ function array1Reader(__r__) {
       return []
     }
     return __a__.map(__r__)
+  })
+}
+function array2Reader(__r__) {
+  return ((__a__) => {
+    if(!_.isArray(__a__)) {
+      doAlert(`arrayReader: ${__a__} is not an array`)
+      return []
+    }
+    return __a__.map(array1Reader(__r__))
   })
 }
 function enumReader(__v__,__dflt__) {
