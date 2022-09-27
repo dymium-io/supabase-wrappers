@@ -14,84 +14,131 @@ import * as ctypes from '@dymium/common/Types/Common'
 import * as http from '../Api/Http'
 import { debugPort } from 'process';
 
- function Test() {
+function Test() {
   const [spinner, setSpinner] = useState(false)
   const [alert, setAlert] = useState<JSX.Element>(<></>)
   const [datascopes, setDatascopes] = useState<types.DataScopeInfo[]>([])
   const [selectedDatascope, setSelectedDatascope] = useState("")
-  const [tables, setTables] = useState<string[]>([])
-  const [selectedTable, setSelectedTable] = useState("")
-  
-  useEffect(() => {
-    com.getDatascopes(setSpinner, setAlert, setDatascopes, ()=>{
+  const [tables, setTables] = useState<ctypes.DatascopeTable[]>([])
+  const [selectedTable, setSelectedTable] = useState<ctypes.DatascopeTable>()
 
-    }) 
+  useEffect(() => {
+    com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
+
+    })
 
   }, [])
-  useEffect( () => {
-    if(selectedDatascope !== "") {
-      setSelectedTable("")
+  useEffect(() => {
+    if (selectedDatascope !== null) {
+      //setSelectedTable()
       getTables()
     }
   }, [selectedDatascope])
   let getTables = () => {
     setSpinner(true)
-    let id:ctypes.DatascopeId = new ctypes.DatascopeId();
+    let id: ctypes.DatascopeId = new ctypes.DatascopeId();
     id.id = selectedDatascope
 
-    let body:string = id.toJson()
+    let body: string = id.toJson()
     http.sendToServer("POST", "/api/getdatascopetables",
-        null, body,
-        resp => {
-            resp.json().then(js => {
-                if (js.status == "OK") {
-                    let t : string[] = []
-                    console.log(js.tables)
-                    js.tables.forEach( (x) => {
-                      let db, sc, tb 
-                      if(x != null && x["database"] !== undefined) db = x.database 
-                      if(x != null && x["schema"] !== undefined) sc = x.schema 
-                      if(x != null && x["table"] !== undefined) tb = x.table 
-                      t.push(`${db}_${sc}_${tb}`)
+      null, body,
+      resp => {
+        resp.json().then(js => {
+          if (js.status == "OK") {
+            let t: ctypes.DatascopeTable[] = []
 
-                    })
-                    setTables(t)
-                
+            js.tables.forEach((x) => {
 
-      
-                } else {
-                    setAlert(
-                        < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
-                            Error: {js.errormessage} !
-                        </Alert >)
-                }
-                setTimeout( () => setSpinner(false), 500)
+              t.push(ctypes.DatascopeTable.fromJson(x))
 
-            }).catch((error) => {
 
             })
-        },
-        resp => {
-            setSpinner(false)
-            setAlert(
-                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                    Error creating connection.
-                </Alert>
-            )
+            setTables(t)
 
-        },
-        error => {
-            console.log("on exception")
-            setSpinner(false)
+
+
+          } else {
             setAlert(
-                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                    Error creating connection: {error.message} { }
-                </Alert>
-            )
+              < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
+                Error: {js.errormessage} !
+              </Alert >)
+          }
+          setTimeout(() => setSpinner(false), 500)
+
+        }).catch((error) => {
+
         })
-}
+      },
+      resp => {
+        setSpinner(false)
+        setAlert(
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+            Error creating connection.
+          </Alert>
+        )
+
+      },
+      error => {
+        console.log("on exception")
+        setSpinner(false)
+        setAlert(
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+            Error creating connection: {error.message} { }
+          </Alert>
+        )
+      })
+  }
+
+  let getSelect = () => {
+    if(selectedTable == null) {
+      return
+    }
+    setSpinner(true)
+
+    let body: string = JSON.stringify( selectedTable.toJson() )
+    http.sendToServer("POST", "/api/getselect",
+      null, body,
+      resp => {
+        resp.json().then(js => {
+          if (js.status == "OK") {
+
+
+
+          } else {
+            setAlert(
+              < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
+                Error: {js.errormessage} !
+              </Alert >)
+          }
+          setTimeout(() => setSpinner(false), 500)
+
+        }).catch((error) => {
+
+        })
+      },
+      resp => {
+        setSpinner(false)
+        setAlert(
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+            Error executing query.
+          </Alert>
+        )
+
+      },
+      error => {
+        console.log("on exception")
+        setSpinner(false)
+        setAlert(
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+            Error executing query: {error.message} { }
+          </Alert>
+        )
+      })
+  }
 
   let handleSubmit = event => {
+
+    getSelect()
 
     event.preventDefault();
     event.stopPropagation();
@@ -103,74 +150,74 @@ import { debugPort } from 'process';
 
       <h5 > Test data access and transformation<Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
       <div className=" text-left">
-      <Form onSubmit={handleSubmit}  noValidate >
-      <Row>
-          <Col xs="auto">
-            <Form.Group className="mb-3" controlId="connection" >
-              <Form.Label >Select Data Scope</Form.Label>
-              <Form.Control as="select" size="sm"
-                onChange={e => {
+        <Form onSubmit={handleSubmit} noValidate >
+          <Row>
+            <Col xs="auto">
+              <Form.Group className="mb-3" controlId="connection" >
+                <Form.Label >Select Data Scope</Form.Label>
+                <Form.Control as="select" size="sm"
+                  onChange={e => {
 
-                  setSelectedDatascope(e.target.value)
-                  setSelectedTable("")
-                  //appDispatch(setSelectedDatascopeDefault(e.target.value))
+                    setSelectedDatascope(e.target.value)
+                    //setSelectedTable(null)
+                    //appDispatch(setSelectedDatascopeDefault(e.target.value))
 
-                }}
-                value={selectedDatascope}
-              >
-                return <option value="">...</option>
-                {datascopes.map(x => {
+                  }}
+                  value={selectedDatascope}
+                >
+                  return <option value="">...</option>
+                  {datascopes.map(x => {
 
-                  return <option key={x.id} value={x.id}>{x.name}</option>
-                })
-                }
-              </Form.Control>
+                    return <option key={x.id} value={x.id}>{x.name}</option>
+                  })
+                  }
+                </Form.Control>
 
-            </Form.Group>
-          </Col>
-        </Row>
-        <Row>
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row>
 
-        <Col xs="auto">
-          <div style={{marginTop: '3px',fontFamily: 'monospace'}}>Select * from</div>
-          
-          </Col>
-          <Col xs="auto">
-            <Form.Group className="mb-3" controlId="connection" >
-            
-              <Form.Control as="select" size="sm" style={{fontFamily: 'monospace'}}
-                onChange={e => {
+            <Col xs="auto">
+              <div style={{ marginTop: '3px', fontFamily: 'monospace' }}>Select * from</div>
 
-                  setSelectedTable(e.target.value)
-                  //appDispatch(setSelectedDatascopeDefault(e.target.value))
+            </Col>
+            <Col xs="auto">
+              <Form.Group className="mb-3" controlId="connection" >
 
-                }}
-                value={selectedTable}
-              >
-                return <option value="">...</option>
-                {tables.map(x => {
+                <Form.Control as="select" size="sm" style={{ fontFamily: 'monospace' }}
+                  onChange={e => {
 
-                  return <option key={x} value={x}>{x}</option>
-                })
-                }
-              </Form.Control>
+                    setSelectedTable(tables[parseInt(e.target.value)])
+                    //appDispatch(setSelectedDatascopeDefault(e.target.value))
 
-            </Form.Group>
-          </Col>
-          <Col xs="auto">
-          <div style={{marginTop: '3px',fontFamily: 'monospace'}}> limit 100;</div>
-          
-          </Col>     
-          <Col>        {selectedDatascope !== "" && selectedTable !== "" &&
-          <div className=" text-left">
+                  }}
+                //value={table}
+                >
+                  return <option value="">...</option>
+                  {tables.map((x, i) => {
+                    debugger
+                    return <option key={i} value={i}>{x.database + '_' + x.schema + '.' + x.table}</option>
+                  })
+                  }
+                </Form.Control>
 
-            <Button variant="dymium" size="sm" className="" type="submit">
-              Apply
-            </Button>
+              </Form.Group>
+            </Col>
+            <Col xs="auto">
+              <div style={{ marginTop: '3px', fontFamily: 'monospace' }}> limit 20;</div>
 
-          </div>
-        }</Col>     
-        </Row>
+            </Col>
+            <Col>        {selectedDatascope !== "" && selectedTable !== null &&
+              <div className=" text-left">
+
+                <Button variant="dymium" size="sm" className="" type="submit">
+                  Apply
+                </Button>
+
+              </div>
+            }</Col>
+          </Row>
         </Form>
 
       </div>
@@ -183,14 +230,14 @@ import { debugPort } from 'process';
 export default function TestSQL() {
 
   return (
-      <Tabs
+    <Tabs
 
-          unmountOnExit={true} className="mb-3 text-left">
-          <Tab eventKey="test" title="Test SQL" className="mx-4">
-              <Test />
-          </Tab>
+      unmountOnExit={true} className="mb-3 text-left">
+      <Tab eventKey="test" title="Test SQL" className="mx-4">
+        <Test />
+      </Tab>
 
-     
-      </Tabs>
+
+    </Tabs>
   )
 }
