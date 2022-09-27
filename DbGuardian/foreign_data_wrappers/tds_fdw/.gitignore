@@ -1,0 +1,7 @@
+.deps
+README.tds_fdw.md
+sql/*--*.sql
+*.o
+*.bc
+*.so
+tests/lib/__pycache__

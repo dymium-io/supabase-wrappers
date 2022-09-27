@@ -11,6 +11,7 @@ const (
   A_Update Action = "update"
   A_Delete Action = "delete"
   A_ConfUser Action = "confUser"
+  A_SqlTest Action = "sqlTest"
 )
 
 type Request struct {
@@ -18,6 +19,18 @@ type Request struct {
    Customer string `json:"customer"`
    Datascope *string `json:"datascope"`
    UserConf *UserConf `json:"userConf"`
+   SqlTest *SqlTestConf `json:"sqlTest"`
+}
+
+type SqlTestConf struct {
+   Database *string `json:"database"`
+   Schema string `json:"schema"`
+   Table string `json:"table"`
+}
+
+type SqlTestResult struct {
+   Columns []string `json:"columns"`
+   Records [][]string `json:"records"`
 }
 
 type UserConf struct {
