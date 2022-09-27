@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -7,6 +8,8 @@ import (
 	"fmt"
 	"log"
 	"sort"
+
+	"crypto/md5"
 
 	"DbSync/types"
 )
@@ -30,9 +33,15 @@ func confUser(
 		sslmode_ = "require"
 	}
 
-	ds := make([]string, len(userCnf.Datascopes))
-	copy(ds, userCnf.Datascopes)
-	sort.Strings(ds)
+	type udb struct { u,db string }
+	ds := make([]udb, len(userCnf.Datascopes))
+	for k, _ := range userCnf.Datascopes {
+		ds[k] = udb{
+			u: fmt.Sprintf(`_%x_`,md5.Sum([]byte(userCnf.Datascopes[k]+"_dymium"))),
+			db: userCnf.Datascopes[k],
+		}
+	}
+	sort.Slice(ds, func (i,j int) bool { return ds[i].u < ds[j].u })
 
 	connectStr := fmt.Sprintf("host=%%s port=%d dbname='%s' user=%s password='%s' sslmode=%s",
 		cnf.GuardianPort, cnf.GuardianDatabase, cnf.GuardianUser, cnf.GuardianAdminPassword, sslmode_)
@@ -61,39 +70,35 @@ func confUser(
 				return empty, err
 			} else {
 				defer rows.Close()
-				toAdd, toDelete := []string{}, []string{}
+				toAdd, toDelete := []udb{}, []string{}
 				k := 0
-				for rows.Next() {
+				loop: for rows.Next() {
 					var d string
 					if err = rows.Scan(&d); err != nil {
 						return empty, fmt.Errorf("Getting role: %v", err)
 					}
-					if k == len(ds) {
-						switch d {
-						case userCnf.Name:
-							userExists = true
-						default:
-							toDelete = append(toDelete, d)
-						}
-					} else {
-						switch d {
-						case userCnf.Name:
-							userExists = true
-						case ds[k]:
+					if d == userCnf.Name {
+						userExists = true
+						continue
+					}
+					for k != len(ds) {
+						switch {
+						case d == ds[k].u:
 							k += 1
-						default:
-							if d < ds[k] {
-								log.Printf("toDelete: d=%s ds[%d]=%s\n", d, k, ds[k])
-								toDelete = append(toDelete, d)
-							} else {
-								log.Printf("toAdd: d=%s ds[%d]=%s\n", d, k, ds[k])
-								toAdd = append(toAdd, d)
-								k += 1
-							}
+							continue loop
+						case ds[k].u < d:
+							toAdd = append(toAdd, ds[k])
+							k += 1
+						case ds[k].u > d:
+							toDelete = append(toDelete, d)
+							continue loop
 						}
 					}
+					// we can get here only when k == len(ds)
+					toDelete = append(toDelete, d)
 				}
 				if k < len(ds) {
+					log.Println("k=",k,"len(ds)=",len(ds),ds[k:])
 					toAdd = append(toAdd, ds[k:]...)
 				}
 				log.Println("toAdd:", toAdd, "toDelete:", toDelete)
@@ -118,15 +123,15 @@ func confUser(
 					log.Printf("REVOKE %s FROM %s", d, userCnf.Name)
 				}
 				for _, a := range toAdd {
-					_, err = db.Exec(fmt.Sprintf("GRANT %s TO %s", a, userCnf.Name))
+					_, err = db.Exec(fmt.Sprintf(`GRANT %s TO %s`, a.u, userCnf.Name))
 					if err != nil {
 						return empty, err
 					}
-					_, err = db.Exec(fmt.Sprintf("ALTER ROLE %s IN DATABASE %s SET ROLE TO %s", userCnf.Name, a, a))
+					_, err = db.Exec(fmt.Sprintf(`ALTER ROLE %s IN DATABASE %s SET ROLE TO %s`, userCnf.Name, a.db, a.u))
 					if err != nil {
 						return empty, err
 					}
-					log.Printf("GRANT %s TO %s", a, userCnf.Name)
+					log.Printf(`GRANT %s TO %s`, a.u, userCnf.Name)
 				}
 			}
 		}

@@ -107,28 +107,21 @@ export class Request {
 }
 
 export class SqlTestConf {
-  private '_database': string | null
+  private '_database': string
   private '_schema': string
   private '_table': string
 
   constructor() {
-    this['_database'] = null
+    this['_database'] = ''
     this['_schema'] = ''
     this['_table'] = ''
   }
-  get database(): string | null { return this['_database'] }
+  get database(): string { return this['_database'] }
   set database(__a__: any) {
-    if(__a__ == null) {
-      if(this['_database'] == null) { return }
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_database'])) {
       setDirtyFlag()
-      this['_database'] = null
-      return
-    } else {
-      let __v__ = stringReader('')(__a__)
-      if(!_.isEqual(__v__,this['_database'])) {
-        setDirtyFlag()
-        this['_database'] = __v__
-      }
+      this['_database'] = __v__
     }
   }
   get schema(): string { return this['_schema'] }
@@ -154,7 +147,7 @@ export class SqlTestConf {
     disableDF()
     let cls = new SqlTestConf()
     if(typeof __a__ === 'object' && __a__ != null) {
-       cls.database = __a__['database'] == null ? null : __a__['database']
+       cls.database = __a__['database']
        cls.schema = __a__['schema']
        cls.table = __a__['table']
     } else {
