@@ -33,7 +33,7 @@ Array [
         className=" text-left"
       >
         <h5>
-           Run SQL statement against Data Scope virtual database
+           Test data access and transformation
           <img
             className="spinner"
             src="/logo.png"
@@ -47,70 +47,116 @@ Array [
         <div
           className=" text-left"
         >
-          <div
-            className="row"
+          <form
+            className=""
+            noValidate={true}
+            onSubmit={[Function]}
           >
             <div
-              className="col-auto"
+              className="row"
             >
               <div
-                className="mb-3 form-group"
+                className="col-auto"
               >
-                <label
-                  className="form-label"
-                  htmlFor="connection"
+                <div
+                  className="mb-3 form-group"
                 >
-                  Select Data Scope
-                </label>
-                <select
-                  className="form-control form-control-sm"
-                  id="connection"
-                  onChange={[Function]}
-                  value=""
-                >
-                  return 
-                  <option
+                  <label
+                    className="form-label"
+                    htmlFor="connection"
+                  >
+                    Select Data Scope
+                  </label>
+                  <select
+                    className="form-control form-control-sm"
+                    id="connection"
+                    onChange={[Function]}
                     value=""
                   >
-                    ...
-                  </option>
-                  <option
-                    value="50fe96d1-b1a4-48df-87bd-6aced2ab1f5a"
-                  >
-                    test1
-                  </option>
-                  <option
-                    value="b3fddf89-5822-4227-9948-3ecb3c8c2e33"
-                  >
-                    test2
-                  </option>
-                </select>
+                    return 
+                    <option
+                      value=""
+                    >
+                      ...
+                    </option>
+                    <option
+                      value="50fe96d1-b1a4-48df-87bd-6aced2ab1f5a"
+                    >
+                      test1
+                    </option>
+                    <option
+                      value="b3fddf89-5822-4227-9948-3ecb3c8c2e33"
+                    >
+                      test2
+                    </option>
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
-          <div
-            className="row"
-          >
             <div
-              className="col"
+              className="row"
             >
               <div
-                className="mb-3 form-group"
+                className="col-auto"
               >
-                <label
-                  className="form-label"
-                  htmlFor="sql"
+                <div
+                  style={
+                    Object {
+                      "fontFamily": "monospace",
+                      "marginTop": "3px",
+                    }
+                  }
                 >
-                  Enter SQL statement
-                </label>
-                <textarea
-                  className="form-control"
-                  id="sql"
-                  rows={3}
-                />
+                  Select * from
+                </div>
+              </div>
+              <div
+                className="col-auto"
+              >
+                <div
+                  className="mb-3 form-group"
+                >
+                  <select
+                    className="form-control form-control-sm"
+                    id="connection"
+                    onChange={[Function]}
+                    style={
+                      Object {
+                        "fontFamily": "monospace",
+                      }
+                    }
+                    value=""
+                  >
+                    return 
+                    <option
+                      value=""
+                    >
+                      ...
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div
+                className="col-auto"
+              >
+                <div
+                  style={
+                    Object {
+                      "fontFamily": "monospace",
+                      "marginTop": "3px",
+                    }
+                  }
+                >
+                   limit 100;
+                </div>
+              </div>
+              <div
+                className="col"
+              >
+                        
               </div>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>
