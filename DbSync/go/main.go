@@ -47,7 +47,7 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 		return sqlTest(c.Datascope, c.SqlTest, &cnf.GuardianConf)
 	}
 	if cnf == nil {
-		return nil, fmt.Errorf("Wrong request: %v", c)
+		return nil, fmt.Errorf("Wrong request: unrecognized action [%s]", c.Action)
 	}
 
 	if db == nil || db.Ping() != nil {
