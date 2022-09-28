@@ -398,4 +398,32 @@ pre {
 
 #testtable td,th {
   text-overflow: ellipsis;
+  width:auto;
+  min-width: 60px;
+  max-width: 300px;
+}
+#testtable table {
+  table-layout: auto !important;
+}
+#testtable {
+  width: 100% !important;
+
+  overflow: scroll;
+}
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  height: 3px;
+  width: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, .5);
+  box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+  background: $main-blue;
+}
+td {
+  ::-webkit-scrollbar {
+    display: none;
+  }
 }
