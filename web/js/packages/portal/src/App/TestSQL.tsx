@@ -101,54 +101,60 @@ function Test() {
   }
 
   let getSelect = () => {
+    let processData = txt => {
+      columns = []
+      let data: {}[] = []
+      let js = stypes.SqlTestResult.fromJson(txt)
+      js.columns.forEach(x => {
+
+        let col: HeaderCell = {
+          dataField: x,
+          text: x,
+          headerStyle: { minWidth: '200px' },
+          formatter: (cell, row) => {
+            return <div style={{
+              textOverflow: 'ellipsis', overflow: 'scroll', minWidth: '200px',
+              marginLeft: '3px', marginRight: '3px'
+            }}>{cell}</div>
+          },
+          headerFormatter: (column, colIndex) => {
+            return <div style={{
+              textOverflow: 'ellipsis', overflow: 'hidden',
+              marginLeft: '3px', marginRight: '3px'
+            }}>{column.text}</div>
+          },
+        }
+
+        columns.push(col)
+      })
+      txt.records.forEach(x => {
+        let a = {}
+        for (let i = 0; i < columns.length; i++) {
+          a[columns[i].dataField] = x[i]
+        }
+        data.push(a)
+      })
+      setData(data)
+
+    }
     let mock = `{"columns":["id","name","primary_function","contractor","thrust","wingspan","length","height","weight","max_takeoff_weight","fuel_capacity","payload","speed","range_","ceiling","armament"],"records":[["67592d50-bbfe-402a-8781-94c9409033a7","F16","multirole fighter","Lockheed Martin","27000","33","50","16","19700","37500","7000","5x1258 bbmos, 7xPYD9, 1xXGL590, 1x7214surl_tnnxs","1500","2000","50000","xxx"]]}`
-    if (selectedTable == null) {
+    processData( JSON.parse(mock))
+    return false
+
+/*
+    //let jj = {database: selectedTable.database, schema: selectedTable.schema, table: selectedTable.table}
+    if (selectedTable == null || selectedTable == undefined) {
       return
     }
-    setSpinner(true)
-
-    //let jj = {database: selectedTable.database, schema: selectedTable.schema, table: selectedTable.table}
     let jj = selectedTable.toJson()
+    setSpinner(true)
     let body: string = jj
     http.sendToServer("POST", "/api/getselect",
       null, body,
       resp => {
         resp.json().then(txt => {
 
-          columns = []
-          let data: {}[] = []
-          let js = stypes.SqlTestResult.fromJson(txt)
-          js.columns.forEach(x => {
-
-            let col: HeaderCell = {
-              dataField: x,
-              text: x,
-              headerStyle: { minWidth: '200px' },
-              formatter: (cell, row) => {
-                return <div style={{
-                  textOverflow: 'ellipsis', overflow: 'scroll', minWidth: '200px',
-                  marginLeft: '3px', marginRight: '3px'
-                }}>{cell}</div>
-              },
-              headerFormatter: (column, colIndex) => {
-                return <div style={{
-                  textOverflow: 'ellipsis', overflow: 'hidden',
-                  marginLeft: '3px', marginRight: '3px'
-                }}>{column.text}</div>
-              },
-            }
-
-            columns.push(col)
-          })
-          txt.records.forEach(x => {
-            let a = {}
-            for (let i = 0; i < columns.length; i++) {
-              a[columns[i].dataField] = x[i]
-            }
-            data.push(a)
-          })
-          setData(data)
-
+          processData(txt)
           setTimeout(() => setSpinner(false), 500)
 
         }).catch((error) => {
@@ -173,6 +179,7 @@ function Test() {
           </Alert>
         )
       })
+      */
   }
 
   let handleSubmit = event => {
@@ -261,19 +268,19 @@ function Test() {
         {columns.length > 0 &&
           <div id="testtable">
 
-                    <BootstrapTable
-                      condensed
-                      striped bootstrap4 bordered={false}
-                      keyField={columns[0].dataField}
-                      columns={columns}
-            
-                      id="scaledtable"
-                      data={data}
-                      pagination={paginationFactory()}
-                    />
+            <BootstrapTable
+              condensed
+              striped bootstrap4 
+              keyField={columns[0].dataField}
+              columns={columns}
+
+              id="scaledtable"
+              data={data}
+
+            />
 
           </div>
-          }
+        }
 
       </div>
     </div>
