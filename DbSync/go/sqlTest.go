@@ -70,13 +70,21 @@ func sqlTest(
 	}
 
 	iCols := make([]interface{}, len(columns))
+	pCols := make([]*string, len(columns))
 	for rows.Next() {
-		sCols := make([]string, len(columns))
 		for k, _ := range iCols {
-			iCols[k] = &sCols[k]
+			iCols[k] = &pCols[k]
 		}
 		if err = rows.Scan(iCols...); err != nil {
 			return nil, fmt.Errorf("Scan error in [%s]: %v",sql, err)
+		}
+		sCols := make([]string, len(columns))
+		for k, p := range pCols {
+			if p == nil {
+				sCols[k] = "NULL"
+			} else {
+				sCols[k] = *p
+			}
 		}
 		result.Records = append(result.Records, sCols)
 	}
