@@ -6,6 +6,12 @@ export DATABASE_NAME=${DATABASE_NAME:-dymium}
 export DATABASE_USER=${DATABASE_USER:-dymium}
 export DATABASE_TLS=${DATABASE_TLS:-disable}
 
+
+[ -z "$DATABASE_PASSWORD" ] && {
+    DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )
+}
+
+
 export AUTH0_ADMIN_DOMAIN='https://dymium-dev-admin.us.auth0.com/'
 export AUTH0_ADMIN_CLIENT_ID='XiRxsWQLAvSSwLWEQ72hTvvhHoLaEBIE'
 export AUTH0_ADMIN_CLIENT_SECRET='lNV1m9JARql55ade-5mjUESzM2kiLgZB5xnmsRcH2uw8urpE3ROCjeOINtsF2Te7'

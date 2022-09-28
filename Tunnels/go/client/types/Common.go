@@ -98,7 +98,8 @@ type DatascopeRecord struct {
 }
 
 type DatascopeTable struct {
-   Database string `json:"database"`
+   Connection string `json:"connection"`
+   Datascope string `json:"datascope"`
    Schema string `json:"schema"`
    Table string `json:"table"`
 }

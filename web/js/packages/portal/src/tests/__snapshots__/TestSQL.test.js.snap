@@ -32,10 +32,34 @@ Array [
       <div
         className=" text-left"
       >
+        <div
+          className="fade alert alert-danger alert-dismissible show"
+          role="alert"
+        >
+          <button
+            className="close"
+            onClick={[Function]}
+            type="button"
+          >
+            <span
+              aria-hidden="true"
+            >
+              ×
+            </span>
+            <span
+              className="sr-only"
+            >
+              Close alert
+            </span>
+          </button>
+          Error creating connection: 
+          Unhandled request: /api/getdatascopetables
+           
+        </div>
         <h5>
            Test data access and transformation
           <img
-            className="spinner"
+            className="hiddenspinner"
             src="/logo.png"
             style={
               Object {
@@ -125,7 +149,6 @@ Array [
                         "fontFamily": "monospace",
                       }
                     }
-                    value=""
                   >
                     return 
                     <option
@@ -147,7 +170,7 @@ Array [
                     }
                   }
                 >
-                   limit 100;
+                   limit 20;
                 </div>
               </div>
               <div

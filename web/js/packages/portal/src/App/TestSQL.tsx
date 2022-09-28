@@ -5,14 +5,27 @@ import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
-import { Link } from "react-router-dom";
+import BootstrapTable from 'react-bootstrap-table-next';
+import paginationFactory from 'react-bootstrap-table2-paginator';
+import ToolkitProvider, { ColumnToggle } from 'react-bootstrap-table2-toolkit';
 import Alert from 'react-bootstrap/Alert'
 import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Internal'
 import * as ctypes from '@dymium/common/Types/Common'
+import * as stypes from '@dymium/common/Types/DbSyncCommon'
 import * as http from '../Api/Http'
 import { debugPort } from 'process';
+
+const { ToggleList } = ColumnToggle;
+type HeaderCell = {
+  dataField: string,
+  text: string,
+  headerStyle: any,
+  formatter: any,
+  headerFormatter: any
+}
+let columns: HeaderCell[] = []
 
 function Test() {
   const [spinner, setSpinner] = useState(false)
@@ -21,7 +34,7 @@ function Test() {
   const [selectedDatascope, setSelectedDatascope] = useState("")
   const [tables, setTables] = useState<ctypes.DatascopeTable[]>([])
   const [selectedTable, setSelectedTable] = useState<ctypes.DatascopeTable>()
-
+  const [data, setData] = useState<{}[]>([])
   useEffect(() => {
     com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
 
@@ -54,9 +67,6 @@ function Test() {
 
             })
             setTables(t)
-
-
-
           } else {
             setAlert(
               < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
@@ -90,28 +100,53 @@ function Test() {
   }
 
   let getSelect = () => {
-    if(selectedTable == null) {
+    if (selectedTable == null) {
       return
     }
     setSpinner(true)
 
     //let jj = {database: selectedTable.database, schema: selectedTable.schema, table: selectedTable.table}
     let jj = selectedTable.toJson()
-    let body: string = jj 
+    let body: string = jj
     http.sendToServer("POST", "/api/getselect",
       null, body,
       resp => {
-        resp.json().then(js => {
-          if (js.status == "OK") {
+        resp.json().then(txt => {
 
+          columns = []
+          let data: {}[] = []
+          let js = stypes.SqlTestResult.fromJson(txt)
+          js.columns.forEach(x => {
 
+            let col: HeaderCell = {
+              dataField: x,
+              text: x,
+              headerStyle: { minWidth: '200px' },
+              formatter: (cell, row) => {
+                return <div style={{
+                  textOverflow: 'ellipsis', overflow: 'scroll', minWidth: '200px',
+                  marginLeft: '3px', marginRight: '3px'
+                }}>{cell}</div>
+              },
+              headerFormatter: (column, colIndex) => {
+                return <div style={{
+                  textOverflow: 'ellipsis', overflow: 'hidden',
+                  marginLeft: '3px', marginRight: '3px'
+                }}>{column.text}</div>
+              },
+            }
 
-          } else {
-            setAlert(
-              < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
-                Error: {js.errormessage} !
-              </Alert >)
-          }
+            columns.push(col)
+          })
+          txt.records.forEach(x => {
+            let a = {}
+            for (let i = 0; i < columns.length; i++) {
+              a[columns[i].dataField] = x[i]
+            }
+            data.push(a)
+          })
+          setData(data)
+
           setTimeout(() => setSpinner(false), 500)
 
         }).catch((error) => {
@@ -198,8 +233,8 @@ function Test() {
                 >
                   return <option value="">...</option>
                   {tables.map((x, i) => {
-                    
-                    return <option key={i} value={i}>{x.database + '_' + x.schema + '.' + x.table}</option>
+
+                    return <option key={i} value={i}>{x.connection + '_' + x.schema + '.' + x.table}</option>
                   })
                   }
                 </Form.Control>
@@ -221,6 +256,35 @@ function Test() {
             }</Col>
           </Row>
         </Form>
+        {columns.length > 0 &&
+          <div id="testtable">
+
+            <ToolkitProvider
+              keyField={columns[0].dataField}
+              columns={columns}
+              columnToggle
+              id="scaledtable"
+              data={data}
+              pagination={paginationFactory()}
+              // wrapperClasses="table-responsive"
+            >
+              {
+                props => (
+                  <div>
+                    <ToggleList {...props.columnToggleProps} btnClassName="btn-dymium"/>
+                    <hr />
+                    <BootstrapTable
+                      condensed
+                      striped bootstrap4 bordered={false}
+                      {...props.baseProps}
+                    />
+                  </div>
+                )
+              }
+            </ToolkitProvider>
+
+          </div>
+        }
 
       </div>
     </div>

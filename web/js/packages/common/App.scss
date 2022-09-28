@@ -108,13 +108,26 @@ h5 {
   color: $thick-blue;
 }
 .btn-dymium {
-  background-color: $main-blue;  
-  color: white;
+  background-color: $main-blue !important;  
+  color: white !important;
 }
 .btn-dymium:hover {
-  background-color: $dark-blue;
-  color: white;  
+  background-color: $dark-blue !important;
 }
+.btn-dymium.active {
+  background-color: $thick-blue !important;
+}
+.btn-select {
+  background-color: $main-blue !important;  
+  color: white !important;
+}
+.btn-select:hover {
+  background-color: $dark-blue !important;
+}
+.btn-select.active {
+  background-color: $thick-blue !important;
+}
+
 .invalid-feedback  {
   font-size: 0.7em;
 }
@@ -382,3 +395,7 @@ pre {
     overflow-x:visible;
   }
 }  
+
+#testtable td,th {
+  text-overflow: ellipsis;
+}

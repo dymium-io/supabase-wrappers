@@ -67,7 +67,8 @@ DatascopeId:
   - id: string
 
 DatascopeTable:
-  - database: string
+  - connection: string
+  - datascope: string
   - schema: string
   - table: string
 

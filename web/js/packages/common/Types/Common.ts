@@ -792,21 +792,31 @@ export class DatascopeRecord {
 }
 
 export class DatascopeTable {
-  private '_database': string
+  private '_connection': string
+  private '_datascope': string
   private '_schema': string
   private '_table': string
 
   constructor() {
-    this['_database'] = ''
+    this['_connection'] = ''
+    this['_datascope'] = ''
     this['_schema'] = ''
     this['_table'] = ''
   }
-  get database(): string { return this['_database'] }
-  set database(__a__: any) {
+  get connection(): string { return this['_connection'] }
+  set connection(__a__: any) {
     let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_database'])) {
+    if(!_.isEqual(__v__,this['_connection'])) {
       setDirtyFlag()
-      this['_database'] = __v__
+      this['_connection'] = __v__
+    }
+  }
+  get datascope(): string { return this['_datascope'] }
+  set datascope(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_datascope'])) {
+      setDirtyFlag()
+      this['_datascope'] = __v__
     }
   }
   get schema(): string { return this['_schema'] }
@@ -832,7 +842,8 @@ export class DatascopeTable {
     disableDF()
     let cls = new DatascopeTable()
     if(typeof __a__ === 'object' && __a__ != null) {
-       cls.database = __a__['database']
+       cls.connection = __a__['connection']
+       cls.datascope = __a__['datascope']
        cls.schema = __a__['schema']
        cls.table = __a__['table']
     } else {

@@ -420,17 +420,26 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 func GetSelect(schema string, ds *types.DatascopeTable) (types.SqlTestResult, error) {
 	log.Printf("ds: %v\n", ds)
 
-	var out types.SqlTestResult
+
 	var conf types.SqlTestConf
-	conf.Database = &ds.Database
+	conf.Database = ds.Connection   // this is connection... name?
 	conf.Schema = ds.Schema
 	conf.Table = ds.Table
-	snc, _ := json.Marshal(conf)	
-log.Printf("snc: %s\n", string(snc))
+
+	var req types.Request
+	req.Action = types.A_SqlTest
+	req.SqlTest = &conf 
+	req.Customer = schema
+	req.Datascope = &ds.Datascope
+	snc, _ := json.Marshal(req)	
+
 	data, err := Invoke("DbSync", nil, snc)
+	var out types.SqlTestResult
 	if err != nil {
+		log.Printf("Error from Invoke: %s\n", err.Error()) 
 		return out, err
 	}
+
 	err = json.Unmarshal(data, &out)
 
 	return out, err
@@ -438,13 +447,15 @@ log.Printf("snc: %s\n", string(snc))
 
 func GetDatascopeTables(schema, id string) ([]types.DatascopeTable, error) {
 	var out []types.DatascopeTable
-	sql := `select distinct b.name, a.schem, tabl from `+schema+`.tables as a join `+schema+`.connections as b on a.connection_id=b.id where datascope_id=$1;`
+	sql := `select distinct b.name, a.schem, a.tabl, c.name from `+schema+`.tables as a join `+schema+
+	`.connections as b on a.connection_id=b.id join `+schema+`.datascopes as c on c.id=a.datascope_id where datascope_id=$1;`
+
 	rows, err := db.Query(sql, id)
 	if nil == err {
 		defer rows.Close()
 		var dt types.DatascopeTable
 		for rows.Next() {
-			err = rows.Scan(&dt.Database, &dt.Schema, &dt.Table) 
+			err = rows.Scan(&dt.Connection, &dt.Schema, &dt.Table, &dt.Datascope) 
 			if err != nil {
 				return out, err
 			}
