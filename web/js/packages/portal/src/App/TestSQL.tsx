@@ -17,7 +17,8 @@ import * as stypes from '@dymium/common/Types/DbSyncCommon'
 import * as http from '../Api/Http'
 import { debugPort } from 'process';
 
-const { ToggleList } = ColumnToggle;
+//const { ToggleList } = ColumnToggle;
+//const ToggleList = ColumnToggle.ToggleList
 type HeaderCell = {
   dataField: string,
   text: string,
@@ -100,6 +101,7 @@ function Test() {
   }
 
   let getSelect = () => {
+    let mock = `{"columns":["id","name","primary_function","contractor","thrust","wingspan","length","height","weight","max_takeoff_weight","fuel_capacity","payload","speed","range_","ceiling","armament"],"records":[["67592d50-bbfe-402a-8781-94c9409033a7","F16","multirole fighter","Lockheed Martin","27000","33","50","16","19700","37500","7000","5x1258 bbmos, 7xPYD9, 1xXGL590, 1x7214surl_tnnxs","1500","2000","50000","xxx"]]}`
     if (selectedTable == null) {
       return
     }
@@ -259,32 +261,19 @@ function Test() {
         {columns.length > 0 &&
           <div id="testtable">
 
-            <ToolkitProvider
-              keyField={columns[0].dataField}
-              columns={columns}
-              columnToggle
-              id="scaledtable"
-              data={data}
-              pagination={paginationFactory()}
-              // wrapperClasses="table-responsive"
-            >
-              {
-                props => (
-                  <div>
-                    <ToggleList {...props.columnToggleProps} btnClassName="btn-dymium"/>
-                    <hr />
                     <BootstrapTable
                       condensed
                       striped bootstrap4 bordered={false}
-                      {...props.baseProps}
+                      keyField={columns[0].dataField}
+                      columns={columns}
+            
+                      id="scaledtable"
+                      data={data}
+                      pagination={paginationFactory()}
                     />
-                  </div>
-                )
-              }
-            </ToolkitProvider>
 
           </div>
-        }
+          }
 
       </div>
     </div>
