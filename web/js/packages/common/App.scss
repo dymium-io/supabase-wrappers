@@ -407,7 +407,7 @@ pre {
 }
 #testtable {
   width: 100% !important;
-  text-overflow:  ellipsis !important;
+
   overflow: scroll;
 }
 ::-webkit-scrollbar {
@@ -421,4 +421,9 @@ pre {
   background-color: rgba(0, 0, 0, .5);
   box-shadow: 0 0 1px rgba(255, 255, 255, .5);
   background: $main-blue;
+}
+td {
+  ::-webkit-scrollbar {
+    display: none;
+  }
 }
