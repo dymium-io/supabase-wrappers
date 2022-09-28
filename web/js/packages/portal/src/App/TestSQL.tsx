@@ -137,11 +137,12 @@ function Test() {
       setData(data)
 
     }
+/*
     let mock = `{"columns":["id","name","primary_function","contractor","thrust","wingspan","length","height","weight","max_takeoff_weight","fuel_capacity","payload","speed","range_","ceiling","armament"],"records":[["67592d50-bbfe-402a-8781-94c9409033a7","F16","multirole fighter","Lockheed Martin","27000","33","50","16","19700","37500","7000","5x1258 bbmos, 7xPYD9, 1xXGL590, 1x7214surl_tnnxs","1500","2000","50000","xxx"]]}`
     processData( JSON.parse(mock))
     return false
+*/
 
-/*
     //let jj = {database: selectedTable.database, schema: selectedTable.schema, table: selectedTable.table}
     if (selectedTable == null || selectedTable == undefined) {
       return
@@ -179,7 +180,7 @@ function Test() {
           </Alert>
         )
       })
-      */
+
   }
 
   let handleSubmit = event => {
