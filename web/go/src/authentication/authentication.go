@@ -32,6 +32,7 @@ import (
 	"aws"
 	"crypto/rand"
 	"math/big"
+	"encoding/base64"
 )
 
 
@@ -441,7 +442,23 @@ func GetSelect(schema string, ds *types.DatascopeTable) (types.SqlTestResult, er
 	}
 
 	err = json.Unmarshal(data, &out)
-
+	if(err != nil) {
+		log.Printf("Error unmarshaling %s\n", err.Error())
+	} else {
+		var records [][]string
+		for _, slice := range out.Records {
+			var newrecord []string
+			for _, record := range slice {
+				rr := base64.StdEncoding.EncodeToString([]byte(record))
+				// log.Printf("val: %s, rr: %s\n", record, rr)
+				newrecord = append(newrecord,  rr)
+			}
+			records = append(records, newrecord)
+			
+		}
+		out.Records = records		
+	}
+//log.Printf("%v\n", out)
 	return out, err
 }
 
