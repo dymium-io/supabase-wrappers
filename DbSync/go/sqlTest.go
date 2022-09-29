@@ -8,7 +8,7 @@ import (
 	"log"
 
 	"crypto/md5"
-	b64 "encoding/base64"
+
 	"DbSync/types"
 )
 
@@ -70,8 +70,7 @@ func sqlTest(
 	}
 
 	iCols := make([]interface{}, len(columns))
-	pCols := make([]*[]byte, len(columns))
-	nl := b64.StdEncoding.EncodeToString([]byte("NULL"))
+	pCols := make([]*string, len(columns))
 	for rows.Next() {
 		for k, _ := range iCols {
 			iCols[k] = &pCols[k]
@@ -82,9 +81,9 @@ func sqlTest(
 		sCols := make([]string, len(columns))
 		for k, p := range pCols {
 			if p == nil {
-				sCols[k] = nl
+				sCols[k] = "NULL"
 			} else {
-				sCols[k] = b64.StdEncoding.EncodeToString(*p)
+				sCols[k] = *p
 			}
 		}
 		result.Records = append(result.Records, sCols)
