@@ -28,6 +28,61 @@ type HeaderCell = {
 }
 let columns: HeaderCell[] = []
 
+function checkUTF8(text) {
+  for(let i = 0; i < text.length; ) {
+    let first = text.charCodeAt(i)
+    if(0 == (first & 0b10000000))  {
+      i = i + 1
+      continue //ASCII
+    }
+    if( (0b11100000 & first) === 0b11000000) {
+      // possible two byte
+      if(i > text.length - 1)
+        return false
+      let second =  text.charCodeAt(i + 1)
+      if((0b11000000 & second) === 0xb10000000) {
+        i = i + 2
+        continue
+      }
+      return false
+    }
+    if( (0b11110000 & first) === 0b11100000) {
+      // possible three bytes
+      if( i > text.length - 2 )
+        return false
+        let second =  text.charCodeAt(i + 1)
+        if((0b11000000 & second) !== 0xb10000000) {
+          return false
+        }        
+        let third =  text.charCodeAt(i + 2)
+        if((0b11000000 & third) !== 0xb10000000) {
+          return false
+        }             
+        i = i + 3
+    }
+    if( (0b11111000 & first) === 0b11110000) {
+      // possible four bytes
+      if( i > text.length - 3 )
+        return false
+        let second =  text.charCodeAt(i + 1)
+        if((0b11000000 & second) !== 0xb10000000) {
+          return false
+        }        
+        let third =  text.charCodeAt(i + 2)
+        if((0b11000000 & third) !== 0xb10000000) {
+          return false
+        }     
+        let fourth =  text.charCodeAt(i + 3)
+        if((0b11000000 & fourth) !== 0xb10000000) {
+          return false
+        }                             
+        i = i + 4
+    }    
+    return false
+  }
+  return true
+}
+
 function Test() {
   const [spinner, setSpinner] = useState(false)
   const [alert, setAlert] = useState<JSX.Element>(<></>)
@@ -113,7 +168,7 @@ function Test() {
           headerStyle: { minWidth: '200px' },
           formatter: (cell, row) => {
             return <div style={{
-              textOverflow: 'ellipsis', overflow: 'scroll', minWidth: '200px',
+              overflow: 'scroll', minWidth: '200px',
               marginLeft: '3px', marginRight: '3px'
             }}>{cell}</div>
           },
@@ -130,7 +185,11 @@ function Test() {
       txt.records.forEach(x => {
         let a = {}
         for (let i = 0; i < columns.length; i++) {
-          a[columns[i].dataField] = x[i]
+
+          if(checkUTF8(x[i]))
+            a[columns[i].dataField] = x[i]
+          else
+            a[columns[i].dataField] = "BINARY"
         }
         data.push(a)
       })
