@@ -426,3 +426,25 @@ td {
     display: none;
   }
 }
+
+.btn-test {
+  background-color: #B8DAEE !important;  
+  color: white !important; 
+  box-shadow: none !important;
+  border-color: $dark-blue !important;
+}
+.btn-test:hover {
+  background-color: #8fccef  !important;
+}
+
+
+.btn-test.active {
+  background-color: $main-blue !important;
+}
+.btn-test.active:focus {
+  background-color: $main-blue  !important;
+  
+}
+.btn-test.active:hover {
+  background-color: rgb(180, 217, 238)   !important;
+}
