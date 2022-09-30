@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"crypto/md5"
+	b64 "encoding/base64"
 
 	"DbSync/types"
 )
@@ -64,29 +65,53 @@ func sqlTest(
 	if columns, err = rows.Columns(); err != nil {
 		return nil, fmt.Errorf("Can not get list of columns in the result of [%s]: %v",sql,err)
 	}
+	columnTypes := make([]string, len(columns))
+	{
+		if cts, err := rows.ColumnTypes(); err != nil {
+			return nil, fmt.Errorf("Can not get list of column types in the result of [%s]: %v",sql,err)
+		} else {
+			for k, ct := range cts {
+				columnTypes[k] = ct.ScanType().String()
+			}
+		}
+	}
+	log.Println("rows types:",columnTypes)
 	result := types.SqlTestResult{
 		Columns: columns,
 		Records: make([][]string, 0, 20),
 	}
 
 	iCols := make([]interface{}, len(columns))
-	pCols := make([]*string, len(columns))
-	for rows.Next() {
-		for k, _ := range iCols {
-			iCols[k] = &pCols[k]
+	sCols := make([]*string, len(columns))
+	bCols := make([]*[]byte, len(columns))
+	for k, ct := range columnTypes {
+		if ct == "[]uint8" {
+			iCols[k] = &bCols[k]
+		} else {
+			iCols[k] = &sCols[k]
 		}
+	}
+	for rows.Next() {
 		if err = rows.Scan(iCols...); err != nil {
 			return nil, fmt.Errorf("Scan error in [%s]: %v",sql, err)
 		}
-		sCols := make([]string, len(columns))
-		for k, p := range pCols {
-			if p == nil {
-				sCols[k] = "NULL"
+		rCols := make([]string, len(columns))
+		for k, ct := range columnTypes {
+			if ct == "[]uint8" {
+				if bCols[k] == nil {
+					rCols[k] = "0NULL"
+				} else {
+					rCols[k] = "1" + b64.StdEncoding.EncodeToString(*bCols[k])
+				}
 			} else {
-				sCols[k] = *p
+				if sCols[k] == nil {
+					rCols[k] = "0NULL"
+				} else {
+					rCols[k] = "0" + *sCols[k]
+				}
 			}
 		}
-		result.Records = append(result.Records, sCols)
+		result.Records = append(result.Records, rCols)
 	}
 
 	return &result, nil

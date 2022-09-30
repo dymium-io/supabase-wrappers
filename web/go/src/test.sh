@@ -30,7 +30,10 @@ export FILESYSTEM_ROOT='../../assets/'
 export AWS_LAMBDAS='{ "DbAnalyzer": "localhost:9080",
                       "DbSync": "localhost:9081"
                     }'
-
+[ -z "$DATABASE_PASSWORD" ] && {
+    DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )
+    export DATABASE_PASSWORD="$DATABASE_PASSWORD"
+}
 go test -v ./...
 
 

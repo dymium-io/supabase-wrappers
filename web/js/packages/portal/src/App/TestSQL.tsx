@@ -16,6 +16,7 @@ import * as ctypes from '@dymium/common/Types/Common'
 import * as stypes from '@dymium/common/Types/DbSyncCommon'
 import * as http from '../Api/Http'
 import { debugPort } from 'process';
+import * as b64 from '../Utils/Base64'
 
 //const { ToggleList } = ColumnToggle;
 //const ToggleList = ColumnToggle.ToggleList
@@ -28,59 +29,24 @@ type HeaderCell = {
 }
 let columns: HeaderCell[] = []
 
-function checkUTF8(text) {
-  for(let i = 0; i < text.length; ) {
-    let first = text.charCodeAt(i)
-    if(0 == (first & 0b10000000))  {
-      i = i + 1
-      continue //ASCII
-    }
-    if( (0b11100000 & first) === 0b11000000) {
-      // possible two byte
-      if(i > text.length - 1)
-        return false
-      let second =  text.charCodeAt(i + 1)
-      if((0b11000000 & second) === 0xb10000000) {
-        i = i + 2
-        continue
-      }
-      return false
-    }
-    if( (0b11110000 & first) === 0b11100000) {
-      // possible three bytes
-      if( i > text.length - 2 )
-        return false
-        let second =  text.charCodeAt(i + 1)
-        if((0b11000000 & second) !== 0xb10000000) {
-          return false
-        }        
-        let third =  text.charCodeAt(i + 2)
-        if((0b11000000 & third) !== 0xb10000000) {
-          return false
-        }             
-        i = i + 3
-    }
-    if( (0b11111000 & first) === 0b11110000) {
-      // possible four bytes
-      if( i > text.length - 3 )
-        return false
-        let second =  text.charCodeAt(i + 1)
-        if((0b11000000 & second) !== 0xb10000000) {
-          return false
-        }        
-        let third =  text.charCodeAt(i + 2)
-        if((0b11000000 & third) !== 0xb10000000) {
-          return false
-        }     
-        let fourth =  text.charCodeAt(i + 3)
-        if((0b11000000 & fourth) !== 0xb10000000) {
-          return false
-        }                             
-        i = i + 4
-    }    
-    return false
+
+function IsImage(text): string {
+
+  if (text[0] === 'G' && text[1] === 'I' && text[2] === 'F' && text[3] === '8' &&
+    text[4] === '9' && text[5] === 'a') {
+    console.log("GIF")
+    return "gif"
   }
-  return true
+  if (text[0] === 211 && text[1] === 'P' && text[2] === 'N' && text[3] === 'G') {
+    console.log("PNG")
+    return "png"
+  }
+  if (text[0] === 0xFF && text[1] === 0xD8) {
+    console.log("JPEG")
+    return "jpeg"
+  }
+
+  return ""
 }
 
 function Test() {
@@ -167,10 +133,30 @@ function Test() {
           text: x,
           headerStyle: { minWidth: '200px' },
           formatter: (cell, row) => {
+
+
+            let b = cell.substring(1, cell.length)
+            if (cell[0] === '1') {
+              let bcell = b64.base64DecToArr(b)
+              let o
+              let m = IsImage(bcell)
+              if (m !== "") {
+
+                let src = `data:image/${m};base64,${b}`
+
+                o = <img src={src} width="250px"></img>
+              } else
+                o = "BINARY"
+              return <div style={{
+                overflow: 'scroll', minWidth: '200px',
+                marginLeft: '3px', marginRight: '3px'
+              }}>{o}</div>
+            }
+           
             return <div style={{
               overflow: 'scroll', minWidth: '200px',
               marginLeft: '3px', marginRight: '3px'
-            }}>{cell}</div>
+            }}>{ b}</div>
           },
           headerFormatter: (column, colIndex) => {
             return <div style={{
@@ -186,21 +172,22 @@ function Test() {
         let a = {}
         for (let i = 0; i < columns.length; i++) {
 
-          if(checkUTF8(x[i]))
-            a[columns[i].dataField] = x[i]
-          else
-            a[columns[i].dataField] = "BINARY"
+          a[columns[i].dataField] = x[i]
+          console.log(x[i])
+          let bcell = b64.base64DecToArr(x[i])
+          let m = IsImage(bcell)
+          console.log(m)
         }
         data.push(a)
       })
       setData(data)
 
     }
-/*    
-    let mock = `{"columns":["id","name","primary_function","contractor","thrust","wingspan","length","height","weight","max_takeoff_weight","fuel_capacity","payload","speed","range_","ceiling","armament"],"records":[["67592d50-bbfe-402a-8781-94c9409033a7","F16","multirole fighter","Lockheed Martin","27000","33","50","16","19700","37500","7000","5x1258 bbmos, 7xPYD9, 1xXGL590, 1x7214surl_tnnxs","1500","2000","50000","xxx"]]}`
-    processData( JSON.parse(mock))
-    return false
-*/
+    /*    
+        let mock = `{"columns":["id","name","primary_function","contractor","thrust","wingspan","length","height","weight","max_takeoff_weight","fuel_capacity","payload","speed","range_","ceiling","armament"],"records":[["67592d50-bbfe-402a-8781-94c9409033a7","F16","multirole fighter","Lockheed Martin","27000","33","50","16","19700","37500","7000","5x1258 bbmos, 7xPYD9, 1xXGL590, 1x7214surl_tnnxs","1500","2000","50000","xxx"]]}`
+        processData( JSON.parse(mock))
+        return false
+    */
 
     //let jj = {database: selectedTable.database, schema: selectedTable.schema, table: selectedTable.table}
     if (selectedTable == null || selectedTable == undefined) {
@@ -326,11 +313,11 @@ function Test() {
           </Row>
         </Form>
         {data.length > 0 &&
-          <div id="testtable">
+          <div id="testtable" className="mb-5">
 
             <BootstrapTable
               condensed
-              striped bootstrap4 
+              striped bootstrap4
               keyField={columns[0].dataField}
               columns={columns}
 

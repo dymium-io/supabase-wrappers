@@ -441,7 +441,9 @@ func GetSelect(schema string, ds *types.DatascopeTable) (types.SqlTestResult, er
 	}
 
 	err = json.Unmarshal(data, &out)
-
+	if(err != nil) {
+		log.Printf("Error unmarshaling %s\n", err.Error())
+	} 
 	return out, err
 }
 
