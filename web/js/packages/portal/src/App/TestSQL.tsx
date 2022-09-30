@@ -31,7 +31,7 @@ let columns: HeaderCell[] = []
 
 
 function IsImage(text): string {
-  
+
   if (text[0] === 'G' && text[1] === 'I' && text[2] === 'F' && text[3] === '8' &&
     text[4] === '9' && text[5] === 'a') {
     console.log("GIF")
@@ -134,98 +134,29 @@ function Test() {
           headerStyle: { minWidth: '200px' },
           formatter: (cell, row) => {
 
-            function checkUTF8(text) {
-              for (let i = 0; i < text.length;) {
-                let first = text[i]
-                if (0 == (first & 0b10000000)) {
-                  i = i + 1
-                  continue //ASCII
-                }
-                if ((0b11100000 & first) === 0b11000000) {
-                  // possible two byte
-                  if (i > text.length - 1)
-                    return false
-                  let second = text[i + 1]
-                  if ((0b11000000 & second) === 0xb10000000) {
-                    i = i + 2
-                    continue
-                  }
-                  return false
-                }
-                if ((0b11110000 & first) === 0b11100000) {
-                  // possible three bytes
-                  if (i > text.length - 2)
-                    return false
-                  let second = text[i + 1]
-                  if ((0b11000000 & second) !== 0xb10000000) {
-                    return false
-                  }
-                  let third = text[i + 2]
-                  if ((0b11000000 & third) !== 0xb10000000) {
-                    return false
-                  }
-                  i = i + 3
-                }
-                if ((0b11111000 & first) === 0b11110000) {
-                  // possible four bytes
-                  if (i > text.length - 3)
-                    return false
-                  let second = text[i + 1]
-                  if ((0b11000000 & second) !== 0xb10000000) {
-                    return false
-                  }
-                  let third = text[i + 2]
-                  if ((0b11000000 & third) !== 0xb10000000) {
-                    return false
-                  }
-                  let fourth = text[i + 3]
-                  if ((0b11000000 & fourth) !== 0xb10000000) {
-                    return false
-                  }
-                  i = i + 4
-                }
-                return false
-              }
-              return true
-            }
-            function IsImage(text): string {
 
-              if (text[0] === 'G' && text[1] === 'I' && text[2] === 'F' && text[3] === '8' &&
-                text[4] === '9' && text[5] === 'a') {
-                console.log("GIF")
-                return "gif"
-              }
-              if (text[0] === 211 && text[1] === 'P' && text[2] === 'N' && text[3] === 'G') {
-                console.log("PNG")
-                return "png"
-              }
-              if (text[0] === 0xFF && text[1] === 0xD8) {
-                console.log("JPEG")
-                return "jpeg"
-              }
-
-              return ""
-            }
-            let bcell = b64.base64DecToArr(cell)
-            if (!checkUTF8(bcell)) {
-
+            let b = cell.substring(1, cell.length)
+            if (cell[0] === '1') {
+              let bcell = b64.base64DecToArr(b)
+              let o
               let m = IsImage(bcell)
               if (m !== "") {
 
-                let src = `data:image/${m};base64,${cell}`
-                cell = <img src={src} width="150px"></img>
+                let src = `data:image/${m};base64,${b}`
+
+                o = <img src={src} width="250px"></img>
               } else
-                cell = "BINARY"
+                o = "BINARY"
               return <div style={{
                 overflow: 'scroll', minWidth: '200px',
                 marginLeft: '3px', marginRight: '3px'
-              }}>{cell}</div>
+              }}>{o}</div>
             }
-
+           
             return <div style={{
               overflow: 'scroll', minWidth: '200px',
               marginLeft: '3px', marginRight: '3px'
-            }}>{atob(cell)}</div>
+            }}>{ b}</div>
           },
           headerFormatter: (column, colIndex) => {
             return <div style={{
@@ -242,7 +173,7 @@ function Test() {
         for (let i = 0; i < columns.length; i++) {
 
           a[columns[i].dataField] = x[i]
-
+          console.log(x[i])
           let bcell = b64.base64DecToArr(x[i])
           let m = IsImage(bcell)
           console.log(m)
@@ -382,7 +313,7 @@ function Test() {
           </Row>
         </Form>
         {data.length > 0 &&
-          <div id="testtable">
+          <div id="testtable" className="mb-5">
 
             <BootstrapTable
               condensed
