@@ -48,13 +48,14 @@ func TestApiHandlers(t *testing.T){
 		dbport := os.Getenv("DATABASE_PORT")
 		dbuser := os.Getenv("DATABASE_USER")
 		dbadminuser := os.Getenv("DATABASE_ADMIN_USER")
+		dbadminpassword := os.Getenv("DATABASE_ADMIN_PASSWORD")
 
 		dbtls  := os.Getenv("DATABASE_TLS")
 		if(dbtls == "")	{
 			dbtls = "disable"
 		}
 	
-		err := authentication.Init(dbhost, dbport, dbadminuser, dbpassword, "postgres", dbtls)
+		err := authentication.Init(dbhost, dbport, dbadminuser, dbadminpassword, "postgres", dbtls)
 		if(err != nil) {
 			t.Errorf("Error: %s\n", err.Error() )
 			return
@@ -84,7 +85,7 @@ func TestApiHandlers(t *testing.T){
 		err = db.Close()
 
 		// ----------------------------- open test -----------------------------------
-		err = authentication.Init(dbhost, dbport, dbadminuser, dbpassword, "test", dbtls)
+		err = authentication.Init(dbhost, dbport, dbadminuser, dbadminpassword, "test", dbtls)
 		if(err != nil) {
 			t.Errorf("Error: %s\n", err.Error() )
 			return

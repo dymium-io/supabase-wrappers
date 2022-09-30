@@ -30,10 +30,28 @@ export FILESYSTEM_ROOT='../../assets/'
 export AWS_LAMBDAS='{ "DbAnalyzer": "localhost:9080",
                       "DbSync": "localhost:9081"
                     }'
-[ -z "$DATABASE_PASSWORD" ] && {
-    DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )
-    export DATABASE_PASSWORD="$DATABASE_PASSWORD"
+
+function getPassword () {
+    host="$1"
+    port="$2"
+    user="$3"
+    password=$( grep "^$host:\\($port\\|[*]\\):[^:]*:$user:" $HOME/.pgpass | cut -f 5 -d : )
+    [ -z "$password" ] && {
+	echo "DATABASE_PASSWORD for $user in $host:$port not defined"
+	exit
+    }
+    echo "$password"
 }
+
+[ -z "$DATABASE_PASSWORD" ] && {
+    DATABASE_PASSWORD=$(getPassword "$DATABASE_HOST" "$DATABASE_PORT" "$DATABASE_USER")
+}
+
+[ -z "$DATABASE_ADMIN_PASSWORD" ] && {
+    DATABASE_ADMIN_PASSWORD=$(getPassword "$DATABASE_HOST" "$DATABASE_PORT" "$DATABASE_ADMIN_USER")
+}
+export DATABASE_PASSWORD DATABASE_ADMIN_PASSWORD
+
 go test -v ./...
 
 
