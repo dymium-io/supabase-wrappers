@@ -7,7 +7,8 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import ToolkitProvider, { ColumnToggle } from 'react-bootstrap-table2-toolkit';
+import ToolkitProvider, { ColumnToggle } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
+
 import Alert from 'react-bootstrap/Alert'
 import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
@@ -152,11 +153,11 @@ function Test() {
                 marginLeft: '3px', marginRight: '3px'
               }}>{o}</div>
             }
-           
+
             return <div style={{
               overflow: 'scroll', minWidth: '200px',
               marginLeft: '3px', marginRight: '3px'
-            }}>{ b}</div>
+            }}>{b}</div>
           },
           headerFormatter: (column, colIndex) => {
             return <div style={{
@@ -313,9 +314,8 @@ function Test() {
           </Row>
         </Form>
         {data.length > 0 &&
-          <div id="testtable" className="mb-5">
-
-            <BootstrapTable
+          <div id="testtable" className="mb-5 mt-3">
+            <ToolkitProvider
               condensed
               striped bootstrap4
               keyField={columns[0].dataField}
@@ -324,13 +324,31 @@ function Test() {
               id="scaledtable"
               data={data}
 
-            />
+              columnToggle
+            >
+              {
+                props => (
+                  <div>
+                    <ColumnToggle.ToggleList
+                      contextual="success"
+                      className="list-custom-class"
+                      btnClassName="btn-test btn-sm"
+                      {...props.columnToggleProps}
+                    />
+                    <hr />
+                    <BootstrapTable
+                      {...props.baseProps}
+                    />
+                  </div>
+                )
+              }
+            </ToolkitProvider>
 
           </div>
-        }
+      }
 
-      </div>
     </div>
+    </div >
   )
 
 }
