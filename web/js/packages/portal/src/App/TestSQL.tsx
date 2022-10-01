@@ -18,6 +18,8 @@ import * as stypes from '@dymium/common/Types/DbSyncCommon'
 import * as http from '../Api/Http'
 import { debugPort } from 'process';
 import * as b64 from '../Utils/Base64'
+import * as hex from '../Utils/Hex'
+
 
 //const { ToggleList } = ColumnToggle;
 //const ToggleList = ColumnToggle.ToggleList
@@ -45,6 +47,44 @@ function IsImage(text): string {
   if (text[0] === 0xFF && text[1] === 0xD8) {
     console.log("JPEG")
     return "jpeg"
+  }
+
+  if (text[0] === '4'.charCodeAt(0) &&
+      text[1] === '7'.charCodeAt(0) &&
+      text[2] === '4'.charCodeAt(0) &&
+      text[3] === '9'.charCodeAt(0) &&
+      text[4] === '4'.charCodeAt(0) &&
+      text[5] === '6'.charCodeAt(0) &&      
+      text[6] === '3'.charCodeAt(0) &&
+      text[7] === '8'.charCodeAt(0) &&         
+      text[8] === '3'.charCodeAt(0) &&
+      text[9] === '9'.charCodeAt(0) &&   
+      text[10] === '6'.charCodeAt(0) &&
+      text[11] === '1'.charCodeAt(0) ) {   
+      console.log("HEX GIF")
+    return "hexgif"
+  }
+  if (text[0] === 'F'.charCodeAt(0) &&
+      text[1] === 'F'.charCodeAt(0) &&
+      text[2] === 'D'.charCodeAt(0) &&
+      text[3] === '8'.charCodeAt(0)  ) {   
+      console.log("HEX JPEG")
+    return "hexjpg"
+  }
+// 89 50 4E 47
+  if (text[0] === '8'.charCodeAt(0) &&
+      text[1] === '9'.charCodeAt(0) &&
+      text[2] === '5'.charCodeAt(0) &&
+      text[3] === '0'.charCodeAt(0) &&
+      text[4] === '4'.charCodeAt(0) &&
+      text[5] === 'E'.charCodeAt(0) &&      
+      text[6] === '4'.charCodeAt(0) &&
+      text[7] === '7'.charCodeAt(0) 
+
+      
+      ) {   
+      console.log("HEX PNG")
+    return "hexpng"
   }
 
   return ""
@@ -138,14 +178,39 @@ function Test() {
 
             let b = cell.substring(1, cell.length)
             if (cell[0] === '1') {
-              let bcell = b64.base64DecToArr(b)
               let o
+              let bcell = b64.base64DecToArr(b)
               let m = IsImage(bcell)
               if (m !== "") {
 
+                switch(m) {
+                  case "hexgif": {
+                    let h = atob(b)
+                    let newb = hex.HexStringToByteArray(h)
+                    b = b64.base64EncArr(newb)
+                    m = "gif"
+                  }
+                  break
+                  case "hexpng": {
+                    let h = atob(b)
+                    let newb = hex.HexStringToByteArray(h)
+                    b = b64.base64EncArr(newb)
+                    m = "png"
+                  }
+                  break
+                  case "hexjpg": {
+                    let h = atob(b)
+                    let newb = hex.HexStringToByteArray(h)
+                    b = b64.base64EncArr(newb)
+                    m = "jpeg"
+                  }
+                  break                                    
+                  default: 
+                  break
+                }
                 let src = `data:image/${m};base64,${b}`
 
-                o = <img src={src} width="250px"></img>
+                o = <img src={src} style={{maxWidth: "250px"}}></img>
               } else
                 o = "BINARY"
               return <div style={{
@@ -172,12 +237,7 @@ function Test() {
       txt.records.forEach(x => {
         let a = {}
         for (let i = 0; i < columns.length; i++) {
-
           a[columns[i].dataField] = x[i]
-          console.log(x[i])
-          let bcell = b64.base64DecToArr(x[i])
-          let m = IsImage(bcell)
-          console.log(m)
         }
         data.push(a)
       })
@@ -316,8 +376,6 @@ function Test() {
         {data.length > 0 &&
           <div id="testtable" className="mb-5 mt-3">
             <ToolkitProvider
-              condensed
-              striped bootstrap4
               keyField={columns[0].dataField}
               columns={columns}
 
@@ -331,12 +389,14 @@ function Test() {
                   <div>
                     <ColumnToggle.ToggleList
                       contextual="success"
-                      className="list-custom-class"
+                      striped
                       btnClassName="btn-test btn-sm"
                       {...props.columnToggleProps}
                     />
                     <hr />
                     <BootstrapTable
+                   condensed
+                   striped bootstrap4
                       {...props.baseProps}
                     />
                   </div>

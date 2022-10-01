@@ -60,7 +60,7 @@ function uint6ToB64(nUint6) {
     : 65;
 }
 
-function base64EncArr(aBytes) {
+export function base64EncArr(aBytes) {
   let nMod3 = 2;
   let sB64Enc = "";
 
