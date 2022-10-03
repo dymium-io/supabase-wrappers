@@ -48,6 +48,19 @@
 ;--------------------------------
 ;Installer Sections
 
+Section "Install Dymium Client" DymiumClient
+
+  SetOutPath "$INSTDIR"
+  
+  ;ADD YOUR OWN FILES HERE...
+  ..\go\src\dymium.exe
+  ;Store installation folder
+  WriteRegStr HKCU "Software\Dymium" "" $INSTDIR
+  
+  ;Create uninstaller
+  WriteUninstaller "$INSTDIR\Uninstall.exe"
+
+SectionEnd
 
 ;--------------------------------
 ;Descriptions
