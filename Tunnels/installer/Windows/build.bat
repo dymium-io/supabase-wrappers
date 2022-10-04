@@ -5,3 +5,5 @@ go build -a -tags netgo -ldflags "-X ^"main.MajorVersion=0^" -X ^"main.MinorVers
 copy dymium.exe ..\..\installer\Windows
 cd   ..\..\installer\Windows
 makensis tunnel.nsi
+
+aws s3 cp DymiumInstaller.exe s3://dymium-dev/installers/macos/
