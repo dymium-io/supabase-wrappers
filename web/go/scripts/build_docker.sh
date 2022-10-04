@@ -68,7 +68,7 @@ CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
            go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=1' -X 'main.ProtocolVersion=4' -extldflags "-static"' -o tunnel.exe
 mkdir -p ../../../web/go/assets/customer/update/windows/amd64/
 cp tunnel.exe ../../../web/go/assets/customer/update/windows/amd64/tunnel
-aws s3  --profile dymium --region us-west-2 cp s3://dymium-dev/installers/macos/DymiumInstaller.exe /tmp
+aws s3  --profile dymium --region us-west-2 cp s3://dymium-dev/installers/windows/DymiumInstaller.exe /tmp
 cp /tmp/DymiumInstaller.exe ../../../web/go/assets/customer/
 mv /tmp/DymiumInstaller.exe ../../../web/js/packages/portal/public
 
