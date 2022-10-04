@@ -1,7 +1,7 @@
 ;NSIS Modern User Interface
 ;Tunnel Client Install Script
 
-
+!include "EnvVarUpdate.nsh"
 ;--------------------------------
 ;Include Modern UI
 
@@ -51,11 +51,20 @@
 Section "Install Dymium Client" DymiumClient
 
   SetOutPath "$INSTDIR"
-  
+ 
+
+
   ;ADD YOUR OWN FILES HERE...
-  ..\go\src\dymium.exe
+  File ..\..\go\client\dymium.exe
+
   ;Store installation folder
-  WriteRegStr HKCU "Software\Dymium" "" $INSTDIR
+  WriteRegStr HKCU "Software\Dymium" "" $INSTDIR  
+  Push "Path"
+  Push "A"
+  Push "HKCU"
+  Push $INSTDIR 
+  Call EnvVarUpdate
+  Pop  $0
   
   ;Create uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -66,11 +75,11 @@ SectionEnd
 ;Descriptions
 
   ;Language strings
-  LangString DESC_SecDummy ${LANG_ENGLISH} "A test section."
+  LangString DESC_DymiumClient ${LANG_ENGLISH} "A test section."
 
   ;Assign language strings to sections
   !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-    !insertmacro MUI_DESCRIPTION_TEXT ${SecDummy} $(DESC_SecDummy)
+    !insertmacro MUI_DESCRIPTION_TEXT ${DymiumClient} $(DESC_DymiumClient)
   !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 ;--------------------------------
@@ -81,9 +90,17 @@ Section "Uninstall"
   ;ADD YOUR OWN FILES HERE...
 
   Delete "$INSTDIR\Uninstall.exe"
-
+  Delete "$INSTDIR\dymium.exe"
   RMDir "$INSTDIR"
 
+  WriteRegStr HKCU "Software\Dymium" "" $INSTDIR  
+  Push "Path"
+  Push "R"
+  Push "HKCU"
+  Push $INSTDIR 
+  Call un.EnvVarUpdate
+  Pop  $0
+  
   DeleteRegKey /ifempty HKCU "Software\Dymium"
 
 SectionEnd
