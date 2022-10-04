@@ -1,6 +1,6 @@
 ;NSIS Modern User Interface
 ;Tunnel Client Install Script
-
+!include "FileFunc.nsh"
 !include "EnvVarUpdate.nsh"
 ;--------------------------------
 ;Include Modern UI
@@ -48,7 +48,7 @@
 ;--------------------------------
 ;Installer Sections
 
-Section "Install Dymium Client" DymiumClient
+Section "Install Dymium Secure Tunnel" DymiumClient
 
   SetOutPath "$INSTDIR"
  
@@ -56,7 +56,7 @@ Section "Install Dymium Client" DymiumClient
 
   ;ADD YOUR OWN FILES HERE...
   File ..\..\go\client\dymium.exe
-
+  File .\logo.ico
   ;Store installation folder
   WriteRegStr HKCU "Software\Dymium" "" $INSTDIR  
   Push "Path"
@@ -68,7 +68,15 @@ Section "Install Dymium Client" DymiumClient
   
   ;Create uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
+WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dymium" \
+                 "DisplayName" "Dymium Secure Tunnel"
+WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dymium" \
+                 "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
+WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dymium" \
+                 "DisplayIcon" "$\"$INSTDIR\logo.ico$\""
 
+ ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
+ IntFmt $0 "0x%08X" $0
 SectionEnd
 
 ;--------------------------------
