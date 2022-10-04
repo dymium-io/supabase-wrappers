@@ -6,4 +6,4 @@ copy dymium.exe ..\..\installer\Windows
 cd   ..\..\installer\Windows
 makensis tunnel.nsi
 
-aws s3 --profile dymium --region us-west-2 cp DymiumInstaller.exe s3://dymium-dev/installers/windows/
+aws s3 --profile dymium --region us-west-2 cp DymiumInstaller.exe s3://dymium-installers/windows/
