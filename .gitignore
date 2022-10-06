@@ -29,3 +29,17 @@ Tunnels/go/client/client.old
 Tunnels/go/server/server
 Tunnels/go/client/client.exe.old
 .VSCodeCounter
+Tunnels/installer/MacOS/macOS-x64/target/package/dymium.pkg
+Tunnels/installer/MacOS/macOS-x64/target/pkg/dymium-macos-installer-x64-0.0.9.pkg
+Tunnels/installer/MacOS/macOS-x64/target/darwinpkg/Library/dymium/0.0.9/.gitkeep
+Tunnels/installer/MacOS/macOS-x64/target/darwinpkg/Library/dymium/0.0.9/dymium
+Tunnels/installer/MacOS/macOS-x64/target/darwinpkg/Library/dymium/0.0.9/uninstall.sh
+Tunnels/installer/MacOS/macOS-x64/application/dymium
+Tunnels/installer/MacOS/macOS-x64/target/darwin/Resources/banner.png
+Tunnels/installer/MacOS/macOS-x64/target/darwin/Resources/conclusion.html
+Tunnels/installer/MacOS/macOS-x64/target/darwin/Resources/LICENSE.txt
+Tunnels/installer/MacOS/macOS-x64/target/darwin/Resources/uninstall.sh
+Tunnels/installer/MacOS/macOS-x64/target/darwin/Resources/welcome.html
+Tunnels/installer/MacOS/macOS-x64/target/darwin/scripts/postinstall
+Tunnels/installer/MacOS/macOS-x64/target/darwin/Distribution
+Tunnels/installer/MacOS/LICENSE
