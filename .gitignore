@@ -29,3 +29,8 @@ Tunnels/go/client/client.old
 Tunnels/go/server/server
 Tunnels/go/client/client.exe.old
 .VSCodeCounter
+Tunnels/go/GUI/client
+Tunnels/go/GUI/dymiumgui.app/Contents/Info.plist
+Tunnels/go/GUI/dymiumgui.app/Contents/MacOS/dymiumgui
+Tunnels/go/GUI/dymiumgui.app/Contents/Resources/icon.icns
+Tunnels/go/GUI/dymiumgui
