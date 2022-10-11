@@ -29,6 +29,11 @@ Tunnels/go/client/client.old
 Tunnels/go/server/server
 Tunnels/go/client/client.exe.old
 .VSCodeCounter
+Tunnels/go/GUI/client
+Tunnels/go/GUI/dymiumgui.app/Contents/Info.plist
+Tunnels/go/GUI/dymiumgui.app/Contents/MacOS/dymiumgui
+Tunnels/go/GUI/dymiumgui.app/Contents/Resources/icon.icns
+Tunnels/go/GUI/dymiumgui
 Tunnels/installer/MacOS/macOS-x64/target/package/dymium.pkg
 Tunnels/installer/MacOS/macOS-x64/target/pkg/dymium-macos-installer-x64-0.0.9.pkg
 Tunnels/installer/MacOS/macOS-x64/target/darwinpkg/Library/dymium/0.0.9/.gitkeep
