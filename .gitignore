@@ -48,3 +48,6 @@ Tunnels/installer/MacOS/macOS-x64/target/darwin/Resources/welcome.html
 Tunnels/installer/MacOS/macOS-x64/target/darwin/scripts/postinstall
 Tunnels/installer/MacOS/macOS-x64/target/darwin/Distribution
 Tunnels/installer/MacOS/LICENSE
+Tunnels/go/GUI/dymium
+Tunnels/go/GUI/config.txt
+Tunnels/go/GUI/dymiumgui.app/Contents/MacOS/dymium
