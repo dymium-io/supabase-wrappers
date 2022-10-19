@@ -85,14 +85,14 @@ mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column,
 #define obf(valstr) do {												\
 	if(act != 0) {														\
 	  switch(how_to_redact) {											\
-	  case 0x0: if(act == 1) redact_something(valstr); else obfuscate(valstr); break; \
-	  case 0x1: if(act == 1) redact_text(valstr); else obfuscate(valstr); break; \
-	  case 0x2: if(act == 1) redact_number(valstr); else obfuscate(valstr); break; \
-	  case 0x3: redact_bool(valstr); break;								\
-	  case 0x4: redact_xml(valstr); break;								\
-	  case 0x5: redact_bytea(valstr); break;							\
-	  case 0x6: redact_json(valstr); break;								\
-	  case 0x7: obfuscate(valstr); break;								\
+	  case 0x0: if(act == 1) redact_something(valstr,-1); else obfuscate(valstr,-1); break; \
+	  case 0x1: if(act == 1) redact_text(valstr,-1); else obfuscate(valstr,-1); break; \
+	  case 0x2: if(act == 1) redact_number(valstr,-1); else obfuscate(valstr,-1); break; \
+	  case 0x3: redact_bool(valstr,-1); break;							\
+	  case 0x4: redact_xml(valstr,-1); break;							\
+	  case 0x5: redact_bytea(valstr,-1); break;							\
+	  case 0x6: redact_json(valstr,-1); break;							\
+	  case 0x7: obfuscate(valstr,-1); break;							\
 	  }																	\
 	}																	\
 } while(0)

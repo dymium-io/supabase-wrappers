@@ -42,40 +42,39 @@ func sqlTest(
 
 	var err error
 	var db *sql.DB
-	
+
 	if db, err = sql.Open("postgres", connectStr); err != nil {
 		return nil, fmt.Errorf("Cannot open connection to %s. Ignoring error: %v", cnf.GuardianAddress[0], err)
 	}
 	defer db.Close()
 
-
-	if _, err := db.Exec("SET SESSION AUTHORIZATION " + fmt.Sprintf("_%x_",md5.Sum([]byte(*datascope+"_dymium")))); err != nil {
-		return nil, fmt.Errorf("session authorization failed: %v",err)
+	if _, err := db.Exec("SET SESSION AUTHORIZATION " + fmt.Sprintf("_%x_", md5.Sum([]byte(*datascope+"_dymium")))); err != nil {
+		return nil, fmt.Errorf("session authorization failed: %v", err)
 	}
 
 	var rows *sql.Rows
 	sql := fmt.Sprintf(`select * from %s_%s.%s limit 20`,
 		sqlTest.Database, sqlTest.Schema, sqlTest.Table)
 	if rows, err = db.Query(sql); err != nil {
-		return nil, fmt.Errorf("Query [%s] failed: %v",sql,err)
+		return nil, fmt.Errorf("Query [%s] failed: %v", sql, err)
 	}
 	defer rows.Close()
 
 	var columns []string
 	if columns, err = rows.Columns(); err != nil {
-		return nil, fmt.Errorf("Can not get list of columns in the result of [%s]: %v",sql,err)
+		return nil, fmt.Errorf("Can not get list of columns in the result of [%s]: %v", sql, err)
 	}
 	columnTypes := make([]string, len(columns))
 	{
 		if cts, err := rows.ColumnTypes(); err != nil {
-			return nil, fmt.Errorf("Can not get list of column types in the result of [%s]: %v",sql,err)
+			return nil, fmt.Errorf("Can not get list of column types in the result of [%s]: %v", sql, err)
 		} else {
 			for k, ct := range cts {
 				columnTypes[k] = ct.ScanType().String()
 			}
 		}
 	}
-	log.Println("rows types:",columnTypes)
+	log.Println("rows types:", columnTypes)
 	result := types.SqlTestResult{
 		Columns: columns,
 		Records: make([][]string, 0, 20),
@@ -93,7 +92,7 @@ func sqlTest(
 	}
 	for rows.Next() {
 		if err = rows.Scan(iCols...); err != nil {
-			return nil, fmt.Errorf("Scan error in [%s]: %v",sql, err)
+			return nil, fmt.Errorf("Scan error in [%s]: %v", sql, err)
 		}
 		rCols := make([]string, len(columns))
 		for k, ct := range columnTypes {

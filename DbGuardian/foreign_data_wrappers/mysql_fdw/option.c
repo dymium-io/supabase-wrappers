@@ -292,11 +292,6 @@ mysql_get_options(Oid foreignoid, bool is_foreigntable)
 
 		if (strcmp(def->defname, "ssl_cipher") == 0)
 			opt->ssl_cipher = defGetString(def);
-
-		/* Dymium */
-		if (strcmp(def->defname, "ssl_cipher") == 0)
-			opt->ssl_cipher = defGetString(def);
-
 	}
 
 	/* Default values, if required */

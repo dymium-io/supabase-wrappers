@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -33,15 +32,15 @@ func confUser(
 		sslmode_ = "require"
 	}
 
-	type udb struct { u,db string }
+	type udb struct{ u, db string }
 	ds := make([]udb, len(userCnf.Datascopes))
 	for k, _ := range userCnf.Datascopes {
 		ds[k] = udb{
-			u: fmt.Sprintf(`_%x_`,md5.Sum([]byte(userCnf.Datascopes[k]+"_dymium"))),
+			u:  fmt.Sprintf(`_%x_`, md5.Sum([]byte(userCnf.Datascopes[k]+"_dymium"))),
 			db: userCnf.Datascopes[k],
 		}
 	}
-	sort.Slice(ds, func (i,j int) bool { return ds[i].u < ds[j].u })
+	sort.Slice(ds, func(i, j int) bool { return ds[i].u < ds[j].u })
 
 	connectStr := fmt.Sprintf("host=%%s port=%d dbname='%s' user=%s password='%s' sslmode=%s",
 		cnf.GuardianPort, cnf.GuardianDatabase, cnf.GuardianUser, cnf.GuardianAdminPassword, sslmode_)
@@ -72,7 +71,8 @@ func confUser(
 				defer rows.Close()
 				toAdd, toDelete := []udb{}, []string{}
 				k := 0
-				loop: for rows.Next() {
+			loop:
+				for rows.Next() {
 					var d string
 					if err = rows.Scan(&d); err != nil {
 						return empty, fmt.Errorf("Getting role: %v", err)
@@ -98,7 +98,7 @@ func confUser(
 					toDelete = append(toDelete, d)
 				}
 				if k < len(ds) {
-					log.Println("k=",k,"len(ds)=",len(ds),ds[k:])
+					log.Println("k=", k, "len(ds)=", len(ds), ds[k:])
 					toAdd = append(toAdd, ds[k:]...)
 				}
 				log.Println("toAdd:", toAdd, "toDelete:", toDelete)
