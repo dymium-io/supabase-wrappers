@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	
+
 	"database/sql"
 
 	"crypto/md5"
@@ -71,7 +71,7 @@ func configureDatabase(db *sql.DB,
 	credentials map[string]types.Credential,
 	createDymiumTables bool) error {
 
-	localUser := fmt.Sprintf(`_%x_`,md5.Sum([]byte(datascope.Name+"_dymium")))
+	localUser := fmt.Sprintf(`_%x_`, md5.Sum([]byte(datascope.Name+"_dymium")))
 
 	connectionTypes := map[types.ConnectionType]struct{}{}
 	for k := range datascope.Connections {
@@ -213,6 +213,26 @@ func configureDatabase(db *sql.DB,
 		}
 	}
 
+	type act int
+	const (
+		allow       act = 0x0
+		redact          = 0x1
+		obfuscate       = 0x2
+		smartRedact     = 0x3
+	)
+
+	type typ int
+	const (
+		undef   typ = 0x0
+		txt         = 0x1
+		number      = 0x2
+		boolean     = 0x3
+		xml         = 0x4
+		binary      = 0x5
+		json        = 0x6
+		uuid        = 0x7
+	)
+
 	for k := range datascope.Schemas {
 		s := &datascope.Schemas[k]
 		for m := range s.Tables {
@@ -222,8 +242,8 @@ func configureDatabase(db *sql.DB,
 			for k := range t.Columns {
 				c := &t.Columns[k]
 				if c.Action != "Block" {
-					ract := 0
-					rtyp := 0
+					ract := allow
+					rtyp := undef
 					rnul := 0
 					notNull := " NOT NULL"
 					if c.IsNullable {
@@ -232,11 +252,11 @@ func configureDatabase(db *sql.DB,
 					}
 					switch c.Action {
 					case "Redact":
-						ract = 0x1
+						ract = redact
 					case "Obfuscate":
-						ract = 0x2
+						ract = obfuscate
 					case "Smart Redact":
-						ract = 0x0
+						ract = smartRedact
 					}
 					switch {
 					case
@@ -244,7 +264,7 @@ func configureDatabase(db *sql.DB,
 						strings.HasPrefix(c.Typ, "var"),
 						c.Typ == "text",
 						c.Typ == "bpchar":
-						rtyp = 0x1
+						rtyp = txt
 					case
 						c.Typ == "bigint",
 						strings.HasPrefix(c.Typ, "double"),
@@ -254,25 +274,40 @@ func configureDatabase(db *sql.DB,
 						c.Typ == "smallint",
 						strings.HasPrefix(c.Typ, "float"),
 						strings.HasPrefix(c.Typ, "decimal"):
-						rtyp = 0x2
+						rtyp = number
+						if ract != 0 {
+							ract = 0x1
+						}
 					case
 						strings.HasPrefix(c.Typ, "bool"):
-						rtyp = 0x3
+						rtyp = boolean
+						if ract != 0 {
+							ract = 0x1
+						}
 					case
 						c.Typ == "xml":
-						rtyp = 0x4
+						rtyp = xml
+						if ract != 0 {
+							ract = 0x1
+						}
 					case
 						c.Typ == "bytea":
-						rtyp = 0x5
+						rtyp = binary
+						if ract != 0 {
+							ract = 0x1
+						}
 					case
 						c.Typ == "json", c.Typ == "jsonb":
-						rtyp = 0x6
+						rtyp = json
+						if ract != 0 {
+							ract = 0x1
+						}
 					case
 						c.Typ == "uuid":
-						rtyp = 0x7
+						rtyp = uuid
 					}
 					defs = append(defs, fmt.Sprintf("  %q %s OPTIONS( redact '%d' )%s",
-						c.Name, c.Typ, ract|(rnul<<2)|(rtyp<<3), notNull))
+						c.Name, c.Typ, int(ract)|(rnul<<2)|(int(rtyp)<<3), notNull))
 				}
 			}
 			e := "CREATE FOREIGN TABLE %q.%q (\n" + strings.Join(defs, ",\n") + "\n)\n" +

@@ -26,7 +26,7 @@ func doUpdate(
 	connectStr := fmt.Sprintf("host=%%s port=%d dbname='%%s' user=%s password='%s' sslmode=%s",
 		cnf.GuardianPort, cnf.GuardianUser, cnf.GuardianAdminPassword, sslmode_)
 
-	localUser := fmt.Sprintf(`_%x_`,md5.Sum([]byte(datascope.Name+"_dymium")))
+	localUser := fmt.Sprintf(`_%x_`, md5.Sum([]byte(datascope.Name+"_dymium")))
 
 	for _, a := range cnf.GuardianAddress {
 		if db, err := sql.Open("postgres", fmt.Sprintf(connectStr, a, esc(cnf.GuardianDatabase))); err != nil {

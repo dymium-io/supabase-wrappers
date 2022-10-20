@@ -23,9 +23,9 @@ retval=$?
 
 fdw=':'
 cp_args=''
-for f in postgres_fdw mysql_fdw; do
+for f in postgres_fdw mysql_fdw tds_fdw; do
     fdw="$fdw; cd /fdw/$f; make USE_PGXS=true"
-    cp_args="$cp_args $f/$f.so $f/$f.control $f/$f--*.sql"
+    cp_args="$cp_args $f/$f.so $f/$f.control $f/$f*.sql"
 done
 set -x
 (

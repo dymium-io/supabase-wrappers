@@ -24,9 +24,5 @@ func (g *Gui) WriteConfig() {
 	var config Config
 	config.Confs = g.confs
 	config.Last = g.input.Text
-	data, _ := json.Marshal(config)
 	os.WriteFile("config.txt", data, 0644)
-}
-func (g *Gui) Launch(cmdslice []string) *exec.Cmd {
-	return exec.Command("client", cmdslice...)
 }

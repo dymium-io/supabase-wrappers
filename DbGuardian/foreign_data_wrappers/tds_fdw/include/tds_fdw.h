@@ -116,6 +116,9 @@ typedef struct TdsFdwExecutionState
 	int ncols;
 	int row;
 	MemoryContext mem_cxt;
+
+    /* Dymium */
+    int        *how_to_redact;
 } TdsFdwExecutionState;
 
 /* Callback argument for ec_member_matches_foreign */

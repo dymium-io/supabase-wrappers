@@ -1379,6 +1379,25 @@ void tdsGetColumnMetadata(ForeignScanState *node, TdsFdwOptionSet *option_set)
 	festate->datums =  palloc(festate->attinmeta->tupdesc->natts * sizeof(*festate->datums));
 	festate->isnull =  palloc(festate->attinmeta->tupdesc->natts * sizeof(*festate->isnull));
 
+	/* !Dymium! */
+	festate->how_to_redact = palloc0(festate->attinmeta->tupdesc->natts * sizeof(int));
+	for(int k = 0; k != festate->attinmeta->tupdesc->natts; ++k) {
+	  List *options = GetForeignColumnOptions(relOid, TupleDescAttr(festate->attinmeta->tupdesc, k)->attnum);
+	  ListCell *lc;
+	  foreach(lc, options)
+		{
+		  DefElem    *def = (DefElem *) lfirst(lc);
+		  
+		  if (strcmp(def->defname, "redact") == 0)
+			{
+			  char *redact = defGetString(def);
+			  festate->how_to_redact[k] = atoi(redact);
+			  break;
+			}
+		}
+	}
+	
+
 	if (option_set->match_column_names)
 	{
 		local_columns_found = palloc0(festate->attinmeta->tupdesc->natts);
@@ -1524,6 +1543,9 @@ void tdsGetColumnMetadata(ForeignScanState *node, TdsFdwOptionSet *option_set)
 }
 
 /* get next row from foreign table */
+
+#define _D if(0)  
+#include "../common/obfuscate.c"
 
 TupleTableSlot* tdsIterateForeignScan(ForeignScanState *node)
 {
@@ -1750,9 +1772,8 @@ TupleTableSlot* tdsIterateForeignScan(ForeignScanState *node)
 					Oid attr_oid;
 					bytea *bytes;
 
-					column = &festate->columns[ncol];
-					attr_oid = column->attr_oid;
-
+					int isNullable, rAct, rTyp;
+					
 					if (column->local_index == -1)
 					{
 						ereport(DEBUG3,
@@ -1762,6 +1783,9 @@ TupleTableSlot* tdsIterateForeignScan(ForeignScanState *node)
 						continue;
 					}
 
+					column = &festate->columns[ncol];
+					attr_oid = column->attr_oid;
+
 					srclen = dbdatlen(festate->dbproc, ncol + 1);
 					
 					ereport(DEBUG3,
@@ -1770,7 +1794,16 @@ TupleTableSlot* tdsIterateForeignScan(ForeignScanState *node)
 					
 					src = dbdata(festate->dbproc, ncol + 1);
 
-					if (srclen == 0 && src == NULL)
+					/* Dymium */
+					isNullable = rAct = rTyp = 0;
+					if(festate->how_to_redact) {
+					  isNullable = (festate->how_to_redact[ncol] >> 2) & 0x1;
+					  rAct = festate->how_to_redact[ncol] & 0x3;
+					  rTyp = festate->how_to_redact[ncol] >> 3;
+					}
+
+					if ((srclen == 0 && src == NULL) ||
+						(rAct == 0x1 && isNullable))
 					{
 						ereport(DEBUG3,
 							(errmsg("tds_fdw: %s: Column value is NULL", column->name)
@@ -1795,29 +1828,96 @@ TupleTableSlot* tdsIterateForeignScan(ForeignScanState *node)
 						switch (attr_oid)
 						{
 						case INT2OID:
+						  if(rAct) {
+							festate->datums[column->local_index] = Int16GetDatum(0);
+						  } else {
 							festate->datums[column->local_index] = Int16GetDatum(column->value.dbsmallint);
-							break;
+						  }
+						  break;
 						case INT4OID:
+						  if(rAct) {
+							festate->datums[column->local_index] = Int32GetDatum(0);
+						  } else {
 							festate->datums[column->local_index] = Int32GetDatum(column->value.dbint);
-							break;
+						  }
+						  break;
 						case INT8OID:
+						  if(rAct) {
+							festate->datums[column->local_index] = Int64GetDatum(0);
+						  } else {
 							festate->datums[column->local_index] = Int64GetDatum(column->value.dbbigint);
-							break;
+						  }
+						  break;
 						case FLOAT4OID:
+						  if(rAct) {
+							festate->datums[column->local_index] = Float4GetDatum(0);
+						  } else {
 							festate->datums[column->local_index] = Float4GetDatum(column->value.dbreal);
-							break;
+						  }
+						  break;
 						case FLOAT8OID:
+						  if(rAct) {
+							festate->datums[column->local_index] = Float8GetDatum(0);
+						  } else {
 							festate->datums[column->local_index] = Float8GetDatum(column->value.dbflt8);
-							break;
+						  }
+						  break;
 						case TEXTOID:
-							festate->datums[column->local_index] = PointerGetDatum(cstring_to_text_with_len((char *)src, srclen));
-							break;
+						  {
+							int srclenR = srclen;
+							if(rAct) {
+							  switch(rTyp) {
+							  case 0x0:
+								if(rAct == 1)
+								  srclenR = redact_something((char*)src, srclen);
+								else
+								  srclenR = obfuscate((char*)src, srclen);
+								break;
+							  case 0x1:
+								if(rAct == 1)
+								  srclenR = redact_text((char*)src, srclen);
+								else
+								  srclenR = obfuscate((char*)src, srclen);
+								break;
+							  case 0x2:
+								if(rAct == 1)
+								  srclenR = redact_number((char*)src, srclen);
+								else
+								  srclenR = obfuscate((char*)src, srclen);
+								break;
+							  case 0x3:
+								srclenR = redact_bool((char*)src, srclen);
+								break;
+							  case 0x4:
+								srclenR = redact_xml((char*)src, srclen);
+								break;
+							  case 0x5:
+								srclenR = redact_bytea((char*)src, srclen);
+								break;
+							  case 0x6:
+								srclenR = redact_json((char*)src, srclen);
+								break;
+							  case 0x7:
+								srclenR = obfuscate((char*)src, srclen);
+								break;
+							  }
+							}
+							festate->datums[column->local_index] = PointerGetDatum(cstring_to_text_with_len((char *)src, srclenR));
+						  }
+						  break;
 						case BYTEAOID:
+						  if(rAct) {
+							bytes = palloc(2 + VARHDRSZ);
+							SET_VARSIZE(bytes, 2 + VARHDRSZ);
+							memcpy(VARDATA(bytes), "\\x", srclen);
+							festate->datums[column->local_index] = PointerGetDatum(bytes);
+						  } else {
 							bytes = palloc(srclen + VARHDRSZ);
 							SET_VARSIZE(bytes, srclen + VARHDRSZ);
 							memcpy(VARDATA(bytes), src, srclen);
 							festate->datums[column->local_index] = PointerGetDatum(bytes);
-							break;
+						  }
+						  break;
 						#if (PG_VERSION_NUM >= 90400)
 						case TIMESTAMPOID:
 							erc = tdsDatetimeToDatum(festate->dbproc, (DBDATETIME *)src, &festate->datums[column->local_index]);
@@ -1839,11 +1939,48 @@ TupleTableSlot* tdsIterateForeignScan(ForeignScanState *node)
 					}
 					else
 					{
-						cstring = tdsConvertToCString(festate->dbproc, column->srctype, src, srclen);
-						festate->datums[column->local_index] = InputFunctionCall(&festate->attinmeta->attinfuncs[column->local_index],
-											  cstring,
-											  festate->attinmeta->attioparams[column->local_index],
-											  festate->attinmeta->atttypmods[column->local_index]);
+					  cstring = tdsConvertToCString(festate->dbproc, column->srctype, src, srclen);
+					  if(rAct) {
+						switch(rTyp) {
+						case 0x0:
+						  if(rAct == 1)
+							redact_something((char*)cstring, -1);
+						  else
+							obfuscate((char*)cstring, -1);
+						  break;
+						case 0x1:
+						  if(rAct == 1)
+							redact_text((char*)src, -1);
+						  else
+							obfuscate((char*)src, -1);
+						  break;
+						case 0x2:
+						  if(rAct == 1)
+							redact_number((char*)src, -1);
+						  else
+							obfuscate((char*)src, -1);
+						  break;
+						case 0x3:
+						  redact_bool((char*)src, -1);
+						  break;
+						case 0x4:
+						  redact_xml((char*)src, -1);
+						  break;
+						case 0x5:
+						  redact_bytea((char*)src, -1);
+						  break;
+						case 0x6:
+						  redact_json((char*)src, -1);
+						  break;
+						case 0x7:
+						  obfuscate((char*)src, -1);
+						  break;
+						}
+					  }
+					  festate->datums[column->local_index] = InputFunctionCall(&festate->attinmeta->attinfuncs[column->local_index],
+																			   cstring,
+																			   festate->attinmeta->attioparams[column->local_index],
+																			   festate->attinmeta->atttypmods[column->local_index]);
 					}
 				}
 				

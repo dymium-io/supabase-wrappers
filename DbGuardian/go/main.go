@@ -83,14 +83,14 @@ func createDatabases(datascopes []types.Scope) error {
 			return err
 		}
 		log.Println(sql)
-		
+
 		sql = fmt.Sprintf("REVOKE CONNECT ON DATABASE %s FROM PUBLIC", datascopes[k].Name)
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
 		log.Println(sql)
-		
-		localUser := fmt.Sprintf(`_%x_`,md5.Sum([]byte(datascopes[k].Name+"_dymium")))
+
+		localUser := fmt.Sprintf(`_%x_`, md5.Sum([]byte(datascopes[k].Name+"_dymium")))
 
 		sql = fmt.Sprintf("CREATE ROLE %s", localUser)
 		if _, err = db.Exec(sql); err != nil {
@@ -102,7 +102,7 @@ func createDatabases(datascopes []types.Scope) error {
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
-		log.Println(sql)		
+		log.Println(sql)
 	}
 
 	return nil
