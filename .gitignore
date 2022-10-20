@@ -66,3 +66,4 @@ Tunnels/installer/MacOSPackages/developer_log.json
 Tunnels/installer/MacOSPackages/DymiumTunnel.pkg
 Tunnels/installer/MacOSPackages/DymiumTunnel.pkgproj
 web/js/packages/portal/public/DymiumInstaller.pkg
+Tunnels/go/client/dymium

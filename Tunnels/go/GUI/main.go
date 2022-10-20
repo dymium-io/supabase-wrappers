@@ -153,7 +153,13 @@ func (g *Gui) Run() {
 		}
 	})
 	paste := widget.NewButtonWithIcon("", theme.ContentPasteIcon(),  func() {
-		g.input.SetText( w.Clipboard().Content() )
+		text := w.Clipboard().Content()
+		g.input.SetText( text )
+		params := strings.Split(text, " ")
+		if( ! strings.HasSuffix(params[2], "org_")){
+			g.name.SetText(params[2])
+			g.checkbox.SetChecked(true)
+		}
 		g.WriteConfig()
 	}) 
 	

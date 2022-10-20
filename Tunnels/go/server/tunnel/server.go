@@ -130,7 +130,7 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 	dec := gob.NewDecoder(ingress)
 	enc := gob.NewEncoder(ingress)
 
-	messages := make(chan protocol.TransmissionUnit)
+	messages := make(chan protocol.TransmissionUnit, 50)
 	go MultiplexWriter(messages, enc, ingress, conmap)
 
 	for {
