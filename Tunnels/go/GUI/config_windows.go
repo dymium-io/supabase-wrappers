@@ -12,15 +12,17 @@ func (g *Gui) ReadConfig() {
 	if err != nil {
 		return
 	}
-	err = json.Unmarshal(inp, &g.confs)
+	var config Config
+	err = json.Unmarshal(inp, &config)
+	g.confs = config.Confs
+	g.last = config.Last
 	if err != nil {
 		return
 	}
 }
 func (g *Gui) WriteConfig() {
-	data, _ := json.Marshal(g.confs)
+	var config Config
+	config.Confs = g.confs
+	config.Last = g.input.Text
 	os.WriteFile("config.txt", data, 0644)
-}
-func (g *Gui) Launch(cmdslice []string) *exec.Cmd {
-	return exec.Command("client", cmdslice...)
 }

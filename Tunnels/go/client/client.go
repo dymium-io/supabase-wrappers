@@ -239,11 +239,14 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 
 	if !forcenoupdate {
 		if ProtocolVersion < back.ProtocolVersion {
-			fmt.Println("The tunneling utility must be updated, downloading the new binary...")
+			fmt.Println("The tunneling utility must be updated!")
+			fmt.Printf("Go to %s/app/access?key=download for the download.", portalurl)
+			os.Exit(1)
 		} else {
 			if ProtocolVersion >= back.ProtocolVersion {
-				fmt.Printf("A new version %s.%s is available, to install restart with the -u option\n",
+				fmt.Printf("A new version %s.%s is available\n",
 					back.ClientMajorVersion, back.ClientMinorVersion)
+				fmt.Printf("Go to %s/app/access?key=download for the download.", portalurl)					
 			}
 
 		}
@@ -450,14 +453,16 @@ func main() {
 	
 	if len(customerid) == 0 && len(portalurl) == 0 {
 		if runtime.GOOS == "windows" {
-			fmt.Println("Usage: client.exe -c <customer ID> -p <portal URL>\n")
+			fmt.Println("Usage: dymium.exe -c <customer ID> -p <portal URL>\n")
 		} else {
-			fmt.Println("Usage: client -c <customer ID> -p <portal URL>\n")
+			fmt.Println("Usage: dymium -c <customer ID> -p <portal URL>\n")
 		}
 		os.Exit(1)
 	}
 
-	loginURL, needsUpdate := getTunnelInfo(customerid, portalurl, *forcenoupdate)
+	loginURL, /* needsUpdate */ _ := getTunnelInfo(customerid, portalurl, *forcenoupdate)
+
+	/* disable self update for now
 	if !*forcenoupdate {
 		if *forceupdate || needsUpdate {
 			// runtime.Breakpoint()
@@ -469,6 +474,7 @@ func main() {
 			restart()
 		}
 	}
+	*/
 
 	err := browser.OpenURL(loginURL)
 	if err != nil {

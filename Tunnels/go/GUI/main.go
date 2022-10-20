@@ -16,9 +16,13 @@ import (
 
 
 type Cfg struct {
-    Name, Command string
+    Name string
+	Command string 
 }
-
+type Config struct {
+	Last string 
+	Confs []Cfg
+}
 type Gui struct {
 	input, intro, name   *widget.Entry
 	button *widget.Button
@@ -29,6 +33,7 @@ type Gui struct {
 	nameEnabled bool
 	active bool
 	confs  []Cfg
+	last  string
 	pid *os.Process
 }
 func  (g *Gui) AddConnection(name, connection string) {
@@ -83,7 +88,7 @@ func (g *Gui) LaunchDymium() error {
 		return err
 	}
 	g.pid = cmd.Process
-
+	g.WriteConfig()
 
 
 	for {
@@ -93,7 +98,6 @@ func (g *Gui) LaunchDymium() error {
 		g.intro.SetText(g.intro.Text  + line)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err.Error())
-			//intro.SetText(intro.Text  + err.Error())
 			g.intro.SetText(g.intro.Text  + "\nClient disconnected")
 			
 			break
@@ -125,6 +129,7 @@ func (g *Gui) Run() {
 
 	g.input = widget.NewEntry()
 	g.input.SetPlaceHolder("Enter connection string...")
+	g.input.SetText(g.last)
 	g.button = widget.NewButton("Connect", func() {
 		if(g.active) {
 			g.SetInactive()
@@ -149,10 +154,11 @@ func (g *Gui) Run() {
 	})
 	paste := widget.NewButtonWithIcon("", theme.ContentPasteIcon(),  func() {
 		g.input.SetText( w.Clipboard().Content() )
+		g.WriteConfig()
 	}) 
 	
 	pair := container.New(layout.NewHBoxLayout(), paste, layout.NewSpacer(), g.button)
-	//title := container.New(layout.NewGridLayout(2), input, button)
+	
 	g.title = container.NewBorder(nil, nil, nil, pair, g.input)
 	g.checkbox = widget.NewCheck("Remember connection", func(b bool) {
 		if(g.nameEnabled) {
@@ -216,6 +222,7 @@ func (g *Gui) Run() {
     w.SetContent(g.split)
 
     w.Resize(fyne.NewSize(660, 300))
+	w.SetFixedSize(true)
     w.ShowAndRun()
 	if(g.pid != nil) {
 		g.pid.Kill()

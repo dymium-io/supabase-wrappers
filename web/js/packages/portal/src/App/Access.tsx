@@ -89,8 +89,6 @@ let displayDatascopes = () => {
         <div className="datascopeuse">
           <Tabs
             id="datascope"
-
-
             unmountOnExit={true} className=" mt-0 text-left ">
             <Tab eventKey="cmd" title="Command Line" className=" mx-2">
               {commandLine(x)}
@@ -195,7 +193,7 @@ return (
   </div>
 )
 }
-let orgid = com.getTokenProperty("orgid")
+let orgid = com.getTokenProperty("schema")
 let url = window.location.protocol + "//" + window.location.host + "/"
 let params = `-c ${orgid} -p ${url}`
 
@@ -215,14 +213,14 @@ function Downloads() {
 
         <div className="viewport">
           <div>On MS Windows:</div>
-          <a href="/tunnel_win.zip" download="tunnel_win.zip"> <i className="fab fa-windows mr-2" aria-hidden="true"></i>Click to Download MS Windows Client</a>
+          <a href="/DymiumInstaller.exe" download="DymiumInstaller.exe"> <i className="fab fa-windows mr-2" aria-hidden="true"></i>Click to Download MS Windows Client</a>
           <div>
-            Usage:
+            CLI Usage:
             <div style={{ display: "flex" }}>
               <div className="terminal">
-                &gt;tunnel.exe {params}
+                &gt;dymium.exe {params}
               </div>
-              <i onClick={copy("tunnel.exe " + params)} className="fas fa-copy clipbtn"></i>
+              <i onClick={copy("dymium.exe " + params)} className="fas fa-copy clipbtn"></i>
             </div>
           </div>
         </div>
@@ -230,14 +228,14 @@ function Downloads() {
 
         <div className="viewport">
           <div>On Mac OS X:</div>
-          <a href="/tunnel_mac.tar.gz" download="tunnel_mac.tar.gz"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Mac OS X Client</a>
+          <a href="/DymiumInstaller.pkg" download="DymiumInstaller.pkg"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Mac OS X Client</a>
           <div>
-            Usage:
+            CLI Usage:
             <div style={{ display: "flex" }}>
               <div className="terminal">
-                &gt;./tunnel {params}
+                &gt;./dymium {params}
               </div>
-              <i onClick={copy("./tunnel " + params)} className="fas fa-copy clipbtn"></i>
+              <i onClick={copy("./dymium " + params)} className="fas fa-copy clipbtn"></i>
             </div>
           </div>
         </div>
@@ -246,14 +244,21 @@ function Downloads() {
           <div>On Linux:</div>
           <a href="/tunnel.tar.gz" download="tunnel.tar.gz"> <i className="fab fa-linux mr-2" aria-hidden="true"></i>Click to Download Linux Client</a>
           <div>
-            Usage:
+            CLI Usage:
             <div style={{ display: "flex" }}>
               <div className="terminal">
-                &gt;./tunnel {params}
+                &gt;./dymium {params}
               </div>
-              <i onClick={copy("./tunnel " + params)} className="fas fa-copy clipbtn"></i>
+              <i onClick={copy("./dymium " + params)} className="fas fa-copy clipbtn"></i>
             </div>
           </div>
+        </div>
+        <div className="mb-5">
+        To use the GUI, launch dymiumgui.app on Mac OS, or dymiumgui.exe on Windows.
+        <img src="/dymiumgui.png" style={{width: "540px"}}></img>  
+        <div>
+        Paste the connection string for your OS into the application, and click Connect.
+        </div>
         </div>
       </div>
     </div>
