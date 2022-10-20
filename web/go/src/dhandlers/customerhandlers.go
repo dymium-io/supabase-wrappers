@@ -929,12 +929,23 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 	clientid := os.Getenv("AUTH0_PORTAL_CLIENT_ID")
 	redirecturl := os.Getenv("AUTH0_PORTAL_CLI_REDIRECT_URL")
 
-	schema, err := authentication.GetSchemaFromClientId(t.Customerid)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	var schema string
+	if( strings.HasPrefix(t.Customerid, "org_") ) {
+		schema, err = authentication.GetSchemaFromClientId(t.Customerid)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		schema, err = authentication.GetClientIdFromSchema(t.Customerid)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// flip
+		schema,t.Customerid  = t.Customerid, schema
 	}
-
+	fmt.Printf("schema=%s,t.Customerid=%s\n", schema, t.Customerid)
 	lbaddress := schema + os.Getenv("LB_DOMAIN")
 	port := os.Getenv("LB_PORT")
 	if(port == "") {

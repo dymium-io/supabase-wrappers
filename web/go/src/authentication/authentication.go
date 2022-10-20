@@ -872,8 +872,17 @@ func GetSchemaFromClientId(clientid string) (string, error) {
 	var schema string
 	err := row.Scan(&schema)
 	return schema, err
-
 }
+
+func GetClientIdFromSchema(schema string) (string, error) {
+	sql := `select organization from global.customers where schema_name=$1;`
+	log.Printf("sql: %s, org: %s\n", sql, schema)
+	row := db.QueryRow(sql, schema)
+	var clientid  string
+	err := row.Scan(&clientid)
+	return clientid, err
+}
+
 func UpdateConnection(schema string, con types.ConnectionRecord) error {
 	// Create a new context, and begin a transaction
     ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)

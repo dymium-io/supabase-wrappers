@@ -78,9 +78,10 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
 chmod a+x tunnel
 mkdir -p ../../../web/go/assets/customer/update/darwin/amd64/
 cp tunnel ../../../web/go/assets/customer/update/darwin/amd64/
-tar -zcvf tunnel_mac.tar.gz tunnel
-cp tunnel_mac.tar.gz ../../../web/go/assets/customer/
-mv tunnel_mac.tar.gz ../../../web/js/packages/portal/public
+aws s3  --profile dymium --region us-west-2 cp s3://dymium-installers/macos/DymiumInstaller.pkg /tmp
+
+cp /tmp/DymiumInstaller.pkg ../../../web/go/assets/customer/
+mv /tmp/DymiumInstaller.pkg ../../../web/js/packages/portal/public
 
 echo "Moved the client binaries"
 
