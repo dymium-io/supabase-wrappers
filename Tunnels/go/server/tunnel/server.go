@@ -97,7 +97,7 @@ func pipe(egress net.Conn, messages chan protocol.TransmissionUnit, id int) {
 	for {
 		n, err := egress.Read(buff)
 		if err != nil {
-			log.Printf("Read failed '%s', id:%d\n", err.Error(), id)
+			log.Printf("Db read failed '%s', id:%d\n", err.Error(), id)
 			egress.Close()
 			return
 		}
@@ -138,7 +138,7 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 		err := dec.Decode(&buff)
 
 		if err != nil {
-			log.Printf("Read failed '%s', cleanup the pipe!\n", err.Error())
+			log.Printf("Read from client failed '%s', cleanup the pipe!\n", err.Error())
 			// close all outgoing connections
 			for key := range conmap {
 				conmap[key].Close()
@@ -169,7 +169,7 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 			if _, ok := conmap[buff.Id]; ok {
 				_, err = conmap[buff.Id].Write(buff.Data)
 				if err != nil {
-					log.Printf("Write Error: %s\n", err.Error())
+					log.Printf("Write to db error: %s\n", err.Error())
 					conmap[buff.Id].Close()
 				}
 			} else { 

@@ -263,12 +263,12 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 	for {
 		n, err := ingress.Read(buff)
 		if err != nil {
-			fmt.Printf("Read failed '%s'\n", err.Error())
+			fmt.Printf("Read on loopback failed '%s'\n", err.Error())
 			ingress.Close()
 			return
 		}
 		b := buff[:n]
-		//fmt.Printf("Read %d bytes from connection #%d\n", len(b), id)
+		fmt.Printf("Read %d bytes from connection #%d\n", len(b), id)
 
 		out := protocol.TransmissionUnit{protocol.Send, id, b}
 		//write out result
@@ -286,7 +286,10 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
 		}
 		fmt.Printf("Encode %d bytes into SSL channel\n", len(buff.Data))
 
-		enc.Encode(buff)
+		err := enc.Encode(buff)
+		if(err != nil) {
+			fmt.Printf("Error writing into tunnel %s\n", err.Error() )
+		}
 	}
 }
 func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder) {
@@ -294,7 +297,7 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder)
 		var buff protocol.TransmissionUnit
 		err := dec.Decode(&buff)
 		if err != nil {
-			fmt.Printf("Еrror %s, closing the tunnel\n", err.Error() )
+			fmt.Printf("Еrror reading from tunnel%s, closing...\n", err.Error() )
 			for key := range conmap {
 				conmap[key].Close()
 				delete(conmap, key)
@@ -309,10 +312,15 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder)
 			delete(conmap, buff.Id)
 		case protocol.Send:
 			//fmt.Printf("Send %d bytes\n", len(buff.Data))
-			_, err = conmap[buff.Id].Write(buff.Data)
-			if(err != nil) {
-				fmt.Printf("Write error: %s, closing the tunnel", err.Error() )
-				os.Exit(1)
+			sock, ok := conmap[buff.Id]
+			if(ok) {
+				_, err = sock.Write(buff.Data)
+				if(err != nil) {
+					fmt.Printf("Write to local socket error: %s, closing...", err.Error() )
+					//os.Exit(1)
+					sock.Close()
+					delete(conmap, buff.Id)
+				}
 			}
 		}
 	}

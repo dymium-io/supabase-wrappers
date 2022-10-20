@@ -70,7 +70,9 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/{name:.*\\.ico}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.zip}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.gz}", dhandlers.GetImages)
-
+	nonauthenticated.HandleFunc("/{name:.*\\.exe}", dhandlers.GetImages)
+	nonauthenticated.HandleFunc("/{name:.*\\.pkg}", dhandlers.GetImages)
+	
 	nonauthenticated.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./customer/index.html")
 	}).Methods("GET")
