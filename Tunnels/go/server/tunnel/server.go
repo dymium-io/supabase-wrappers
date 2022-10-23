@@ -3,17 +3,28 @@ package tunnel
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"dymium.com/server/protocol"
 	"encoding/gob"
 	"fmt"
 	"log"
 	"net"
 	"os"
+
+	"dymium.com/server/protocol"
 )
 
 var iprecords []net.IP
 var ipindex = 0
 
+func displayBuff(what string, buff []byte) {
+	if len(buff) > 14 {
+		head := buff[:6]
+		tail := buff[len(buff) - 6:]
+		log.Printf("%s head: %v, tail: %v\n", what, head, tail)
+	} else {
+		log.Printf("%s buffer: %v\n", what, buff)
+	}
+
+}
 func getTargetConnection(customer, postgresPort string) (net.Conn, error) {
 	log.Printf("in getTargetConnection, len(iprecords): %d\n", len(iprecords))
 	index := ipindex % len(iprecords)
@@ -93,15 +104,20 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 }
 
 func pipe(egress net.Conn, messages chan protocol.TransmissionUnit, id int) {
-	buff := make([]byte, 0xffff)
+
 	for {
+		buff := make([]byte, 0xffff)		
 		n, err := egress.Read(buff)
 		if err != nil {
 			log.Printf("Db read failed '%s', id:%d\n", err.Error(), id)
 			egress.Close()
+			out := protocol.TransmissionUnit{protocol.Close, id, nil}
+			messages <- out
 			return
 		}
 		b := buff[:n]
+		displayBuff("Read from db ", b)
+		log.Printf("Send to client %d bytes, connection %d\n", n, id)
 		out := protocol.TransmissionUnit{protocol.Send, id, b}
 		//write out result
 		messages <- out
@@ -154,27 +170,29 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 			if err != nil {
 				log.Printf("Error connecting to target")
 			}
-			log.Printf("Connection #%d created\n", buff.Id)
+			log.Printf("Connection #%d to db created\n", buff.Id)
 			conmap[buff.Id] = egress
-			go pipe(egress,  messages, buff.Id)
+			go pipe(egress, messages, buff.Id)
 		case protocol.Close:
 			log.Printf("Connection #%d closing\n", buff.Id)
-            if _, ok := conmap[buff.Id]; ok {
-                conmap[buff.Id].Close()
-                delete(conmap, buff.Id)
-            } else {
-                log.Printf("Error finding the descriptor %d, %v\n", buff.Id, buff)
-            }
-		case protocol.Send:
 			if _, ok := conmap[buff.Id]; ok {
-				_, err = conmap[buff.Id].Write(buff.Data)
+				conmap[buff.Id].Close()
+				delete(conmap, buff.Id)
+			} else {
+				log.Printf("Error finding the descriptor %d, %v\n", buff.Id, buff)
+			}
+		case protocol.Send:
+			if sock, ok := conmap[buff.Id]; ok {
+				_, err = sock.Write(buff.Data)
+				log.Printf("Write %d bytes to database at connection %d\n", len(buff.Data), buff.Id)
 				if err != nil {
 					log.Printf("Write to db error: %s\n", err.Error())
 					conmap[buff.Id].Close()
+					//delete(conmap, buff.Id)
 				}
-			} else { 
-                log.Printf("Error finding the descriptor %d, %v\n", buff.Id, buff)
-            }
+			} else {
+				log.Printf("Error finding the descriptor %d, %v\n", buff.Id, buff)
+			}
 		}
 
 	}

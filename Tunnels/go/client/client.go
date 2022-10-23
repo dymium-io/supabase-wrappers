@@ -56,6 +56,16 @@ var (
 	ProtocolVersion string
 )
 
+func displayBuff(what string, buff []byte) {
+	if len(buff) > 10 {
+		head := buff[:6]
+		tail := buff[len(buff) - 6:]
+		fmt.Printf("%s head: %v, tail: %v\n", what, head, tail)
+	} else {
+		fmt.Printf("%s buffer: %v\n", what, buff)
+	}
+}
+
 func generateError(w http.ResponseWriter, r *http.Request, header string, body string) error {
 	/*
 		Failed to get userinfo: "+err.Error()
@@ -256,11 +266,13 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 
 func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, id int) {
 	out := protocol.TransmissionUnit{protocol.Open, id, []byte{}}
+	fmt.Printf("Create proxy connection %d, number of connections %d\n", id, len(conmap))
 	//write out result
 	messages <- out
 
-	buff := make([]byte, 0xffff)
 	for {
+		buff := make([]byte, 0xffff)
+
 		n, err := ingress.Read(buff)
 		if err != nil {
 			fmt.Printf("Read on loopback failed '%s'\n", err.Error())
@@ -268,7 +280,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 			return
 		}
 		b := buff[:n]
-		fmt.Printf("Read %d bytes from connection #%d\n", len(b), id)
+		fmt.Printf("Read %d bytes from local connection #%d\n", len(b), id)
 
 		out := protocol.TransmissionUnit{protocol.Send, id, b}
 		//write out result
@@ -289,10 +301,10 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
 		err := enc.Encode(buff)
 		if(err != nil) {
 			fmt.Printf("Error writing into tunnel %s\n", err.Error() )
-		}
+		} 
 	}
 }
-func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder) {
+func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder, messages  chan protocol.TransmissionUnit) {
 	for {
 		var buff protocol.TransmissionUnit
 		err := dec.Decode(&buff)
@@ -308,18 +320,26 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder)
 		}
 		switch buff.Action {
 		case protocol.Close:
-			conmap[buff.Id].Close()
-			delete(conmap, buff.Id)
+			fmt.Printf("Close connection %d on signal from tunnel\n", buff.Id)
+			sock, ok := conmap[buff.Id]
+			if(ok) {
+				sock.Close()
+				delete(conmap, buff.Id)
+			}
 		case protocol.Send:
 			//fmt.Printf("Send %d bytes\n", len(buff.Data))
 			sock, ok := conmap[buff.Id]
 			if(ok) {
-				_, err = sock.Write(buff.Data)
+				n, err := sock.Write(buff.Data)
+				fmt.Printf("Wrote back to local socket to connection %d, %d bytes out of %d bytes\n", buff.Id, n, len(buff.Data))
+				displayBuff("Data: ", buff.Data )
 				if(err != nil) {
 					fmt.Printf("Write to local socket error: %s, closing...", err.Error() )
 					//os.Exit(1)
+					back := protocol.TransmissionUnit{protocol.Close, buff.Id, nil}
 					sock.Close()
 					delete(conmap, buff.Id)
+					messages <- back
 				}
 			}
 		}
@@ -350,7 +370,7 @@ func runProxy(listener *net.TCPListener, back chan string, token int) {
 		Certificates: []tls.Certificate{clientCert}}
 	target := fmt.Sprintf("%s:%d", lbaddress, lbport)
 	back <- fmt.Sprintf("Connect to %s\n", target)
-	// create a counterpart tls connection out
+	fmt.Printf("tls.Dial to %s\n", target)
 	egress, err := tls.Dial("tcp", target, config) // *Conn
 	if err != nil {
 		back <- err.Error()
@@ -358,9 +378,9 @@ func runProxy(listener *net.TCPListener, back chan string, token int) {
 		return
 	}
 	back <- "Connected successfully"
-	//fmt.Printf("Wrote to back Connected")
+	fmt.Printf("Wrote to back Connected")
 
-	/* state  := egress.ConnectionState()
+	state  := egress.ConnectionState()
 
 	fmt.Printf("Version: %x\n", state.Version)
 	fmt.Printf("HandshakeComplete: %t\n", state.HandshakeComplete)
@@ -377,7 +397,7 @@ func runProxy(listener *net.TCPListener, back chan string, token int) {
 		fmt.Printf(" %d s:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", i, subject.Country, subject.Province, subject.Locality, subject.Organization, subject.OrganizationalUnit, subject.CommonName)
 		fmt.Printf("   i:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", issuer.Country, issuer.Province, issuer.Locality, issuer.Organization, issuer.OrganizationalUnit, issuer.CommonName)
 	}
-	*/
+	
 
 	var conmap = make(map[int]net.Conn)
 	connectionCounter := 0
@@ -385,7 +405,7 @@ func runProxy(listener *net.TCPListener, back chan string, token int) {
 	enc := gob.NewEncoder(egress)
 	messages := make(chan protocol.TransmissionUnit)
 	go MultiplexWriter(messages, enc)
-	go MultiplexReader(egress, conmap, dec)
+	go MultiplexReader(egress, conmap, dec, messages)
 
 	back <- "end"
 
