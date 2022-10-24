@@ -17,6 +17,8 @@ func LambdaHandler(c types.Connection) (interface{}, error) {
 		return getMysqlInfo(c)
 	case types.CT_SqlServer:
 		return getTdsInfo(c)
+	case types.CT_OracleDB:
+		return getOraInfo(c)
 	}
 	return nil, fmt.Errorf("Data sources of type %v are not supported yet", c.Typ)
 }
