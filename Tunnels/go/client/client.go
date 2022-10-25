@@ -59,7 +59,7 @@ var (
 func displayBuff(what string, buff []byte) {
 	if len(buff) > 10 {
 		head := buff[:6]
-		tail := buff[len(buff) - 6:]
+		tail := buff[len(buff)-6:]
 		fmt.Printf("%s head: %v, tail: %v\n", what, head, tail)
 	} else {
 		fmt.Printf("%s buffer: %v\n", what, buff)
@@ -227,7 +227,7 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
-	if(resp.StatusCode != 200) {
+	if resp.StatusCode != 200 {
 		fmt.Printf("Error retrieving the tunnel information. Please check your parameters.\n")
 		os.Exit(1)
 	}
@@ -256,7 +256,7 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 			if ProtocolVersion >= back.ProtocolVersion {
 				fmt.Printf("A new version %s.%s is available\n",
 					back.ClientMajorVersion, back.ClientMinorVersion)
-				fmt.Printf("Go to %s/app/access?key=download for the download.", portalurl)					
+				fmt.Printf("Go to %s/app/access?key=download for the download.", portalurl)
 			}
 
 		}
@@ -275,12 +275,18 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 
 		n, err := ingress.Read(buff)
 		if err != nil {
-			fmt.Printf("Read on loopback failed '%s'\n", err.Error())
+			if(err.Error() != "EOF") {
+				fmt.Printf("Read on loopback failed '%s'\n", err.Error())
+			} else {
+				fmt.Println("Loopback connection closed")
+			}
 			ingress.Close()
+			back := protocol.TransmissionUnit{protocol.Close, id, nil}
+			messages <- back
 			return
 		}
 		b := buff[:n]
-		fmt.Printf("Read %d bytes from local connection #%d\n", len(b), id)
+		//fmt.Printf("Read %d bytes from local connection #%d\n", len(b), id)
 
 		out := protocol.TransmissionUnit{protocol.Send, id, b}
 		//write out result
@@ -296,21 +302,24 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
 			close(messages)
 			return
 		}
-		fmt.Printf("Encode %d bytes into SSL channel\n", len(buff.Data))
+		//fmt.Printf("Encode %d bytes into SSL channel\n", len(buff.Data))
 
 		err := enc.Encode(buff)
-		if(err != nil) {
-			fmt.Printf("Error writing into tunnel %s\n", err.Error() )
-		} 
+		if err != nil {
+			fmt.Printf("Error writing into tunnel %s\n", err.Error())
+		}
 	}
 }
-func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder, messages  chan protocol.TransmissionUnit) {
+func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder, messages chan protocol.TransmissionUnit) {
 	for {
 		var buff protocol.TransmissionUnit
 		err := dec.Decode(&buff)
 		if err != nil {
-			fmt.Printf("Еrror reading from tunnel%s, closing...\n", err.Error() )
+			fmt.Printf("Еrror reading from tunnel%s, closing...\n", err.Error())
 			for key := range conmap {
+				back := protocol.TransmissionUnit{protocol.Close, key, nil}
+				messages <- back
+
 				conmap[key].Close()
 				delete(conmap, key)
 			}
@@ -320,21 +329,21 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder,
 		}
 		switch buff.Action {
 		case protocol.Close:
-			fmt.Printf("Close connection %d on signal from tunnel\n", buff.Id)
 			sock, ok := conmap[buff.Id]
-			if(ok) {
+			if ok {
 				sock.Close()
 				delete(conmap, buff.Id)
 			}
+			fmt.Printf("Closed connection %d, %d left\n", buff.Id, len(conmap))
 		case protocol.Send:
 			//fmt.Printf("Send %d bytes\n", len(buff.Data))
 			sock, ok := conmap[buff.Id]
-			if(ok) {
-				n, err := sock.Write(buff.Data)
-				fmt.Printf("Wrote back to local socket to connection %d, %d bytes out of %d bytes\n", buff.Id, n, len(buff.Data))
-				displayBuff("Data: ", buff.Data )
-				if(err != nil) {
-					fmt.Printf("Write to local socket error: %s, closing...", err.Error() )
+			if ok {
+				_, err := sock.Write(buff.Data)
+				//fmt.Printf("Wrote back to local socket to connection %d, %d bytes out of %d bytes\n", buff.Id, n, len(buff.Data))
+				//displayBuff("Data: ", buff.Data )
+				if err != nil {
+					fmt.Printf("Write to local socket error: %s, closing...", err.Error())
 					//os.Exit(1)
 					back := protocol.TransmissionUnit{protocol.Close, buff.Id, nil}
 					sock.Close()
@@ -380,7 +389,7 @@ func runProxy(listener *net.TCPListener, back chan string, token int) {
 	back <- "Connected successfully"
 	fmt.Printf("Wrote to back Connected")
 
-	state  := egress.ConnectionState()
+	state := egress.ConnectionState()
 
 	fmt.Printf("Version: %x\n", state.Version)
 	fmt.Printf("HandshakeComplete: %t\n", state.HandshakeComplete)
@@ -397,7 +406,6 @@ func runProxy(listener *net.TCPListener, back chan string, token int) {
 		fmt.Printf(" %d s:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", i, subject.Country, subject.Province, subject.Locality, subject.Organization, subject.OrganizationalUnit, subject.CommonName)
 		fmt.Printf("   i:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", issuer.Country, issuer.Province, issuer.Locality, issuer.Organization, issuer.OrganizationalUnit, issuer.CommonName)
 	}
-	
 
 	var conmap = make(map[int]net.Conn)
 	connectionCounter := 0
@@ -478,7 +486,7 @@ func main() {
 	}
 
 	wg.Add(1)
-	
+
 	if len(customerid) == 0 && len(portalurl) == 0 {
 		if runtime.GOOS == "windows" {
 			fmt.Println("Usage: dymium.exe -c <customer ID> -p <portal URL>\n")
@@ -488,7 +496,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	loginURL, /* needsUpdate */ _ := getTunnelInfo(customerid, portalurl, *forcenoupdate)
+	loginURL /* needsUpdate */, _ := getTunnelInfo(customerid, portalurl, *forcenoupdate)
 
 	/* disable self update for now
 	if !*forcenoupdate {
@@ -592,7 +600,7 @@ func main() {
 		message := make(chan string)
 		var claim types.Claims
 		var p jwt.Parser
-	
+
 		_, _, err = p.ParseUnverified(groups.Token, &claim)
 		if err != nil {
 			fmt.Printf("Error: token invalid, can't continue %s\n", err.Error())
@@ -600,7 +608,7 @@ func main() {
 		}
 
 		listener, err := getListener(claim.Port, message)
-		if(err != nil) {
+		if err != nil {
 			fmt.Printf("Error: %s\n", err.Error())
 		}
 
@@ -636,7 +644,6 @@ func main() {
 		if f, ok := w.(http.Flusher); ok {
 			f.Flush()
 		}
-
 
 		if err := s.Shutdown(context.TODO()); err != nil {
 			panic(err) // failure/timeout shutting down the server gracefully

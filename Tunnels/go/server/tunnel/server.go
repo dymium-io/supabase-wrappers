@@ -8,7 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
-
+	"strings"
 	"dymium.com/server/protocol"
 )
 
@@ -26,7 +26,7 @@ func displayBuff(what string, buff []byte) {
 
 }
 func getTargetConnection(customer, postgresPort string) (net.Conn, error) {
-	log.Printf("in getTargetConnection, len(iprecords): %d\n", len(iprecords))
+	//log.Printf("in getTargetConnection, len(iprecords): %d\n", len(iprecords))
 	index := ipindex % len(iprecords)
 	ipindex = (ipindex + 1) % len(iprecords)
 
@@ -109,15 +109,19 @@ func pipe(egress net.Conn, messages chan protocol.TransmissionUnit, id int) {
 		buff := make([]byte, 0xffff)		
 		n, err := egress.Read(buff)
 		if err != nil {
-			log.Printf("Db read failed '%s', id:%d\n", err.Error(), id)
+			if(strings.Contains(err.Error(), "use of closed network connection" ) ){
+				// no op
+			} else {
+				log.Printf("Db read failed '%s', id:%d\n", err.Error(), id)
+			}
 			egress.Close()
 			out := protocol.TransmissionUnit{protocol.Close, id, nil}
 			messages <- out
 			return
 		}
 		b := buff[:n]
-		displayBuff("Read from db ", b)
-		log.Printf("Send to client %d bytes, connection %d\n", n, id)
+		//displayBuff("Read from db ", b)
+		//log.Printf("Send to client %d bytes, connection %d\n", n, id)
 		out := protocol.TransmissionUnit{protocol.Send, id, b}
 		//write out result
 		messages <- out
@@ -148,13 +152,13 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 
 	messages := make(chan protocol.TransmissionUnit, 50)
 	go MultiplexWriter(messages, enc, ingress, conmap)
-
+	
 	for {
 		var buff protocol.TransmissionUnit
 		err := dec.Decode(&buff)
 
 		if err != nil {
-			log.Printf("Read from client failed '%s', cleanup the pipe!\n", err.Error())
+			log.Printf("Read from client failed '%s', cleanup the proxy connection!\n", err.Error())
 			// close all outgoing connections
 			for key := range conmap {
 				conmap[key].Close()
@@ -170,21 +174,21 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 			if err != nil {
 				log.Printf("Error connecting to target")
 			}
-			log.Printf("Connection #%d to db created\n", buff.Id)
 			conmap[buff.Id] = egress
+			log.Printf("Connection #%d to db created, total #=%d\n", buff.Id, len(conmap))
 			go pipe(egress, messages, buff.Id)
 		case protocol.Close:
-			log.Printf("Connection #%d closing\n", buff.Id)
 			if _, ok := conmap[buff.Id]; ok {
 				conmap[buff.Id].Close()
 				delete(conmap, buff.Id)
+				log.Printf("Connection #%d closing, %d left\n", buff.Id, len(conmap))
 			} else {
 				log.Printf("Error finding the descriptor %d, %v\n", buff.Id, buff)
 			}
 		case protocol.Send:
 			if sock, ok := conmap[buff.Id]; ok {
 				_, err = sock.Write(buff.Data)
-				log.Printf("Write %d bytes to database at connection %d\n", len(buff.Data), buff.Id)
+				//log.Printf("Write %d bytes to database at connection %d\n", len(buff.Data), buff.Id)
 				if err != nil {
 					log.Printf("Write to db error: %s\n", err.Error())
 					conmap[buff.Id].Close()
