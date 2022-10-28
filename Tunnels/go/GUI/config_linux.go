@@ -1,3 +1,13 @@
+package main
+
+import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
+	"os/exec"
+)
+
+
 func (g *Gui) GetClientPath() string{
 	return "./dymium"
 }

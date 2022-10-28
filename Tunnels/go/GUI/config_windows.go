@@ -5,10 +5,29 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/user"
+	"errors"
+	"fmt"
 )
+func (g *Gui) GetClientPath() string{
+	return "./dymium.exe"
+}
 
+func (g *Gui) GetConfigPath() string {
+	currentUser, _ := user.Current()
+
+	dymium := currentUser.HomeDir + "/.dymium"
+	if _, err := os.Stat(dymium); errors.Is(err, os.ErrNotExist) {
+		err := os.Mkdir(dymium, os.ModePerm)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	return dymium + "/config.txt"
+}
 func (g *Gui) ReadConfig() {
-	inp, err := ioutil.ReadFile("config.txt")
+	inp, err := ioutil.ReadFile(g.GetConfigPath())
 	if err != nil {
 		return
 	}
@@ -24,5 +43,9 @@ func (g *Gui) WriteConfig() {
 	var config Config
 	config.Confs = g.confs
 	config.Last = g.input.Text
-	os.WriteFile("config.txt", data, 0644)
+	data, _ := json.Marshal(config)
+	os.WriteFile(g.GetConfigPath(), data, 0644)
+}
+func (g *Gui) Launch(cmdslice []string) *exec.Cmd {
+	return exec.Command(g.GetClientPath(), cmdslice...)
 }
