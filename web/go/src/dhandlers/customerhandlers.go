@@ -211,6 +211,48 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)		
 }
 
+func GetUsage(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	_, _ = ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	bytesin, bytesout,logins,tunnels, err := authentication.GetBytes(schema)
+	if err != nil {
+		log.Printf("Error: %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var t types.Usage
+
+	t.Bytesin = strconv.FormatInt(bytesin, 10) 
+	t.Bytesout = strconv.FormatInt(bytesout, 10) 
+	t.Logins = logins //
+	t.Tunnels = tunnels 
+
+	connections, datascopes, blocked, obfuscated, redacted, err := authentication.GetRestrictions(schema)
+	if err != nil {
+		log.Printf("Error: %s\n", err.Error())
+
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	t.Connections = connections
+	t.Datascopes = datascopes
+	t.Blocked = blocked
+	t.Obfuscated = obfuscated 
+	t.Redacted = redacted
+	js, err := json.Marshal(t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "text/html")
+	w.Write(js)	
+}
 
 func GetSelect(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
@@ -219,7 +261,6 @@ func GetSelect(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var t types.DatascopeTable
-log.Printf("input %s into %v\n", string(body ), t)
 
 	err := json.Unmarshal(body, &t)
 	if err != nil {

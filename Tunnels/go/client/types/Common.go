@@ -145,6 +145,18 @@ type RequestById struct {
    Id string `json:"id"`
 }
 
+type Usage struct {
+   Connections int `json:"connections"`
+   Datascopes int `json:"datascopes"`
+   Logins int `json:"logins"`
+   Tunnels int `json:"tunnels"`
+   Blocked int `json:"blocked"`
+   Obfuscated int `json:"obfuscated"`
+   Redacted int `json:"redacted"`
+   Bytesin string `json:"bytesin"`
+   Bytesout string `json:"bytesout"`
+}
+
 type UserDatascopes struct {
    Schema string `json:"schema"`
    Username string `json:"username"`

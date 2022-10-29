@@ -9,12 +9,60 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
+	"database/sql"
+	_ "github.com/lib/pq"
 	"dymium.com/server/protocol"
 )
 
 var iprecords []net.IP
 var ipindex = 0
+var bytesInLog = make(chan int, 128)
+var bytesOutLog = make(chan int, 128)
 
+func logBandwidth(customer string) {
+	bytesIn := 0
+	bytesOut := 0
+	for  {
+		select {
+		case _bytesIn := <-bytesInLog:
+			bytesIn += _bytesIn
+			log.Printf("bytesIn=%d\n", bytesIn)
+		case _bytesOut := <-bytesOutLog:
+			bytesOut += _bytesOut
+			log.Printf("bytesOut=%d\n", bytesOut)
+		case <-time.After(30 * time.Second):
+			if(	bytesIn != 0 || bytesOut != 0) {
+				sql := `update ` + customer + `.counters set bytesin=bytesin+$1, bytesout=bytesout+$2 where id=1;`
+				log.Printf("sql: %s\n", sql)
+				_, err := db.Exec(sql, bytesIn, bytesOut)
+				if err != nil {
+					log.Printf("Error saving bytes: %s\n", err.Error() )
+				}
+			}
+			bytesIn = 0
+			bytesOut = 0			
+		}	
+	}
+}
+
+var psqlInfo string
+var db *sql.DB
+func initDB(host, nport, user, password, dbname, usetls string) error {
+	psqlInfo = fmt.Sprintf("host=%s port=%s user=%s "+
+	"dbname=%s sslmode=%s",
+	host, nport, user, dbname, usetls)
+	if password != "" {
+	psqlInfo += " password='"+password+"'"
+	}
+	var err error
+	log.Printf("%s\n", psqlInfo)
+	db, err = sql.Open("postgres", psqlInfo)
+	if(err != nil) {
+		log.Printf("Error creating database: %s\n", err.Error())
+	}
+	return err
+}
 func displayBuff(what string, buff []byte) {
 	if len(buff) > 14 {
 		head := buff[:6]
@@ -35,8 +83,13 @@ func getTargetConnection(customer, postgresPort string) (net.Conn, error) {
 	return net.Dial("tcp", target)
 }
 
-func Server(address string, port int, customer, postgressDomain, postgresPort string, certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte) {
+func Server(address string, port int, customer, postgressDomain, postgresPort string, 
+	certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte, 
+	dbDomain, dbPort, dbUsername, dbPassword, dbName, usetls string) {
 	var err error
+
+	initDB(dbDomain, dbPort, dbUsername, dbPassword, dbName, usetls) 
+	go logBandwidth(customer)
 	targetHost := customer + postgressDomain
 	iprecords, err = net.LookupIP(targetHost)
 	log.Printf("target postgress: %s\n", targetHost)
@@ -120,6 +173,7 @@ func pipe(egress net.Conn, messages chan protocol.TransmissionUnit, id int) {
 			return
 		}
 		b := buff[:n]
+		bytesOutLog <- n
 		//displayBuff("Read from db ", b)
 		//log.Printf("Send to client %d bytes, connection %d\n", n, id)
 		out := protocol.TransmissionUnit{protocol.Send, id, b}
@@ -188,6 +242,7 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 		case protocol.Send:
 			if sock, ok := conmap[buff.Id]; ok {
 				_, err = sock.Write(buff.Data)
+				bytesInLog <- len(buff.Data)
 				//log.Printf("Write %d bytes to database at connection %d\n", len(buff.Data), buff.Id)
 				if err != nil {
 					log.Printf("Write to db error: %s\n", err.Error())
