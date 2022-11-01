@@ -42,7 +42,7 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated.HandleFunc("/api/regenpassword", dhandlers.RegenerateDatascopePassword).Methods("GET").Name("regenpassword")
 	authenticated.HandleFunc("/api/getdatascopetables", dhandlers.GetDatascapeTables).Methods("POST").Name("getdatascopetables")
 	authenticated.HandleFunc("/api/getselect", dhandlers.GetSelect).Methods("POST").Name("getselect")
-	
+	authenticated.HandleFunc("/api/getusage", dhandlers.GetUsage).Methods("POST").Name("getusage")
 	
 	
 	nonauthenticated.HandleFunc("/api/fakelogin", dhandlers.FakeLogin).Methods("GET")
@@ -72,7 +72,7 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/{name:.*\\.gz}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.exe}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.pkg}", dhandlers.GetImages)
-	
+
 	nonauthenticated.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./customer/index.html")
 	}).Methods("GET")

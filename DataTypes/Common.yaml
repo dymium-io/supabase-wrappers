@@ -132,3 +132,14 @@ UserDatascopes:
   - username: string 
   - password: string 
   - datascopes: <|DatascopeIdName|>
+
+Usage:
+  - connections: int
+  - datascopes: int
+  - logins: int
+  - tunnels: int  
+  - blocked: int 
+  - obfuscated: int 
+  - redacted: int 
+  - bytesin: string
+  - bytesout: string

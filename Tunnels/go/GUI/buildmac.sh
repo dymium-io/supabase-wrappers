@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
+GOOS=darwin GOARCH=amd64 \
            go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=2' -X 'main.ProtocolVersion=4' -w -extldflags "-static"' 
 
 rm -rf dymium.app

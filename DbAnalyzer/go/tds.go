@@ -2,16 +2,17 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/thda/tds"
-
+	//_ "github.com/thda/tds"
+	_ "github.com/denisenkom/go-mssqldb"
 	"fmt"
+	"net/url"
 
 	"DbAnalyzer/types"
 )
 
 func getTdsInfo(c types.Connection) (interface{}, error) {
-
-	tdsconn := fmt.Sprintf("%s:%s@tcp(%s:%d)/?%sencryptPassword=try",
+	/*
+	tdsconn := fmt.Sprintf("sqlserver://%s:%s@%s:%d?%s",
 		c.User, c.Password, c.Address, c.Port,
 		func() string {
 			if c.Tls {
@@ -20,8 +21,26 @@ func getTdsInfo(c types.Connection) (interface{}, error) {
 				return ""
 			}
 		}())
+	*/
 
-	db, err := sql.Open("tds", tdsconn)
+	query := url.Values{}
+	query.Add("database",c.Database)
+	if c.Tls {
+		query.Add("encrypt","true")
+	} else {
+		query.Add("encrypt","disable")
+	}
+	u := &url.URL{
+		Scheme:   "sqlserver",
+		User:     url.UserPassword(c.User, c.Password),
+		Host:     fmt.Sprintf("%s:%d", c.Address, c.Port),
+		// Path:  instance, // if connecting to an instance instead of a port
+		RawQuery: query.Encode(),
+	}
+	tdsconn := u.String()
+
+	fmt.Println("tdsconn:",tdsconn)
+	db, err := sql.Open("sqlserver", tdsconn)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +127,7 @@ func getTdsInfo(c types.Connection) (interface{}, error) {
 		}
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
 			switch schema {
-			case "information_schema", "mysql", "sys", "performance_schema":
+			case "information_schema", "sys", "performance_schema":
 				isSystem = true
 			default:
 				isSystem = false
@@ -119,7 +138,7 @@ func getTdsInfo(c types.Connection) (interface{}, error) {
 				Tables: []types.Table{
 					{
 						Name:     tblName,
-						IsSystem: isSystem,
+						IsSystem: isSystem || isSysTable(tblName),
 						Columns:  []types.Column{c},
 					},
 				},
@@ -130,7 +149,7 @@ func getTdsInfo(c types.Connection) (interface{}, error) {
 			database.Schemas[curSchema].Tables = append(database.Schemas[curSchema].Tables,
 				types.Table{
 					Name:     tblName,
-					IsSystem: isSystem,
+					IsSystem: isSystem || isSysTable(tblName),
 					Columns:  []types.Column{c},
 				})
 			curTbl += 1
@@ -149,20 +168,28 @@ func getTdsInfo(c types.Connection) (interface{}, error) {
 
 func resolveTdsRefs(db *sql.DB, database *types.Database) error {
 	rows, err := db.Query(`
-           SELECT
-	       tc.table_schema, 
-	       tc.constraint_name, 
-	       kcu.table_name, 
-	       kcu.column_name, 
-	       kcu.referenced_table_schema AS foreign_table_schema,
-	       kcu.referenced_table_name AS foreign_table_name,
-	       kcu.referenced_column_name AS foreign_column_name
-	   FROM 
-	       information_schema.table_constraints AS tc 
-	       JOIN information_schema.key_column_usage AS kcu
-		 ON tc.constraint_name = kcu.constraint_name
-		 AND tc.table_schema = kcu.table_schema
-	   WHERE tc.constraint_type = 'FOREIGN KEY'`)
+	  SELECT sch.name AS [table_schema],
+              obj.name AS [constraint_name],
+	      tab1.name AS [table_name],
+	      col1.name AS [column_name],
+              sch2.name AS [foreign_table_schema],
+	      tab2.name AS [foreign_table_name],
+	      col2.name AS [foreign_column_name]
+	  FROM sys.foreign_key_columns fkc
+	  INNER JOIN sys.objects obj
+	      ON obj.object_id = fkc.constraint_object_id
+	  INNER JOIN sys.tables tab1
+	      ON tab1.object_id = fkc.parent_object_id
+	  INNER JOIN sys.schemas sch
+	      ON tab1.schema_id = sch.schema_id
+	  INNER JOIN sys.columns col1
+	      ON col1.column_id = parent_column_id AND col1.object_id = tab1.object_id
+	  INNER JOIN sys.tables tab2
+	      ON tab2.object_id = fkc.referenced_object_id
+	  INNER JOIN sys.schemas sch2
+	      ON tab2.schema_id = sch2.schema_id
+	  INNER JOIN sys.columns col2
+	      ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id`)
 	if err != nil {
 		return err
 	}
@@ -208,4 +235,13 @@ func resolveTdsRefs(db *sql.DB, database *types.Database) error {
 	}
 
 	return nil
+}
+
+func isSysTable(tblName string) bool {
+	return tblName == "MSreplication_options" ||
+		tblName == "spt_fallback_db" ||
+		tblName == "spt_fallback_dev" ||
+		tblName == "spt_fallback_usg" ||
+		tblName == "spt_monitor" ||
+		tblName == "spt_values"
 }

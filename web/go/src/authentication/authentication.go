@@ -49,7 +49,7 @@ func initRBAC() {
 	adminnames :=  []string{"createnewconnection", "queryconnection","updateconnection","deleteconnection",
 	"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
 	"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
-	"getgroupsfordatascopes", "getselect"}
+	"getgroupsfordatascopes", "getselect", "getusage"}
 	usernames :=  []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getdatascopetables"}	
 
 	for _, v := range adminnames {
@@ -228,6 +228,64 @@ func Init(host string, port, user, password, dbname, tls string) error {
 
 func GetDB() *sql.DB {
 	return db
+}
+
+func recordLogin(schema string) error {
+	sql := `update `+schema+`.counters SET logins=logins+1 where id=1`
+	_, err := db.Exec(sql)
+
+	return err
+}
+
+func recordTunnel(schema string) error {
+	sql := `update `+schema+`.counters SET tunnels=tunnels+1 where id=1`
+	_, err := db.Exec(sql)
+
+	return err
+}
+func GetBytes(schema string) (int64, int64, int, int, error)  {
+	sql := `select bytesin, bytesout,logins,tunnels from `+schema+`.counters where id=1`
+
+	var bytesin, bytesout int64
+	var logins,tunnels int
+	row := db.QueryRow(sql)
+	err := row.Scan(&bytesin, &bytesout, &logins, &tunnels)
+	return  bytesin, bytesout,logins,tunnels, err
+}
+
+func GetRestrictions(schema string) (int, int, int, int, int, error)  {
+	var connections, datascopes, blocked, obfuscated, redacted int
+	sql := `select count(*) from ` +schema+`.connections`
+	row := db.QueryRow(sql)
+	err := row.Scan(&connections)
+	if(err != nil) {
+		return connections, datascopes, blocked, obfuscated, redacted,err
+	}	
+	sql = `select count(*) from ` +schema+`.datascopes`
+	row = db.QueryRow(sql)
+	err = row.Scan(&datascopes)
+	if(err != nil) {
+		return connections, datascopes, blocked, obfuscated, redacted,err
+	}	
+	sql = `select count(*) from ` +schema+`.tables where action='Block'`
+	row = db.QueryRow(sql)
+	err = row.Scan(&blocked)
+	if(err != nil) {
+		return connections, datascopes, blocked, obfuscated, redacted,err
+	}	
+	sql = `select count(*) from ` +schema+`.tables where action='Obfuscate'`
+	row = db.QueryRow(sql)
+	err = row.Scan(&obfuscated)
+	if(err != nil) {
+		return connections, datascopes, blocked, obfuscated, redacted,err
+	}	
+	sql = `select count(*) from ` +schema+`.tables where action='Redact'`
+	row = db.QueryRow(sql)
+	err = row.Scan(&redacted)
+	if(err != nil) {
+		return connections, datascopes, blocked, obfuscated, redacted,err
+	}	
+	return  connections, datascopes, blocked, obfuscated, redacted, nil
 }
 func generateAdminJWT(picture string, name string, email string, groups []string, org_id string) (string, error) {
 		// generate JWT right header
@@ -1490,6 +1548,7 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id, auth_portal
 	if(err != nil){
 		log.Printf("Error 2: %s\n", err.Error() )
 	}	
+	recordTunnel(schema)
 	return token, name, groups, err
 }
 func AuthenticationAdminHandlers(h *mux.Router) error {
@@ -1687,6 +1746,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		if(err != nil){
 			log.Printf("Error 2: %s\n", err.Error() )
 		}
+		recordLogin(schema)
 		w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(`<html>

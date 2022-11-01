@@ -1202,6 +1202,124 @@ export class RequestById {
   }
 }
 
+export class Usage {
+  private '_connections': number
+  private '_datascopes': number
+  private '_logins': number
+  private '_tunnels': number
+  private '_blocked': number
+  private '_obfuscated': number
+  private '_redacted': number
+  private '_bytesin': string
+  private '_bytesout': string
+
+  constructor() {
+    this['_connections'] = 0
+    this['_datascopes'] = 0
+    this['_logins'] = 0
+    this['_tunnels'] = 0
+    this['_blocked'] = 0
+    this['_obfuscated'] = 0
+    this['_redacted'] = 0
+    this['_bytesin'] = ''
+    this['_bytesout'] = ''
+  }
+  get connections(): number { return this['_connections'] }
+  set connections(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_connections'])) {
+      setDirtyFlag()
+      this['_connections'] = __v__
+    }
+  }
+  get datascopes(): number { return this['_datascopes'] }
+  set datascopes(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_datascopes'])) {
+      setDirtyFlag()
+      this['_datascopes'] = __v__
+    }
+  }
+  get logins(): number { return this['_logins'] }
+  set logins(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_logins'])) {
+      setDirtyFlag()
+      this['_logins'] = __v__
+    }
+  }
+  get tunnels(): number { return this['_tunnels'] }
+  set tunnels(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_tunnels'])) {
+      setDirtyFlag()
+      this['_tunnels'] = __v__
+    }
+  }
+  get blocked(): number { return this['_blocked'] }
+  set blocked(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_blocked'])) {
+      setDirtyFlag()
+      this['_blocked'] = __v__
+    }
+  }
+  get obfuscated(): number { return this['_obfuscated'] }
+  set obfuscated(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_obfuscated'])) {
+      setDirtyFlag()
+      this['_obfuscated'] = __v__
+    }
+  }
+  get redacted(): number { return this['_redacted'] }
+  set redacted(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_redacted'])) {
+      setDirtyFlag()
+      this['_redacted'] = __v__
+    }
+  }
+  get bytesin(): string { return this['_bytesin'] }
+  set bytesin(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_bytesin'])) {
+      setDirtyFlag()
+      this['_bytesin'] = __v__
+    }
+  }
+  get bytesout(): string { return this['_bytesout'] }
+  set bytesout(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_bytesout'])) {
+      setDirtyFlag()
+      this['_bytesout'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): Usage {
+    disableDF()
+    let cls = new Usage()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.connections = __a__['connections']
+       cls.datascopes = __a__['datascopes']
+       cls.logins = __a__['logins']
+       cls.tunnels = __a__['tunnels']
+       cls.blocked = __a__['blocked']
+       cls.obfuscated = __a__['obfuscated']
+       cls.redacted = __a__['redacted']
+       cls.bytesin = __a__['bytesin']
+       cls.bytesout = __a__['bytesout']
+    } else {
+       doAlert(`Usage: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class UserDatascopes {
   private '_schema': string
   private '_username': string
