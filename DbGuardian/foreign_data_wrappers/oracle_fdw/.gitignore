@@ -1,0 +1,38 @@
+# Object files
+*.o
+*.obj
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+*.bc
+
+# Executables
+*.exe
+
+# Regression test results
+results
+regression.out
+regression.diffs
+
+# dependency tracking
+.deps
+
+# other version control systems
+CVS
+.svn
+
+# Windows build, build output
+v15
+msvc/*.opensdf
+msvc/*.sdf
+msvc/*.suo
+msvc/*.vcxproj.filters
+msvc/Win32
+msvc/x64
