@@ -5,23 +5,31 @@ import (
 	_ "github.com/sijms/go-ora/v2"
 
 	"fmt"
+	"net/url"
+	"strings"
 
 	"DbAnalyzer/types"
 )
 
 func getOraInfo(c types.Connection) (interface{}, error) {
 
-	mysqlconn := fmt.Sprintf("%s:%s@tcp(%s:%d)/?tls=%s",
-		c.User, c.Password, c.Address, c.Port,
-		func() string {
-			if c.Tls {
-				return "true"
-			} else {
-				return "false"
-			}
-		}())
+	query := url.Values{}
+	query.Add("database", c.Database)
+	if c.Tls {
+		query.Add("SSL", "true")
+	} else {
+		query.Add("SSL", "false")
+	}
+	u := &url.URL{
+		Scheme:   "oracle",
+		User:     url.UserPassword(c.User, c.Password),
+		Host:     fmt.Sprintf("%s:%d", c.Address, c.Port),
+		Path:     "XEPDB1",
+		RawQuery: query.Encode(),
+	}
+	oracleconn := u.String()
 
-	db, err := sql.Open("mysql", mysqlconn)
+	db, err := sql.Open("oracle", oracleconn)
 	if err != nil {
 		return nil, err
 	}
@@ -33,13 +41,23 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 		return struct{}{}, nil
 	}
 
-	rows, err := db.Query(`SELECT table_schema, table_name, ordinal_position, column_name,
-                                      data_type,
-                                      character_maximum_length,
-                                      numeric_precision, numeric_scale,
-                                      is_nullable, column_default
-                               FROM information_schema.columns
-                               ORDER BY table_schema, table_name, ordinal_position`)
+	rows, err := db.Query(`
+			       SELECT c.OWNER,
+                                      c.TABLE_NAME,
+                                      c.COLUMN_ID,
+                                      c.COLUMN_NAME,
+                                      c.DATA_TYPE,
+                                      c.CHAR_LENGTH,
+                                      c.DATA_PRECISION,
+                                      c.DATA_SCALE,
+                                      c.NULLABLE,
+                                      c.DEFAULT_LENGTH,
+                                      c.DATA_DEFAULT
+                               FROM ALL_TABLES t
+                               INNER JOIN ALL_TAB_COLS c ON
+                                 t.OWNER = c.OWNER AND t.TABLE_NAME = c.TABLE_NAME
+                               WHERE t.TABLESPACE_NAME NOT IN ('SYSTEM', 'SYSAUX', 'UNDOTBS1', 'TEMP')
+                               ORDER BY c.OWNER, c.TABLE_NAME, c.COLUMN_ID`)
 	if err != nil {
 		return nil, err
 	}
@@ -55,51 +73,68 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 	isSystem := false
 	for rows.Next() {
 		var schema, tblName, cName string
-		var pos int
-		var cIsNullable string
-		var dflt *string
-		var cTyp string
+		var pos *int
+		var cIsNullable *string
+		var cDflt *string
+		var cTyp *string
 		var cCharMaxLen, cPrecision, cScale *int
+		var dLength *int
 		err = rows.Scan(&schema, &tblName, &pos, &cName,
 			&cTyp, &cCharMaxLen, &cPrecision, &cScale,
-			&cIsNullable, &dflt)
+			&cIsNullable, &dLength, &cDflt)
 		if err != nil {
 			return nil, err
 		}
-		isNullable := false
-		if cIsNullable == "YES" {
-			isNullable = true
+		fmt.Println(schema, tblName, pos, cName, cTyp, cCharMaxLen, cPrecision, cScale, cIsNullable, dLength, cDflt)
+		isNullable := true
+		if cIsNullable != nil && *cIsNullable == "N" {
+			isNullable = false
 		}
 		var t string
-		switch cTyp {
-		case "decimal":
-			if cPrecision != nil {
-				if cScale != nil {
-					t = fmt.Sprintf("numeric(%d,%d)", *cPrecision, *cScale)
+		if cTyp == nil {
+			t = "undefined"
+		} else {
+			switch strings.ToLower(*cTyp) {
+			case "number":
+				if cPrecision != nil {
+					if cScale != nil {
+						t = fmt.Sprintf("numeric(%d,%d)", *cPrecision, *cScale)
+					} else {
+						t = fmt.Sprintf("numeric(%d)", *cPrecision)
+					}
 				} else {
-					t = fmt.Sprintf("numeric(%d)", *cPrecision)
+					t = "numeric"
 				}
-			} else {
-				t = "numeric"
+			case "varchar2", "nvarchar2":
+				if cCharMaxLen != nil {
+					t = fmt.Sprintf("varchar(%d)", *cCharMaxLen)
+				} else {
+					t = "varchar"
+				}
+			case "char", "nchar":
+				if cCharMaxLen != nil {
+					t = fmt.Sprintf("character(%d)", *cCharMaxLen)
+				} else {
+					t = "bpchar"
+				}
+			default:
+				t = *cTyp
 			}
-		case "varchar":
-			if cCharMaxLen != nil {
-				t = fmt.Sprintf("varchar(%d)", *cCharMaxLen)
-			} else {
-				t = "varchar"
-			}
-		case "char":
-			if cCharMaxLen != nil {
-				t = fmt.Sprintf("character(%d)", *cCharMaxLen)
-			} else {
-				t = "bpchar"
-			}
-		default:
-			t = cTyp
+		}
+		if pos == nil {
+			p := 0
+			pos = &p
+		}
+		var dflt *string
+		if dLength == nil || *dLength == 0 || cDflt == nil {
+			dflt = nil
+		} else {
+			d := (*cDflt)[:*dLength]
+			dflt = &d
 		}
 		c := types.Column{
 			Name:       cName,
-			Position:   pos,
+			Position:   *pos,
 			Typ:        t,
 			IsNullable: isNullable,
 			Default:    dflt,
@@ -149,20 +184,18 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 
 func resolveOraRefs(db *sql.DB, database *types.Database) error {
 	rows, err := db.Query(`
-           SELECT
-	       tc.table_schema, 
-	       tc.constraint_name, 
-	       kcu.table_name, 
-	       kcu.column_name, 
-	       kcu.referenced_table_schema AS foreign_table_schema,
-	       kcu.referenced_table_name AS foreign_table_name,
-	       kcu.referenced_column_name AS foreign_column_name
-	   FROM 
-	       information_schema.table_constraints AS tc 
-	       JOIN information_schema.key_column_usage AS kcu
-		 ON tc.constraint_name = kcu.constraint_name
-		 AND tc.table_schema = kcu.table_schema
-	   WHERE tc.constraint_type = 'FOREIGN KEY'`)
+	   SELECT c.OWNER, a.CONSTRAINT_NAME, a.TABLE_NAME, a.COLUMN_NAME,
+		  c.R_OWNER AS REF_OWNER, cpk.TABLE_NAME AS REF_TABLE,
+                  c.R_CONSTRAINT_NAME
+           FROM ALL_TABLES t
+	   JOIN ALL_CONS_COLUMNS a ON t.OWNER = a.OWNER
+               AND t.TABLE_NAME = a.TABLE_NAME
+	   JOIN ALL_CONSTRAINTS c ON a.OWNER = c.OWNER
+	       AND a.CONSTRAINT_NAME = c.CONSTRAINT_NAME
+	   JOIN ALL_CONSTRAINTS cpk ON c.R_OWNER = cpk.OWNER
+	       AND c.R_CONSTRAINT_NAME = cpk.CONSTRAINT_NAME
+           WHERE t.TABLESPACE_NAME NOT IN ('SYSTEM', 'SYSAUX', 'UNDOTBS1', 'TEMP')
+               AND c.CONSTRAINT_TYPE = 'R'`)
 	if err != nil {
 		return err
 	}
