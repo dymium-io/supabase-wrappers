@@ -8,7 +8,6 @@ import (
 	_ "errors"
 	"flag"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -20,6 +19,7 @@ import (
 	"dymium.com/dymium/admin"
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/authentication"
+	"dymium.com/dymium/log"
 )
 
 
@@ -35,7 +35,9 @@ func main() {
 	dbuser := os.Getenv("DATABASE_USER")
 	dbname := os.Getenv("DATABASE_NAME")
 	dbtls  := os.Getenv("DATABASE_TLS")
-	log.Printf("dbname: %s\n", dbname)
+	log.Init()
+
+	log.Debugf("dbname: %s", dbname)
 	if(dbtls == "")	{
 		dbtls = "disable"
 	}
@@ -43,9 +45,10 @@ func main() {
 		dbname = "dymium"
 	}
 
+
 	err := authentication.Init(dbhost, dbport, dbuser, dbpassword, dbname, dbtls)	
 	if(err != nil) {
-		log.Panicln(err)
+		log.Fatal(err.Error())
 	}
 	p := mux.NewRouter()
 
@@ -54,7 +57,7 @@ func main() {
 			// Do stuff here
 
 			if r.RequestURI != "/healthcheck" {
-				log.Printf("%s%s\n", r.Host, r.RequestURI)
+				log.Debugf("%s%s", r.Host, r.RequestURI)
 			}
 			// Call the next handler, which can be another middleware in the chain, or the final handler.
 			next.ServeHTTP(w, r)
@@ -66,7 +69,7 @@ func main() {
 		memory.AdapterWithCapacity(20000000),
 	)
 	if err != nil {
-		log.Panicln(err)
+		log.Panic(err)
 	}
 
 	cacheClient, err := cache.NewClient(
@@ -76,7 +79,7 @@ func main() {
 	)
 
 	if err != nil {
-		log.Panicln(err)
+		log.Panic(err)
 	}
 	p.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", common.Nocache)
@@ -97,11 +100,11 @@ func main() {
 	_ = cacheClient.Middleware(CompressHandler(etag.Handler(p, false)))
 	cp := CompressHandler(etag.Handler(p, false))
 	if *ssl {
-		log.Printf("Start listening on %s\n", *selfAddr+":443")
-		log.Fatal(http.ListenAndServeTLS(*selfAddr+":443", "dymiumai.crt", "dymiumai.key", cp))
+		log.Infof("Start listening on %s", *selfAddr+":443")
+		log.Panic(http.ListenAndServeTLS(*selfAddr+":443", "dymiumai.crt", "dymiumai.key", cp))
 	} else {
-		log.Printf("Start listening on %s\n", *selfAddr+":80")
-		log.Fatal(http.ListenAndServe(*selfAddr+":80", cp))
+		log.Infof("Start listening on %s", *selfAddr+":80")
+		log.Panic(http.ListenAndServe(*selfAddr+":80", cp))
 
 	}
 }

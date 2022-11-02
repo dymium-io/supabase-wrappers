@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	_"encoding/json"
@@ -16,6 +15,7 @@ import (
 	"strings"
 	"github.com/gorilla/mux"
 	"dymium.com/dymium/common"
+	_ "dymium.com/dymium/log"
 )
 
 func AdminHandlers(p *mux.Router) {
@@ -68,8 +68,6 @@ func AdminHandlers(p *mux.Router) {
 
 		logoutURL := fmt.Sprintf("%sv2/logout?returnTo=%s&client_id=%s",
 			domain, url.QueryEscape(returnurl), clientid)
-		log.Printf("%s\n", logoutURL)
-
 
 		w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")	
