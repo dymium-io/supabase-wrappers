@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"fmt"
-	"log"
 	"strconv"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
@@ -28,6 +27,7 @@ import (
 	"github.com/Jeffail/gabs"
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/types"
+	"dymium.com/dymium/log"
 	"path/filepath"
 	"aws"
 	"crypto/rand"
@@ -73,7 +73,7 @@ func Authorized(r *http.Request, roles []string) bool {
 			}
 		}
 	}
-	log.Printf("Error:%s  not authorized\n", name)
+	log.Errorf("Error:%s  not authorized", name)
 	return false
 }
 
@@ -102,7 +102,7 @@ func generatePassword(passwordLength int) string {
 	getChar := func() byte {
 		j, err := rand.Int(rand.Reader, big.NewInt(int64(length)))
 		if err != nil {
-			log.Printf("Error generating crypto strong int")
+			log.Errorf("Error generating crypto strong int")
 		}
 		return stdChars[ int(j.Int64()) ]
 	}
@@ -163,12 +163,12 @@ func Init(host string, port, user, password, dbname, tls string) error {
 
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
-		log.Printf("In Database, error: %s\n", err.Error())
+		log.Errorf("In Database, error: %s", err.Error())
 		return err
 	} else {
 		err = db.Ping()
 		if err != nil {
-			log.Printf("In Database, error on Ping: %s\n", err.Error())
+			log.Errorf("In Database, error on Ping: %s", err.Error())
 			return err
 		}		
 	}
@@ -203,7 +203,7 @@ func Init(host string, port, user, password, dbname, tls string) error {
 	}{}	
 	err = json.Unmarshal([]byte(ca_cert), &t)
 	if err != nil {
-		log.Printf("Cert unmarshaling error: %s\n", err.Error() )
+		log.Errorf("Cert unmarshaling error: %s", err.Error() )
 		return nil
 	}
 	
@@ -211,7 +211,7 @@ func Init(host string, port, user, password, dbname, tls string) error {
 
 	CaCert, err = x509.ParseCertificate(pemcert.Bytes)
 	if err != nil {
-		log.Printf("Cert parsing error: %s\n", err.Error() )
+		log.Errorf("Cert parsing error: %s", err.Error() )
 		return nil
 	}
 
@@ -219,7 +219,7 @@ func Init(host string, port, user, password, dbname, tls string) error {
 	CaKey, err = ParsePEMPrivateKey([]byte(t.Key), passphrase)
 
 	if err != nil {
-		log.Printf("Key parsing error: %s\n", err.Error() )
+		log.Errorf("Key parsing error: %s", err.Error() )
 		return nil
 	}
 
@@ -339,7 +339,7 @@ func refreshAdminToken(token string) (string, error) {
 		tokenString, err := newtoken.SignedString(jwtKey)
 
 		if err != nil {
-			log.Printf("Error: Database Problem: %s", err)
+			log.Errorf("Error: Database Problem: %s", err)
 
 			// If there is an error in creating the JWT return an internal server error
 			return "", errors.New("JWT Creation Problem")
@@ -348,8 +348,6 @@ func refreshAdminToken(token string) (string, error) {
 		return tokenString, nil
 	}
 
-	// trigger redirect to authentication
-	// log.Printf("Invalid session, expired at %v, time now: %v ", claim.StandardClaims.ExpiresAt, timeNow.Unix())
 	return "", errors.New("Token invalid or expired")
 }
 func GetSchemaFromToken(token string) (string, error) {
@@ -370,7 +368,7 @@ func GetSchemaFromToken(token string) (string, error) {
 	return claim.Schema, err
 
 }
-func GetSchemaRolesFromToken(token string) (string, []string, error) {
+func GetSchemaRolesFromToken(token string) (string, []string,  []string, string, string, error) {
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
 	claim := &types.Claims{}
 
@@ -385,7 +383,7 @@ func GetSchemaRolesFromToken(token string) (string, []string, error) {
 	if claim.Schema == "" {
 		err = errors.New("Empty schema")
 	}
-	return claim.Schema, claim.Roles, err
+	return claim.Schema, claim.Roles, claim.Groups, claim.Email, claim.Orgid, err
 
 }
 
@@ -436,7 +434,7 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	sqlName := `update ` + schema + `.users set password=$1, lastchanged=now() where username=$2;`
 	_, err := db.Exec(sqlName, password, username)
 	if(err != nil) {
-		log.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 	}
 
 	sql := `select distinct a.name, a.id from `+schema+`.datascopes as a  join `+schema+`.groupsfordatascopes as b on a.id=b.datascope_id join `+schema+`.groupmapping as c on c.id=b.group_id where c.outergroup = any ($1)`
@@ -447,12 +445,12 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	rows, err := db.Query(sql, pq.Array(groups))
 	if nil == err {
 		defer rows.Close()
-		log.Println ("No error")
+
 		for rows.Next() {
 			var ds types.DatascopeIdName
 			err = rows.Scan(&ds.Name, &ds.Id) 
 			if err != nil {
-				log.Printf("Error: %s\n", err.Error())
+				log.Errorf("Error: %s", err.Error())
 			} else {
 				out.Datascopes = append(out.Datascopes, ds)
 				
@@ -461,7 +459,7 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 			
 		}
 	} else { 
-		log.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 	}
 
 
@@ -470,15 +468,12 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	_, err = Invoke("DbSync", nil, snc)
 	if(err != nil) {
 		// TODO - pass this error
-		log.Printf("Error: syncing datascopes: %s\n", err.Error())
+		log.Errorf("Error: syncing datascopes: %s", err.Error())
 	}
 	return out, nil
 }
 
 func GetSelect(schema string, ds *types.DatascopeTable) (types.SqlTestResult, error) {
-	log.Printf("ds: %v\n", ds)
-
-
 	var conf types.SqlTestConf
 	conf.Database = ds.Connection   // this is connection... name?
 	conf.Schema = ds.Schema
@@ -494,13 +489,13 @@ func GetSelect(schema string, ds *types.DatascopeTable) (types.SqlTestResult, er
 	data, err := Invoke("DbSync", nil, snc)
 	var out types.SqlTestResult
 	if err != nil {
-		log.Printf("Error from Invoke: %s\n", err.Error()) 
+		log.Errorf("Error from Invoke: %s", err.Error()) 
 		return out, err
 	}
 
 	err = json.Unmarshal(data, &out)
 	if(err != nil) {
-		log.Printf("Error unmarshaling %s\n", err.Error())
+		log.Errorf("Error unmarshaling %s", err.Error())
 	} 
 	return out, err
 }
@@ -541,13 +536,13 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 
 
 	if err != nil {
-		log.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 		password = generatePassword(10) 
 		sqlName := `insert into ` + schema + `.users (username,password)  values($1, $2);`
 		_, err = db.Exec(sqlName, username, password)
-		log.Printf("sqlName: %s\n", sqlName)
+
 		if(err != nil) {
-			log.Printf("Error: %s\n", err.Error())
+			log.Errorf("Error: %s", err.Error())
 		}
 	}
 	sql := `select distinct a.name, a.id from `+schema+`.datascopes as a  join `+schema+`.groupsfordatascopes as b on a.id=b.datascope_id join `+schema+`.groupmapping as c on c.id=b.group_id where c.outergroup = any ($1)`
@@ -565,12 +560,12 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 	rows, err := db.Query(sql, pq.Array(groups))
 	if nil == err {
 		defer rows.Close()
-		log.Println ("No error")
+
 		for rows.Next() {
 			var ds types.DatascopeIdName
 			err = rows.Scan(&ds.Name, &ds.Id) 
 			if err != nil {
-				log.Printf("Error: %s\n", err.Error())
+				log.Errorf("Error: %s", err.Error())
 			} else {
 				out.Datascopes = append(out.Datascopes, ds)
 				
@@ -578,7 +573,7 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 			rq.UserConf.Datascopes = append(rq.UserConf.Datascopes, ds.Name)			
 		}
 	} else { 
-		log.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 	}
 
 
@@ -587,7 +582,7 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 
 	if(err != nil) {
 		// TODO - pass this error
-		log.Printf("Error syncing datascopes: %s\n", err.Error())
+		log.Errorf("Error syncing datascopes: %s", err.Error())
 	}
 	return out, nil
 }
@@ -618,7 +613,6 @@ func CreateNewConnection(schema string, con types.ConnectionRecord) (string, err
 	var id string
 	err := row.Scan(&id)
 	if err != nil {
-		log.Printf("Error: %s\n", err.Error())
 		return "", err
 	}
 	// now let's save credentials!
@@ -627,14 +621,12 @@ func CreateNewConnection(schema string, con types.ConnectionRecord) (string, err
 	row = db.QueryRow(sql, id, con.Username)
 	err = row.Scan(&credid)
 	if err != nil {
-		log.Printf("Error: %s\n", err.Error())
 		return id, err
 	}
 	sql = `insert into `+schema+`.passwords(id, password) values($1, $2)`;
 	
 	_, err = db.Exec(sql, credid, con.Password)
 	if err != nil {
-		log.Printf("Error: %s\n", err.Error())
 		return id, err
 	}
 
@@ -655,14 +647,14 @@ func GetConnections(schema string) ([]types.ConnectionRecord, error ) {
 			err = rows.Scan(&conn.Id, &conn.Name, &conn.Address, &conn.Port, &conn.Dbname, &conn.Dbtype, &conn.UseTLS, 
 					&conn.Description, &conn.Username, &conn.Credid)
 			if nil != err {
-				log.Printf("Error in GetConnections:  %s\n", err.Error())
+				log.Errorf("Error in GetConnections:  %s", err.Error())
 				return []types.ConnectionRecord{}, err
 			} else {
 				conns = append(conns, conn)
 			}
 		}
 	} else {
-		log.Printf("Error in GetConnections:  %s\n", err.Error())
+		log.Errorf("Error in GetConnections:  %s", err.Error())
 		return conns, err
 	}
 
@@ -681,7 +673,6 @@ func  CheckAndRefreshToken(token string, sport string) (string, error) {
 
 	if err == nil && tkn.Valid {
 		// update token
-		log.Printf("claim: %v, groups:%v\n", claim, claim.Groups)
 
 		expirationTime := timeNow.Add(timeOut * time.Minute)
 		newclaim := &types.Claims{
@@ -705,7 +696,7 @@ func  CheckAndRefreshToken(token string, sport string) (string, error) {
 		tokenString, err := newtoken.SignedString(jwtKey)
 
 		if err != nil {
-			log.Printf("Error: Token Signing Problem: %s", err)
+			log.Errorf("Error: Token Signing Problem: %s", err)
 
 			// If there is an error in creating the JWT return an internal server error
 			return "", errors.New("JWT Creation Problem")
@@ -714,8 +705,6 @@ func  CheckAndRefreshToken(token string, sport string) (string, error) {
 		return tokenString, nil
 	}	
 
-// trigger redirect to authentication
-// log.Printf("Invalid session, expired at %v, time now: %v ", claim.StandardClaims.ExpiresAt, timeNow.Unix())
 return "", err
 }
 func GetRoles(schema string, groups []string) []string {
@@ -723,13 +712,13 @@ func GetRoles(schema string, groups []string) []string {
 	roles = append(roles, types.RoleUser)
 	var count int	
 	if(len(groups) == 0) {
-		log.Printf("No groups specified")
+
 		// let's see if mapping is present at all
 		sql := `select count(*) from ` + schema + `.groupmapping;`;
 		row := db.QueryRow(sql)
 		err := row.Scan(&count)
 		if(err != nil) {
-			log.Printf("Error quering mapping: %s\n", err.Error())
+			log.Errorf("Error quering mapping: %s", err.Error())
 			return roles;
 		} else {
 			if(count > 0) {
@@ -745,10 +734,9 @@ func GetRoles(schema string, groups []string) []string {
 	row := db.QueryRow(sql, pq.Array(groups))
 	err := row.Scan(&count)
 	if(err != nil) {
-		log.Printf("Error quering mapping: %s\n", err.Error())
+		log.Errorf("Error quering mapping: %s", err.Error())
 		return roles;
 	} else {
-		log.Printf("count of admin groups: %d\n", count)
 		if(count > 0) {
 			roles = append(roles, types.RoleAdmin)
 		}
@@ -777,7 +765,7 @@ func GeneratePortalJWT(picture string, schema string, name string, email string,
 			IssuedAt: issueTime.Unix(),
 		},
 	}
-	log.Printf("claim: %v, groups:%v\n", claim, groups)
+
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 	// Create the JWT string
@@ -797,8 +785,6 @@ func refreshPortalToken(token string) (string, error) {
 
 	if err == nil && tkn.Valid {
 		// update token
-		log.Printf("claim: %v, groups:%v\n", claim, claim.Groups)
-
 		expirationTime := timeNow.Add(timeOut * time.Minute)
 		newclaim := &types.Claims{
 			Name: claim.Name,
@@ -821,7 +807,7 @@ func refreshPortalToken(token string) (string, error) {
 		tokenString, err := newtoken.SignedString(jwtKey)
 
 		if err != nil {
-			log.Printf("Error: Token Signing Problem: %s", err)
+			log.Errorf("Error: Token Signing Problem: %s", err)
 
 			// If there is an error in creating the JWT return an internal server error
 			return "", errors.New("JWT Creation Problem")
@@ -830,8 +816,6 @@ func refreshPortalToken(token string) (string, error) {
 		return tokenString, nil
 	}
 
-	// trigger redirect to authentication
-	// log.Printf("Invalid session, expired at %v, time now: %v ", claim.StandardClaims.ExpiresAt, timeNow.Unix())
 	return "", err
 }
 
@@ -839,7 +823,7 @@ func generateError(w http.ResponseWriter, r *http.Request, header string, body s
 	/*
 	Failed to get userinfo: "+err.Error()
 	*/
-	log.Printf("Error %s: %s\n", header, body)
+	log.Errorf("Error %s: %s", header, body)
 	w.Header().Set("Cache-Control", common.Nocache)
 	w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(`<html>
@@ -861,7 +845,7 @@ func  getUserInfoFromToken(admin_domain, token, id_token string) ( string, strin
 
 	nr, err := http.NewRequest(http.MethodGet, urlStr, nil) // URL-encoded payload
 	if err != nil {
-		log.Printf("Error: %s\n", err.Error()) 
+		log.Errorf("Error: %s", err.Error()) 
 		return "", "", "", []string{}, "", err
 
 	}
@@ -870,12 +854,12 @@ func  getUserInfoFromToken(admin_domain, token, id_token string) ( string, strin
 	resp, err := client.Do(nr)
 
 	if err != nil {
-		log.Printf("Error: %s\n", err.Error()) 
+		log.Errorf("Error: %s", err.Error()) 
 		return "", "", "", []string{}, "", err
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)	
-log.Printf("%s\n", string(body))
+
 	jsonParsed, err := gabs.ParseJSON(body)
 	org_id, _ := jsonParsed.Path("org_id").Data().(string)
 	name, _ := jsonParsed.Path("name").Data().(string)
@@ -891,7 +875,7 @@ log.Printf("%s\n", string(body))
 	for _, child := range  gr {
 		groups = append(groups, child.Data().(string))
 	}
-log.Printf("groups: %v\n", groups)
+
 	return picture, name, email, groups, org_id, err
 }
 func getTokenFromCode(code, domain, client_id, client_secret, redirect string) ( []byte, error) {
@@ -911,7 +895,7 @@ func getTokenFromCode(code, domain, client_id, client_secret, redirect string) (
 	
 	nr, err := http.NewRequest(http.MethodPost, urlStr, strings.NewReader(encodedData) ) // URL-encoded payload
 	if err != nil {
-		log.Printf("Error: %s\n", err.Error()) 
+		log.Errorf("Error: %s", err.Error()) 
 		return []byte{}, err
 
 	}
@@ -925,7 +909,7 @@ func getTokenFromCode(code, domain, client_id, client_secret, redirect string) (
 
 func GetSchemaFromClientId(clientid string) (string, error) {
 	sql := `select schema_name from global.customers where organization=$1;`
-	log.Printf("sql: %s, org: %s\n", sql, clientid)
+
 	row := db.QueryRow(sql, clientid)
 	var schema string
 	err := row.Scan(&schema)
@@ -934,7 +918,7 @@ func GetSchemaFromClientId(clientid string) (string, error) {
 
 func GetClientIdFromSchema(schema string) (string, error) {
 	sql := `select organization from global.customers where schema_name=$1;`
-	log.Printf("sql: %s, org: %s\n", sql, schema)
+
 	row := db.QueryRow(sql, schema)
 	var clientid  string
 	err := row.Scan(&clientid)
@@ -947,7 +931,7 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
     defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		log.Printf("Error in UpdateConnection: %s\n", err.Error())
+		log.Errorf("Error in UpdateConnection: %s", err.Error())
 		return err
 	}
 	sql := `update `+schema+`.connections set name=$1, database_type=$2, 
@@ -959,7 +943,7 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 	err = row.Scan(&newid)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 1 in UpdateConnection: %s\n", err.Error())
+		log.Errorf("Error 1 in UpdateConnection: %s", err.Error())
 		return err
 	}
 	if(con.Username != nil && con.Password != nil) {
@@ -969,26 +953,28 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 		err = row.Scan(&credid)
 		if err != nil {
 			tx.Rollback()
-			log.Printf("Error 2 in UpdateConnection: %s\n", err.Error())
+			log.Errorf("Error 2 in UpdateConnection: %s", err.Error())
 			return err
 		}
 		sql = `update `+schema+`.passwords set password=$1 where id=$2;`
 		_, err  = tx.ExecContext(ctx, sql, con.Password, credid)
 		if err != nil {
 			tx.Rollback()
-			log.Printf("Error 3 in UpdateConnection: %s\n", err.Error())
+			log.Errorf("Error 3 in UpdateConnection: %s", err.Error())
 			return err
 		}		
 	}
+	/*
 	if(con.Username != nil && con.Password != nil) {
-		log.Printf("Username: %s, password %s\n", *con.Username, *con.Password )
+		log.Printf("Username: %s, password %s", *con.Username, *con.Password )
 	}
+	*/
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
-	log.Printf("Returning success")	
+
 	return nil
 }
 func GetConnection(schema, id string) (types.Connection, error) {
@@ -1000,7 +986,7 @@ func GetConnection(schema, id string) (types.Connection, error) {
 	var con types.Connection
 	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &con.Password, &con.Database, &con.Tls)
 	if(err != nil) {
-		log.Printf("Error in GetConnection: %s\n", err.Error())
+		log.Errorf("Error in GetConnection: %s", err.Error())
 	} 
 	return con, err
 
@@ -1019,7 +1005,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 	err = row.Scan(&name)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 1 in GetDatascope: %s\n", err.Error())
+		log.Errorf("Error 1 in GetDatascope: %s", err.Error())
 		return ds, err
 	}
 
@@ -1043,7 +1029,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 			err = rows.Scan(&dr.Id, &dr.Connection, &dr.ConnectionId, &dr.Schema, &dr.Table, &dr.Col, &dr.Position, &dr.Typ, 
 				&dr.Action, &dr.Semantics, &rs, &rt, &rc, &dr.Dflt, &dr.Isnullable)
 			if err != nil {
-				log.Printf("Error 2 in GetDatascope:  %s\n", err.Error())
+				log.Errorf("Error 2 in GetDatascope:  %s", err.Error())
 				return ds, err	
 			}
 			var ref *types.Reference
@@ -1067,7 +1053,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 
 		return ds, nil
 	} else {
-		log.Printf("Error 3 in GetDatascope:  %s\n", err.Error())
+		log.Errorf("Error 3 in GetDatascope:  %s", err.Error())
 		return ds, err		
 	}
 
@@ -1084,7 +1070,7 @@ func GetDatascopes(schema string) ([]types.DatascopeIdName, error) {
 
 	rows, err := db.Query(sql, schema)
 	if err != nil {
-		log.Printf("Error 0 in GetDatascopes:  %s\n", err.Error())
+		log.Errorf("Error 0 in GetDatascopes:  %s", err.Error())
 		return nil, err	
 	}	
 
@@ -1096,14 +1082,14 @@ func GetDatascopes(schema string) ([]types.DatascopeIdName, error) {
 			var din types.DatascopeIdName
 			err = rows.Scan(&din.Id, &din.Name)
 			if err != nil {
-				log.Printf("Error 1 in GetDatascopes:  %s\n", err.Error())
+				log.Errorf("Error 1 in GetDatascopes:  %s", err.Error())
 				return nil, err	
 			}
 			ds = append(ds, din)
 		}
 		return ds, nil
 	} else {
-		log.Printf("Error 2 in GetDatascopes:  %s\n", err.Error())
+		log.Errorf("Error 2 in GetDatascopes:  %s", err.Error())
 		return nil, err		
 	}
 
@@ -1115,7 +1101,7 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
     defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		log.Printf("Error in UpdateDatascope: %s\n", err.Error())
+		log.Errorf("Error in UpdateDatascope: %s", err.Error())
 		return err
 	}
 
@@ -1126,18 +1112,16 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 	err = row.Scan(&id)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 1 in UpdateDatascope: %s\n", err.Error())
+		log.Errorf("Error 1 in UpdateDatascope: %s", err.Error())
 		return err
 	}	
-	log.Printf("datascope id=%s\n", id)
-
 	// delete everything 
 
 	sql="delete from "+schema+".tables where datascope_id=$1;"
 	_, err = tx.ExecContext(ctx, sql, id)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 2 in UpdateDatascope: %s\n", err.Error())
+		log.Errorf("Error 2 in UpdateDatascope: %s", err.Error())
 		return err
 	}
 
@@ -1146,7 +1130,7 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 		err = tx.Commit()
 		if err != nil {
 			tx.Rollback()
-			log.Printf("Error 6 in UpdateDatascope: %s\n", err.Error())
+			log.Errorf("Error 6 in UpdateDatascope: %s", err.Error())
 			return err
 		}	
 		return nil		
@@ -1169,7 +1153,7 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 		_, err = tx.ExecContext(ctx, sql, id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable)
 		if err != nil {
 			tx.Rollback()
-			log.Printf("Error 5 in UpdateDatascope record: %s\n", err.Error())
+			log.Errorf("Error 5 in UpdateDatascope record: %s", err.Error())
 			return err
 		}
 	}
@@ -1177,10 +1161,10 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 6 in UpdateDatascope: %s\n", err.Error())
+		log.Errorf("Error 6 in UpdateDatascope: %s", err.Error())
 		return err
 	}	
-	log.Println("UpdateDatascope success!")
+
 	return nil
 }
 
@@ -1190,7 +1174,7 @@ func DeleteDatascope(schema string, id string) error {
     defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		log.Printf("Error in DeleteDatascope: %s\n", err.Error())
+		log.Errorf("Error in DeleteDatascope: %s", err.Error())
 		return err
 	}
 
@@ -1198,7 +1182,7 @@ func DeleteDatascope(schema string, id string) error {
 	_, err = tx.ExecContext(ctx, sql, id)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 0 in DeleteDatascope: %s\n", err.Error())
+		log.Errorf("Error 0 in DeleteDatascope: %s", err.Error())
 		return err
 	}
 
@@ -1206,7 +1190,7 @@ func DeleteDatascope(schema string, id string) error {
 	_, err = tx.ExecContext(ctx, sql, id)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 1 in DeleteDatascope: %s\n", err.Error())
+		log.Errorf("Error 1 in DeleteDatascope: %s", err.Error())
 		return err
 	}	
 	
@@ -1216,16 +1200,16 @@ func DeleteDatascope(schema string, id string) error {
 	_, err = tx.ExecContext(ctx, sql, id)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 2 in DeleteDatascope: %s\n", err.Error())
+		log.Errorf("Error 2 in DeleteDatascope: %s", err.Error())
 		return err
 	}
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 3 in DeleteDatascope: %s\n", err.Error())
+		log.Errorf("Error 3 in DeleteDatascope: %s", err.Error())
 		return err
 	}	
-	log.Println("DeleteDatascope success!")
+
 	return nil
 }
 
@@ -1243,7 +1227,7 @@ func GetMappings(schema string) ([]types.GroupMapping, error) {
 			err = rows.Scan(&mp.Id, &mp.Directorygroup, &mp.Dymiumgroup, &mp.Comments, &mp.Adminaccess)
 
 			if nil != err {
-				log.Printf("Error in GetMappings:  %s\n", err.Error())
+				log.Errorf("Error in GetMappings:  %s", err.Error())
 				return []types.GroupMapping{}, err
 			} else {
 				mps = append(mps, mp)
@@ -1251,7 +1235,7 @@ func GetMappings(schema string) ([]types.GroupMapping, error) {
 		}
 		
 	} else {
-		log.Printf("Error in GetMappings:  %s\n", err.Error())
+		log.Errorf("Error in GetMappings:  %s", err.Error())
 		return mps, err
 	}
 
@@ -1274,7 +1258,7 @@ func GetGroupAssignments(schema string) ([]types.DatascopeAndGroups, error) {
 			err = rows.Scan(&mp.Id, &mp.Name, &mp.Groupid, &mp.Groupname)
 
 			if nil != err {
-				log.Printf("Error in GetGroupAssignments:  %s\n", err.Error())
+				log.Errorf("Error in GetGroupAssignments:  %s", err.Error())
 				return []types.DatascopeAndGroups{}, err
 			} else {
 				mps = append(mps, mp)
@@ -1282,7 +1266,7 @@ func GetGroupAssignments(schema string) ([]types.DatascopeAndGroups, error) {
 		}
 		
 	} else {
-		log.Printf("Error 1 in GetGroupAssignments:  %s\n", err.Error())
+		log.Errorf("Error 1 in GetGroupAssignments:  %s", err.Error())
 		return mps, err
 	}
 	return mps, nil
@@ -1293,7 +1277,7 @@ func UpdateGroupAssignment(schema string, groups types.GroupAssignment) error {
     defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		log.Printf("Error in UpdateGroupAssignment: %s\n", err.Error())
+		log.Errorf("Error in UpdateGroupAssignment: %s", err.Error())
 		return err
 	}
 
@@ -1302,7 +1286,7 @@ func UpdateGroupAssignment(schema string, groups types.GroupAssignment) error {
 	_, err = tx.ExecContext(ctx, sql, datascope_id)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 2 in UpdateGroupAssignment: %s\n", err.Error())
+		log.Errorf("Error 2 in UpdateGroupAssignment: %s", err.Error())
 		return err
 	}	
 
@@ -1312,14 +1296,14 @@ func UpdateGroupAssignment(schema string, groups types.GroupAssignment) error {
 		_, err = tx.ExecContext(ctx, sql, datascope_id, group_id)
 		if err != nil {
 			tx.Rollback()
-			log.Printf("Error 3 in UpdateGroupAssignment: %s\n", err.Error())
+			log.Errorf("Error 3 in UpdateGroupAssignment: %s", err.Error())
 			return err
 		}	
 		}
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 4 in UpdateGroupAssignment: %s\n", err.Error())
+		log.Errorf("Error 4 in UpdateGroupAssignment: %s", err.Error())
 		return err
 	}	
 	
@@ -1332,7 +1316,7 @@ func CreateNewMapping(schema, dymiumgroup, directorygroup, comments string) erro
     defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		log.Printf("Error in CreateNewMapping: %s\n", err.Error())
+		log.Errorf("Error in CreateNewMapping: %s", err.Error())
 		return err
 	}
 
@@ -1341,14 +1325,14 @@ func CreateNewMapping(schema, dymiumgroup, directorygroup, comments string) erro
 
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 3 in CreateNewMapping: %s\n", err.Error())
+		log.Errorf("Error 3 in CreateNewMapping: %s", err.Error())
 		return err
 	}	
 
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 4 in CreateNewMapping: %s\n", err.Error())
+		log.Errorf("Error 4 in CreateNewMapping: %s", err.Error())
 		return err
 	}	
 	return nil
@@ -1356,10 +1340,10 @@ func CreateNewMapping(schema, dymiumgroup, directorygroup, comments string) erro
 
 func UpdateMapping(schema, id, dymiumgroup, directorygroup, comments string, adminaccess bool) error {
 	sql := "update "+schema+".groupmapping set outergroup=$1, innergroup=$2, comment=$3, adminaccess=$4  where id=$5;"
-log.Printf("UpdateMapping, adminaccess: %v\n", adminaccess)
+
 	_, err := db.Exec(sql, directorygroup, dymiumgroup, comments, adminaccess, id)
 	if(err != nil) {
-		log.Printf("UpdateMapping error %s\n", err.Error())
+		log.Errorf("UpdateMapping error %s", err.Error())
 	}
 	return err
 }
@@ -1369,7 +1353,7 @@ func DeleteMapping(schema, id string) error {
 
 	_, err := db.Exec(sql, id)
 	if(err != nil) {
-		log.Printf("DeleteMapping error %s\n", err.Error())
+		log.Errorf("DeleteMapping error %s", err.Error())
 	}
 	return err
 }
@@ -1379,7 +1363,7 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
     defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		log.Printf("Error in SaveDatascope: %s\n", err.Error())
+		log.Errorf("Error in SaveDatascope: %s", err.Error())
 		return err
 	}
 
@@ -1390,14 +1374,13 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 	err = row.Scan(&count)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 1 in SaveDatascope: %s\n", err.Error())
+		log.Errorf("Error 1 in SaveDatascope: %s", err.Error())
 		return err
 	}	
 	if(count != 0) {
 		tx.Rollback()
-		log.Printf("count: %d\n", count)
 		err := errors.New("A record for datascope '" + dscope.Name + "' already exists!")
-		log.Printf("Error 2 in SaveDatascope: %s\n", err.Error())
+		log.Errorf("Error 2 in SaveDatascope: %s", err.Error())
 		return err
 	}
 	sql="insert into "+schema+".datascopes(name) values($1)  returning id;"
@@ -1406,7 +1389,7 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 	err = row.Scan(&ds_id)	
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 3 in SaveDatascope: %s\n", err.Error())
+		log.Errorf("Error 3 in SaveDatascope: %s", err.Error())
 		return err
 	}	
 
@@ -1426,7 +1409,7 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 		_, err = tx.ExecContext(ctx, sql, ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable)
 		if err != nil {
 			tx.Rollback()
-			log.Printf("Error 4 in SaveDatascope record: %s\n", err.Error())
+			log.Errorf("Error 4 in SaveDatascope record: %s", err.Error())
 			return err
 		}
 	}
@@ -1434,10 +1417,10 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 5 in SaveDatascope: %s\n", err.Error())
+		log.Errorf("Error 5 in SaveDatascope: %s", err.Error())
 		return err
 	}	
-	log.Println("SaveDatascope success!")
+
 	return nil
 }
 func DeleteConnection(schema, id string) error {
@@ -1446,7 +1429,7 @@ func DeleteConnection(schema, id string) error {
     defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		log.Printf("Error in DeleteConnection: %s\n", err.Error())
+		log.Errorf("Error in DeleteConnection: %s", err.Error())
 		return err
 	}
 	sql := "select id from " + schema + ".admincredentials where connection_id=$1 and exists (select schema_name from global.customers where schema_name = $2);";
@@ -1455,35 +1438,35 @@ func DeleteConnection(schema, id string) error {
 	var credid string
 	err = row.Scan(&credid)
 	if err != nil {
-		log.Printf("Error 2 in DeleteConnection: %s\n", err.Error())
+		log.Errorf("Error 2 in DeleteConnection: %s", err.Error())
 		return err
 	}
 	sql = "delete from "+schema+".passwords where id=$1;"
 	_, err = tx.ExecContext(ctx, sql, credid)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 3 in DeleteConnection: %s\n", err.Error())
+		log.Errorf("Error 3 in DeleteConnection: %s", err.Error())
 		return err
 	}
 	sql = "delete from "+schema+".admincredentials where id=$1;"
 	_, err = tx.ExecContext(ctx, sql, credid)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 4 in DeleteConnection: %s\n", err.Error())
+		log.Errorf("Error 4 in DeleteConnection: %s", err.Error())
 		return err
 	}
 	sql = "delete from "+schema+".connections where id=$1;"
 	_, err = tx.ExecContext(ctx, sql, id)
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 5 in DeleteConnection: %s\n", err.Error())
+		log.Errorf("Error 5 in DeleteConnection: %s", err.Error())
 		return err
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		log.Printf("Error 6 in DeleteConnection: %s\n", err.Error())
+		log.Errorf("Error 6 in DeleteConnection: %s", err.Error())
 		return err
 	}
 
@@ -1495,7 +1478,7 @@ func GetFakeAuthentication () []byte{
 	token, err :=  GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s", 
 	"spoofcorp", "user@spoofcorp.com", "user", []string{"Admins", "Users"}, []string{"user", "admin"}, "org_nsEsSgfq3IYXe2pu")
 	if(err != nil){
-		log.Printf("Error: %s\n", err.Error() )
+		log.Errorf("Error: %s", err.Error() )
 	}
 	return []byte(`<html>
 	<head>
@@ -1511,19 +1494,18 @@ func GetFakeAuthentication () []byte{
 	
 }
 
-func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_portal_redirect string) (string, string, []string, error){
+func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id, 
+	auth_portal_client_secret, auth_portal_redirect string) (string, string, []string, string, string, []string, error){
 	body, err := getTokenFromCode(code, auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_portal_redirect)
-
-	log.Printf("returned body: %s\n", string(body))
 
 	jsonParsed, err := gabs.ParseJSON(body)
 
 	value, ok := jsonParsed.Path("error").Data().(string)
 	if ok {
-		log.Printf("Error: %s\n", value) 
+		log.Errorf("Error: %s", value) 
 		des, _ := jsonParsed.Path("error_description").Data().(string)
 		
-		return "", "", []string{}, errors.New(des)
+		return "", "", []string{}, "", "", []string{}, errors.New(des)
 
 	}
 	access_token, ok := jsonParsed.Path("access_token").Data().(string)
@@ -1531,29 +1513,31 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id, auth_portal
 	picture, name, email, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
 
 	sql := fmt.Sprintf("select schema_name from global.customers where organization=$1;")
-	log.Printf("sql: %s, ord_id: '%s'\n", sql, org_id)
+
 	row := db.QueryRow(sql, org_id)
 	var schema string
 	err = row.Scan(&schema)
 
 
 	if(err != nil){
-		log.Printf("Error 1: %s\n", err.Error() )		
-		return	"", "", []string{}, err
-	} else{
-		log.Printf("Schema: %s\n", schema )
-	}
+		log.ErrorUserf(schema, email, groups, GetRoles(schema, groups), "Error in tunnel login: %s", err.Error())
+	
+		return	"", "", []string{}, "", "", []string{}, err
+	} 
 
 	token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups), org_id)
 	if(err != nil){
-		log.Printf("Error 2: %s\n", err.Error() )
+		log.ErrorUserf(schema, email, groups, []string{}, "Error in tunnel JWT generation: %s", err.Error())
 	}	
 	recordTunnel(schema)
-	return token, name, groups, err
+	if(err == nil) {
+		log.InfoUserf(schema, email, groups, []string{}, "Successful tunnel login")
+	}
+	return token, name, groups, schema, email, GetRoles(schema, groups), err
 }
 func AuthenticationAdminHandlers(h *mux.Router) error {
 	host := os.Getenv("ADMIN_HOST")
-	log.Printf("ADMIN_HOST: %s\n", host)	
+	log.Debugf("ADMIN_HOST: %s", host)	
 	p := h.Host(host).Subrouter()
 
 	p.HandleFunc("/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
@@ -1565,7 +1549,7 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		if autherror == nil {
 			status = types.AuthStatus{"OK", "Session live", newtoken}
 		} else {
-			log.Println("Return error, reauthenticate")
+			log.Debug("Return error, reauthenticate")
 			status = types.AuthStatus{"Error", autherror.Error(), ""}
 		}
 
@@ -1596,19 +1580,15 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		if code == "" {
 			generateError(w, r, "Error: ", r.URL.Query().Get("error_description"))
 			return
-		} else {
-			log.Printf("Returned code: %s\n", code)
-		}
+		} 
 
 		body, err := getTokenFromCode(code, auth_admin_domain, auth_admin_client_id, auth_admin_client_secret, auth_admin_redirect)
-
-		log.Printf("returned body: %s\n", string(body))
 
 		jsonParsed, err := gabs.ParseJSON(body)
 
 		value, ok := jsonParsed.Path("error").Data().(string)
 		if ok {
-			log.Printf("Error: %s\n", value) 
+			log.Errorf("Error: %s", value) 
 			des, _ := jsonParsed.Path("error_description").Data().(string)
 			generateError(w, r, value, des)
 			return
@@ -1620,7 +1600,7 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 
 		token, err := generateAdminJWT(picture, name, email, groups, org_id)
 		if(err != nil){
-			log.Printf("Error: %s\n", err.Error() )
+			log.Errorf("Error: %s", err.Error() )
 		}
 		w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")
@@ -1650,7 +1630,7 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect), url.QueryEscape(auth_admin_audience ),  url.QueryEscape("groups") )
 
 		}
-		log.Printf("In /auth/login: redirect to \n%s\n", newquery)
+	
 		http.Redirect(w, r, newquery, http.StatusFound)
 	})
 
@@ -1660,7 +1640,7 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 
 func AuthenticationPortalHandlers(h *mux.Router) error {
 	host := os.Getenv("CUSTOMER_HOST")
-	log.Printf("CUSTOMER_HOST: %s\n", host)
+	log.Debugf("CUSTOMER_HOST: %s", host)
 	p := h.Host(host).Subrouter()
 
 	p.HandleFunc("/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
@@ -1672,7 +1652,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		if autherror == nil {
 			status = types.AuthStatus{"OK", "Session live", newtoken}
 		} else {
-			log.Println("Return error, reauthenticate")
+			log.Debug("Return error, reauthenticate")
 			status = types.AuthStatus{"Error", autherror.Error(), ""}
 		}
 
@@ -1704,19 +1684,15 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		if code == "" {
 			generateError(w, r, "Error: ", r.URL.Query().Get("error_description"))
 			return
-		} else {
-			log.Printf("Returned code: %s\n", code)
-		}
+		} 
 
 		body, err := getTokenFromCode(code, auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_portal_redirect)
-
-		log.Printf("returned body: %s\n", string(body))
 
 		jsonParsed, err := gabs.ParseJSON(body)
 
 		value, ok := jsonParsed.Path("error").Data().(string)
 		if ok {
-			log.Printf("Error: %s\n", value) 
+			log.Errorf("Error: %s", value) 
 			des, _ := jsonParsed.Path("error_description").Data().(string)
 			generateError(w, r, value, des)
 			return
@@ -1727,26 +1703,29 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		picture, name, email, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
 
 		sql := fmt.Sprintf("select schema_name from global.customers where organization=$1;")
-		log.Printf("sql: %s, ord_id: '%s'\n", sql, org_id)
+
 		row := db.QueryRow(sql, org_id)
 		var schema string
 		err = row.Scan(&schema)
 
 
 		if(err != nil){
-			log.Printf("Error 1: %s\n", err.Error() )
+			log.Errorf("Error 1: %s", err.Error() )
 			des, _ := jsonParsed.Path("error_description").Data().(string)
+			log.ErrorTenantf(org_id,  "Error in retrieving tenant: %s", err.Error() )
+
 			generateError(w, r, err.Error(), des)	
 			return		
-		} else{
-			log.Printf("Schema: %s\n", schema )
-		}
+		} 
 
 		token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups), org_id)
 		if(err != nil){
-			log.Printf("Error 2: %s\n", err.Error() )
+			log.ErrorUserf(schema, email, groups,  GetRoles(schema, groups), "Error in portal JWT generation: %s", err.Error() )
 		}
 		recordLogin(schema)
+		if(err == nil){
+			log.InfoUserf(schema, email, groups,  GetRoles(schema, groups), "Successful portal login")
+		}
 		w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(`<html>
@@ -1766,7 +1745,6 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		newquery := fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&scope=%s", 
 			auth_portal_domain, r.URL.RawQuery, auth_portal_client_id, url.QueryEscape(auth_portal_redirect), url.QueryEscape("openid profile email"))
 
-		log.Printf("In /auth/login: redirect to \n%s\n", newquery)
 		http.Redirect(w, r, newquery, http.StatusFound)
 	})
 
