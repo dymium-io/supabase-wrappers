@@ -405,7 +405,7 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 	if err == nil {		
 		conn, err := authentication.GetConnection(schema, *t.Id)
 		if(err != nil) {
-			log.ErrorUserf(schema, email, groups, roles, "UpdateConnection, error %s", err.Error() )
+			log.ErrorUserf(schema, email, groups, roles, "UpdateConnection, error %s, Id %s", err.Error(), *t.Id )
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -459,7 +459,7 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 		log.ErrorUserf(schema, email, groups, roles, "UpdateConnection, error: %s", error.Error())
 		status = types.OperationStatus{"Error", error.Error()}
 	} else {
-		log.ErrorUserf(schema, email, groups, roles, "UpdateConnection, success")
+		log.InfoUserf(schema, email, groups, roles, "UpdateConnection, success")
 		status = types.OperationStatus{"OK", "Connection updated"}
 	}
 	js, err := json.Marshal(status) //
