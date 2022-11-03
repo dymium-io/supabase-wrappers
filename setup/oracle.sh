@@ -5,22 +5,58 @@ set -e
 script_name=$0
 
 declare -a linux_packages
+linux_version='instantclient_21_8'
 linux_path='https://download.oracle.com/otn_software/linux/instantclient/218000'
 linux_packages+=('instantclient-basic-linux.x64-21.8.0.0.0dbru.zip'
 	'instantclient-sdk-linux.x64-21.8.0.0.0dbru.zip')
 
 declare -a darwin_packages
+darwin_version='instantclient_19_8'
 darwin_path='https://download.oracle.com/otn_software/mac/instantclient/198000'
 darwin_packages+=('instantclient-basic-macos.x64-19.8.0.0.0dbru.zip'
 	'instantclient-sqlplus-macos.x64-19.8.0.0.0dbru.zip'
 	'instantclient-sdk-macos.x64-19.8.0.0.0dbru.zip')
 
 usage() {
-	echo "Usage: ${script_name} <get|copy-to-aws|copy-from-aws> <linux|darwin|all>"
+	echo "Usage: ${script_name} <version|get|copy-to-aws|copy-from-aws> <linux|darwin|all>"
 }
 
 main() {
 	case "$1" in
+	version)
+		shift
+		case "$1" in
+		linux)
+			echo ${linux_version}
+			exit 0
+			;;
+		darwin)
+			echo ${darwin_version}
+			exit 0
+			;;
+		*)
+			usage
+			exit -1
+			;;
+		esac
+		;;
+	packages)
+		shift
+		case "$1" in
+		linux)
+			echo ${linux_packages}
+			exit 0
+			;;
+		darwin)
+			echo ${darwin_packages}
+			exit 0
+			;;
+		*)
+			usage
+			exit -1
+			;;
+		esac
+		;;
 	get)
 		shift
 		case "$1" in

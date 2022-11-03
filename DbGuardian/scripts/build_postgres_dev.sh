@@ -1,34 +1,38 @@
 #!/bin/zsh
 
 set -e
+set -x
 
 script_d=$PWD/$(dirname $0)
 build_d=${script_d}/BLD
 setup_d=${script_d}/../../setup
 
-instantclient_version='instantclient_21_8'
-instantclients=('instantclient-basic-linux.x64-21.8.0.0.0dbru.zip' \
-		    'instantclient-sdk-linux.x64-21.8.0.0.0dbru.zip')
+instantclient_version="$(${setup_d}/oracle.sh version linux)"
+instantclients=($(${setup_d}/oracle.sh packages linux))
+
 for f in ${instantclients[@]}; do
-    [ -f ${setup_d}/oracle/$f ] || {
-	echo "Oracle instantclient file $f not found in ${setup_d}"
-	echo "Please use ${setup_d}/oracle.sh script to get them"
-	exit -1
-    }
+	[ -f ${setup_d}/oracle/$f ] || {
+		echo "Oracle instantclient file $f not found in ${setup_d}"
+		echo "Please use ${setup_d}/oracle.sh script to get them"
+		exit -1
+	}
 done
 
 [ -d $build_d ] && {
-    rm -rf $build_d
+	rm -rf $build_d
 }
 
 mkdir $build_d
 cd $build_d
 
 for f in ${instantclients[@]}; do
-    unzip ${setup_d}/oracle/$f
+	unzip ${setup_d}/oracle/$f
 done
 
-cat <<EOF | docker build -t postgres-dev -f - .
+PostgresDev=$(docker images postgres-dev -q)
+[ -z "$PostgresDev" ] || docker rmi -f "$PostgresDev"
+
+cat <<EOF | docker build --compress -t postgres-dev -f - .
 FROM ubuntu:latest
 
 
