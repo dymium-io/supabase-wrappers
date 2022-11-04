@@ -12,7 +12,7 @@ DATA = mysql_fdw--1.0.sql mysql_fdw--1.1.sql mysql_fdw--1.0--1.1.sql
 
 REGRESS = server_options connection_validation dml select pushdown join_pushdown aggregate_pushdown limit_offset_pushdown misc
 
-MYSQL_CONFIG = mysql_config
+MYSQL_CONFIG = mariadb_config
 PG_CPPFLAGS := $(shell $(MYSQL_CONFIG) --include)
 LIB := $(shell $(MYSQL_CONFIG) --libs)
 

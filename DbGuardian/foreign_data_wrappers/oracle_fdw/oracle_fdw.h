@@ -125,6 +125,8 @@ struct oraColumn
 	unsigned int val_len4;   /* actual length of val - for bind callbacks */
 	short val_null;          /* indicator for NULL value */
 	int varno;               /* range table index of this column's relation */
+    /* Dymium */
+    int how_to_redact;       /* how to redact/obfuscate this column */
 };
 
 struct oraTable
