@@ -3,7 +3,9 @@ import (
 	"os"
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
-	_ "github.com/apex/log/handlers/logfmt"
+	"github.com/apex/log/handlers/json"
+	"github.com/apex/log/handlers/kinesis"
+	"github.com/apex/log/handlers/multi"
 )
 var Log *log.Entry
 
@@ -85,7 +87,17 @@ func FatalUserf(tenant, user string, groups, roles []string, format string, data
 }
 
 func Init() {
-	log.SetHandler(text.New(os.Stderr))
+	//log.SetHandler(json.New(os.Stderr))
+	_, ok := os.LookupEnv("AWS_LAMBDAS")
+	if(ok) {
+		log.SetHandler( text.New(os.Stderr) )
+	} else {
+		log.SetHandler(multi.New(
+			json.New(os.Stderr),
+			kinesis.New("dymium-data-stream"),
+		))
+	
+	}
 	//log.SetHandler(logfmt.New(os.Stderr))
 
 	extra = log.Fields{
