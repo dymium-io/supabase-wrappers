@@ -188,6 +188,11 @@ struct OracleFdwOption
 #define OPT_SAMPLE "sample_percent"
 #define OPT_PREFETCH "prefetch"
 
+/* Dymium */
+#define OPT_DYMIUM_SEMANTICS "semantics"
+#define OPT_DYMIUM_ACTION "action"
+#define OPT_DYMIUM_REDACT "redact"
+
 #define DEFAULT_ISOLATION_LEVEL ORA_TRANS_SERIALIZABLE
 #define DEFAULT_MAX_LONG 32767
 #define DEFAULT_PREFETCH 200
@@ -215,7 +220,12 @@ static struct OracleFdwOption valid_options[] = {
 	{OPT_SAMPLE, ForeignTableRelationId, false},
 	{OPT_PREFETCH, ForeignTableRelationId, false},
 	{OPT_KEY, AttributeRelationId, false},
-	{OPT_STRIP_ZEROS, AttributeRelationId, false}
+	{OPT_STRIP_ZEROS, AttributeRelationId, false},
+
+	/* Dymium */
+	{OPT_DYMIUM_SEMANTICS, AttributeRelationId, false},
+	{OPT_DYMIUM_ACTION, AttributeRelationId, false},
+	{OPT_DYMIUM_REDACT, AttributeRelationId, false}
 };
 
 #define option_count (sizeof(valid_options)/sizeof(struct OracleFdwOption))
@@ -2752,6 +2762,8 @@ getColumnData(Oid foreigntableid, struct oraTable *oraTable)
 			}
 			else if (strcmp(def->defname, OPT_STRIP_ZEROS) == 0 && optionIsTrue(strVal(def->arg)))
 				oraTable->cols[index-1]->strip_zeros = 1;
+			else if (strcmp(def->defname, OPT_DYMIUM_REDACT))
+			    oraTable->cols[index-1]->how_to_redact = atoi(strVal(def->arg));
 		}
 	}
 
@@ -5324,6 +5336,8 @@ List
 		result = lappend(result, serializeInt(fdwState->oraTable->cols[i]->strip_zeros));
 		result = lappend(result, serializeInt(fdwState->oraTable->cols[i]->pkey));
 		result = lappend(result, serializeLong(fdwState->oraTable->cols[i]->val_size));
+		/* Dymium */
+		result = lappend(result, serializeInt(fdwState->oraTable->cols[i]->how_to_redact));
 		/* don't serialize val, val_len, val_len4, val_null and varno */
 	}
 
@@ -5480,6 +5494,11 @@ struct OracleFdwState
 		cell = list_next(list, cell);
 		state->oraTable->cols[i]->val_size = deserializeLong(lfirst(cell));
 		cell = list_next(list, cell);
+		
+		/* Dymium */
+		state->oraTable->cols[i]->how_to_redact = (int)DatumGetInt32(((Const *)lfirst(cell))->constvalue);
+		cell = list_next(list, cell);
+		
 		/* allocate memory for the result value */
 		state->oraTable->cols[i]->val = (char *)palloc(state->oraTable->cols[i]->val_size + 1);
 		state->oraTable->cols[i]->val_len = 0;
@@ -6389,6 +6408,9 @@ setSelectParameters(struct paramDesc *paramList, ExprContext *econtext)
  * 		into arrays of values and null indicators.
  * 		If trunc_lob it true, truncate LOBs to WIDTH_THRESHOLD+1 bytes.
  */
+#define _D if(0)  
+#include "../common/obfuscate.c"
+
 void
 convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool trunc_lob)
 {
@@ -6405,6 +6427,9 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 	/* assign result values */
 	for (j=0; j<fdw_state->oraTable->npgcols; ++j)
 	{
+
+	    int how_to_redact, isNullable, act;
+		  
 		/* for dropped columns, insert a NULL */
 		if ((index + 1 < fdw_state->oraTable->ncols)
 				&& (fdw_state->oraTable->cols[index + 1]->pgattnum > j + 1))
@@ -6433,6 +6458,16 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 			continue;
 		}
 
+	    how_to_redact = fdw_state->oraTable->cols[index]->how_to_redact;
+		isNullable = (how_to_redact >> 2) & 0x1;
+		act = how_to_redact & 0x3;
+		
+		if (act == 1 && isNullable) {
+			nulls[j]  = true;
+			values[j] = PointerGetDatum(NULL);
+			continue;		  
+		}
+		
 		/* from here on, we can assume columns to be NOT NULL */
 		nulls[j] = false;
 		pgtype = fdw_state->oraTable->cols[index]->pgtype;
@@ -6446,6 +6481,9 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 			oracleGetLob(fdw_state->session,
 				(void *)fdw_state->oraTable->cols[index]->val, fdw_state->oraTable->cols[index]->oratype,
 				&value, &value_len, trunc_lob ? (WIDTH_THRESHOLD+1) : 0);
+			if(act == 1) {
+			  redact_bytea(value, value_len);
+			}
 		}
 		else if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_GEOMETRY)
 		{
@@ -6472,6 +6510,9 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 			value = fdw_state->oraTable->cols[index]->val + 4;
 			/* terminating zero byte (needed for LONGs) */
 			value[value_len] = '\0';
+			if(act == 1) {
+			  redact_bytea(value, value_len);
+			}
 		}
 		else
 		{
@@ -6492,6 +6533,41 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 			/* for other data types, oraTable contains the results */
 			value = oraval;
 			value_len = fdw_state->oraTable->cols[index]->val_len;
+			if(act != 0) {
+			  switch(how_to_redact >> 3) {
+			  case 0x0:
+				if(act == 1)
+				  value_len = redact_something(value, value_len);
+				else
+				  value_len = obfuscate(value, value_len);
+				break;
+			  case 0x1:
+				if(act == 1)
+				  value_len = redact_text(value, value_len);
+				else value_len = obfuscate(value, value_len);
+				break;
+			  case 0x2:
+				if(act == 1)
+				  value_len = redact_number(value, value_len);
+				else
+				  value_len = obfuscate(value, value_len);
+				break;
+			  case 0x3:
+				value_len = redact_bool(value, value_len);
+				break;
+			  case 0x4:
+				value_len = redact_xml(value, value_len);
+				break;
+			  case 0x5:
+				value_len = redact_bytea(value, value_len);
+				break;
+			  case 0x6:
+				value_len = redact_json(value, value_len);
+				break;
+			  case 0x7:
+				value_len = obfuscate(value, value_len); break;
+			  }
+			}
 		}
 
 		/* fill the TupleSlot with the data (after conversion if necessary) */

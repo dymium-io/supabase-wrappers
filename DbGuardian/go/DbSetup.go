@@ -19,6 +19,10 @@ func extensionName(connectionType types.ConnectionType) (string, error) {
 		return "postgres_fdw", nil
 	case types.CT_MySQL, types.CT_MariaDB:
 		return "mysql_fdw", nil
+	case types.CT_SqlServer:
+		return "tds_fdw", nil
+	case types.CT_OracleDB:
+		return "oracle_fdw", nil
 	}
 	return "", fmt.Errorf("Extension %v is not supported yet", connectionType)
 }
@@ -59,6 +63,36 @@ func options(connectionType types.ConnectionType) iOptions {
 			table: func(remoteSchema, remoteTable string) string {
 				return fmt.Sprintf("dbname '%s', table_name '%s'",
 					esc(remoteSchema), esc(remoteTable))
+			},
+		}
+	case types.CT_SqlServer:
+		return iOptions{
+			server: func(host string, port int, dbname string) string {
+				return fmt.Sprintf("servername '%s', port '%d', database '%s'",
+					esc(host), port, esc(dbname))
+			},
+			userMapping: func(user, password string) string {
+				return fmt.Sprintf("username '%s', password '%s'",
+					esc(user), esc(password))
+			},
+			table: func(remoteSchema, remoteTable string) string {
+				return fmt.Sprintf("schema_name '%s', table_name '%s'",
+					esc(remoteSchema), esc(remoteTable))
+			},
+		}
+	case types.CT_OracleDB:
+		return iOptions{
+			server: func(host string, port int, dbname string) string {
+				return fmt.Sprintf("dbserver '//%s:%d/%s'",
+					host, port, strings.ToUpper(dbname))
+			},
+			userMapping: func(user, password string) string {
+				return fmt.Sprintf("username '%s', password '%s'",
+					esc(user), esc(password))
+			},
+			table: func(remoteSchema, remoteTable string) string {
+				return fmt.Sprintf("schema '%s', table '%s'",
+					esc(remoteSchema), esc(strings.ToUpper(remoteTable)))
 			},
 		}
 	}
