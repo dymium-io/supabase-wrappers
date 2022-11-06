@@ -6,14 +6,16 @@ declare -a dbs
 init=0
 kill=0
 foreground=0
+show_databases=0
 
 usage () {
-    echo "Usage: $0 [-k | --kill] [-i | --init] [-f | --foreground] db..."
+    echo "Usage: $0 [-s | --show] [-k | --kill] [-i | --init] [-f | --foreground] db..."
 }
 
 while true
 do
     case "$1" in
+	-s | --show) show_databases=1;;
 	-i | --init) init=1;;
 	-k | --kill) kill=1;;
 	-f | --foreground) foreground=1;;
@@ -36,8 +38,13 @@ main() {
 	exit -1
     }
     
-    (( $init + $kill + $foreground > 1 )) && {
-	echo "--forground, --kill and --init flags can not be specified simultaneously"
+    (( $init + $kill + $foreground + $show_databases > 1 )) && {
+	echo "--show, --forground, --kill and --init flags can not be specified simultaneously"
+	exit -1
+    }
+
+    [[ $show -eq 1 && ${#dbs} -gt 0 ]] && {
+	echo "--show flag does not need databases names specification"
 	exit -1
     }
 
@@ -53,10 +60,12 @@ main() {
 	exit -1
     }
     
-    [[ ${#dbs} -eq 0 ]] && {
+    [[ ${#dbs} -eq 0 && $show_databases -eq 0 ]] && {
 	echo "no databases specified"
 	exit -1
     }
+    
+    [[ $show_databases -eq 1 ]] && show_databases $confs
 
     get_conf $dbs
     confs=(${reply[@]})
@@ -67,10 +76,10 @@ main() {
 }
 
 get_conf() {
-    dbs=${1[@]}
-    e='.[] | to_entries |
-       .[] | select(.key == strenv(DB)) |
-       .value | select(.active and .access == "docker") | to_json(0)'
+    local dbs=$@
+    local e='.[] | to_entries |
+             .[] | select(.key == strenv(DB)) |
+             .value | select(.active and .access == "docker") | to_json(0)'
     declare -a confs
     for db in ${dbs[@]}; do
 	declare -a c
@@ -91,15 +100,20 @@ get_conf() {
 
 
 kill_dockers() {
-    local confs=$1
+    local confs=$@
     for c in $confs[@]; do
 	docker stop "$(echo -n $c | yq -p j '.name')"
     done
     exit 0
 }
 
+show_databases() {
+    yq '.[] | to_entries | .[] | select(.value.active and .value.access == "docker") | .key' $cnf
+    exit 0
+}
+
 start_dockers() {
-    local confs=$1
+    local confs=$@
     for c in $confs[@]; do
 	t=$(echo -n $c | yq -p j '.type')
 	n=$(echo -n $c | yq -p j '.name')
