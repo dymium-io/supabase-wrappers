@@ -76,7 +76,7 @@ main() {
 }
 
 get_conf() {
-    local dbs=$@
+    local dbs=($@)
     local e='.[] | to_entries |
              .[] | select(.key == strenv(DB)) |
              .value | select(.active and .access == "docker") | to_json(0)'
@@ -100,7 +100,7 @@ get_conf() {
 
 
 kill_dockers() {
-    local confs=$@
+    local confs=($@)
     for c in $confs[@]; do
 	docker stop "$(echo -n $c | yq -p j '.name')"
     done
@@ -113,7 +113,7 @@ show_databases() {
 }
 
 start_dockers() {
-    local confs=$@
+    local confs=($@)
     for c in $confs[@]; do
 	t=$(echo -n $c | yq -p j '.type')
 	n=$(echo -n $c | yq -p j '.name')
