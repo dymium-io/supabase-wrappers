@@ -6,9 +6,10 @@ const RoleAdmin = "admin"
 
 type Claims struct {
 	Name       string`json:"name"`
-	Email       string`json:"email"`
+	Session    string`json:"session"`
+	Email      string`json:"email"`
 	Groups     []string `json:"groups"`
-	Roles     []string `json:"roles"`
+	Roles      []string `json:"roles"`
 	Picture    string `json:"picture"`
 	Schema     string `json:"schema"`
 	Port       int  `json:"port"`
