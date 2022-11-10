@@ -56,7 +56,7 @@ func TestApiHandlers(t *testing.T){
 			dbtls = "disable"
 		}
 	
-		log.Init()
+		log.Init("webserver")
 		err := authentication.Init(dbhost, dbport, dbadminuser, dbadminpassword, "postgres", dbtls)
 		if(err != nil) {
 			t.Errorf("Error: %s\n", err.Error() )

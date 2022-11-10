@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"fmt"
 	"github.com/go-http-utils/etag"
 	"github.com/gorilla/mux"
 	cache "github.com/victorspringer/http-cache"
@@ -35,7 +36,7 @@ func main() {
 	dbuser := os.Getenv("DATABASE_USER")
 	dbname := os.Getenv("DATABASE_NAME")
 	dbtls  := os.Getenv("DATABASE_TLS")
-	log.Init()
+	log.Init("webserver")
 
 	log.Debugf("dbname: %s", dbname)
 	if(dbtls == "")	{
@@ -57,7 +58,30 @@ func main() {
 			// Do stuff here
 
 			if r.RequestURI != "/healthcheck" {
-				log.Debugf("%s%s", r.Host, r.RequestURI)
+				// Loop over header 
+				var out []string
+				for name, values := range r.Header {
+					// Loop over all values for the name.
+					for _, value := range values {
+						s := fmt.Sprintf("%s: %s", name, value)
+						out = append(out, s)
+					}
+				}
+
+				token := common.TokenFromHTTPRequest(r)
+				msg := fmt.Sprintf("://%s%s", r.Host, r.RequestURI)
+				if token != "" {
+					schema, roles, groups, email, _, session, err := authentication.GetSchemaRolesFromToken(token)
+					if err != nil {
+						log.InfoUserArrayf(schema, session, email, groups, roles, msg, out)
+					} else {
+						log.InfoArrayf(msg, out)			
+					}
+
+				} else {
+					log.InfoArrayf(msg, out)
+
+				}
 			}
 			// Call the next handler, which can be another middleware in the chain, or the final handler.
 			next.ServeHTTP(w, r)

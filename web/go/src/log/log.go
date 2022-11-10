@@ -33,15 +33,16 @@ func clearAll() {
 	delete(extra, "roles")
 	delete(extra, "tenant")
 }
-func setAll(user string, groups, roles []string, tenant string) {
+func setAll(user string, groups, roles []string, tenant, session string) {
 	extra["useremail"] =  user
 	extra["groups"] =  groups
 	extra["roles"] =  roles
 	extra["tenant"] = tenant
+	extra["session"] = session
 }
-func Userf(f func(string, ...interface{}), tenant, user string, groups, roles []string, 
+func Userf(f func(string, ...interface{}), tenant, session, user string, groups, roles []string, 
 	format string, data ...interface{}) {
-		setAll(user, groups, roles, tenant)
+		setAll(user, groups, roles, tenant, session)
 		if(len(data) == 0) {
 			f(format)
 		} else {
@@ -49,6 +50,20 @@ func Userf(f func(string, ...interface{}), tenant, user string, groups, roles []
 		}
 		clearAll()			
 }
+
+func UserArrayf(f func(string, ...interface{}), tenant, session, user string, groups, roles []string, 
+	format string, arr []string, data ...interface{}) {
+		setAll(user, groups, roles, tenant, session)
+		extra["messageattach"] = arr
+		if(len(data) == 0) {
+			f(format)
+		} else {
+			f(format, data...)
+		}
+		clearAll()			
+		delete(extra, "messageattach")
+}
+
 func Tenantf(f func(string, ...interface{}), tenant string, format string,  data ...interface{}) {
 	extra["tenant"] = tenant
 	f(format, data...)
@@ -70,23 +85,45 @@ func FatalTenantf(tenant, format string, data ...interface{}){
 	Tenantf(Fatalf, tenant, format, data...)
 }
 
-func DebugUserf(tenant, user string, groups, roles []string, format string, data ...interface{}) {
-	Userf(Debugf, tenant, user, groups, roles, format, data...)
+func DebugUserf(tenant, session, user string, groups, roles []string, format string, data ...interface{}) {
+	Userf(Debugf, tenant, session, user, groups, roles, format, data...)
 }
-func InfoUserf(tenant, user string, groups, roles []string, format string, data ...interface{}) {
-	Userf(Infof, tenant, user, groups, roles, format, data...)
+func InfoUserf(tenant, session, user string, groups, roles []string, format string, data ...interface{}) {
+	Userf(Infof, tenant, session, user, groups, roles, format, data...)
 }
-func WarnUserf(tenant, user string, groups, roles []string, format string, data ...interface{}) {
-	Userf(Warnf, tenant, user, groups, roles, format, data...)
+func WarnUserf(tenant, session, user string, groups, roles []string, format string, data ...interface{}) {
+	Userf(Warnf, tenant, session, user, groups, roles, format, data...)
 }
-func ErrorUserf(tenant, user string, groups, roles []string, format string, data ...interface{}) {
-	Userf(Errorf, tenant, user, groups, roles, format, data...)
+func ErrorUserf(tenant, session, user string, groups, roles []string, format string, data ...interface{}) {
+	Userf(Errorf, tenant, session, user, groups, roles, format, data...)
 }
-func FatalUserf(tenant, user string, groups, roles []string, format string, data ...interface{}) {
-	Userf(Fatalf, tenant, user, groups, roles, format, data...)
+func FatalUserf(tenant, session, user string, groups, roles []string, format string, data ...interface{}) {
+	Userf(Fatalf, tenant, session, user, groups, roles, format, data...)
 }
 
-func Init() {
+func DebugUserArrayf(tenant, session, user string, groups, roles []string, format string, arr []string, data ...interface{}) {
+	UserArrayf(Debugf, tenant, session, user, groups, roles, format, arr, data...)
+}
+func InfoUserArrayf(tenant, session, user string, groups, roles []string, format string, arr []string, data ...interface{}) {
+	UserArrayf(Infof, tenant, session, user, groups, roles, format, arr, data...)
+}
+func WarnUserArrayf(tenant, session, user string, groups, roles []string, format string, arr []string, data ...interface{}) {
+	UserArrayf(Warnf, tenant, session, user, groups, roles, format, arr, data...)
+}
+func ErrorUserArrayf(tenant, session, user string, groups, roles []string, format string, arr []string, data ...interface{}) {
+	UserArrayf(Errorf, tenant, session, user, groups, roles, format, arr, data...)
+}
+func FatalUserArrayf(tenant, session, user string, groups, roles []string, format string, arr []string, data ...interface{}) {
+	UserArrayf(Fatalf, tenant, session, user, groups, roles, format, arr, data...)
+}
+
+func InfoArrayf(format string, arr []string, data ...interface{}) {
+	extra["messageattach"] =  arr
+	Infof(format, data...)
+	delete(extra, "messageattach")
+}
+
+func Init(component string) {
 	//log.SetHandler(json.New(os.Stderr))
 	_, ok := os.LookupEnv("AWS_LAMBDAS")
 	if(ok) {
@@ -101,7 +138,7 @@ func Init() {
 	//log.SetHandler(logfmt.New(os.Stderr))
 
 	extra = log.Fields{
-		"component": "webserver",
+		"component": component,
 	}
 
 	Log = log.WithFields(extra)
