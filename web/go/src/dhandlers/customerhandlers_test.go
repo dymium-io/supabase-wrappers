@@ -6,6 +6,7 @@ package dhandlers
 
 import "dymium.com/dymium/authentication"
 import "dymium.com/dymium/types"
+import "dymium.com/dymium/log"
 import "os"
 import "os/exec"
 import "testing"
@@ -55,6 +56,7 @@ func TestApiHandlers(t *testing.T){
 			dbtls = "disable"
 		}
 	
+		log.Init("webserver")
 		err := authentication.Init(dbhost, dbport, dbadminuser, dbadminpassword, "postgres", dbtls)
 		if(err != nil) {
 			t.Errorf("Error: %s\n", err.Error() )
@@ -83,6 +85,7 @@ func TestApiHandlers(t *testing.T){
 			return
 		}
 		err = db.Close()
+
 
 		// ----------------------------- open test -----------------------------------
 		err = authentication.Init(dbhost, dbport, dbadminuser, dbadminpassword, "test", dbtls)
@@ -405,18 +408,10 @@ fmt.Println(token)
 	id, _ = getConnections(2)
 // -------- edit a connection without password
 	func (data string) {
-		rr, body := LoadAuthHandler("POST", "/api/updateconnection", bytes.NewBuffer([]byte(data)), 
+		rr, _ := LoadAuthHandler("POST", "/api/updateconnection", bytes.NewBuffer([]byte(data)), 
 			UpdateConnection) 
-		if s := rr.Code; s != http.StatusOK {
-			t.Errorf("handler returned wrong status code: got %v want %v",
-				s, http.StatusOK)
-			return 
-		}		
-		var status  types.OperationStatus
-		err = json.Unmarshal(body, &status)
-		fmt.Println("Check update properly failing")
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.NotEqual(t, "OK", status.Status, fmt.Sprintf("Error in UpdateConnection %s\n", status.Errormessage ) )
+
+		require.Equal(t, rr.Code, http.StatusInternalServerError, fmt.Sprintf("Unexpected in UpdateConnection %s\n", status.Errormessage ) )
 
 	}(edited_adventureworks)
 	UpdateConn := func (data, name string) {

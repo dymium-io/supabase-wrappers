@@ -8,8 +8,9 @@ case ${1:-"--darwin"} in
 	$0 --linux
 	;;
     "--darwin")
+	PATH="/usr/local/bin:$PATH"
 	stack build --copy-bins --local-bin-path .
-	upx --best mallard
+	# upx --best mallard
 	mv mallard ../../bin/darwin/mallard
 	;;
     "--linux")

@@ -264,8 +264,8 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 	return back.LoginURL, ProtocolVersion < back.ProtocolVersion
 }
 
-func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, id int) {
-	out := protocol.TransmissionUnit{protocol.Open, id, []byte{}}
+func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, token string, id int) {
+	out := protocol.TransmissionUnit{protocol.Open, id, []byte(token) }
 	fmt.Printf("Create proxy connection %d, number of connections %d\n", id, len(conmap))
 	//write out result
 	messages <- out
@@ -355,11 +355,11 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder,
 	}
 }
 
-func runProxy(listener *net.TCPListener, back chan string, token int) {
+func runProxy(listener *net.TCPListener, back chan string, port int, token string) {
 	defer wg.Done()
 
 	/*
-		addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", token))
+		addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 		if err != nil {
 			fmt.Printf("Error resolving address: %s\n", err.Error())
 			panic(err)
@@ -425,7 +425,7 @@ func runProxy(listener *net.TCPListener, back chan string, token int) {
 		}
 
 		conmap[connectionCounter] = ingress
-		go pipe(ingress, messages, conmap, connectionCounter)
+		go pipe(ingress, messages, conmap, token, connectionCounter)
 		connectionCounter++
 	}
 }
@@ -612,7 +612,7 @@ func main() {
 			fmt.Printf("Error: %s\n", err.Error())
 		}
 
-		go runProxy(listener, message, claim.Port)
+		go runProxy(listener, message, claim.Port, groups.Token)
 		for {
 			msg := <-message
 			// fmt.Printf("read from channel: %s\n", msg)

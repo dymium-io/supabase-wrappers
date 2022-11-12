@@ -7,9 +7,9 @@ import (
 	_"fmt"
 	"github.com/gorilla/mux"
 	"io"
-	"log"
 	"net/http"
 	"os"
+	"dymium.com/dymium/log"
 )
 
 const Nocache = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"
@@ -25,7 +25,6 @@ func health() {
 		w.Header().Set("Content-Type", "text/html")
 
 		io.WriteString(w, "<html><body>OK</body></html>")
-		//log.Println("Healthcheck")
 	}).Methods("GET")
 
 	p.HandleFunc("/healthshellcheck", func(w http.ResponseWriter, r *http.Request) {
@@ -33,16 +32,16 @@ func health() {
 		w.Header().Set("Content-Type", "text/html")
 
 		io.WriteString(w, "<html><body>OK</body></html>")
-		//log.Println("Shell Healthcheck")
+		
 	}).Methods("GET")
 
 	
-	log.Println("Listen for health on :80")
+	log.Infof("Listen for health on :80")
 	http.ListenAndServe(":80", p)
 }
 func main() {
-
-	log.Print("Version 0.19")
+	log.Init("tunnel")
+	log.Info("Starting tunnel server, Version 0.20")
 	flag.IntVar(&port, "p", 0, "Port")
 	flag.StringVar(&address, "a", "", "Address")
 	flag.Parse()
@@ -52,7 +51,7 @@ func main() {
 	if port == 0 {
 		port = 443
 	}
-	log.Printf("address: %s, port %d\n", address, port)
+	log.Debugf("address: %s, port %d", address, port)
 	certificatejson := os.Getenv("CERTIFICATE")
 	t := struct {
 		Key         string
@@ -60,7 +59,7 @@ func main() {
 	}{}
 	err := json.Unmarshal([]byte(certificatejson), &t)
 	if err != nil {
-		log.Printf("Cert unmarshaling error: %s\n", err.Error())
+		log.Errorf("Cert unmarshaling error: %s", err.Error())
 		os.Exit(1)
 	}
 	passphrase := os.Getenv("PASSPHRASE")
@@ -72,7 +71,7 @@ func main() {
 	
 	err = json.Unmarshal([]byte(cajson), &tt)
 	if err != nil {
-		log.Printf("CA Cert unmarshaling error: %s\n", err.Error())
+		log.Errorf("CA Cert unmarshaling error: %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -86,7 +85,15 @@ func main() {
 		postgressDomain = ".guardian.local"
 	}
 
-	log.Printf("proxy domain: %s, port %s\n", postgressDomain, postgresPort)
+	log.Infof("proxy domain: %s, port %s", postgressDomain, postgresPort)
 
-	tunnel.Server(address, port, customer, postgressDomain, postgresPort, []byte(t.Certificate), []byte(t.Key), passphrase, []byte(tt.Certificate))
+	dbPort := os.Getenv("DATABASE_PORT")
+	dbDomain := os.Getenv("DATABASE_HOST")
+	dbUsername := os.Getenv("DATABASE_USER")
+	dbPassword := os.Getenv("DATABASE_PASSWORD")
+	dbName := os.Getenv("DATABASE_NAME")
+	tls := os.Getenv("DATABASE_TLS")
+	
+	tunnel.Server(address, port, customer, postgressDomain, postgresPort, []byte(t.Certificate), 
+		[]byte(t.Key), passphrase, []byte(tt.Certificate), dbDomain, dbPort, dbUsername, dbPassword, dbName, tls)
 }
