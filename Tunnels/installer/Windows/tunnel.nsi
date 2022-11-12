@@ -16,13 +16,13 @@
   Unicode True
 
   ;Default installation folder
-  InstallDir "$LOCALAPPDATA\Dymium"
+  InstallDir "$PROGRAMFILES64\Dymium"
   
   ;Get installation folder from registry if available
-  InstallDirRegKey HKCU "Software\Dymium" ""
+  InstallDirRegKey HKLM "Software\Dymium" ""
 
   ;Request application privileges for Windows Vista
-  RequestExecutionLevel user
+  RequestExecutionLevel highest
 
 ;--------------------------------
 ;Interface Settings
@@ -56,27 +56,33 @@ Section "Install Dymium Secure Tunnel" DymiumClient
 
   ;ADD YOUR OWN FILES HERE...
   File ..\..\go\client\dymium.exe
-  File .\logo.ico
+  File ..\..\go\GUI\dymiumgui.exe
+  
   ;Store installation folder
-  WriteRegStr HKCU "Software\Dymium" "" $INSTDIR  
+  WriteRegStr HKLM "Software\Dymium" "" $INSTDIR  
   Push "Path"
   Push "A"
-  Push "HKCU"
+  Push "HKLM"
   Push $INSTDIR 
   Call EnvVarUpdate
   Pop  $0
   
   ;Create uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
-WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dymium" \
+WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dymium" \
                  "DisplayName" "Dymium Secure Tunnel"
-WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dymium" \
+WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dymium" \
                  "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
-WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dymium" \
+WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Dymium" \
                  "DisplayIcon" "$\"$INSTDIR\logo.ico$\""
 
  ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
  IntFmt $0 "0x%08X" $0
+
+ 
+SetShellVarContext all
+CreateShortcut "$DESKTOP\Dymium.lnk" "$instdir\dymiumgui.exe"
+
 SectionEnd
 
 ;--------------------------------
@@ -96,19 +102,21 @@ SectionEnd
 Section "Uninstall"
 
   ;ADD YOUR OWN FILES HERE...
-
+  SetShellVarContext all
   Delete "$INSTDIR\Uninstall.exe"
   Delete "$INSTDIR\dymium.exe"
+  Delete "$INSTDIR\dymiumgui.exe"
+  Delete "$DESKTOP\Dymium.lnk" 
   RMDir "$INSTDIR"
 
-  WriteRegStr HKCU "Software\Dymium" "" $INSTDIR  
+  WriteRegStr HKLM "Software\Dymium" "" $INSTDIR  
   Push "Path"
   Push "R"
-  Push "HKCU"
+  Push "HKLM"
   Push $INSTDIR 
   Call un.EnvVarUpdate
   Pop  $0
   
-  DeleteRegKey /ifempty HKCU "Software\Dymium"
+  DeleteRegKey /ifempty HKLM "Software\Dymium"
 
 SectionEnd

@@ -1,2 +1,2 @@
-makensis tunnel.nsi
+makensis /V4 tunnel.nsi
 
