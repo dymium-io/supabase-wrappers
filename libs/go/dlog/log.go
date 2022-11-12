@@ -125,7 +125,7 @@ func InfoArrayf(format string, arr []string, data ...interface{}) {
 
 func Init(component string) {
 	//log.SetHandler(json.New(os.Stderr))
-	_, ok := os.LookupEnv("AWS_LAMBDAS")
+	_, ok := os.LookupEnv("LOCAL_ENVIRONMENT")
 	if(ok) {
 		log.SetHandler( text.New(os.Stderr) )
 	} else {
@@ -134,6 +134,10 @@ func Init(component string) {
 			kinesis.New("dymium-data-stream"),
 		))
 	
+	}
+	loglevel, ok := os.LookupEnv("LOG_LEVEL")
+	if ok {
+		log.SetLevelFromString(loglevel)
 	}
 	//log.SetHandler(logfmt.New(os.Stderr))
 

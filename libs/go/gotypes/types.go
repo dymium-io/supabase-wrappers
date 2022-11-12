@@ -1,4 +1,4 @@
-package types
+package gotypes
 import "github.com/dgrijalva/jwt-go"
 
 const RoleUser = "user"
