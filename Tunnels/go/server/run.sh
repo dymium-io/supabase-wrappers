@@ -21,6 +21,9 @@ export DATABASE_TLS=${DATABASE_TLS:-disable}
     DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )
 }
 export DATABASE_PASSWORD=$DATABASE_PASSWORD
+export LOCAL_ENVIRONMENT=true
+export LOG_LEVEL=Debug
+//export LOG_LEVEL=Info
 
 ./server -p 15654 -a 127.0.0.1
 

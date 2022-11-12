@@ -26,7 +26,11 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-require github.com/apex/log v0.0.0-00010101000000-000000000000
+require (
+	dymium.com/dymium/gotypes v0.0.0-00010101000000-000000000000
+	dymium.com/dymium/log v0.0.0-00010101000000-000000000000
+	github.com/apex/log v1.9.0 // indirect
+)
 
 require github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
 
@@ -35,5 +39,9 @@ replace aws => ../../../libs/go/aws
 replace github.com/apex/log => ../../../libs/go/log
 
 replace github.com/tj/go-kinesis => ../../../libs/go/go-kinesis
+
+replace dymium.com/dymium/log => ../../../libs/go/dlog
+
+replace dymium.com/dymium/gotypes => ../../../libs/go/gotypes
 
 go 1.18

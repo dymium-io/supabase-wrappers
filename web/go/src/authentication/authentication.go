@@ -27,6 +27,7 @@ import (
 	"github.com/Jeffail/gabs"
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/types"
+	"dymium.com/dymium/gotypes"
 	"dymium.com/dymium/log"
 	"path/filepath"
 	"aws"
@@ -112,7 +113,7 @@ var ctx context.Context
 
 var FilesystemRoot string
 
-var Invoke types.Invoke_t
+var Invoke gotypes.Invoke_t
 
 var CaKey *rsa.PrivateKey
 var CaCert *x509.Certificate 
@@ -167,7 +168,7 @@ func ParsePEMPrivateKey(pemBytes []byte, passphrase string) (*rsa.PrivateKey, er
 		return nil, fmt.Errorf("unsupported key type %q", block.Type)
 	}
 }
-func InitInvoke( i types.Invoke_t) {
+func InitInvoke( i gotypes.Invoke_t) {
 	Invoke = i
 }
 //aws.Invoke("DbAnalyzer", nil, bconn)
@@ -320,7 +321,7 @@ func generateAdminJWT(picture string, name string, email string, groups []string
 		issueTime := time.Now()
 		expirationTime := issueTime.Add(timeOut * time.Minute)
 		
-		claim := &types.AdminClaims{
+		claim := &gotypes.AdminClaims{
 			// TODO
 			Name: name,
 			Email: email,
@@ -341,7 +342,7 @@ func generateAdminJWT(picture string, name string, email string, groups []string
 }
 func refreshAdminToken(token string) (string, error) {
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
-	claim := &types.AdminClaims{}
+	claim := &gotypes.AdminClaims{}
 
 	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -350,7 +351,7 @@ func refreshAdminToken(token string) (string, error) {
 	if err == nil && tkn.Valid {
 		// update token
 		expirationTime := timeNow.Add(timeOut * time.Minute)
-		newclaim := &types.AdminClaims{
+		newclaim := &gotypes.AdminClaims{
 			Name: claim.Name,
 			Email: claim.Email,
 			Groups: claim.Groups,
@@ -380,7 +381,7 @@ func refreshAdminToken(token string) (string, error) {
 }
 func GetSchemaFromToken(token string) (string, error) {
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
-	claim := &types.Claims{}
+	claim := &gotypes.Claims{}
 
 	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -398,7 +399,7 @@ func GetSchemaFromToken(token string) (string, error) {
 }
 func GetSessionFromToken(token string) (string, error) {
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
-	claim := &types.Claims{}
+	claim := &gotypes.Claims{}
 
 	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -416,7 +417,7 @@ func GetSessionFromToken(token string) (string, error) {
 }
 func GetSchemaRolesFromToken(token string) (string, []string,  []string, string, string, string, error) {
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
-	claim := &types.Claims{}
+	claim := &gotypes.Claims{}
 
 	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -635,7 +636,7 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 
 func GetIdentityFromToken(token string) (string, []string, error) {
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
-	claim := &types.Claims{}
+	claim := &gotypes.Claims{}
 
 	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -709,7 +710,7 @@ func GetConnections(schema string) ([]types.ConnectionRecord, error ) {
 
 func  CheckAndRefreshToken(token string, sport string) (string, error) {
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
-	claim := &types.Claims{}
+	claim := &gotypes.Claims{}
 
 	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -721,7 +722,7 @@ func  CheckAndRefreshToken(token string, sport string) (string, error) {
 		// update token
 
 		expirationTime := timeNow.Add(timeOut * time.Minute)
-		newclaim := &types.Claims{
+		newclaim := &gotypes.Claims{
 			Name: claim.Name,
 			Email: claim.Email,
 			Groups: claim.Groups,
@@ -755,7 +756,7 @@ return "", err
 }
 func GetRoles(schema string, groups []string) []string {
 	var roles []string
-	roles = append(roles, types.RoleUser)
+	roles = append(roles, gotypes.RoleUser)
 	var count int	
 	if(len(groups) == 0) {
 
@@ -770,7 +771,7 @@ func GetRoles(schema string, groups []string) []string {
 			if(count > 0) {
 				return roles
 			}
-			roles = append(roles, types.RoleAdmin)
+			roles = append(roles, gotypes.RoleAdmin)
 			return roles
 		}
 	}
@@ -784,7 +785,7 @@ func GetRoles(schema string, groups []string) []string {
 		return roles;
 	} else {
 		if(count > 0) {
-			roles = append(roles, types.RoleAdmin)
+			roles = append(roles, gotypes.RoleAdmin)
 		}
 	}
 
@@ -796,7 +797,7 @@ func GeneratePortalJWT(picture string, schema string, name string, email string,
 	expirationTime := issueTime.Add(timeOut * time.Minute)
 
 	session, _ := GenerateRandomString(32) //ignore the error for now
-	claim := &types.Claims{
+	claim := &gotypes.Claims{
 		// TODO
 		Name: name,
 		Session: session,
@@ -824,7 +825,7 @@ func GeneratePortalJWT(picture string, schema string, name string, email string,
 
 func refreshPortalToken(token string) (string, error) {
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
-	claim := &types.Claims{}
+	claim := &gotypes.Claims{}
 
 	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
@@ -834,7 +835,7 @@ func refreshPortalToken(token string) (string, error) {
 	if err == nil && tkn.Valid {
 		// update token
 		expirationTime := timeNow.Add(timeOut * time.Minute)
-		newclaim := &types.Claims{
+		newclaim := &gotypes.Claims{
 			Name: claim.Name,
 			Session: claim.Session,
 			Email: claim.Email,
