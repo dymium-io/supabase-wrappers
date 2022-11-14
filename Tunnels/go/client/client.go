@@ -22,6 +22,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/apex/log"
+	"github.com/apex/log/handlers/cli"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/pkg/browser"
@@ -60,9 +63,9 @@ func displayBuff(what string, buff []byte) {
 	if len(buff) > 10 {
 		head := buff[:6]
 		tail := buff[len(buff)-6:]
-		fmt.Printf("%s head: %v, tail: %v\n", what, head, tail)
+		log.Debugf("%s head: %v, tail: %v", what, head, tail)
 	} else {
-		fmt.Printf("%s buffer: %v\n", what, buff)
+		log.Debugf("%s buffer: %v", what, buff)
 	}
 }
 
@@ -111,7 +114,7 @@ func generateCSR(name string, groups []string) ([]byte, error) {
 		Subject:            pkix.Name{CommonName: name},
 		DNSNames:           groups,
 	}
-	fmt.Println("Generating certificate request...")
+	log.Infof("Generating certificate request...")
 	csrDER, err := x509.CreateCertificateRequest(rand.Reader, template, certKey)
 	if err != nil {
 		return []byte{}, err
@@ -126,7 +129,7 @@ func sendCSR(csr []byte, token string) error {
 	outbody.Csr = string(csr)
 	js, err := json.Marshal(outbody)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -134,7 +137,7 @@ func sendCSR(csr []byte, token string) error {
 
 	req, err := http.NewRequest("POST", urlStr, bytes.NewBuffer(js))
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 	req.Header.Add("Content-Type", "application/json")
@@ -143,21 +146,21 @@ func sendCSR(csr []byte, token string) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 
 	var back types.CSRResponse
 	err = json.Unmarshal(body, &back)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -172,7 +175,7 @@ func sendCSR(csr []byte, token string) error {
 
 	clientCert, err = tls.X509KeyPair([]byte(back.Certificate), keyPem)
 	if err != nil {
-		fmt.Printf("Error in X509KeyPair: %s", err)
+		log.Errorf("Error in X509KeyPair: %s", err)
 		os.Exit(1)
 	}
 
@@ -200,11 +203,11 @@ func restart() {
 	time.Sleep(time.Second)
 	proc, err := os.StartProcess(ex, args, procAttr)
 	if err != nil {
-		fmt.Printf("StartProcess Error: %s\n", err.Error())
+		log.Errorf("StartProcess Error: %s", err.Error())
 	}
 	_, err = proc.Wait()
 	if err != nil {
-		fmt.Printf("proc.Wait error: %s\n", err.Error())
+		log.Errorf("proc.Wait error: %s", err.Error())
 	}
 	os.Exit(0)
 }
@@ -215,7 +218,7 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 	outbody.Customerid = customerid
 	js, err := json.Marshal(outbody)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -223,24 +226,24 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 	resp, err := http.Post(urlStr, "application/json", bytes.NewBuffer(js))
 
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		fmt.Printf("Error retrieving the tunnel information. Please check your parameters.\n")
+		log.Errorf("Error retrieving the tunnel information. Please check your parameters.")
 		os.Exit(1)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 
 	var back types.CustomerIDResponse
 	err = json.Unmarshal(body, &back)
 	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
+		log.Errorf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -249,14 +252,14 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 
 	if !forcenoupdate {
 		if ProtocolVersion < back.ProtocolVersion {
-			fmt.Println("The tunneling utility must be updated!")
-			fmt.Printf("Go to %s/app/access?key=download for the download.", portalurl)
+			log.Infof("The tunneling utility must be updated!")
+			log.Infof("Go to %s/app/access?key=download for the download.", portalurl)
 			os.Exit(1)
 		} else {
 			if ProtocolVersion >= back.ProtocolVersion {
-				fmt.Printf("A new version %s.%s is available\n",
+				log.Infof("A new version %s.%s is available",
 					back.ClientMajorVersion, back.ClientMinorVersion)
-				fmt.Printf("Go to %s/app/access?key=download for the download.", portalurl)
+				log.Infof("at %s/app/access?key=download", portalurl)
 			}
 
 		}
@@ -266,7 +269,7 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 
 func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, token string, id int) {
 	out := protocol.TransmissionUnit{protocol.Open, id, []byte(token) }
-	fmt.Printf("Create proxy connection %d, number of connections %d\n", id, len(conmap))
+	log.Debugf("Create proxy connection %d, number of connections %d", id, len(conmap))
 	//write out result
 	messages <- out
 
@@ -276,9 +279,9 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 		n, err := ingress.Read(buff)
 		if err != nil {
 			if(err.Error() != "EOF") {
-				fmt.Printf("Read on loopback failed '%s'\n", err.Error())
+				log.Errorf("Read on loopback failed '%s'", err.Error())
 			} else {
-				fmt.Println("Loopback connection closed")
+				log.Infof("Loopback connection closed")
 			}
 			ingress.Close()
 			back := protocol.TransmissionUnit{protocol.Close, id, nil}
@@ -286,7 +289,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 			return
 		}
 		b := buff[:n]
-		//fmt.Printf("Read %d bytes from local connection #%d\n", len(b), id)
+		//fmt.Printf("Read %d bytes from local connection #%d", len(b), id)
 
 		out := protocol.TransmissionUnit{protocol.Send, id, b}
 		//write out result
@@ -298,15 +301,15 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
 	for {
 		buff, ok := <-messages
 		if !ok {
-			fmt.Printf("Error reading from SSL channel\n")
+			log.Errorf("Error reading from SSL channel")
 			close(messages)
 			return
 		}
-		//fmt.Printf("Encode %d bytes into SSL channel\n", len(buff.Data))
+		//fmt.Printf("Encode %d bytes into SSL channel", len(buff.Data))
 
 		err := enc.Encode(buff)
 		if err != nil {
-			fmt.Printf("Error writing into tunnel %s\n", err.Error())
+			log.Errorf("Error writing into tunnel %s", err.Error())
 		}
 	}
 }
@@ -315,7 +318,7 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder,
 		var buff protocol.TransmissionUnit
 		err := dec.Decode(&buff)
 		if err != nil {
-			fmt.Printf("Еrror reading from tunnel%s, closing...\n", err.Error())
+			log.Errorf("Еrror reading from tunnel%s, closing...", err.Error())
 			for key := range conmap {
 				back := protocol.TransmissionUnit{protocol.Close, key, nil}
 				messages <- back
@@ -334,16 +337,16 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder,
 				sock.Close()
 				delete(conmap, buff.Id)
 			}
-			fmt.Printf("Closed connection %d, %d left\n", buff.Id, len(conmap))
+			log.Debugf("Closed connection %d, %d left", buff.Id, len(conmap))
 		case protocol.Send:
-			//fmt.Printf("Send %d bytes\n", len(buff.Data))
+			//fmt.Printf("Send %d bytes", len(buff.Data))
 			sock, ok := conmap[buff.Id]
 			if ok {
 				_, err := sock.Write(buff.Data)
-				//fmt.Printf("Wrote back to local socket to connection %d, %d bytes out of %d bytes\n", buff.Id, n, len(buff.Data))
+				//fmt.Printf("Wrote back to local socket to connection %d, %d bytes out of %d bytes", buff.Id, n, len(buff.Data))
 				//displayBuff("Data: ", buff.Data )
 				if err != nil {
-					fmt.Printf("Write to local socket error: %s, closing...", err.Error())
+					log.Errorf("Write to local socket error: %s, closing...", err.Error())
 					//os.Exit(1)
 					back := protocol.TransmissionUnit{protocol.Close, buff.Id, nil}
 					sock.Close()
@@ -358,19 +361,6 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder,
 func runProxy(listener *net.TCPListener, back chan string, port int, token string) {
 	defer wg.Done()
 
-	/*
-		addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", port))
-		if err != nil {
-			fmt.Printf("Error resolving address: %s\n", err.Error())
-			panic(err)
-		}
-		listener, err := net.ListenTCP("tcp", addr)
-		if err != nil {
-			fmt.Printf("Error in ListenTCP: %s, can't continue\n", err.Error())
-			back <- err.Error()
-			os.Exit(1)
-		}
-	*/
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM([]byte(RootCApem))
 
@@ -378,8 +368,8 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 		RootCAs:      caCertPool,
 		Certificates: []tls.Certificate{clientCert}}
 	target := fmt.Sprintf("%s:%d", lbaddress, lbport)
-	back <- fmt.Sprintf("Connect to %s\n", target)
-	fmt.Printf("tls.Dial to %s\n", target)
+	back <- fmt.Sprintf("Connect to %s", target)
+	log.Debugf("tls.Dial to %s", target)
 	egress, err := tls.Dial("tcp", target, config) // *Conn
 	if err != nil {
 		back <- err.Error()
@@ -387,24 +377,24 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 		return
 	}
 	back <- "Connected successfully"
-	fmt.Printf("Wrote to back Connected")
+	log.Debugf("Wrote to back Connected")
 
 	state := egress.ConnectionState()
 
-	fmt.Printf("Version: %x\n", state.Version)
-	fmt.Printf("HandshakeComplete: %t\n", state.HandshakeComplete)
-	fmt.Printf("DidResume: %t\n", state.DidResume)
-	fmt.Printf("CipherSuite: %x\n", state.CipherSuite)
-	fmt.Printf("NegotiatedProtocol: %s\n", state.NegotiatedProtocol)
-	fmt.Printf("NegotiatedProtocolIsMutual: %t\n", state.NegotiatedProtocolIsMutual)
+	log.Debugf("Version: %x", state.Version)
+	log.Debugf("HandshakeComplete: %t", state.HandshakeComplete)
+	log.Debugf("DidResume: %t", state.DidResume)
+	log.Debugf("CipherSuite: %x", state.CipherSuite)
+	log.Debugf("NegotiatedProtocol: %s", state.NegotiatedProtocol)
+	log.Debugf("NegotiatedProtocolIsMutual: %t", state.NegotiatedProtocolIsMutual)
 
-	fmt.Print("Certificate chain:")
+	log.Debugf("Certificate chain:")
 
 	for i, cert := range state.PeerCertificates {
 		subject := cert.Subject
 		issuer := cert.Issuer
-		fmt.Printf(" %d s:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", i, subject.Country, subject.Province, subject.Locality, subject.Organization, subject.OrganizationalUnit, subject.CommonName)
-		fmt.Printf("   i:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s\n", issuer.Country, issuer.Province, issuer.Locality, issuer.Organization, issuer.OrganizationalUnit, issuer.CommonName)
+		log.Debugf(" %d s:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s", i, subject.Country, subject.Province, subject.Locality, subject.Organization, subject.OrganizationalUnit, subject.CommonName)
+		log.Debugf("   i:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s", issuer.Country, issuer.Province, issuer.Locality, issuer.Organization, issuer.OrganizationalUnit, issuer.CommonName)
 	}
 
 	var conmap = make(map[int]net.Conn)
@@ -420,7 +410,7 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 	for {
 		ingress, err := listener.Accept() //*TCPConn
 		if err != nil {
-			fmt.Printf("Error in Accept: %s\n", err.Error())
+			log.Errorf("Error in Accept: %s", err.Error())
 			panic(err)
 		}
 
@@ -433,7 +423,7 @@ func doUpdate(portalUrl string) error {
 
 	url := fmt.Sprintf("%sapi/downloadupdate?os=%s&arch=%s", portalUrl, runtime.GOOS, runtime.GOARCH)
 
-	fmt.Println("Downloading new version...")
+	log.Infof("Downloading new version...")
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -443,45 +433,48 @@ func doUpdate(portalUrl string) error {
 		return errors.New(fmt.Sprintf("Error downloading update, status %d", resp.StatusCode))
 	}
 	ex, _ := os.Executable()
-	fmt.Println("Updating the client...")
+	log.Infof("Updating the client...")
 	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, ex + ".old"})
 	if err != nil {
-		fmt.Printf("Error updating: %s\n", err.Error())
+		log.Errorf("Error updating: %s", err.Error())
 		if rerr := selfupdate.RollbackError(err); rerr != nil {
-			fmt.Println("Failed to rollback from bad update: %s", rerr.Error())
+			log.Errorf("Failed to rollback from bad update: %s", rerr.Error())
 		}
 		// error handling
 	} else {
-		fmt.Println("Utility successfully updated, restarting...")
+		log.Infof("Utility successfully updated, restarting...")
 	}
 	return err
 }
 func getListener(port int, back chan string) (*net.TCPListener, error) {
 	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
-		fmt.Printf("Error resolving address: %s\n", err.Error())
+		log.Errorf("Error resolving address: %s", err.Error())
 		panic(err)
 	}
 	listener, err := net.ListenTCP("tcp", addr)
 	if err != nil {
-		fmt.Printf("Error in ListenTCP: %s, can't continue\n", err.Error())
+		log.Errorf("Error in ListenTCP: %s, can't continue", err.Error())
 		back <- err.Error()
 		os.Exit(1)
 	}
-	fmt.Printf("Listener listening on port %d\n", port)
+	log.Infof("Listener listening on port %d", port)
 	return listener, err
 }
 func main() {
+	log.SetHandler( cli.New(os.Stderr) )
+
 	forcenoupdate := flag.Bool("r", false, "Don't update")
 	forceupdate := flag.Bool("u", false, "Force update")
+	verbose := flag.Bool("v", false, "Verbose")
 	flag.StringVar(&customerid, "c", "", "Customer ID")
 	flag.StringVar(&portalurl, "p", "", "Portal URL")
 	flag.Parse()
 	if !*forcenoupdate {
-		fmt.Printf("Dymium secure tunnel, version %s.%s, protocol iteration %s\n", MajorVersion, MinorVersion, ProtocolVersion)
+		log.Infof("Dymium secure tunnel, version %s.%s, protocol iteration %s", MajorVersion, MinorVersion, ProtocolVersion)
 	}
 	if *forcenoupdate && *forceupdate {
-		fmt.Printf("Can't force update and no update!")
+		log.Errorf("Can't force update and no update!")
 		os.Exit(1)
 	}
 
@@ -489,11 +482,18 @@ func main() {
 
 	if len(customerid) == 0 && len(portalurl) == 0 {
 		if runtime.GOOS == "windows" {
-			fmt.Println("Usage: dymium.exe -c <customer ID> -p <portal URL>\n")
+			log.Infof("Usage: dymium.exe -c <customer ID> -p <portal URL> [-v]")
 		} else {
-			fmt.Println("Usage: dymium -c <customer ID> -p <portal URL>\n")
+			log.Infof("Usage: dymium -c <customer ID> -p <portal URL> [-v]")
 		}
 		os.Exit(1)
+	}
+
+
+	if *verbose {
+		log.SetLevelFromString("Debug") 	
+	} else {
+		log.SetLevelFromString("Info") 	
 	}
 
 	loginURL /* needsUpdate */, _ := getTunnelInfo(customerid, portalurl, *forcenoupdate)
@@ -504,7 +504,7 @@ func main() {
 			// runtime.Breakpoint()
 			err := doUpdate(portalurl)
 			if err != nil {
-				fmt.Printf("Error: %s\n", err.Error())
+				fmt.Printf("Error: %s", err.Error())
 				os.Exit(1)
 			}
 			restart()
@@ -514,12 +514,12 @@ func main() {
 
 	err := browser.OpenURL(loginURL)
 	if err != nil {
-		fmt.Printf("OpenURL failed: %s\n", err.Error())
+		log.Errorf("OpenURL failed: %s", err.Error())
 	}
 	p := mux.NewRouter()
 	loggingMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// fmt.Printf("%s%s\n", r.Host, r.RequestURI)
+			// fmt.Printf("%s%s", r.Host, r.RequestURI)
 			// Call the next handler, which can be another middleware in the chain, or the final handler.
 			next.ServeHTTP(w, r)
 		})
@@ -542,7 +542,7 @@ func main() {
 			generateError(w, r, "Error: ", r.URL.Query().Get("error_description"))
 			return
 		} else {
-			// fmt.Printf("Returned code: %s\n", code)
+			// fmt.Printf("Returned code: %s", code)
 		}
 		//w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")
@@ -558,7 +558,7 @@ func main() {
 
 		js, err := json.Marshal(outbody)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err.Error())
+			log.Errorf("Error: %s", err.Error())
 			os.Exit(1)
 		}
 
@@ -566,19 +566,19 @@ func main() {
 		resp, err := http.Post(urlStr, "application/json", bytes.NewBuffer(js))
 
 		if err != nil {
-			fmt.Printf("Error: %s\n", err.Error())
+			log.Errorf("Error: %s", err.Error())
 			os.Exit(1)
 		}
 		defer resp.Body.Close()
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err.Error())
+			log.Errorf("Error: %s", err.Error())
 			os.Exit(1)
 		}
 		var groups types.AuthorizationCodeResponse
 		err = json.Unmarshal(body, &groups)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err.Error())
+			log.Errorf("Error: %s", err.Error())
 			os.Exit(1)
 		}
 
@@ -603,19 +603,19 @@ func main() {
 
 		_, _, err = p.ParseUnverified(groups.Token, &claim)
 		if err != nil {
-			fmt.Printf("Error: token invalid, can't continue %s\n", err.Error())
+			log.Errorf("Error: token invalid, can't continue %s", err.Error())
 			os.Exit(1)
 		}
 
 		listener, err := getListener(claim.Port, message)
 		if err != nil {
-			fmt.Printf("Error: %s\n", err.Error())
+			log.Errorf("Error: %s", err.Error())
 		}
 
 		go runProxy(listener, message, claim.Port, groups.Token)
 		for {
 			msg := <-message
-			// fmt.Printf("read from channel: %s\n", msg)
+
 			if msg == "end" {
 				break
 			}
@@ -635,18 +635,19 @@ func main() {
 
 		if connectionError {
 			w.Write([]byte(content.ErrorTail))
-			fmt.Println("Error detected, exiting...")
+			log.Errorf("Error detected, exiting...")
 		} else {
 			tail := fmt.Sprintf(content.Tail, portalurl, groups.Token, claim.Port)
 			w.Write([]byte(tail))
-			fmt.Println("Ready to pass traffic securely!")
+			log.Infof("Ready to pass traffic securely!")
 		}
 		if f, ok := w.(http.Flusher); ok {
 			f.Flush()
 		}
 
 		if err := s.Shutdown(context.TODO()); err != nil {
-			panic(err) // failure/timeout shutting down the server gracefully
+			log.Errorf(err.Error()) // failure/timeout shutting down the server gracefully
+			os.Exit(1)
 		}
 
 	}).Methods("GET")

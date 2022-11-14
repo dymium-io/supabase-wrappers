@@ -74,8 +74,8 @@ func (g *Gui) LaunchDymium() error {
 
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
-	d, _ := os.Getwd()
-	g.intro.SetText(g.intro.Text  +d + "\n")
+	//d, _ := os.Getwd()
+	//g.intro.SetText(g.intro.Text  +d + "\n")
 
 	if err != nil {
 		fmt.Printf("Error: %s\n", err.Error())
