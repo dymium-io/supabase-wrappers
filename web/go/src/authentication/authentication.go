@@ -1544,6 +1544,34 @@ func GetFakeAuthentication () []byte{
 	</html>`)
 	
 }
+func GetTargets(schema, key, secret string, ) ([]string, error) {
+	var targets []string 	
+	sql := `select a.targetaddress, a.targetport, a.localport from ` + schema + `.connectors as a 
+	join `+schema+`.connectorauth as b on a.id_connectorauth=b.id where b.accesskey=$1 and b.accesssecret=$2;`
+	fmt.Println(sql)
+	fmt.Printf("schema %s, key: %s\n", schema, key)
+
+	rows, err  := db.Query(sql, key, secret)
+	if nil == err {
+		defer rows.Close()
+		for rows.Next() {		
+			var address string
+			var port, localport int
+			err := rows.Scan(&address, &port, &localport)	
+			if err != nil {
+				fmt.Printf("Error: %s\n", err.Error())
+				return nil, err
+			}
+			s := fmt.Sprintf("%s:%d,%d", address, port, localport)
+			targets = append(targets, s)
+		}
+	} else {
+		return nil, err
+	}
+
+	fmt.Printf("targets: %v\n", targets)
+	return targets, nil
+}
 
 func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id, 
 	auth_portal_client_secret, auth_portal_redirect string) (string, string, []string, string, string, []string, error){

@@ -1294,6 +1294,87 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(js))
 }
 
+// TODO TODO TODO TODO TODO TODO TODO TODO TODO
+// check the secret here!!!
+func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	var t types.CertificateRequestWithSecret
+
+	err := json.Unmarshal(body, &t)
+	schema := t.Customer
+	key := t.Key
+	secret := t.Secret
+		
+	fmt.Printf("%v\nschema: %s, key: %s, secret %s\n", schema, key, secret)
+
+	if err != nil {
+		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error unmarshaling cert: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+    
+	pemBlock, _ := pem.Decode( []byte(t.Csr) )
+    if pemBlock == nil {
+		log.ErrorTenantf(schema, "Api GetConnectorCertificate, pem.Decode failed")
+		http.Error(w, "pem.Decode failed", http.StatusInternalServerError)
+		return		
+    }
+
+	clientCSR, err := x509.ParseCertificateRequest(pemBlock.Bytes) 
+    if err = clientCSR.CheckSignature(); err != nil {
+		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return 
+    }
+
+	targets, err := authentication.GetTargets(clientCSR.Subject.CommonName, key, secret)
+
+	// create client certificate template
+    clientCRTTemplate := x509.Certificate{
+        Signature:          clientCSR.Signature,
+        SignatureAlgorithm: clientCSR.SignatureAlgorithm,
+
+        PublicKeyAlgorithm: clientCSR.PublicKeyAlgorithm,
+        PublicKey:          clientCSR.PublicKey,
+
+        SerialNumber: big.NewInt(2),
+        Issuer:       authentication.CaCert.Subject,
+        Subject:      clientCSR.Subject,
+        NotBefore:    time.Now().Add(-90 * time.Second), // grace time
+        NotAfter:     time.Now().Add(90 * time.Second),
+        KeyUsage:     x509.KeyUsageDigitalSignature,
+        ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		DNSNames: 		targets,
+    }
+
+    // create client certificate from template and CA public key
+    clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, authentication.CaCert, 
+		clientCSR.PublicKey, authentication.CaKey)
+	
+    if err != nil {
+		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+
+    out := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: clientCRTRaw})
+
+	var certout types.CSRResponse 
+	certout.Certificate = string(out)
+	js, err := json.Marshal(certout)
+	if err != nil {
+		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	log.InfoTenantf(schema, "Api GetConnectorCertificate, success")
+
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(js))
+}
+
+
 func GetConnections(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 	email := r.Context().Value(authenticatedEmailKey).(string)

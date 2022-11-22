@@ -51,9 +51,26 @@ tclient:
   modules:
     - source: Tunnel.yaml
     - source: Common.yaml
+
 tserver:
   language: GoLang
   path: ../Tunnels/go/server/types
+  root-module: dymium/types
+  modules:
+    - source: Tunnel.yaml    
+    - source: Common.yaml
+
+meshserver:
+  language: GoLang
+  path: ../Tunnels/go/meshserver/types
+  root-module: dymium/types
+  modules:
+    - source: Tunnel.yaml    
+    - source: Common.yaml
+
+meshconnector:
+  language: GoLang
+  path: ../Tunnels/go/meshconnector/types
   root-module: dymium/types
   modules:
     - source: Tunnel.yaml    

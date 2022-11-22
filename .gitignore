@@ -68,3 +68,4 @@ Tunnels/installer/MacOSPackages/DymiumTunnel.pkgproj
 web/js/packages/portal/public/DymiumInstaller.pkg
 Tunnels/go/client/dymium
 Tunnels/go/GUI/dymiumgui.app/Contents/MacOS/dymium.cstemp
+Tunnels/go/meshconnector/__debug_bin

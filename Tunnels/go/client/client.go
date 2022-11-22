@@ -12,22 +12,21 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"dymium.com/client/content"
-	"dymium.com/client/selfupdate"
-	"dymium.com/client/types"
-	"dymium.com/server/protocol"
 	"encoding/gob"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"flag"
 	"fmt"
+
+	"dymium.com/client/ca"
+	"dymium.com/client/content"
+	"dymium.com/client/selfupdate"
+	"dymium.com/client/types"
+	"dymium.com/server/protocol"
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/cli"
 
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/mux"
-	"github.com/pkg/browser"
 	"io"
 	"net"
 	"net/http"
@@ -37,6 +36,10 @@ import (
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
+	"github.com/pkg/browser"
 )
 
 const (
@@ -268,7 +271,7 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 }
 
 func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, token string, id int) {
-	out := protocol.TransmissionUnit{protocol.Open, id, []byte(token) }
+	out := protocol.TransmissionUnit{protocol.Open, id, []byte(token)}
 	log.Debugf("Create proxy connection %d, number of connections %d", id, len(conmap))
 	//write out result
 	messages <- out
@@ -278,7 +281,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 
 		n, err := ingress.Read(buff)
 		if err != nil {
-			if(err.Error() != "EOF") {
+			if err.Error() != "EOF" {
 				log.Errorf("Read on loopback failed '%s'", err.Error())
 			} else {
 				log.Infof("Loopback connection closed")
@@ -362,7 +365,7 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 	defer wg.Done()
 
 	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM([]byte(RootCApem))
+	caCertPool.AppendCertsFromPEM([]byte(ca.RootCApem))
 
 	config := &tls.Config{
 		RootCAs:      caCertPool,
@@ -462,7 +465,7 @@ func getListener(port int, back chan string) (*net.TCPListener, error) {
 	return listener, err
 }
 func main() {
-	log.SetHandler( cli.New(os.Stderr) )
+	log.SetHandler(cli.New(os.Stderr))
 
 	forcenoupdate := flag.Bool("r", false, "Don't update")
 	forceupdate := flag.Bool("u", false, "Force update")
@@ -489,11 +492,10 @@ func main() {
 		os.Exit(1)
 	}
 
-
 	if *verbose {
-		log.SetLevelFromString("Debug") 	
+		log.SetLevelFromString("Debug")
 	} else {
-		log.SetLevelFromString("Info") 	
+		log.SetLevelFromString("Info")
 	}
 
 	loginURL /* needsUpdate */, _ := getTunnelInfo(customerid, portalurl, *forcenoupdate)

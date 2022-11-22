@@ -26,6 +26,13 @@ type CertificateRequest struct {
    Csr string `json:"csr"`
 }
 
+type CertificateRequestWithSecret struct {
+   Customer string `json:"customer"`
+   Key string `json:"key"`
+   Secret string `json:"secret"`
+   Csr string `json:"csr"`
+}
+
 type CustomerIDRequest struct {
    Customerid string `json:"customerid"`
 }

@@ -25,6 +25,12 @@ AuthorizationCodeResponse:
 CertificateRequest:
   - csr: string
 
+CertificateRequestWithSecret:
+  - customer: string
+  - key: string
+  - secret: string
+  - csr: string
+
 CSRResponse:
   - certificate: string
 

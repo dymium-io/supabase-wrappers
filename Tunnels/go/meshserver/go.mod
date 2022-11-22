@@ -1,0 +1,26 @@
+module dymium.com/meshserver
+
+go 1.18
+
+replace dymium.com/server/gotypes => ../../../libs/go/gotypes
+
+require (
+	dymium.com/dymium/log v0.0.0-00010101000000-000000000000
+	dymium.com/server/protocol v0.0.0-00010101000000-000000000000
+	github.com/gorilla/mux v1.8.0
+	github.com/lib/pq v1.10.7
+)
+
+require (
+	github.com/apex/log v1.9.0 // indirect
+	github.com/aws/aws-sdk-go v1.20.6 // indirect
+	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
+	github.com/jpillora/backoff v0.0.0-20180909062703-3050d21c67d7 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
+	github.com/rogpeppe/fastuuid v1.1.0 // indirect
+	github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
+)
+
+replace dymium.com/dymium/log => ../../../libs/go/dlog
+
+replace dymium.com/server/protocol => ../protocol
