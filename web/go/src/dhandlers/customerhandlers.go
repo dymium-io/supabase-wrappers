@@ -966,7 +966,7 @@ func GetMappings(w http.ResponseWriter, r *http.Request) {
 		s := fmt.Sprintf("%s to %s, ",  mappings[i].Directorygroup, mappings[i].Dymiumgroup)
 		out = append(out, s)
 	}
-	log.InfoUserf(schema, session, email, groups, roles, "Api GetMappings, success", out)
+	log.InfoUserf(schema, session, email, groups, roles, "Api GetMappings, success")
 	w.Write(js)
 }
 
@@ -1306,8 +1306,8 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 	schema := t.Customer
 	key := t.Key
 	secret := t.Secret
-		
-	fmt.Printf("%v\nschema: %s, key: %s, secret %s\n", schema, key, secret)
+
+	fmt.Printf("schema: %s, key: %s, secret %s\n", schema, key, secret)
 
 	if err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error unmarshaling cert: %s", err.Error())
