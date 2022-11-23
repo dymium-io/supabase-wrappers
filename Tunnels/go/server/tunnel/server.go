@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 	"sync"
+	"sync/atomic"
 	"dymium.com/dymium/log"
 	"dymium.com/server/gotypes"
 	"dymium.com/server/protocol"
@@ -25,35 +26,37 @@ type Virtcon struct {
 	session string
 	groups  []string
 	roles   []string
-	accumDownstream int
-	totalDownstream int
-	accumUpstream int
-	totalUpstream int
+	accumDownstream int64
+	totalDownstream int64
+	accumUpstream int64
+	totalUpstream int64
 }
 func (x *Virtcon) LogDownstream(bytes int, final bool) {
-	x.accumDownstream += bytes
-	x.totalDownstream += bytes
-	if( (x.accumDownstream > 10000 || final) && x.accumDownstream > 0) {
+	atomic.AddInt64(&x.accumDownstream, int64(bytes))
+	atomic.AddInt64(&x.totalDownstream, int64(bytes))
+	accumDownstream := atomic.LoadInt64(&x.accumDownstream)
+	if( (accumDownstream > 10000 || final) && accumDownstream > 0) {
 		sl := fmt.Sprintf("%d", x.accumDownstream)
 		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "Downstream, sent #%d bytes", []string{sl}, x.accumDownstream)
-		x.accumDownstream = 0
+		atomic.StoreInt64(&x.accumDownstream, 0)
 	}
 	if(final) {
-		sl := fmt.Sprintf("%d", x.totalDownstream)
-		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "End of connection, total downstream traffic %d bytes", []string{sl}, x.totalDownstream)
+		sl := fmt.Sprintf("%d", atomic.LoadInt64(&x.totalDownstream) )
+		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "End of connection, total downstream traffic %d bytes", []string{sl}, atomic.LoadInt64(&x.totalDownstream))
 	}
 }
 func (x *Virtcon) LogUpstream(bytes int, final bool) {
-	x.accumUpstream += bytes
-	x.totalUpstream += bytes
-	if( (x.accumUpstream > 10000 || final) && x.accumUpstream > 0) {
+	atomic.AddInt64(&x.accumUpstream, int64(bytes))
+	atomic.AddInt64(&x.totalUpstream, int64(bytes))
+	accumUpstream := atomic.LoadInt64(&x.accumUpstream)
+	if( (accumUpstream > 10000 || final) && accumUpstream > 0) {
 		sl := fmt.Sprintf("%d", x.accumUpstream)
 		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "Upstream, sent #%d bytes", []string{sl}, x.accumUpstream)
-		x.accumUpstream = 0
+		atomic.StoreInt64(&x.accumUpstream, 0)
 	}
 	if(final) {
-		sl := fmt.Sprintf("%d", x.totalUpstream)
-		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "End of connection, total upstream traffic %d bytes", []string{sl}, x.totalUpstream)
+		sl := fmt.Sprintf("%d", atomic.LoadInt64(&x.totalUpstream) )
+		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "End of connection, total upstream traffic %d bytes", []string{sl}, atomic.LoadInt64(&x.totalUpstream))
 	}
 }
 
@@ -197,12 +200,14 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 	}
 }
 
-func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.TransmissionUnit, id int, token string) {
+func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.TransmissionUnit, id int, token string, mu *sync.RWMutex) {
 
 	for {
 		buff := make([]byte, 0xffff)
 		n, err := egress.Read(buff)
+		mu.RLock()
 		conn, ok := conmap[id]
+		mu.RUnlock()
 		if err != nil {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				// no op
@@ -256,6 +261,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder,
 
 func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 	var conmap = make(map[int]*Virtcon)
+	var mu sync.RWMutex
 	claim := &gotypes.Claims{}
 
 	dec := gob.NewDecoder(ingress)
@@ -274,11 +280,13 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 		if err != nil {
 			log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!", customer, err.Error())
 			// close all outgoing connections
+			mu.Lock()
 			for key := range conmap {
 				conmap[key].sock.Close()
 				(conmap[key]).LogUpstream(0, true)
 				delete(conmap, key)
 			}
+			mu.Unlock()
 			ingress.Close()
 			return
 		}
@@ -313,21 +321,30 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 				log.ErrorUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles,"Error connecting to target %s", err.Error())
 			}
 			conn.sock = egress
+			mu.Lock()
 			conmap[buff.Id] = conn
-			go pipe(conmap, egress, messages, buff.Id, string(buff.Data))
+			mu.Unlock()
+			go pipe(conmap, egress, messages, buff.Id, string(buff.Data), &mu)
 		case protocol.Close:
-			if conn, ok := conmap[buff.Id]; ok {
+			mu.RLock()
+			conn, ok := conmap[buff.Id]
+			mu.RUnlock()
+			if ok {
 				log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Connection #%d closing, %d left", buff.Id, len(conmap) - 1)
 				conn.LogUpstream(0, true)
 				conn.sock.Close()
+				mu.Lock()
 				delete(conmap, buff.Id)
+				mu.Unlock()
 			} else {
 				log.Errorf("Error finding the descriptor %d, %v", buff.Id, buff)
 			}
 		case protocol.Send:
-			if conn, ok := conmap[buff.Id]; ok {
+			mu.RLock()
+			conn, ok := conmap[buff.Id]
+			mu.RUnlock()
+			if ok {
 				_, err = conn.sock.Write(buff.Data)
-
 				if err != nil {
 					log.DebugUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Write to db error: %s", err.Error())
 					conn.sock.Close()

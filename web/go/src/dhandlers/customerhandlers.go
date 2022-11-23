@@ -1124,8 +1124,12 @@ func RegenerateDatascopePassword(w http.ResponseWriter, r *http.Request) {
 	roles := r.Context().Value(authenticatedRolesKey).([]string)
 	session := r.Context().Value(authenticatedSessionKey).(string)
 
-	out, _ := authentication.RegenerateDatascopePassword(schema, email, groups)
-
+	out, err := authentication.RegenerateDatascopePassword(schema, email, groups)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api RegenerateDatascopePassword, error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	js, _ := json.Marshal(out)
 	log.InfoUserf(schema, session, email, groups, roles, "Api RegenerateDatascopePassword, success")
 

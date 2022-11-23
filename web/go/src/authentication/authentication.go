@@ -482,6 +482,7 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	_, err := db.Exec(sqlName, password, username)
 	if(err != nil) {
 		log.Errorf("RegenerateDatascopePassword error: %s", err.Error())
+		return out, err
 	}
 
 	sql := `select distinct a.name, a.id from `+schema+`.datascopes as a  join `+schema+`.groupsfordatascopes as b on a.id=b.datascope_id join `+schema+`.groupmapping as c on c.id=b.group_id where c.outergroup = any ($1)`
@@ -507,6 +508,7 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 		}
 	} else { 
 		log.Errorf("RegenerateDatascopePassword error: %s", err.Error())
+		return out, err
 	}
 
 
@@ -516,6 +518,7 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	if(err != nil) {
 		// TODO - pass this error
 		log.Errorf("RegenerateDatascopePassword error: syncing datascopes: %s", err.Error())
+		return out, err
 	}
 	return out, nil
 }

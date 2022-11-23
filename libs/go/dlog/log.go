@@ -239,9 +239,9 @@ func DebugUserArrayf(tenant, session, user string, groups, roles []string, forma
 
 	Log := log.WithFields(extra)
 	if len(data) == 0 {
-		Log.Fatalf(format)
+		Log.Debugf(format)
 	} else {
-		Log.Fatalf(format, data...)
+		Log.Debugf(format, data...)
 	}		
 }
 func InfoUserArrayf(tenant, session, user string, groups, roles []string, format string, arr []string, data ...interface{}) {
@@ -325,9 +325,9 @@ func InfoArrayf(format string, arr []string, data ...interface{}) {
 
 	Log := log.WithFields(extra)
 	if len(data) == 0 {
-		Log.Fatalf(format)
+		Log.Infof(format)
 	} else {
-		Log.Fatalf(format, data...)
+		Log.Infof(format, data...)
 	}
 }
 
