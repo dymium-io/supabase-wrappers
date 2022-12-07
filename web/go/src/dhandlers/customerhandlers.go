@@ -416,7 +416,7 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 	var t types.ConnectionRecord
 	err := json.Unmarshal(body, &t)
 
-/* This is commented out temporarily. TODO - fix this with Valya!!!
+
 	if err == nil {		
 		conn, err := authentication.GetConnection(schema, *t.Id)
 		if(err != nil) {
@@ -467,7 +467,7 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-*/
+
 	error := authentication.UpdateConnection(schema, t)
 
 	if(error != nil) {
@@ -614,8 +614,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 		status = types.OperationStatus{"Error", error.Error()}
 		log.ErrorUserf(schema, session, email, groups, roles, "Error: %s", error.Error())
 	}
-	fmt.Println(id) // remove later
-/* reenable this later TODO TODO TODO
+
 	if(error == nil) {
 		// get the connection details
 		conn, err := authentication.GetConnection(schema, id)
@@ -649,7 +648,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 		authentication.DeleteConnection(schema, id)
 		log.ErrorUserf(schema, session, email, groups, roles, "Api Roll back connection creation")
 	}
-*/	
+
 	js, err := json.Marshal(status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

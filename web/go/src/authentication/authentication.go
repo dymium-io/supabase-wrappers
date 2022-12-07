@@ -1090,16 +1090,37 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 	return nil
 }
 func GetConnection(schema, id string) (types.Connection, error) {
-	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls from 
+	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls, a.use_connector,
+	coalesce(connector_id, ''), coalesce(tunnel_id, '') from 
 		spoofcorp.connections as a join spoofcorp.admincredentials as b on a.id=b.connection_id 
 			join spoofcorp.passwords as c on b.id=c.id where a.id=$1;`
 
 	row := db.QueryRow(sql, id)
 	var con types.Connection
-	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &con.Password, &con.Database, &con.Tls)
+	var use_connector bool
+	var connector_id, tunnel_id string
+
+	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &con.Password, 
+		&con.Database, &con.Tls, &use_connector, &connector_id, &tunnel_id)
 	if(err != nil) {
-		log.Errorf("GetConnection error in GetConnection: %s", err.Error())
-	} 
+		log.Errorf("GetConnection error: %s", err.Error())
+		return con, err
+	} else {
+		if use_connector {
+			// get the connector information
+			var localport int
+			sql = `select localport from ` + schema + `.connectors where tunnel_id=$1;`
+			row := db.QueryRow(sql, tunnel_id)
+			err := row.Scan(&localport) 
+			if(err != nil) {
+				log.Errorf("GetConnection error: %s", err.Error())
+				return con, err
+			}
+			host := os.Getenv("CONNECTOR_SERVER")
+			con.Address = host
+			con.Port = localport
+		}
+	}
 	return con, err
 
 }

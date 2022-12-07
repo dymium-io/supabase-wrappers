@@ -33,7 +33,7 @@ export AUTH0_PORTAL_AUDIENCE='https://portal.dymium.local/api/handler'
 export SESSION_SECRET="b<Qu9K)q}Ksh+R)JzlJJ'X1sHMp$UI@t&OCjDYTEmVe6WZe,rdJ}!I=4N[|yoTq"
 export CUSTOMER_HOST='portal.dymium.local'
 export ADMIN_HOST='admin.dymium.local'
-
+export CONNECTOR_SERVER="connector.dymium.local"
 export LB_DOMAIN='.dymium.local'
 export LB_PORT=15654
 export PROTOCOL_VERSION=3
