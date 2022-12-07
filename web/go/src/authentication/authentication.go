@@ -35,7 +35,7 @@ import (
 	"math/big"
 )
 
-
+var pswd = `**********`
 func GenerateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
 	_, err := rand.Read(b)
@@ -74,7 +74,9 @@ func initRBAC() {
 	adminnames :=  []string{"createnewconnection", "queryconnection","updateconnection","deleteconnection",
 	"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
 	"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
-	"getgroupsfordatascopes", "getselect", "getusage"}
+	"getgroupsfordatascopes", "getselect", "getusage", "getaccesskey", "createnewconnector", 
+	"getconnectors", "updateconnector", "deleteconnector"}
+
 	usernames :=  []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getdatascopetables"}	
 
 	for _, v := range adminnames {
@@ -282,39 +284,61 @@ func GetBytes(schema string) (int64, int64, int, int, error)  {
 	return  bytesin, bytesout,logins,tunnels, err
 }
 
-func GetRestrictions(schema string) (int, int, int, int, int, error)  {
-	var connections, datascopes, blocked, obfuscated, redacted int
+func GetRestrictions(schema string) (int, int, int, int, int, int, int, error)  {
+	var connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels int
 	sql := `select count(*) from ` +schema+`.connections`
 	row := db.QueryRow(sql)
 	err := row.Scan(&connections)
 	if(err != nil) {
-		return connections, datascopes, blocked, obfuscated, redacted,err
+		return connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels,err
 	}	
 	sql = `select count(*) from ` +schema+`.datascopes`
 	row = db.QueryRow(sql)
 	err = row.Scan(&datascopes)
 	if(err != nil) {
-		return connections, datascopes, blocked, obfuscated, redacted,err
+		return connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels,err
 	}	
 	sql = `select count(*) from ` +schema+`.tables where action='Block'`
 	row = db.QueryRow(sql)
 	err = row.Scan(&blocked)
 	if(err != nil) {
-		return connections, datascopes, blocked, obfuscated, redacted,err
+		return connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels,err
 	}	
 	sql = `select count(*) from ` +schema+`.tables where action='Obfuscate'`
 	row = db.QueryRow(sql)
 	err = row.Scan(&obfuscated)
 	if(err != nil) {
-		return connections, datascopes, blocked, obfuscated, redacted,err
+		return connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels,err
 	}	
 	sql = `select count(*) from ` +schema+`.tables where action='Redact'`
 	row = db.QueryRow(sql)
 	err = row.Scan(&redacted)
 	if(err != nil) {
-		return connections, datascopes, blocked, obfuscated, redacted,err
+		return connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels,err
 	}	
-	return  connections, datascopes, blocked, obfuscated, redacted, nil
+
+	sql = `select count(*) from ` +schema+`.tables where action='Redact'`
+	row = db.QueryRow(sql)
+	err = row.Scan(&redacted)
+	if(err != nil) {
+		return connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels,err
+	}	
+
+	sql = `select count(*) from ` +schema+`.connectorauth`
+	row = db.QueryRow(sql)
+	err = row.Scan(&connectors)
+	if(err != nil) {
+		return connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels,err
+	}	
+
+	sql = `select count(*) from ` +schema+`.connectors`
+	row = db.QueryRow(sql)
+	err = row.Scan(&tunnels)
+	if(err != nil) {
+		return connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels,err
+	}	
+
+	return  connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels, nil
 }
 func generateAdminJWT(picture string, name string, email string, groups []string, org_id string) (string, error) {
 		// generate JWT right header
@@ -517,7 +541,7 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	_, err = Invoke("DbSync", nil, snc)
 	if(err != nil) {
 		// TODO - pass this error
-		log.Errorf("RegenerateDatascopePassword error: syncing datascopes: %s", err.Error())
+		log.Errorf("DatascopePassword error: syncing datascopes: %s", err.Error())
 		return out, err
 	}
 	return out, nil
@@ -598,7 +622,7 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 	sql := `select distinct a.name, a.id from `+schema+`.datascopes as a  join `+schema+`.groupsfordatascopes as b on a.id=b.datascope_id join `+schema+`.groupmapping as c on c.id=b.group_id where c.outergroup = any ($1)`
 
 	if age >  60*60*24 {
-		password = `**********`
+		password = pswd
 	}
     out.Username = username
 	out.Password = password
@@ -656,26 +680,42 @@ func GetIdentityFromToken(token string) (string, []string, error) {
 }
 
 func CreateNewConnection(schema string, con types.ConnectionRecord) (string, error) {
-	sql := `insert into `+schema+`.connections(name, database_type, address, port, dbname, use_tls, description) 
-		values($1,$2,$3,$4,$5,$6,$7) returning id; `
+	var row *sql.Row
+	var id, sqlI string
 
-	row := db.QueryRow(sql, con.Name, con.Dbtype, con.Address, con.Port, con.Dbname, con.UseTLS, con.Description)
-	var id string
+	if con.Usesconnector {
+		sqlI = `insert into `+schema+`.connections(name, database_type, dbname, use_tls, description,
+			use_connector,   
+			connector_id,  tunnel_id, address, port) 
+			values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id; `
+
+		row = db.QueryRow(sqlI, con.Name, con.Dbtype, con.Dbname, con.UseTLS, 
+			con.Description, con.Usesconnector,
+			con.Connectorid, con.Tunnelid, "", 0)	 
+	} else {
+		sqlI = `insert into `+schema+`.connections(name, database_type, address, 
+			port, dbname, use_tls, description,
+			use_connector) 
+			values($1,$2,$3,$4,$5,$6,$7,$8) returning id; `
+
+		row = db.QueryRow(sqlI, con.Name, con.Dbtype, con.Address, con.Port, con.Dbname, con.UseTLS, 
+			con.Description, con.Usesconnector)
+	}
 	err := row.Scan(&id)
 	if err != nil {
 		return "", err
 	}
 	// now let's save credentials!
 	var credid string
-	sql = `insert into `+schema+`.admincredentials(connection_id, username) values($1, $2) returning id`
-	row = db.QueryRow(sql, id, con.Username)
+	sqlI = `insert into `+schema+`.admincredentials(connection_id, username) values($1, $2) returning id`
+	row = db.QueryRow(sqlI, id, con.Username)
 	err = row.Scan(&credid)
 	if err != nil {
 		return id, err
 	}
-	sql = `insert into `+schema+`.passwords(id, password) values($1, $2)`;
+	sqlI = `insert into `+schema+`.passwords(id, password) values($1, $2)`;
 	
-	_, err = db.Exec(sql, credid, con.Password)
+	_, err = db.Exec(sqlI, credid, con.Password)
 	if err != nil {
 		return id, err
 	}
@@ -683,9 +723,13 @@ func CreateNewConnection(schema string, con types.ConnectionRecord) (string, err
 	return id, nil
 }
 func GetConnections(schema string) ([]types.ConnectionRecord, error ) {
-	sql := `select a.id,a.name,a.address,a.port,a.dbname, a.database_type,a.use_tls,a.description,b.username,b.id from `+
+	sql := `select a.id,a.name,COALESCE(a.address,''),COALESCE(a.port, 0),a.dbname,a.database_type,a.use_tls,a.description,b.username,
+	b.id,a.use_connector,COALESCE(a.connector_id,''),COALESCE(a.tunnel_id,''),COALESCE(c.name, ''),COALESCE(d.connectorname, '') from `+
 		schema+`.connections as a join `+
-		schema+`.admincredentials as b on a.id=b.connection_id;`
+		schema+`.admincredentials as b on a.id=b.connection_id left join ` + 
+		schema + `.connectorauth as c on c.id=a.connector_id left join ` + 
+		schema +`.connectors as d on d.id=a.tunnel_id	;`
+	
 	rows, err := db.Query(sql)
 
 	var conns = []types.ConnectionRecord{}
@@ -695,7 +739,8 @@ func GetConnections(schema string) ([]types.ConnectionRecord, error ) {
 		for rows.Next() {
 			var conn = types.ConnectionRecord{}
 			err = rows.Scan(&conn.Id, &conn.Name, &conn.Address, &conn.Port, &conn.Dbname, &conn.Dbtype, &conn.UseTLS, 
-					&conn.Description, &conn.Username, &conn.Credid)
+					&conn.Description, &conn.Username, &conn.Credid, &conn.Usesconnector, &conn.Connectorid, &conn.Tunnelid,
+					&conn.Connectorname, &conn.Tunnelname)
 			if nil != err {
 				log.Errorf("GetConnections error:  %s", err.Error())
 				return []types.ConnectionRecord{}, err
@@ -988,11 +1033,24 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 		log.Errorf("UpdateConnection error in UpdateConnection: %s", err.Error())
 		return err
 	}
-	sql := `update `+schema+`.connections set name=$1, database_type=$2, 
-		address=$3, port=$4, dbname=$5, use_tls=$6, description=$7 where id=$8  
-		and exists (select schema_name from global.customers where schema_name = $9) returning id; `
+	var sq string
+	var row *sql.Row
+	if con.Usesconnector {
+		sq = `update `+schema+`.connections set name=$1, database_type=$2, 
+			address=$3, port=$4, dbname=$5, use_tls=$6, description=$7,use_connector=$8,connector_id=$9,tunnel_id=$10
+			 where id=$11  
+			and exists (select schema_name from global.customers where schema_name = $12) returning id; `
+			row  = tx.QueryRowContext(ctx, sq, con.Name, con.Dbtype, con.Address, con.Port, con.Dbname, 
+				con.UseTLS, con.Description, con.Usesconnector, 
+				con.Connectorid, con.Tunnelid, con.Id, schema)
 
-	row  := tx.QueryRowContext(ctx, sql, con.Name, con.Dbtype, con.Address, con.Port, con.Dbname, con.UseTLS, con.Description, con.Id, schema)
+	} else {
+		sq = `update `+schema+`.connections set name=$1, database_type=$2, 
+			address=$3, port=$4, dbname=$5, use_tls=$6, description=$7,use_connector=$8 where id=$9  
+			and exists (select schema_name from global.customers where schema_name = $10) returning id; `
+			row  = tx.QueryRowContext(ctx, sq, con.Name, con.Dbtype, con.Address, con.Port, con.Dbname, con.UseTLS, con.Description, con.Usesconnector, con.Id, schema)
+	}
+	// fmt.Printf("\nsql: %s\ncon: %s \n", sq, con.Dbtype)
 	var newid string
 	err = row.Scan(&newid)
 	if err != nil {
@@ -1001,8 +1059,8 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 		return err
 	}
 	if(con.Username != nil && con.Password != nil) {
-		sql = `update `+schema+`.admincredentials set username=$1 where connection_id=$2 returning id;`
-		row  := tx.QueryRowContext(ctx, sql, con.Username, con.Id)
+		sq = `update `+schema+`.admincredentials set username=$1 where connection_id=$2 returning id;`
+		row  := tx.QueryRowContext(ctx, sq, con.Username, con.Id)
 		var credid string
 		err = row.Scan(&credid)
 		if err != nil {
@@ -1010,8 +1068,8 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 			log.Errorf("UpdateConnection 2: %s", err.Error())
 			return err
 		}
-		sql = `update `+schema+`.passwords set password=$1 where id=$2;`
-		_, err  = tx.ExecContext(ctx, sql, con.Password, credid)
+		sq = `update `+schema+`.passwords set password=$1 where id=$2;`
+		_, err  = tx.ExecContext(ctx, sq, con.Password, credid)
 		if err != nil {
 			tx.Rollback()
 			log.Errorf("UpdateConnection Error 3: %s", err.Error())
@@ -1032,16 +1090,37 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 	return nil
 }
 func GetConnection(schema, id string) (types.Connection, error) {
-	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls from 
+	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls, a.use_connector,
+	coalesce(connector_id, ''), coalesce(tunnel_id, '') from 
 		spoofcorp.connections as a join spoofcorp.admincredentials as b on a.id=b.connection_id 
 			join spoofcorp.passwords as c on b.id=c.id where a.id=$1;`
 
 	row := db.QueryRow(sql, id)
 	var con types.Connection
-	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &con.Password, &con.Database, &con.Tls)
+	var use_connector bool
+	var connector_id, tunnel_id string
+
+	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &con.Password, 
+		&con.Database, &con.Tls, &use_connector, &connector_id, &tunnel_id)
 	if(err != nil) {
-		log.Errorf("GetConnection error in GetConnection: %s", err.Error())
-	} 
+		log.Errorf("GetConnection error: %s", err.Error())
+		return con, err
+	} else {
+		if use_connector {
+			// get the connector information
+			var localport int
+			sql = `select localport from ` + schema + `.connectors where tunnel_id=$1;`
+			row := db.QueryRow(sql, tunnel_id)
+			err := row.Scan(&localport) 
+			if(err != nil) {
+				log.Errorf("GetConnection error: %s", err.Error())
+				return con, err
+			}
+			host := os.Getenv("CONNECTOR_SERVER")
+			con.Address = host
+			con.Port = localport
+		}
+	}
 	return con, err
 
 }
@@ -1835,5 +1914,272 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 	})
 
 
+	return nil
+}
+
+func CreateNewConnector(schema string, req *types.AddConnectorRequest) (string, error) {
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("CreateNewConnector error 0: %s", err.Error())
+		return "", err
+	}	
+
+	sql := `insert into `+schema+`.connectorauth(name, accesskey, accesssecret) values($1,$2,$3) returning id;`
+
+	var id string
+	row  := tx.QueryRowContext(ctx, sql, req.Name, req.Accesskey, req.Secret)
+	err = row.Scan(&id)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("CreateNewConnector error 1: %s", err.Error())
+		return "", err
+	}	
+
+	for i := 0; i < len(req.Tunnels); i++ {
+		sql := `WITH CTE AS (SELECT FLOOR(RANDOM()*50000 + 10000) AS rn )
+		SELECT rn FROM CTE WHERE rn NOT IN (SELECT localport FROM `+schema+`.connectors) limit 1;`
+
+		var localport int
+		row  := tx.QueryRowContext(ctx, sql)
+		err = row.Scan(&localport)
+		if err != nil {
+			tx.Rollback()
+			log.Errorf("CreateNewConnector error 2: %s", err.Error())
+			return "", err
+		}	
+		sql = `insert into `+schema+`.connectors(targetaddress,targetport,connectorname,id_connectorauth, localport) values($1,$2,$3,$4,$5) `
+		_, err = tx.ExecContext(ctx, sql, req.Tunnels[i].Address, req.Tunnels[i].Port, req.Tunnels[i].Name, id, localport)
+		if err != nil {
+			tx.Rollback()
+			log.Errorf("CreateNewConnector error 3: %s", err.Error())
+			return "", err
+		}	
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("CreateNewConnector error 4: %s", err.Error())
+		return "", err
+	}	
+
+	return id, nil
+}
+
+func GetConnectors(schema string) ( []types.Connector, error) {
+	var out []types.Connector //
+
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
+
+	tx, err := db.BeginTx(ctx, nil)
+	sql := `select id, name, accesskey, accesssecret, EXTRACT(epoch from (now() - createdat)), status from ` + schema + `.connectorauth;`
+
+	rows, err  := tx.QueryContext(ctx, sql)
+	if nil == err {
+		defer rows.Close()
+		for rows.Next() {
+			var id, name, accesskey, accesssecret, status string 
+			var age float64
+
+			err = rows.Scan(&id, &name, &accesskey, &accesssecret, &age, &status)
+			if err != nil {
+				tx.Rollback()
+				log.Errorf("GetConnectors error 0: %s", err.Error())
+				return out, err			
+			}
+			var o  types.Connector 
+			o.Name = name 
+			o.Id = id 
+			o.Accesskey = &accesskey 
+			if age > 60*60*24 {
+				o.Secret = &pswd
+			} else {
+				o.Secret = &accesssecret
+			}
+			var t types.TunnelStatus
+			t = types.TunnelStatus(status)
+			o.Status = &t
+			out = append(out, o)
+		}
+
+		for i:=0; i < len(out); i++ {
+			sql := `select id, targetaddress, targetport, localport, connectorname, status from ` +schema+ 
+			`.connectors where id_connectorauth=$1;`
+
+			trows, err  := tx.QueryContext(ctx, sql, out[i].Id)
+			if err != nil {
+				tx.Rollback()
+				log.Errorf("GetConnectors error 1: %s", err.Error())
+				return out, err			
+			}
+			defer trows.Close()
+			out[i].Tunnels = []types.Tunnel{}
+			for trows.Next() {
+				var id, targetaddress, targetport, localport, connectorname string 
+				var status types.ConnectorStatus
+
+				err = trows.Scan(&id, &targetaddress, &targetport, &localport, &connectorname, &status)
+				if err != nil {
+					tx.Rollback()
+					log.Errorf("GetConnectors error 2: %s", err.Error())
+					return out, err			
+				}
+				t := types.Tunnel{ &id, connectorname, targetaddress, targetport, &localport, &status }		
+				out[i].Tunnels = append(out[i].Tunnels, t)		
+			}			
+		}
+	} else {
+		tx.Rollback()
+		log.Errorf("GetConnectors error 0: %s", err.Error())
+		return out, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("CreateNewConnector error 4: %s", err.Error())
+		return out, err
+	}	
+
+	fmt.Printf("Return correctly %v\n", out)
+	return out, nil
+}
+
+func UpdateConnector(schema string, connector *types.AddConnectorRequest) error {
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
+
+	tx, err := db.BeginTx(ctx, nil)
+	sql := `update ` + schema + `.connectorauth set name=$1 where id=$2;`
+
+	_, err  = tx.ExecContext(ctx, sql, connector.Name, connector.Id)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("UpdateConnector error 0: %s", err.Error())
+		return err
+	}	
+
+	tunnelIds := []string{}
+	// get all existing ids
+	sql = `select id from ` + schema + `.connectors  where id_connectorauth=$1;`
+	rows, err  := tx.QueryContext(ctx, sql, connector.Id)
+	if nil == err {
+		defer rows.Close()
+		for rows.Next() {
+			var id string
+			err = rows.Scan(&id)
+			if err != nil {
+				tx.Rollback()
+				log.Errorf("UpdateConnector error 1: %s", err.Error())
+				return err
+			}		
+			tunnelIds = append(tunnelIds, id)		
+		}
+	} else {
+		tx.Rollback()
+		log.Errorf("UpdateConnector error 2: %s", err.Error())
+		return err		
+	}
+	submitted := []string{}
+	for i := 0; i < len(connector.Tunnels); i++ {
+		submitted = append(submitted, *connector.Tunnels[i].Id)
+	}
+
+	missing := []string{}
+	for i := 0; i < len(tunnelIds); i++ {
+		hasif := contains(submitted, tunnelIds[i])
+		if !hasif {
+			missing = append(missing, tunnelIds[i])
+		}
+	}
+	if len(missing) > 0 {
+		sql = `delete from ` + schema + `.connectors where id=ANY($1);`
+		_, err  = tx.ExecContext(ctx, sql,  pq.Array(missing))
+		if err != nil {
+			tx.Rollback()
+			log.Errorf("UpdateConnector error 3: %s", err.Error())
+			return err
+		}			
+	}
+
+	for i := 0; i < len(connector.Tunnels); i++ {
+		hasit := contains(tunnelIds, *connector.Tunnels[i].Id)
+
+		if hasit {
+			// update
+			sql = `update `+schema+`.connectors set targetaddress=$1,targetport=$2,connectorname=$3 where id=$4;`
+			_, err  = tx.ExecContext(ctx, sql, connector.Tunnels[i].Address, connector.Tunnels[i].Port, connector.Tunnels[i].Name, *connector.Tunnels[i].Id)
+			if err != nil {
+				tx.Rollback()
+				log.Errorf("UpdateConnector error 3: %s", err.Error())
+				return err
+			}	
+		} else {
+			// insert
+			sql := `WITH CTE AS (SELECT FLOOR(RANDOM()*50000 + 10000) AS rn )
+			SELECT rn FROM CTE WHERE rn NOT IN (SELECT localport FROM `+schema+`.connectors) limit 1;`
+	
+			var localport int
+			row  := tx.QueryRowContext(ctx, sql)
+			err = row.Scan(&localport)
+			if err != nil {
+				tx.Rollback()
+				log.Errorf("CreateNewConnector error 2: %s", err.Error())
+				return err
+			}	
+			sql = `insert into `+schema+`.connectors(targetaddress,targetport,connectorname,id_connectorauth, localport) values($1,$2,$3,$4,$5) `
+			_, err = tx.ExecContext(ctx, sql, connector.Tunnels[i].Address, connector.Tunnels[i].Port, connector.Tunnels[i].Name, connector.Id, localport)
+			if err != nil {
+				tx.Rollback()
+				log.Errorf("CreateNewConnector error 3: %s", err.Error())
+				return err
+			}				
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("UpdateConnector error 4: %s", err.Error())
+		return err
+	}	
+	return nil
+}
+
+
+func DeleteConnector(schema, Id string) error {
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
+
+	tx, err := db.BeginTx(ctx, nil)
+	sql := `delete from ` + schema + `.connectors  where id_connectorauth=$1;`
+
+	_, err  = tx.ExecContext(ctx, sql, Id)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("DeleteConnector error 0: %s", err.Error())
+		return err
+	}		
+
+	sql = `delete from ` + schema + `.connectorauth  where id=$1;`
+
+	_, err  = tx.ExecContext(ctx, sql, Id)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("DeleteConnector error 1: %s", err.Error())
+		return err
+	}		
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("DeleteConnector error 2: %s", err.Error())
+		return err
+	}	
 	return nil
 }

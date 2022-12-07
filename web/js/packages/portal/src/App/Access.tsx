@@ -85,7 +85,7 @@ let displayDatascopes = () => {
     </div>
     {datascopes !== undefined && datascopes.datascopes.map(x => {
       return <div className="my-5">
-        <h5 className="mb-2"><i className="fa fa-unlock mr-2" aria-hidden="true"></i>Datascope: {x.name}</h5>
+        <h5 className="mb-2"><i className="fa fa-unlock mr-2" aria-hidden="true"></i>Ghost Database: {x.name}</h5>
         <div className="datascopeuse">
           <Tabs
             id="datascope"
@@ -183,7 +183,7 @@ useEffect(() => {
 return (
   <div className=" text-left">
     {alert}
-    <h5 > Your Datascopes <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+    <h5 > Your Ghost Databases <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
     <div className=" text-left">
 
       {datascopes !== undefined && displayDatascopes()}
@@ -299,7 +299,7 @@ export default function Access() {
       onSelect={(k) => appDispatch(setActiveAccessTab(k))}
 
       unmountOnExit={true} className="mb-3 text-left">
-      <Tab eventKey="datascopes" title="Your Datascopes" className="mx-4">
+      <Tab eventKey="datascopes" title="Your Ghost Databases" className="mx-4">
         <YourDatascopes />
       </Tab>
       <Tab eventKey="download" title="Client Download And Use" className="mx-4">

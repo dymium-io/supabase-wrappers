@@ -39,3 +39,40 @@ RequestUpdate:
   - clientMajorVersion: string
   - clientMinorVersion: string
     
+ConnectorStatus:
+  - provisioned  <*> Provisioned
+  - configured   <*> Configured in Data Source
+
+TunnelStatus:
+  - provisioned  <*> Provisioned
+  - configured   <*> Configured in Data Source
+  - active       <*> Tunnel Established
+
+Tunnel:
+  - id: ?string
+  - name: string
+  - address: string
+  - port: string
+  - localport: ?string
+  - status: ?ConnectorStatus
+
+AddConnectorRequest: 
+  - id: ?string
+  - name: string
+  - accesskey: string
+  - secret: string
+  - tunnels: <|Tunnel|>
+
+GetKeySecret: 
+  - accesskey: string 
+  - secret: string
+
+Connector:
+  - id: string 
+  - name: string 
+  - accesskey: ?string
+  - secret: ?string  
+  - status: ?TunnelStatus
+  - tunnels: <|Tunnel|> 
+
+

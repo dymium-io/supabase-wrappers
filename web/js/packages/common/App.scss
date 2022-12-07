@@ -225,6 +225,7 @@ input:-internal-autofill-selected {
 
 #tablecontainer table {
   table-layout: auto;
+  width: 100%;
 }
 .pagination .page-item.active .page-link {
   background-color: $main-blue;  
@@ -381,7 +382,7 @@ pre {
 .sidebar_container {
   overflow-x: clip;
   transition: width 0.1s ease-out;
-  width: 160px;
+  width: 180px;
 }
 
 @media (max-width: $breakdown-width) {
@@ -457,4 +458,48 @@ td {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0.3em 0.3em 1em rgba(0, 151,206, 0.4);
+}
+
+.plusminus {
+  cursor: pointer;
+  background-color:#ffffff;
+}
+
+.plusminus:hover {
+  cursor: pointer;
+  background-color:#c9e5ef;
+}
+.transparent
+{
+	opacity: 0;
+}
+
+.palegray {
+  background-color: #EBF2F7;
+}
+.palergray{
+  background-color: white;
+}
+
+.view {
+  box-shadow: rgba(126, 131, 134, 0.56) 0px 22px 70px 4px;
+}
+
+.yellowtoggle.react-toggle--checked .react-toggle-track {
+  background-color: $dark-yellow
+}
+.yellowtoggle.react-toggle--checked:hover .react-toggle-track {
+  background-color: $main-yellow
+}
+.yellowtoggle.react-toggle--checked .react-toggle-thumb {
+  border-color: $dark-yellow;
+  box-shadow: 0px 0px 2px 3px $main-yellow;
+}
+.yellowtoggle.react-toggle--focus .react-toggle-thumb {
+  border-color: $main-yellow;
+  box-shadow: 0px 0px 2px 3px $main-yellow;
+}
+.yellowtoggle.react-toggle:active .react-toggle-thumb {
+  border-color: $dark-yellow;
+  box-shadow: 0px 0px 5px 5px $dark-yellow;
 }

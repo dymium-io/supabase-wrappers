@@ -23,7 +23,7 @@ export DATABASE_TLS=${DATABASE_TLS:-disable}
 export DATABASE_PASSWORD=$DATABASE_PASSWORD
 export LOCAL_ENVIRONMENT=true
 export LOG_LEVEL=Debug
-//export LOG_LEVEL=Info
+export LOG_LEVEL=Info
 
 ./meshserver -a portal.dymium.local -p 3009
 

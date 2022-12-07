@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
+	"time"
 	"dymium.com/dymium/log"
 	"dymium.com/server/protocol"
 	_ "github.com/lib/pq"
@@ -69,7 +69,8 @@ func createListener(customer, target, sport string) (*net.TCPListener, error) {
 }
 
 func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *gob.Encoder, dec *gob.Decoder,
-	egress net.Conn, conmap map[int]*Virtcon, counter chan int, mu *sync.RWMutex) {
+	egress net.Conn, conmap map[int]*Virtcon, counter chan int, mu *sync.RWMutex,
+	listeners []*net.TCPListener) {
 
 	// writer
 	go func(messages chan protocol.TransmissionUnit, enc *gob.Encoder) {
@@ -99,6 +100,9 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 			}
 			mu.Unlock()
 			egress.Close()
+			for i:= 0; i < len(listeners); i++ {
+				listeners[i].Close()
+			}
 			return
 		}
 
@@ -127,7 +131,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 				_, err = conn.sock.Write(buff.Data)
 
 				if err != nil {
-					log.DebugTenantf(customer, "Write to local socket(%d) error: %s", buff.Id, err.Error())
+					log.ErrorTenantf(customer, "Write to local socket(%d) error: %s", buff.Id, err.Error())
 					conn.sock.Close()
 				} else {
 					log.DebugTenantf(customer, "Wrote to local socket(%d) bytes: %d", buff.Id, len(buff.Data))
@@ -171,6 +175,9 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 			messages <- out
 			return
 		}
+		if n == 0 {
+			log.Infof("Read returned 0 bytes")
+		}
 		log.Debugf("read local data successfully %d bytes", n)
 		b := buff[:n]
 		out := protocol.TransmissionUnit{protocol.Send, id, b}
@@ -183,11 +190,19 @@ func listenLocally(egress net.Conn, listener *net.TCPListener, customer string,
 	connectionString string, messages chan protocol.TransmissionUnit,
 	conmap map[int]*Virtcon, counter chan int, mu *sync.RWMutex) {
 
+	listener.SetDeadline(time.Now().Add(30*time.Second))
+
 	for {
 		ingress, err := listener.Accept() //*TCPConn
-		if err != nil {
-			log.Errorf("Error in Accept: %s", err.Error())
-			panic(err)
+		if err, ok := err.(*net.OpError); ok && err.Timeout() {
+				log.Infof("timeout")
+				listener.SetDeadline(time.Now().Add(30*time.Second))
+				continue
+		} else {
+			if err != nil {
+				log.Errorf("Error in Accept: %s", err.Error())
+				return
+			}
 		}
 		
 		log.Infof("accepted local connection for %s", connectionString)
@@ -224,8 +239,9 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 		}
 	}(counter)
 
-	// read and write from and to connector over tls
-	go remotepipe(customer, messages, enc, dec, egress, conmap, counter, &mu)
+
+
+	var listeners []*net.TCPListener
 
 	for i := 0; i < len(connections); i++ {
 		tg := strings.Split(connections[i], ",")
@@ -233,9 +249,11 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 		if err != nil {
 			log.ErrorTenantf(customer, "Error creating listener %s", err.Error())
 		}
+		listeners = append(listeners, listen)
 		go listenLocally(egress, listen, customer, tg[0], messages, conmap, counter, &mu)
-
 	}
+	// read and write from and to connector over tls
+	go remotepipe(customer, messages, enc, dec, egress, conmap, counter, &mu, listeners)
 }
 
 func Server(address string, port int, customer string,

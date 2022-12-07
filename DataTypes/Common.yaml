@@ -23,6 +23,11 @@ GroupMapping:
 ConnectionRecord:
   - name: string
   - dbtype: string
+  - usesconnector: bool
+  - connectorname: string
+  - connectorid: string
+  - tunnelname: string 
+  - tunnelid: string
   - address: string
   - port: int
   - dbname: string
@@ -141,5 +146,7 @@ Usage:
   - blocked: int 
   - obfuscated: int 
   - redacted: int 
+  - connectors: int 
+  - connectortunnels: int   
   - bytesin: string
   - bytesout: string

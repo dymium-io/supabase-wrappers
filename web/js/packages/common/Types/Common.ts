@@ -88,6 +88,11 @@ export class AuthStatus {
 export class ConnectionRecord {
   private '_name': string
   private '_dbtype': string
+  private '_usesconnector': boolean
+  private '_connectorname': string
+  private '_connectorid': string
+  private '_tunnelname': string
+  private '_tunnelid': string
   private '_address': string
   private '_port': number
   private '_dbname': string
@@ -101,6 +106,11 @@ export class ConnectionRecord {
   constructor() {
     this['_name'] = ''
     this['_dbtype'] = ''
+    this['_usesconnector'] = false
+    this['_connectorname'] = ''
+    this['_connectorid'] = ''
+    this['_tunnelname'] = ''
+    this['_tunnelid'] = ''
     this['_address'] = ''
     this['_port'] = 0
     this['_dbname'] = ''
@@ -125,6 +135,46 @@ export class ConnectionRecord {
     if(!_.isEqual(__v__,this['_dbtype'])) {
       setDirtyFlag()
       this['_dbtype'] = __v__
+    }
+  }
+  get usesconnector(): boolean { return this['_usesconnector'] }
+  set usesconnector(__a__: any) {
+    let __v__ = boolReader(false)(__a__)
+    if(!_.isEqual(__v__,this['_usesconnector'])) {
+      setDirtyFlag()
+      this['_usesconnector'] = __v__
+    }
+  }
+  get connectorname(): string { return this['_connectorname'] }
+  set connectorname(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_connectorname'])) {
+      setDirtyFlag()
+      this['_connectorname'] = __v__
+    }
+  }
+  get connectorid(): string { return this['_connectorid'] }
+  set connectorid(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_connectorid'])) {
+      setDirtyFlag()
+      this['_connectorid'] = __v__
+    }
+  }
+  get tunnelname(): string { return this['_tunnelname'] }
+  set tunnelname(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_tunnelname'])) {
+      setDirtyFlag()
+      this['_tunnelname'] = __v__
+    }
+  }
+  get tunnelid(): string { return this['_tunnelid'] }
+  set tunnelid(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_tunnelid'])) {
+      setDirtyFlag()
+      this['_tunnelid'] = __v__
     }
   }
   get address(): string { return this['_address'] }
@@ -236,6 +286,11 @@ export class ConnectionRecord {
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.name = __a__['name']
        cls.dbtype = __a__['dbtype']
+       cls.usesconnector = __a__['usesconnector']
+       cls.connectorname = __a__['connectorname']
+       cls.connectorid = __a__['connectorid']
+       cls.tunnelname = __a__['tunnelname']
+       cls.tunnelid = __a__['tunnelid']
        cls.address = __a__['address']
        cls.port = __a__['port']
        cls.dbname = __a__['dbname']
@@ -1210,6 +1265,8 @@ export class Usage {
   private '_blocked': number
   private '_obfuscated': number
   private '_redacted': number
+  private '_connectors': number
+  private '_connectortunnels': number
   private '_bytesin': string
   private '_bytesout': string
 
@@ -1221,6 +1278,8 @@ export class Usage {
     this['_blocked'] = 0
     this['_obfuscated'] = 0
     this['_redacted'] = 0
+    this['_connectors'] = 0
+    this['_connectortunnels'] = 0
     this['_bytesin'] = ''
     this['_bytesout'] = ''
   }
@@ -1280,6 +1339,22 @@ export class Usage {
       this['_redacted'] = __v__
     }
   }
+  get connectors(): number { return this['_connectors'] }
+  set connectors(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_connectors'])) {
+      setDirtyFlag()
+      this['_connectors'] = __v__
+    }
+  }
+  get connectortunnels(): number { return this['_connectortunnels'] }
+  set connectortunnels(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_connectortunnels'])) {
+      setDirtyFlag()
+      this['_connectortunnels'] = __v__
+    }
+  }
   get bytesin(): string { return this['_bytesin'] }
   set bytesin(__a__: any) {
     let __v__ = stringReader('')(__a__)
@@ -1310,6 +1385,8 @@ export class Usage {
        cls.blocked = __a__['blocked']
        cls.obfuscated = __a__['obfuscated']
        cls.redacted = __a__['redacted']
+       cls.connectors = __a__['connectors']
+       cls.connectortunnels = __a__['connectortunnels']
        cls.bytesin = __a__['bytesin']
        cls.bytesout = __a__['bytesout']
     } else {

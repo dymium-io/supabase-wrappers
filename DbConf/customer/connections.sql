@@ -44,3 +44,19 @@ ALTER TYPE source_type RENAME VALUE 'mysql' to 'MySQL';
 ALTER TYPE source_type RENAME VALUE 'mariadb' to 'MariaDB';  
 ALTER TYPE source_type RENAME VALUE 'sqlserver' to 'SqlServer';  
 ALTER TYPE source_type RENAME VALUE 'oracle' to 'OracleDB';  
+
+
+-- #!migration
+-- name: "customer/connections-nullable",
+-- description: "Add connectors",
+-- requires: ["customer/connections","customer/connections-source-type","customer/connections-source-type","customer/rename-enum"];
+ALTER TABLE connections ADD column use_connector BOOLEAN DEFAULT FALSE;
+ALTER TABLE connections ADD column connector_id varchar(128) ;
+
+-- #!migration
+-- name: "customer/connections-ftkeys",
+-- description: "Add fks",
+-- requires: ["customer/connections","customer/connections-source-type","customer/connections-source-type","customer/rename-enum", "customer/connections-nullable", "customer/connectors-add-auth"];
+ALTER TABLE connections ADD CONSTRAINT connectorid_fk FOREIGN KEY (connector_id) REFERENCES connectorauth(id);
+ALTER TABLE connections ADD column tunnel_id varchar(128) ;
+ALTER TABLE connections ADD CONSTRAINT tunnelid_fk FOREIGN KEY (tunnel_id) REFERENCES connectors(id);

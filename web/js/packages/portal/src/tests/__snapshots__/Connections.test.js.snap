@@ -20,7 +20,7 @@ exports[`test-connections 1`] = `
         className="d-flex"
       >
         <h5>
-          Edit Connections  
+          Edit Data Sources  
           <img
             className="spinner"
             src="/logo.png"
@@ -105,30 +105,13 @@ exports[`test-connections 1`] = `
                   />
                 </th>
                 <th
-                  aria-label="Address: sortable"
+                  aria-label="Target: sortable"
                   className="sortable"
                   onClick={[Function]}
                   onKeyUp={[Function]}
                   tabIndex={0}
                 >
-                  Address:
-                  <span
-                    className="order-4"
-                  />
-                </th>
-                <th
-                  aria-label="Port: sortable"
-                  className="sortable"
-                  onClick={[Function]}
-                  onKeyUp={[Function]}
-                  style={
-                    Object {
-                      "width": "100px",
-                    }
-                  }
-                  tabIndex={0}
-                >
-                  Port:
+                  Target:
                   <span
                     className="order-4"
                   />
@@ -208,10 +191,22 @@ exports[`test-connections 1`] = `
                   PostgreSQL
                 </td>
                 <td>
-                  docker.for.mac.host.internal
-                </td>
-                <td>
-                  5432
+                  <div
+                    className="d-flex"
+                  >
+                    <i
+                      className=" mr-2 fa fa-cloud-arrow-up blue"
+                      style={
+                        Object {
+                          "position": "relative",
+                          "top": "0.3em",
+                        }
+                      }
+                    />
+                    docker.for.mac.host.internal
+                    :
+                    5432
+                  </div>
                 </td>
                 <td>
                   Adventureworks
@@ -270,10 +265,22 @@ exports[`test-connections 1`] = `
                   PostgreSQL
                 </td>
                 <td>
-                  docker.for.mac.host.internal
-                </td>
-                <td>
-                  5432
+                  <div
+                    className="d-flex"
+                  >
+                    <i
+                      className=" mr-2 fa fa-cloud-arrow-up blue"
+                      style={
+                        Object {
+                          "position": "relative",
+                          "top": "0.3em",
+                        }
+                      }
+                    />
+                    docker.for.mac.host.internal
+                    :
+                    5432
+                  </div>
                 </td>
                 <td>
                   northwind

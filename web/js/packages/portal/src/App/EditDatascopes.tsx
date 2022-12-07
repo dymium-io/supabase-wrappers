@@ -399,7 +399,7 @@ export default function EditDatascopes() {
                 {/*
                 <Row> <Col xs="auto">
                     <Form.Group className="mb-3" controlId="connection" >
-                        <Form.Label >Available Data Scopes</Form.Label>
+                        <Form.Label >Available Ghost Databases</Form.Label>
                         <Form.Control as="select" size="sm"
                             onChange={e => {
 
@@ -435,7 +435,7 @@ export default function EditDatascopes() {
                                     <div className="text-left">
                                    
                                         <div className="d-flex">
-                                            <h5 >Edit Datascopes  <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+                                            <h5 >Edit Ghost Databases  <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
 
 
                                             <div style={{ marginLeft: "auto" }}>

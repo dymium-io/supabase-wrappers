@@ -51,7 +51,7 @@ Object {
           </div>
         </div>
         <h5>
-           Create New Data Scope 
+           Create New Ghost Database 
           <img
             class="spinner"
             src="/logo.png"
@@ -116,7 +116,7 @@ Object {
                     class="form-label"
                     for="connection"
                   >
-                    Available Connections
+                    Available Data Sources
                   </label>
                   <select
                     class="form-control form-control-sm"
@@ -266,7 +266,7 @@ Object {
         </div>
       </div>
       <h5>
-         Create New Data Scope 
+         Create New Ghost Database 
         <img
           class="spinner"
           src="/logo.png"
@@ -331,7 +331,7 @@ Object {
                   class="form-label"
                   for="connection"
                 >
-                  Available Connections
+                  Available Data Sources
                 </label>
                 <select
                   class="form-control form-control-sm"
@@ -629,7 +629,7 @@ Object {
           </div>
         </div>
         <h5>
-           Create New Data Scope 
+           Create New Ghost Database 
           <img
             class="spinner"
             src="/logo.png"
@@ -694,7 +694,7 @@ Object {
                     class="form-label"
                     for="connection"
                   >
-                    Available Connections
+                    Available Data Sources
                   </label>
                   <select
                     class="form-control form-control-sm"
@@ -935,7 +935,7 @@ Object {
         </div>
       </div>
       <h5>
-         Create New Data Scope 
+         Create New Ghost Database 
         <img
           class="spinner"
           src="/logo.png"
@@ -1000,7 +1000,7 @@ Object {
                   class="form-label"
                   for="connection"
                 >
-                  Available Connections
+                  Available Data Sources
                 </label>
                 <select
                   class="form-control form-control-sm"
@@ -3284,7 +3284,7 @@ Object {
           </div>
         </div>
         <h5>
-           Create New Data Scope 
+           Create New Ghost Database 
           <img
             class="hiddenspinner"
             src="/logo.png"
@@ -3349,7 +3349,7 @@ Object {
                     class="form-label"
                     for="connection"
                   >
-                    Available Connections
+                    Available Data Sources
                   </label>
                   <select
                     class="form-control form-control-sm"
@@ -5576,7 +5576,7 @@ Object {
         </div>
       </div>
       <h5>
-         Create New Data Scope 
+         Create New Ghost Database 
         <img
           class="hiddenspinner"
           src="/logo.png"
@@ -5641,7 +5641,7 @@ Object {
                   class="form-label"
                   for="connection"
                 >
-                  Available Connections
+                  Available Data Sources
                 </label>
                 <select
                   class="form-control form-control-sm"
@@ -5848,7 +5848,7 @@ Object {
           </div>
         </div>
         <h5>
-           Create New Data Scope 
+           Create New Ghost Database 
           <img
             class="hiddenspinner"
             src="/logo.png"
@@ -5913,7 +5913,7 @@ Object {
                     class="form-label"
                     for="connection"
                   >
-                    Available Connections
+                    Available Data Sources
                   </label>
                   <select
                     class="form-control form-control-sm"
@@ -6174,7 +6174,7 @@ Object {
         </div>
       </div>
       <h5>
-         Create New Data Scope 
+         Create New Ghost Database 
         <img
           class="hiddenspinner"
           src="/logo.png"
@@ -6239,7 +6239,7 @@ Object {
                   class="form-label"
                   for="connection"
                 >
-                  Available Connections
+                  Available Data Sources
                 </label>
                 <select
                   class="form-control form-control-sm"
@@ -6580,7 +6580,7 @@ Object {
           </div>
         </div>
         <h5>
-           Create New Data Scope 
+           Create New Ghost Database 
           <img
             class="hiddenspinner"
             src="/logo.png"
@@ -6645,7 +6645,7 @@ Object {
                     class="form-label"
                     for="connection"
                   >
-                    Available Connections
+                    Available Data Sources
                   </label>
                   <select
                     class="form-control form-control-sm"
@@ -6929,7 +6929,7 @@ Object {
         </div>
       </div>
       <h5>
-         Create New Data Scope 
+         Create New Ghost Database 
         <img
           class="hiddenspinner"
           src="/logo.png"
@@ -6994,7 +6994,7 @@ Object {
                   class="form-label"
                   for="connection"
                 >
-                  Available Connections
+                  Available Data Sources
                 </label>
                 <select
                   class="form-control form-control-sm"

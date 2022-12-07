@@ -69,7 +69,7 @@ exports[`add-datascope 1`] = `
             className="d-flex"
           >
             <h5>
-              Edit Datascopes  
+              Edit Ghost Databases  
               <img
                 className="spinner"
                 src="/logo.png"

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	_ "fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,7 @@ const Nocache = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"
 
 var port int
 var address string
+
 func health() {
 	p := mux.NewRouter()
 
@@ -68,7 +70,7 @@ func main() {
 	ca := struct {
 		Certificate string
 	}{}
-
+	fmt.Println(cajson)
 	err = json.Unmarshal([]byte(cajson), &ca)
 	if err != nil {
 		log.Errorf("CA Cert unmarshaling error: %s", err.Error())
