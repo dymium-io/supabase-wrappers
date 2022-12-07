@@ -40,3 +40,16 @@ ALTER TABLE connectors add COLUMN id_connectorauth varchar(36);
 -- description: "add foreign key";
 ALTER TABLE connectors
     ADD CONSTRAINT fk_id_connectorauth FOREIGN KEY (id_connectorauth) REFERENCES connectorauth (id);
+
+
+-- #!migration
+-- name: "customer/connectors-change-default-status",
+-- requires: ["customer/conectors", "customer/connectors-add-connectorname", "customer/connectors-add-auth", "customer/connectors-add-foreignkey"],
+-- description: "change default status";
+ALTER TABLE connectors ALTER COLUMN status SET DEFAULT 'provisioned';
+
+-- #!migration
+-- name: "customer/connectors-change-default-status1",
+-- requires: ["customer/conectors", "customer/connectors-add-connectorname", "customer/connectors-add-auth", "customer/connectors-add-foreignkey"],
+-- description: "change default status";
+ALTER TABLE connectorauth ALTER COLUMN status SET DEFAULT 'provisioned';

@@ -31,6 +31,9 @@ function Usage() {
     const [redacted, setRedacted] = useState(0)
     const [bytesin, setBytesin] = useState("")
     const [bytesout, setBytesout] = useState("")
+    const [connectors, setConnectors] = useState(0)
+    const [connectortunnels, setConnectortunnels] = useState(0)
+
 
     let sendQuery = () => {
         setSpinner(true)
@@ -48,7 +51,8 @@ function Usage() {
                     setTunnels(js.tunnels)
                     setBytesin(getReadableSizeString(js.bytesin))
                     setBytesout(getReadableSizeString(js.bytesout))
-
+                    setConnectors(js.connectors)
+                    setConnectortunnels(js.connectortunnels)
                     setTimeout( () => setSpinner(false), 500)
 
                 }).catch((error) => {
@@ -76,18 +80,19 @@ function Usage() {
                     <h6 style={{fontSize: '1.1em'}}><i className="fa-solid fa-link mr-2"></i>Links to data sources:</h6>
                     <div style={{fontSize: '2.0em'}}>{connections}</div>
                 </Col>
+                <Col className="card"> 
+                    <h6 style={{fontSize: '1.1em'}}><i className=" fas fa-diagram-project fa-fw  mr-2"></i>Connectors configured:</h6>
+                    <div style={{fontSize: '2.0em'}}>{connectors}, with {connectortunnels} tunnels</div>
+                </Col>                
                 <Col className="card">
-                <h6 style={{fontSize: '1.1em'}}><i className="fa-solid fa-database mr-2"></i> Datascopes:</h6>
+                <h6 style={{fontSize: '1.1em'}}><i className="fa-solid fa-ghost mr-2"></i> Ghost Databases:</h6>
                     <div style={{fontSize: '2.0em'}}>{datascopes}</div>                
                 </Col>
                 <Col className="card">
                 <h6 style={{fontSize: '1.1em'}}><i className="fa-solid fa-right-to-bracket mr-2"></i>Successful logins:</h6>
                     <div style={{fontSize: '2.0em'}}>{logins}</div>                
                 </Col>     
-                <Col className="card">
-                <h6 style={{fontSize: '1.1em'}}><i className="fa-solid fa-network-wired"></i>Tunnels established:</h6>
-                    <div style={{fontSize: '2.0em'}}>{tunnels}</div>                
-                </Col>                                   
+                        
             </Row>
             <Row style={{marginTop: '3em'}}> 
                 <Col className="card"> 
@@ -104,6 +109,10 @@ function Usage() {
                 </Col>                
             </Row>            
             <Row style={{marginTop: '3em'}}> 
+            <Col className="card">
+                <h6 style={{fontSize: '1.1em'}}><i className="fa-solid fa-network-wired mr-2"></i>User Tunnels established:</h6>
+                    <div style={{fontSize: '2.0em'}}>{tunnels}</div>                
+                </Col>                       
                 <Col className="card"> 
                     <h6 style={{fontSize: '1.1em'}}><i className="fa fa-traffic-light mr-2"></i>Traffic out:</h6>
                     <div style={{fontSize: '2.0em'}}>{bytesout}</div>

@@ -219,7 +219,7 @@ export default function AssignGroups() {
         },
         {
             dataField: 'name',
-            text: 'Datascope:',
+            text: 'Ghost Database:',
             headerStyle: { width: '20em' },
             sort: true,
         },
@@ -296,7 +296,7 @@ export default function AssignGroups() {
     }
     return (
         <div className=" text-left">
-            <h5 > Associate groups with Data Scopes <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+            <h5 > Associate groups with Ghost Databases <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
             {alert}
             <Modal centered size="lg" show={show} onHide={() => setShow(false)} >
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>

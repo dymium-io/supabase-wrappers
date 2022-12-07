@@ -20,8 +20,8 @@ export default function Sidebar() {
   }
   let isadmin = roles.includes("admin")
   let isuser = roles.includes("user")
-  if(!isadmin) {
-    if( ["dashboard", "connections", "datascopes", "groups", "rules"].includes(selected) ) {
+  if (!isadmin) {
+    if (["dashboard", "connections", "datascopes", "groups", "rules"].includes(selected)) {
       selected = "access"
       appDispatch(setActiveMenu(selected))
     }
@@ -41,16 +41,16 @@ export default function Sidebar() {
     if (isadmin)
       items.push(
         {
-          item: <div className='darkblue'> <i className="fas fa-database mr-2 fa-fw"></i>Connections</div>,
-          to: '/app/connections',
-          id: 'connections'
+          item: <div className='darkblue'><i className="fas fa-diagram-project mr-2  fa-fw"></i>Connectors</div>,
+          to: '/app/connectors',
+          id: 'connectors'
         })
     if (isadmin)
       items.push(
         {
-          item: <div className='darkblue'><i className="fas fa-lock-open mr-2  fa-fw"></i>Data Scopes</div>,
-          to: '/app/datascopes',
-          id: 'datascopes'
+          item: <div className='darkblue'> <i className="fas fa-database mr-2 fa-fw"></i>Data Sources</div>,
+          to: '/app/connections',
+          id: 'connections'
         })
     if (isadmin)
       items.push(
@@ -62,6 +62,15 @@ export default function Sidebar() {
     if (isadmin)
       items.push(
         {
+          item: <div className='darkblue'><i className="fas fa-ghost mr-2  fa-fw"></i>Ghost Databases</div>,
+          to: '/app/datascopes',
+          id: 'datascopes'
+        })
+
+
+    if (isadmin)
+      items.push(
+        {
           item: <div className='darkblue'> <i className="fa fa-gavel mr-2 fa-fw"></i>Rules </div>,
           to: '/app/rules',
           id: 'rules'
@@ -69,7 +78,7 @@ export default function Sidebar() {
     if (isuser)
       items.push(
         {
-          item: <div className='darkblue'> <i className="fa fa-key mr-2 fa-fw"></i>Access </div>,
+          item: <div className='darkblue'> <i className="fa fa-key mr-2 fa-fw"></i>User Access </div>,
           to: '/app/access',
           id: 'access'
         })

@@ -107,7 +107,7 @@ export default async function mockFetch(url, js) {
                 {
                     ok: true,
                     status: 200,
-                    json:  () => new Promise( (resolve, reject) => resolve(JSON.parse(`{"status":"OK","errormessage":"Datascope created"}`) ))
+                    json:  () => new Promise( (resolve, reject) => resolve(JSON.parse(`{"status":"OK","errormessage":"Ghost Database created"}`) ))
                 }
               )
             )    

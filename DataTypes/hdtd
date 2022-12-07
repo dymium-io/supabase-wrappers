@@ -43,7 +43,7 @@ web-ts:
     - source: DbAnalyzer.yaml
     - source: DbSyncCommon.yaml
     - source: Common.yaml
-
+    - source: Tunnel.yaml
 tclient:
   language: GoLang
   path: ../Tunnels/go/client/types

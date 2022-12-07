@@ -157,7 +157,7 @@ export function AddDatascope(props) {
                 <AddTable onHide={() => {setShowOffcanvas(false)}} onAlert={setAlert} onAddTable={onAddTable} table={table} currentConnectionType={currentConnectionType} connectionId={currentConnectionId}/>
                 }
             </Offcanvas>
-            <h5 > Create New Data Scope <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+            <h5 > Create New Ghost Database <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
             <div className=" text-left">
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                     <DatascopeForm edit={false} dbname={dbname} onDbname={setDbname} onTablesMapUpdate={onTablesMapUpdate} 
@@ -189,10 +189,10 @@ export default function Datascopes() {
             onSelect={(k) => appDispatch( setActiveDatascopeTab(k) )}
 
             unmountOnExit={true} className="mb-3 text-left">
-            <Tab eventKey="add" title="Add Data Scope" className="mx-4">
+            <Tab eventKey="add" title="Add" className="mx-4">
                 <AddDatascope />
             </Tab>
-            <Tab eventKey="edit" title="Edit Data Scopes" className="mx-4">
+            <Tab eventKey="edit" title="Edit Ghost Databases" className="mx-4">
                 <EditDatascopes />
             </Tab>
             <Tab eventKey="groups" title="Assign Groups" className="mx-4">

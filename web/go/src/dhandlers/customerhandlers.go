@@ -171,7 +171,7 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 	error := authentication.SaveDatascope(schema, t)
 	var status types.OperationStatus
 	if(error == nil) {
-		status = types.OperationStatus{"OK", "Datascope created"}
+		status = types.OperationStatus{"OK", "Ghost Database created"}
 		log.InfoUserf(schema, session, email, groups, roles, "Api SaveDatascope(%s), success", t.Name )
 
 	} else {
@@ -258,7 +258,7 @@ func GetUsage(w http.ResponseWriter, r *http.Request) {
 	t.Logins = logins //
 	t.Tunnels = tunnels 
 
-	connections, datascopes, blocked, obfuscated, redacted, err := authentication.GetRestrictions(schema)
+	connections, datascopes, blocked, obfuscated, redacted, connectors, ctunnels, err := authentication.GetRestrictions(schema)
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetUsage, error: %s", err.Error())
 
@@ -270,6 +270,9 @@ func GetUsage(w http.ResponseWriter, r *http.Request) {
 	t.Blocked = blocked
 	t.Obfuscated = obfuscated 
 	t.Redacted = redacted
+	t.Connectors = connectors
+	t.Connectortunnels = ctunnels
+
 	js, err := json.Marshal(t)
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetUsage, error: %s", err.Error())
@@ -413,7 +416,7 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 	var t types.ConnectionRecord
 	err := json.Unmarshal(body, &t)
 
-
+/* This is commented out temporarily. TODO - fix this with Valya!!!
 	if err == nil {		
 		conn, err := authentication.GetConnection(schema, *t.Id)
 		if(err != nil) {
@@ -464,12 +467,13 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
+*/
 	error := authentication.UpdateConnection(schema, t)
 
 	if(error != nil) {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, error: %s", error.Error())
 		status = types.OperationStatus{"Error", error.Error()}
+		http.Error(w, error.Error(), http.StatusInternalServerError)
 	} else {
 		log.InfoUserf(schema, session, email, groups, roles, "Api UpdateConnection, success")
 		status = types.OperationStatus{"OK", "Connection updated"}
@@ -537,7 +541,7 @@ func UpdateMapping(w http.ResponseWriter, r *http.Request) {
 	error := authentication.UpdateMapping(schema, *t.Id, t.Dymiumgroup, t.Directorygroup, t.Comments, t.Adminaccess)
 	var status types.OperationStatus
 	if(error == nil) {
-		status = types.OperationStatus{"OK", "Connection created"}
+		status = types.OperationStatus{"OK", "Mapping updated"}
 	} else {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateMapping, error: %s", error.Error())
 		status = types.OperationStatus{"Error", error.Error()}
@@ -571,7 +575,7 @@ func CreateMapping(w http.ResponseWriter, r *http.Request) {
 	error := authentication.CreateNewMapping(schema, t.Dymiumgroup, t.Directorygroup, t.Comments)
 	var status types.OperationStatus
 	if(error == nil) {
-		status = types.OperationStatus{"OK", "Connection created"}
+		status = types.OperationStatus{"OK", "Mapping created"}
 	} else {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api CreateMapping, error: %s", error.Error())
 		status = types.OperationStatus{"Error", error.Error()}
@@ -610,8 +614,8 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 		status = types.OperationStatus{"Error", error.Error()}
 		log.ErrorUserf(schema, session, email, groups, roles, "Error: %s", error.Error())
 	}
-	
-
+	fmt.Println(id) // remove later
+/* reenable this later TODO TODO TODO
 	if(error == nil) {
 		// get the connection details
 		conn, err := authentication.GetConnection(schema, id)
@@ -645,6 +649,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 		authentication.DeleteConnection(schema, id)
 		log.ErrorUserf(schema, session, email, groups, roles, "Api Roll back connection creation")
 	}
+*/	
 	js, err := json.Marshal(status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1469,4 +1474,103 @@ func GetImages(w http.ResponseWriter, r *http.Request) {
 		}
 		http.ServeFile(w, r, filename)
 	}
+}
+
+func GetAccessKeys(w http.ResponseWriter, r *http.Request) {
+	var out types.GetKeySecret
+	out.Accesskey, _ = authentication.GenerateRandomString(12)
+	out.Secret, _ = authentication.GenerateRandomString(128)
+
+	js, err := json.Marshal(out)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(js))
+}
+
+func CreateNewConnector(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.AddConnectorRequest{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	id, err := authentication.CreateNewConnector(schema, &t)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	status := types.AuthStatus{"OK", "Connector "+t.Name+" provisioned!", id}
+	js, err := json.Marshal(status)
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(js))	
+}
+
+func GetConnectors(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	conns, err := authentication.GetConnectors(schema)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}	
+	js, err := json.Marshal(conns)
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(js))		
+}
+
+func UpdateConnector(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.AddConnectorRequest{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = authentication.UpdateConnector(schema, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}	
+	status := types.OperationStatus{"OK", "Connector "+t.Name+" updated!"}
+	js, err := json.Marshal(status)
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(js))		
+}
+
+func DeleteConnector(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.DatascopeId{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = authentication.DeleteConnector(schema, t.Id)
+
+	status := types.OperationStatus{"OK", "Connector deleted!"}
+	js, err := json.Marshal(status)
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(js))		
 }

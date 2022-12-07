@@ -373,7 +373,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
             <Row>
                 <Col xs="auto" className="d-flex" style={{ alignItems: "center" }}>
                     <Form.Group className="mb-3" controlId="connection" >
-                        <Form.Label >Available Connections</Form.Label>
+                        <Form.Label >Available Data Sources</Form.Label>
                         <Form.Control as="select" size="sm" 
                             onChange={e => {
 

@@ -43,8 +43,14 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated.HandleFunc("/api/getdatascopetables", dhandlers.GetDatascapeTables).Methods("POST").Name("getdatascopetables")
 	authenticated.HandleFunc("/api/getselect", dhandlers.GetSelect).Methods("POST").Name("getselect")
 	authenticated.HandleFunc("/api/getusage", dhandlers.GetUsage).Methods("POST").Name("getusage")
+	authenticated.HandleFunc("/api/getaccesskey", dhandlers.GetAccessKeys).Methods("GET").Name("getkeyaccess")
+	authenticated.HandleFunc("/api/createnewconnector", dhandlers.CreateNewConnector).Methods("POST").Name("createnewconnector")
+	authenticated.HandleFunc("/api/getconnectors", dhandlers.GetConnectors).Methods("GET").Name("getconnectors")
+	authenticated.HandleFunc("/api/updateconnector", dhandlers.UpdateConnector).Methods("POST").Name("updateconnector")
+	authenticated.HandleFunc("/api/deleteconnector", dhandlers.DeleteConnector).Methods("POST").Name("deleteconnector")
 	
 	
+
 	nonauthenticated.HandleFunc("/api/fakelogin", dhandlers.FakeLogin).Methods("GET")
 	nonauthenticated.HandleFunc("/api/getlogin", dhandlers.GetLogin).Methods("GET")
 	nonauthenticated.HandleFunc("/api/logout", dhandlers.GetLogout).Methods("GET")
@@ -53,7 +59,6 @@ func CustomerHandlers(p *mux.Router) {
 	
 	nonauthenticated.HandleFunc("/api/downloadupdate", dhandlers.DownloadUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")
 	nonauthenticated.HandleFunc("/api/datascopehelp", dhandlers.DatascopeHelp).Queries("token", "{token}", "port", "{port}").Methods("GET")
-
 	nonauthenticated.HandleFunc("/api/getconnectorcertificate",  dhandlers.GetConnectorCertificate).Methods("POST").Name("getconnectorcertificate")
 
 	

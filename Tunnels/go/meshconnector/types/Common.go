@@ -30,6 +30,11 @@ type AuthStatus struct {
 type ConnectionRecord struct {
    Name string `json:"name"`
    Dbtype string `json:"dbtype"`
+   Usesconnector bool `json:"usesconnector"`
+   Connectorname string `json:"connectorname"`
+   Connectorid string `json:"connectorid"`
+   Tunnelname string `json:"tunnelname"`
+   Tunnelid string `json:"tunnelid"`
    Address string `json:"address"`
    Port int `json:"port"`
    Dbname string `json:"dbname"`
@@ -153,6 +158,8 @@ type Usage struct {
    Blocked int `json:"blocked"`
    Obfuscated int `json:"obfuscated"`
    Redacted int `json:"redacted"`
+   Connectors int `json:"connectors"`
+   Connectortunnels int `json:"connectortunnels"`
    Bytesin string `json:"bytesin"`
    Bytesout string `json:"bytesout"`
 }

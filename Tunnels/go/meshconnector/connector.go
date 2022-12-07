@@ -195,7 +195,7 @@ func restart() {
 
 func pipe(conmap map[int]*Virtcon, egress net.Conn, 
 	messages chan protocol.TransmissionUnit, id int, 
-	token string, mu sync.RWMutex) {
+	token string, mu *sync.RWMutex) {
 
 	for {
 		buff := make([]byte, 0xffff)
@@ -208,9 +208,15 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn,
 				// no op
 			} else {	
 				if ok {
-					log.InfoTenantf(conn.tenant, "Db read failed '%s', id:%d", err.Error(), id)
+					es := err.Error()
+					if( !strings.Contains(es, "EOF")) {
+						log.InfoTenantf(conn.tenant, "Db read failed '%s', id:%d", err.Error(), id)
+					}
 				} else {
-					log.Infof("Db read failed '%s', id:%d", err.Error(), id)
+					es := err.Error()
+					if( !strings.Contains(es, "EOF")) {
+						log.Infof("Db read failed '%s', id:%d", err.Error(), id)
+					}
 				}
 			}
 			egress.Close()
@@ -276,24 +282,29 @@ func PassTraffic(ingress *tls.Conn, customer, connector string) {
 
 			conn := &Virtcon{}
 			conn.tenant = customer
-
-			log.InfoTenantf(conn.tenant, "Connection #%d to db created, total #=%d", buff.Id, len(conmap))
+			mu.RLock()
+			l := len(conmap)
+			mu.RUnlock()
+			log.InfoTenantf(conn.tenant, "Connection #%d to db created, total #=%d", buff.Id, l)
 
 			egress, err := net.Dial("tcp", string(buff.Data))
 			if err != nil {
-				log.ErrorTenantf(conn.tenant, "Error connecting to target %s", err.Error())
+				log.ErrorTenantf(conn.tenant, "Error connecting to target %s, send close back", err.Error())
+				messages <- protocol.TransmissionUnit{protocol.Close, buff.Id, nil}
+				return
 			}
 			conn.sock = egress
 			mu.Lock()
 			conmap[buff.Id] = conn
 			mu.Unlock()
-			go pipe(conmap, egress, messages, buff.Id, string(buff.Data), mu)
+			go pipe(conmap, egress, messages, buff.Id, string(buff.Data), &mu)
 		case protocol.Close:
 			mu.RLock()
 			conn, ok := conmap[buff.Id]
+			l := len(conmap)
 			mu.RUnlock()
 			if  ok {
-				log.InfoTenantf(conn.tenant, "Connection #%d closing, %d left", buff.Id, len(conmap)-1)
+				log.InfoTenantf(conn.tenant, "Connection #%d closing, %d left", buff.Id, l-1)
 				conn.sock.Close()
 				mu.Lock()
 				delete(conmap, buff.Id)

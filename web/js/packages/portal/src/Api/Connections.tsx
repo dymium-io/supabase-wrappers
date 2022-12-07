@@ -35,6 +35,11 @@ export function getConnections(setSpinner, setConns, setAlert, remap:internal.Co
                         port: x.port,
                         description: x.description,
                         useTLS: x.useTLS,
+                        usesconnector: x.usesconnector,
+                        connectorid: x.connectorid,
+                        connectorname: x.connectorname,
+                        tunnelid: x.tunnelid,
+                        tunnelname: x.tunnelname
 
                     })
                     if(undefined != remap && x.name != null)

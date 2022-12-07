@@ -10,6 +10,7 @@ import Dashboard from "./App/Dashboard"
 import Customers from "./App/Customers"
 import Connections from "./App/Connections"
 import Datascopes from "./App/Datascopes"
+import Connectors from "./App/Connectors"
 import Groups from "./App/Groups"
 import Rules from "./App/Rules"
 import Access from "./App/Access"
@@ -38,7 +39,8 @@ function App() {
           <Route path="/app/" element={<AuthenticatedApp />} >
             <Route path="/app/dashboard" element={<Dashboard />} />
             <Route path="/app/connections" element={<Connections />} />     
-            <Route path="/app/datascopes" element={<Datascopes />} />                
+            <Route path="/app/datascopes" element={<Datascopes />} />     
+            <Route path="/app/connectors/*" element={<Connectors />} />                
             <Route path="/app/groups" element={<Groups />} />    
             <Route path="/app/rules" element={<Rules />} />   
             <Route path="/app/access" element={<Access />} />                     
