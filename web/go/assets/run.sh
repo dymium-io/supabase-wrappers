@@ -33,12 +33,13 @@ export AUTH0_PORTAL_AUDIENCE='https://portal.dymium.local/api/handler'
 export SESSION_SECRET="b<Qu9K)q}Ksh+R)JzlJJ'X1sHMp$UI@t&OCjDYTEmVe6WZe,rdJ}!I=4N[|yoTq"
 export CUSTOMER_HOST='portal.dymium.local'
 export ADMIN_HOST='admin.dymium.local'
-export CONNECTOR_SERVER="connector.dymium.local"
+export CONNECTOR_SERVER="docker.for.mac.host.internal"
 export LB_DOMAIN='.dymium.local'
 export LB_PORT=15654
 export PROTOCOL_VERSION=3
 export MAJOR_VERSION=0
 export MINOR_VERSION=1
+export MESH_PORT_RANGE=30000-30050
 
 export AWS_LAMBDAS='{ "DbAnalyzer": "localhost:9080",
                       "DbSync": "localhost:9081"

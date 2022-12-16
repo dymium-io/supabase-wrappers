@@ -68,6 +68,14 @@ func contains(s []string, str string) bool {
 	}
 	return false
 }
+func containsi(s []int, i int) bool {
+	for _, v := range s {
+		if v == i {
+			return true
+		}
+	}
+	return false
+}
 var admins = make(map[string]int)
 var users = make(map[string]int)
 func initRBAC() {
@@ -114,6 +122,7 @@ var auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_p
 var ctx context.Context
 
 var FilesystemRoot string
+var LowMeshport, HighMeshport int
 
 var Invoke gotypes.Invoke_t
 
@@ -217,6 +226,10 @@ func Init(host string, port, user, password, dbname, tls string) error {
 	auth_portal_redirect = os.Getenv("AUTH0_PORTAL_REDIRECT_URL")
 	auth_portal_audience = os.Getenv("AUTH0_PORTAL_AUDIENCE")
 
+	sports := os.Getenv("MESH_PORT_RANGE")
+	ports := strings.Split(sports, "-")
+	LowMeshport, _  = strconv.Atoi(ports[0])
+	HighMeshport, _ = strconv.Atoi(ports[1])
 	ctx = context.Background()
 
 	FilesystemRoot = os.Getenv("FILESYSTEM_ROOT")
@@ -1091,7 +1104,7 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 }
 func GetConnection(schema, id string) (types.Connection, error) {
 	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls, a.use_connector,
-	coalesce(connector_id, ''), coalesce(tunnel_id, '') from 
+	coalesce(a.connector_id, ''), coalesce(a.tunnel_id, '') from 
 		spoofcorp.connections as a join spoofcorp.admincredentials as b on a.id=b.connection_id 
 			join spoofcorp.passwords as c on b.id=c.id where a.id=$1;`
 
@@ -1099,26 +1112,28 @@ func GetConnection(schema, id string) (types.Connection, error) {
 	var con types.Connection
 	var use_connector bool
 	var connector_id, tunnel_id string
-
+fmt.Printf("in GetConnection ")
 	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &con.Password, 
 		&con.Database, &con.Tls, &use_connector, &connector_id, &tunnel_id)
 	if(err != nil) {
-		log.Errorf("GetConnection error: %s", err.Error())
+		log.Errorf("GetConnection error 0: %s", err.Error())
 		return con, err
 	} else {
+		fmt.Printf("use_connector: %t\n", use_connector)
 		if use_connector {
 			// get the connector information
 			var localport int
-			sql = `select localport from ` + schema + `.connectors where tunnel_id=$1;`
+			sql = `select localport from ` + schema + `.connectors where id=$1;`
 			row := db.QueryRow(sql, tunnel_id)
 			err := row.Scan(&localport) 
 			if(err != nil) {
-				log.Errorf("GetConnection error: %s", err.Error())
+				log.Errorf("GetConnection error 1: %s", err.Error())
 				return con, err
 			}
 			host := os.Getenv("CONNECTOR_SERVER")
 			con.Address = host
 			con.Port = localport
+			fmt.Printf("conn: %v\n", con)
 		}
 	}
 	return con, err
@@ -1628,10 +1643,8 @@ func GetFakeAuthentication () []byte{
 }
 func GetTargets(schema, key, secret string, ) ([]string, error) {
 	var targets []string 	
-	sql := `select a.targetaddress, a.targetport, a.localport from ` + schema + `.connectors as a 
+	sql := `select a.targetaddress, a.targetport, a.localport, b.id, a.id from ` + schema + `.connectors as a 
 	join `+schema+`.connectorauth as b on a.id_connectorauth=b.id where b.accesskey=$1 and b.accesssecret=$2;`
-	fmt.Println(sql)
-	fmt.Printf("schema %s, key: %s\n", schema, key)
 
 	rows, err  := db.Query(sql, key, secret)
 	if nil == err {
@@ -1639,19 +1652,21 @@ func GetTargets(schema, key, secret string, ) ([]string, error) {
 		for rows.Next() {		
 			var address string
 			var port, localport int
-			err := rows.Scan(&address, &port, &localport)	
+			var connid, tunnelid string
+			err := rows.Scan(&address, &port, &localport, &connid, &tunnelid)	
 			if err != nil {
 				fmt.Printf("Error: %s\n", err.Error())
 				return nil, err
 			}
-			s := fmt.Sprintf("%s:%d,%d", address, port, localport)
+			s := fmt.Sprintf("%s:%d,%d,%s,%s", address, port, localport, connid, tunnelid)
+			log.Infof("Add target %s", s)
 			targets = append(targets, s)
 		}
 	} else {
 		return nil, err
 	}
 
-	fmt.Printf("targets: %v\n", targets)
+
 	return targets, nil
 }
 
@@ -1939,13 +1954,31 @@ func CreateNewConnector(schema string, req *types.AddConnectorRequest) (string, 
 		return "", err
 	}	
 
+	var ports  []int
+	sql = `select localport from ` + schema + `.connectors`
+	rows, err  := tx.QueryContext(ctx, sql)
+	if nil == err {
+		defer rows.Close()
+		for rows.Next() {
+			var p int 
+			rows.Scan(&p)
+			ports = append(ports, p)
+		}
+	} else {
+		log.Errorf("CreateNewConnector error x: %s", err.Error())
+		return "", err
+	}
+	getport := func() (int, error) {
+		fmt.Printf("LowMeshport %d, HighMeshport %d\n", LowMeshport, HighMeshport)
+		for i := LowMeshport; i < HighMeshport; i++ {
+			if !containsi(ports, i) {
+				return i, nil
+			}
+		}
+		return 0, errors.New("No ports available")
+	}
 	for i := 0; i < len(req.Tunnels); i++ {
-		sql := `WITH CTE AS (SELECT FLOOR(RANDOM()*50000 + 10000) AS rn )
-		SELECT rn FROM CTE WHERE rn NOT IN (SELECT localport FROM `+schema+`.connectors) limit 1;`
-
-		var localport int
-		row  := tx.QueryRowContext(ctx, sql)
-		err = row.Scan(&localport)
+		localport, err := getport()
 		if err != nil {
 			tx.Rollback()
 			log.Errorf("CreateNewConnector error 2: %s", err.Error())
@@ -1977,13 +2010,14 @@ func GetConnectors(schema string) ( []types.Connector, error) {
     defer cancelfunc()
 
 	tx, err := db.BeginTx(ctx, nil)
-	sql := `select id, name, accesskey, accesssecret, EXTRACT(epoch from (now() - createdat)), status from ` + schema + `.connectorauth;`
+	sql := `select a.id, a.name, a.accesskey, a.accesssecret, EXTRACT(epoch from (now() - a.createdat)), COALESCE(b.use_connector, false) from `+schema+`.connectorauth as a left join `+schema+`.connections as b on a.id=b.connector_id`
 
 	rows, err  := tx.QueryContext(ctx, sql)
 	if nil == err {
 		defer rows.Close()
 		for rows.Next() {
-			var id, name, accesskey, accesssecret, status string 
+			var id, name, accesskey, accesssecret string 
+			var status bool
 			var age float64
 
 			err = rows.Scan(&id, &name, &accesskey, &accesssecret, &age, &status)
@@ -2001,8 +2035,13 @@ func GetConnectors(schema string) ( []types.Connector, error) {
 			} else {
 				o.Secret = &accesssecret
 			}
-			var t types.TunnelStatus
-			t = types.TunnelStatus(status)
+			var st string
+			if status {
+				st = "provisioned"
+			} else {
+				st = "configured"
+			}
+			t := types.TunnelStatus(st)
 			o.Status = &t
 			out = append(out, o)
 		}
