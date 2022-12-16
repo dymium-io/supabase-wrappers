@@ -30,6 +30,7 @@ export FILESYSTEM_ROOT='../../assets/'
 export AWS_LAMBDAS='{ "DbAnalyzer": "localhost:9080",
                       "DbSync": "localhost:9081"
                     }'
+export MESH_PORT_RANGE=30000-30050
 
 ../gotest -v ./...
 
