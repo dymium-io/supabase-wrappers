@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	_ "fmt"
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 
 	"dymium.com/dymium/log"
 	"dymium.com/meshserver/tunnel"
@@ -40,20 +40,25 @@ func health() {
 	log.Infof("Listen for health on :80")
 	http.ListenAndServe(":80", p)
 }
+
 func main() {
 	log.Init("Mesh Tunnel")
 	log.Info("Starting Mesh server, Version 0.01")
 
-	flag.IntVar(&port, "p", 0, "Port")
-	flag.StringVar(&address, "a", "", "Address")
-	flag.Parse()
-
-	go health()
-
+	if "true" != os.Getenv("LOCAL_ENVIRONMENT") {
+		go health()
+	}
+	sport := os.Getenv("PORT")
+	if sport != "" {
+		port, _ = strconv.Atoi(sport)
+	}
 	if port == 0 {
 		port = 443
 	}
 	log.Debugf("port %d", port)
+
+	address := os.Getenv("ADDRESS")
+
 	certificatejson := os.Getenv("CERTIFICATE")
 	cert := struct {
 		Key         string

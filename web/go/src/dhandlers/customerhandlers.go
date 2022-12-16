@@ -1315,7 +1315,7 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 	key := t.Key
 	secret := t.Secret
 
-	fmt.Printf("schema: %s, key: %s, secret %s\n", schema, key, secret)
+	//fmt.Printf("schema: %s, key: %s, secret %s\n", schema, key, secret)
 
 	if err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error unmarshaling cert: %s", err.Error())
@@ -1519,11 +1519,21 @@ func GetConnectors(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 
 	conns, err := authentication.GetConnectors(schema)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}	
 	js, err := json.Marshal(conns)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return		
+	}
+	if len(conns) == 0 {
+		js = []byte("[]")
+	}
+	fmt.Printf("%s \n", string(js))
 	w.Header().Set("Cache-Control", common.Nocache)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))		
@@ -1568,6 +1578,9 @@ func DeleteConnector(w http.ResponseWriter, r *http.Request) {
 	err = authentication.DeleteConnector(schema, t.Id)
 
 	status := types.OperationStatus{"OK", "Connector deleted!"}
+	if err != nil {
+		status = types.OperationStatus{"Error", err.Error()}
+	}
 	js, err := json.Marshal(status)
 	w.Header().Set("Cache-Control", common.Nocache)
 	w.Header().Set("Content-Type", "application/json")

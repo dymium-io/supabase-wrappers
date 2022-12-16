@@ -79,9 +79,9 @@ function ConnectionForm(props) {
         getConnectors()
     }, [])
     let getConnectorOptions = () => {
-    
-        let out : any[] = [<option value="">...</option>]  
-        conns.forEach( (x:any) => {
+
+        let out: any[] = [<option value="">...</option>]
+        conns.forEach((x: any) => {
             out.push(
                 <option key={x.id} value={x.id}>{x.name}</option>
             )
@@ -89,26 +89,26 @@ function ConnectionForm(props) {
         return out
     }
     let getTunnelOptions = () => {
-        let out : any[] = [<option value="">...</option>]  
-        if(props.connector === "")
+        let out: any[] = [<option value="">...</option>]
+        if (props.connector === "")
             return out
         // find the connector 
         let c = undefined
-        for(let i = 0; i < conns.length; i++) {
-            
-            if(conns[i]["id"] === props.connectorid) {
-                
-                conns[i].tunnels.forEach( x => {
-                    if(x.id != null)
+        for (let i = 0; i < conns.length; i++) {
+
+            if (conns[i]["id"] === props.connectorid) {
+
+                conns[i].tunnels.forEach(x => {
+                    if (x.id != null)
                         out.push(
                             <option key={x.id} value={x.id}>{x.name}</option>
-                        )                    
+                        )
                 })
                 return out
                 break
             }
         }
-        if(c === undefined) return out //
+        if (c === undefined) return out //
 
         return out
     }
@@ -181,7 +181,8 @@ function ConnectionForm(props) {
                     }
                 </Col>
             </Row>
-            <Row>
+            {conns.length > 0 &&
+                < Row >
                 <Col className="mt-1" style={{ paddingLeft: '1.5em' }}>
                     <Toggle className="yellowtoggle"
                         id='conn-status'
@@ -197,178 +198,181 @@ function ConnectionForm(props) {
                     <label className="form-check-label" style={{ marginLeft: '0.5em', position: 'relative', top: '-0.38em' }} htmlFor='conn-status'>Use Connector instead of direct addressing</label>
                 </Col>
             </Row>
-            <Row>
-                {props.usesconnector ?
-                    <>
-                        <Col xs="auto">
-                            <Form.Group className="mb-3" controlId="connector" >
-                                <Form.Label >Connector</Form.Label>
-                                <Form.Control as="select" required size="sm" 
-                                    value={props.connectorid} 
-                                    onChange={e => {
-                                        
-                                        let key = e.target.value
-                                        if (key !== "")
-                                            props.setConnectorid(key)
-                                        else
-                                            props.setConnectorid("")
-                               
-                                    }}
-                                >
-                                    
-                                    {getConnectorOptions()}
-                                </Form.Control>
-                                <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                                <Form.Control.Feedback type="invalid" >
-                                    Select Connector
-                                </Form.Control.Feedback>
-                            </Form.Group>
-                        </Col>
-                        <Col xs="auto">
-                            <Form.Group className="mb-3" controlId="tunnrl" >
-                                <Form.Label >Connector</Form.Label>
-                                <Form.Control as="select" required size="sm" 
-                                            value={props.tunnelid} 
-                                            onChange={e => {
-                                                
-                                                let key = e.target.value
-                                                if (key !== "")
-                                                    props.setTunnelid(key)
-                                                else
-                                                    props.setTunnelid("")
-                                       
-                                            }}
-                                >
-                                    
-                                    {getTunnelOptions()}
-                                </Form.Control>
-                                <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                                <Form.Control.Feedback type="invalid" >
-                                    Select Connector
-                                </Form.Control.Feedback>
-                            </Form.Group>
-                        </Col>                        
-                    </>
-                    :
-                    <>
-                        <Col xs="auto">
-                            <Form.Group className="mb-3" controlId="ipaddress">
-                                <Form.Label>Address</Form.Label>
-                                <Form.Control size="sm" type="text" placeholder="DB IP address or host name"
-                                    required
-                                    pattern="^[a-zA-Z0-9._]+$"
-                                    value={props.address}
-                                    onChange={e => props.setAddress(e.target.value)}
-                                />
-                                <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                                <Form.Control.Feedback type="invalid" >
-                                    Ender DB address for Dymium
-                                </Form.Control.Feedback>
-                            </Form.Group>
-                        </Col>
-                        <Col xs="auto">
-                            <Form.Group className="mb-3" controlId="portnumber">
-                                <Form.Label>Port</Form.Label>
-                                <Form.Control size="sm" type="number"
-                                    required
-                                    pattern=".+"
-                                    placeholder="DB port number"
-                                    value={props.port}
-                                    onChange={e => props.setPort(e.target.value)}
-                                />
-                                <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                                <Form.Control.Feedback type="invalid" >
-                                    Select DB port for Dymium
-                                </Form.Control.Feedback>
-                            </Form.Group>
-                        </Col>
-                    </>
-                }
-                <Col xs="auto" style={{ display: 'flex', alignItems: 'bottom' }}>
-                    <div style={{ marginTop: '1.8em' }}>
-                        <Toggle className="yellowtoggle"
-                            id='tls-status'
-                            checked={props.useTLS}
-                            onChange={e => props.setUseTLS(e.target.checked)}
-                        />
-                        <label className="form-check-label" style={{ marginLeft: '0.5em', position: 'relative', top: '-0.38em' }} htmlFor='tls-status'>Use TLS</label>
-                    </div>
-                </Col>
-            </Row>
-            {props.context === "edit" &&
-                <Row>
-                    <Col>
-                        <Form.Group className="mb-1" controlId="usetls">
-
-                            <Form.Check
-                                style={{ marginTop: '0.2em' }}
-                                type="checkbox"
-                                label="Change credentials"
-                                id="changecred"
-                                defaultChecked={props.cred}
-                                onChange={e => {
-
-                                    props.setPassword("")
-                                    props.setUsername("")
-                                    props.setCred(e.target.checked)
-                                }}
-                            />
-                        </Form.Group>
-                    </Col>
-                </Row>
             }
-            {props.cred &&
-                <Row>
-                    <Col xs="auto">
-                        <Form.Group className="mb-3" controlId="dbusername">
-                            <Form.Label>Username</Form.Label>
-                            <Form.Control size="sm" type="text" placeholder="DB username"
-                                required
-                                pattern=".+"
-                                value={props.username}
-                                onChange={e => props.setUsername(e.target.value)}
-                            />
-                            <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                            <Form.Control.Feedback type="invalid" >
-                                Admin name for DB
-                            </Form.Control.Feedback>
-                        </Form.Group>
+<Row>
+    {props.usesconnector ?
+        <>
+            <Col xs="auto">
+                <Form.Group className="mb-3" controlId="connector" >
+                    <Form.Label >Connector</Form.Label>
+                    <Form.Control as="select" required size="sm"
+                        value={props.connectorid}
+                        onChange={e => {
 
-                    </Col>
-                    <Col xs="auto">
-                        <Form.Group className="mb-3" controlId="dbpassword">
-                            <Form.Label>Password</Form.Label>
-                            <PasswordField type="password"
-                                required
-                                placeholder="DB password"
-                                pattern=".+"
-                                validfeedback="Looks good!"
-                                invalidfeedback="Admin password"
-                                value={props.password}
-                                className="w-12em"
-                                onChange={e => props.setPassword(e.target.value)}
-                                size="sm" />
-                        </Form.Group>
-                    </Col>
-                </Row>
-            }
-            <Row>
-                <Col xs>
-                    <Form.Group className="mb-3" controlId="description">
-                        <Form.Label>Description</Form.Label>
-                        <Form.Control as="textarea" rows={3} style={{ width: '100%' }}
-                            required
-                            placeholder="Please put in the description of this connection"
-                            onChange={e => props.setDescription(e.target.value)}
-                            value={props.description}
-                        />
-                        <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                        <Form.Control.Feedback type="invalid" >
-                            Please put in some description
-                        </Form.Control.Feedback>
-                    </Form.Group>
-                </Col>
-            </Row>
+                            let key = e.target.value
+                            if (key !== "")
+                                props.setConnectorid(key)
+                            else
+                                props.setConnectorid("")
+
+                        }}
+                    >
+
+                        {getConnectorOptions()}
+                    </Form.Control>
+                    <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid" >
+                        Select Connector
+                    </Form.Control.Feedback>
+                </Form.Group>
+            </Col>
+            <Col xs="auto">
+                <Form.Group className="mb-3" controlId="tunnrl" >
+                    <Form.Label >Connector</Form.Label>
+                    <Form.Control as="select" required size="sm"
+                        value={props.tunnelid}
+                        onChange={e => {
+
+                            let key = e.target.value
+                            if (key !== "")
+                                props.setTunnelid(key)
+                            else
+                                props.setTunnelid("")
+
+                        }}
+                    >
+
+                        {getTunnelOptions()}
+                    </Form.Control>
+                    <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid" >
+                        Select Connector
+                    </Form.Control.Feedback>
+                </Form.Group>
+            </Col>
+        </>
+        :
+        <>
+            <Col xs="auto">
+                <Form.Group className="mb-3" controlId="ipaddress">
+                    <Form.Label>Address</Form.Label>
+                    <Form.Control size="sm" type="text" placeholder="DB IP address or host name"
+                        required
+                        pattern="^[a-zA-Z0-9._]+$"
+                        value={props.address}
+                        onChange={e => props.setAddress(e.target.value)}
+                    />
+                    <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid" >
+                        Ender DB address for Dymium
+                    </Form.Control.Feedback>
+                </Form.Group>
+            </Col>
+            <Col xs="auto">
+                <Form.Group className="mb-3" controlId="portnumber">
+                    <Form.Label>Port</Form.Label>
+                    <Form.Control size="sm" type="number"
+                        required
+                        pattern=".+"
+                        placeholder="DB port number"
+                        value={props.port}
+                        onChange={e => props.setPort(e.target.value)}
+                    />
+                    <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid" >
+                        Select DB port for Dymium
+                    </Form.Control.Feedback>
+                </Form.Group>
+            </Col>
+        </>
+    }
+    <Col xs="auto" style={{ display: 'flex', alignItems: 'bottom' }}>
+        <div style={{ marginTop: '1.8em' }}>
+            <Toggle className="yellowtoggle"
+                id='tls-status'
+                checked={props.useTLS}
+                onChange={e => props.setUseTLS(e.target.checked)}
+            />
+            <label className="form-check-label" style={{ marginLeft: '0.5em', position: 'relative', top: '-0.38em' }} htmlFor='tls-status'>Use TLS</label>
+        </div>
+    </Col>
+</Row>
+{
+    props.context === "edit" &&
+    <Row>
+        <Col>
+            <Form.Group className="mb-1" controlId="usetls">
+
+                <Form.Check
+                    style={{ marginTop: '0.2em' }}
+                    type="checkbox"
+                    label="Change credentials"
+                    id="changecred"
+                    defaultChecked={props.cred}
+                    onChange={e => {
+
+                        props.setPassword("")
+                        props.setUsername("")
+                        props.setCred(e.target.checked)
+                    }}
+                />
+            </Form.Group>
+        </Col>
+    </Row>
+}
+{
+    props.cred &&
+    <Row>
+        <Col xs="auto">
+            <Form.Group className="mb-3" controlId="dbusername">
+                <Form.Label>Username</Form.Label>
+                <Form.Control size="sm" type="text" placeholder="DB username"
+                    required
+                    pattern=".+"
+                    value={props.username}
+                    onChange={e => props.setUsername(e.target.value)}
+                />
+                <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                <Form.Control.Feedback type="invalid" >
+                    Admin name for DB
+                </Form.Control.Feedback>
+            </Form.Group>
+
+        </Col>
+        <Col xs="auto">
+            <Form.Group className="mb-3" controlId="dbpassword">
+                <Form.Label>Password</Form.Label>
+                <PasswordField type="password"
+                    required
+                    placeholder="DB password"
+                    pattern=".+"
+                    validfeedback="Looks good!"
+                    invalidfeedback="Admin password"
+                    value={props.password}
+                    className="w-12em"
+                    onChange={e => props.setPassword(e.target.value)}
+                    size="sm" />
+            </Form.Group>
+        </Col>
+    </Row>
+}
+<Row>
+    <Col xs>
+        <Form.Group className="mb-3" controlId="description">
+            <Form.Label>Description</Form.Label>
+            <Form.Control as="textarea" rows={3} style={{ width: '100%' }}
+                required
+                placeholder="Please put in the description of this connection"
+                onChange={e => props.setDescription(e.target.value)}
+                value={props.description}
+            />
+            <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+            <Form.Control.Feedback type="invalid" >
+                Please put in some description
+            </Form.Control.Feedback>
+        </Form.Group>
+    </Col>
+</Row>
         </>
     )
 }
@@ -396,9 +400,10 @@ export function AddConnection() {
 
     let sendConnection = () => {
         setSpinner(true)
-        let body = JSON.stringify({ name, dbtype, address, port: parseInt(port), 
-            dbname, useTLS, username, password, description,  
-            usesconnector: usesconnector,  connectorname: connectorName, 
+        let body = JSON.stringify({
+            name, dbtype, address, port: parseInt(port),
+            dbname, useTLS, username, password, description,
+            usesconnector: usesconnector, connectorname: connectorName,
             connectorid, tunnelname: tunnelName, tunnelid
         })
         http.sendToServer("POST", "/api/createnewconnection",
@@ -643,13 +648,13 @@ export function EditConnections(props) {
             text: 'Target:',
             sort: true,
             formatter: (cell, row, rowIndex, formatExtraData) => {
-                
-                if(row.usesconnector) {
-                    return <div className="d-flex " ><i className="mr-2 fas fa-diagram-project fa-fw blue" style={{position: 'relative', top: '0.3em'}}></i>{row.connectorname}/{row.tunnelname}</div>
+
+                if (row.usesconnector) {
+                    return <div className="d-flex " ><i className="mr-2 fas fa-diagram-project fa-fw blue" style={{ position: 'relative', top: '0.3em' }}></i>{row.connectorname}/{row.tunnelname}</div>
                 }
-             
-                return <div className="d-flex"><i className=" mr-2 fa fa-cloud-arrow-up blue" style={{position: 'relative', top: '0.3em'}}></i>{row.address}:{row.port}</div>
-            },            
+
+                return <div className="d-flex"><i className=" mr-2 fa fa-cloud-arrow-up blue" style={{ position: 'relative', top: '0.3em' }}></i>{row.address}:{row.port}</div>
+            },
         },
         {
             dataField: 'dbname',
@@ -713,7 +718,7 @@ export function EditConnections(props) {
             dbname: dbname,
             useTLS: useTLS,
             description: description,
-            usesconnector: usesconnector,  
+            usesconnector: usesconnector,
             connectorid: connectorid,
             tunnelid: tunnelid
         }
