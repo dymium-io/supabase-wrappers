@@ -1,28 +1,25 @@
 #!/bin/sh
 
-REGION=us-west-2
-# ARN="411064808315"
-# REPO="db-sync"
+source "../../libs/shell/aws-include.sh"
 
-PROFILE="dymium"
-
-if [ "$1" = "staging" ]
+if [ "$1" = "-c" ]
 then
-    PROFILE="dymium_staging"
     shift
-elif [ "$1" = "dev" ]
-then
-    PROFILE="dymium_dev"
+    [ -z "$1" ] && {
+	aws_usage -exe "$0 -c <customer> "
+    }
+    m="d-$1"
     shift
+else
+    aws_usage -exe "$0 -c <customer> "
 fi
 
-case "$1" in
-  "")
-      m="d-spoofcorp"
-      ;;
-  *)
-      m="d-$1"
-      ;;
-esac
+aws_params -exe "$0 -c <customer> " "$@"
    
-aws ecs update-service --cluster data-guardian-cluster --service ${m}-srv --force-new-deployment --profile ${PROFILE} --region ${REGION}
+set -x
+aws ecs update-service \
+    --cluster data-guardian-cluster \
+    --service ${m}-srv \
+    --force-new-deployment \
+    --profile ${PROFILE} \
+    --region ${REGION}

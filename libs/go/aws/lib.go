@@ -4,24 +4,29 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-secretsmanager-caching-go/secretcache"
 
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 )
 
-var fnmap map[string]string
 var region string
+
+var lambdas_map map[string]string
+
+var ssm_map map[string]string
+var secretCache *secretcache.Cache
 
 func init() {
 	lambdas, ok := os.LookupEnv("AWS_LAMBDAS")
 	if ok {
-		err := json.Unmarshal([]byte(lambdas), &fnmap)
+		err := json.Unmarshal([]byte(lambdas), &lambdas_map)
 		if err != nil {
 			log.Printf("can not unmarshall `%s`", lambdas)
 			os.Exit(-1)
@@ -31,17 +36,33 @@ func init() {
 		if !ok {
 			log.Printf("AWS_REGION not defined")
 			os.Exit(-1)
-		}	
-        }
+		}
+	}
+
+	ssm, ok := os.LookupEnv("AWS_SECRETS")
+	if ok {
+		err := json.Unmarshal([]byte(ssm), &ssm_map)
+		if err != nil {
+			log.Printf("can not unmarshall `%s`", ssm)
+			os.Exit(-1)
+		}
+	} else {
+		var err error
+		secretCache, err = secretcache.New()
+		if err != nil {
+			log.Printf("Can not initialize secretCache")
+			os.Exit(-1)
+		}
+	}
 }
 
-type E struct{
+type E struct {
 	ErrorMessage *string `json:"errorMessage"`
 	ErrorType    *string `json:"errorType"`
 }
 
 func Invoke(fname string, qualifier *string, payload []byte) (r []byte, err error) {
-	if fnmap == nil { // running in cloud!
+	if lambdas_map == nil { // running in cloud!
 		sess := session.Must(session.NewSessionWithOptions(session.Options{
 			SharedConfigState: session.SharedConfigEnable,
 		}))
@@ -60,14 +81,14 @@ func Invoke(fname string, qualifier *string, payload []byte) (r []byte, err erro
 		var e E
 		if json.Unmarshal(r, &e) == nil && e.ErrorMessage != nil {
 			if e.ErrorType != nil {
-				return nil, fmt.Errorf("%s: %s",*e.ErrorType,*e.ErrorMessage)
+				return nil, fmt.Errorf("%s: %s", *e.ErrorType, *e.ErrorMessage)
 			} else {
-				return nil, fmt.Errorf("%s",*e.ErrorMessage)
+				return nil, fmt.Errorf("%s", *e.ErrorMessage)
 			}
 		}
 		return r, err
 	} else {
-		hostname, ok := fnmap[fname]
+		hostname, ok := lambdas_map[fname]
 		if !ok {
 			return nil, errors.New("function `" + fname + "` is not defined")
 		}
@@ -85,11 +106,26 @@ func Invoke(fname string, qualifier *string, payload []byte) (r []byte, err erro
 		var e E
 		if json.Unmarshal(r, &e) == nil && e.ErrorMessage != nil {
 			if e.ErrorType != nil {
-				return nil, fmt.Errorf("%s: %s",*e.ErrorType,*e.ErrorMessage)
+				return nil, fmt.Errorf("%s: %s", *e.ErrorType, *e.ErrorMessage)
 			} else {
-				return nil, fmt.Errorf("%s",*e.ErrorMessage)
+				return nil, fmt.Errorf("%s", *e.ErrorMessage)
 			}
 		}
 		return r, err
+	}
+}
+
+func GetSecret(secretId string) (v string, err error) {
+	if ssm_map == nil {
+		v, err = secretCache.GetSecretString(secretId)
+		return v, err
+	} else {
+		var ok bool
+		v, ok = ssm_map[secretId]
+		if ok {
+			return v, nil
+		} else {
+			return v, fmt.Errorf("Secret `%s` is not defined")
+		}
 	}
 }
