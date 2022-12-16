@@ -47,4 +47,5 @@ docker run --rm -m="0.5Gb" --cpus="0.5" --name dymium -p 90:80 \
     -e SESSION_SECRET=$SESSION_SECRET \
     -e CUSTOMER_HOST=$CUSTOMER_HOST \
     -e ADMIN_HOST=$ADMIN_HOST \
+    -e LOG_LEVEL=Debug \
     dymium

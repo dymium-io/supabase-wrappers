@@ -16,17 +16,18 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"sync"
-	"flag"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"os"
+	"time"
 	"strings"
 	"dymium.com/dymium/log"
 	"dymium.com/meshconnector/ca"
 	"dymium.com/meshconnector/types"
 	"dymium.com/server/protocol"
+	"github.com/gorilla/mux"
 )
 
 const (
@@ -55,6 +56,29 @@ type Virtcon struct {
 	totalDownstream int
 	accumUpstream   int
 	totalUpstream   int
+}
+
+
+func health() {
+	p := mux.NewRouter()
+
+	p.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", Nocache)
+		w.Header().Set("Content-Type", "text/html")
+
+		io.WriteString(w, "<html><body>OK</body></html>")
+	}).Methods("GET")
+
+	p.HandleFunc("/healthshellcheck", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", Nocache)
+		w.Header().Set("Content-Type", "text/html")
+
+		io.WriteString(w, "<html><body>OK</body></html>")
+
+	}).Methods("GET")
+
+	log.Infof("Listen for health on :80")
+	http.ListenAndServe(":80", p)
 }
 
 func displayBuff(what string, buff []byte) {
@@ -210,12 +234,12 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn,
 				if ok {
 					es := err.Error()
 					if( !strings.Contains(es, "EOF")) {
-						log.InfoTenantf(conn.tenant, "Db read failed '%s', id:%d", err.Error(), id)
+						log.ErrorTenantf(conn.tenant, "Db read failed '%s', id:%d", err.Error(), id)
 					}
 				} else {
 					es := err.Error()
 					if( !strings.Contains(es, "EOF")) {
-						log.Infof("Db read failed '%s', id:%d", err.Error(), id)
+						log.Errorf("Db read failed '%s', id:%d", err.Error(), id)
 					}
 				}
 			}
@@ -249,7 +273,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 		}
 	}
 }
-func PassTraffic(ingress *tls.Conn, customer, connector string) {
+func PassTraffic(ingress *tls.Conn, customer string) {
 	var conmap = make(map[int]*Virtcon)
 	var mu sync.RWMutex
 
@@ -264,8 +288,8 @@ func PassTraffic(ingress *tls.Conn, customer, connector string) {
 		err := dec.Decode(&buff)
 
 		if err != nil {
-			log.Errorf("Customer %s, connector %s, read from client failed '%s', cleanup the proxy connection!", 
-				customer, connector, err.Error())
+			log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!", 
+				customer, err.Error())
 			// close all outgoing connections
 			mu.Lock()
 			for key := range conmap {
@@ -285,11 +309,11 @@ func PassTraffic(ingress *tls.Conn, customer, connector string) {
 			mu.RLock()
 			l := len(conmap)
 			mu.RUnlock()
-			log.InfoTenantf(conn.tenant, "Connection #%d to db created, total #=%d", buff.Id, l)
+			log.InfoTenantf(conn.tenant, "Creating connection #%d to db at %s, total #=%d", buff.Id, string(buff.Data), l)
 
 			egress, err := net.Dial("tcp", string(buff.Data))
 			if err != nil {
-				log.ErrorTenantf(conn.tenant, "Error connecting to target %s, send close back", err.Error())
+				log.ErrorTenantf(conn.tenant, "Error connecting to target :  %s, send close back", err.Error())
 				messages <- protocol.TransmissionUnit{protocol.Close, buff.Id, nil}
 				return
 			}
@@ -320,7 +344,7 @@ func PassTraffic(ingress *tls.Conn, customer, connector string) {
 				_, err = conn.sock.Write(buff.Data)
 
 				if err != nil {
-					log.DebugTenantf(conn.tenant, "Write to db error: %s", err.Error())
+					log.ErrorTenantf(conn.tenant, "Write to db error: %s", err.Error())
 					conn.sock.Close()
 				}
 			} else {
@@ -338,25 +362,25 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 		RootCAs:      caCertPool,
 		Certificates: []tls.Certificate{*clientCert}}
 
-	log.Debugf("tls.Dial to %s", tunnelserver)
+	log.Infof("tls.Dial to %s", tunnelserver)
 	egress, err := tls.Dial("tcp", tunnelserver, config) // *Conn
 	if err != nil {
-		log.Debugf("Error connecting to %s: %s", tunnelserver, err.Error() )
+		log.Errorf("Error connecting to %s: %s", tunnelserver, err.Error() )
 
 		return nil, err
 	}
 
-	log.Debugf("Wrote to back Connected")
+	log.Info("Connected to Dymium!")
 
 	state := egress.ConnectionState()
-
+/*
 	log.Debugf("Version: %x", state.Version)
 	log.Debugf("HandshakeComplete: %t", state.HandshakeComplete)
 	log.Debugf("DidResume: %t", state.DidResume)
 	log.Debugf("CipherSuite: %x", state.CipherSuite)
 	log.Debugf("NegotiatedProtocol: %s", state.NegotiatedProtocol)
 	log.Debugf("NegotiatedProtocolIsMutual: %t", state.NegotiatedProtocolIsMutual)
-
+*/
 	log.Debugf("Certificate chain:")
 
 	for i, cert := range state.PeerCertificates {
@@ -369,18 +393,10 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 	return egress, nil
 }
 
-
-func main() {
-	//forceupdate := flag.Bool("u", false, "Force update")
-	// verbose := flag.Bool("v", false, "Verbose")
-
-	flag.Parse()
-	log.Init("connector")
-	// TODO:
-	// UPDATE
+func DoConnect() {
 	// -------------------
 	customer := os.Getenv("CUSTOMER")
-	connector := os.Getenv("CONNECTOR")
+
 	csr, err := generateCSR(customer)
 	if err != nil {
 		log.Errorf("Error generating CSR %s", err.Error())
@@ -395,7 +411,7 @@ func main() {
 
 	js, err := json.Marshal(crs)
 	if err != nil {
-		log.Errorf("Error: %s", err.Error())
+		log.Errorf("Fatal Error: %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -404,34 +420,37 @@ func main() {
 
 	req, err := http.NewRequest("POST", urlStr, bytes.NewBuffer(js))
 	if err != nil {
-		log.Errorf("Error: %s", err.Error())
-		os.Exit(1)
+		log.Errorf("Error connecting to %s: %s", portal, err.Error())
+		return // retry later
 	}
 	req.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Errorf("Error: %s", err.Error())
-		os.Exit(1)
+		log.Errorf("Error connecting to %s: %s", portal, err.Error())
+		return
+	}
+	if resp.StatusCode != 200 {
+		log.Errorf("Invalid response %d from %s", resp.StatusCode, portal)
+		return
+
 	}
 
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Errorf("Error: %s", err.Error())
-		os.Exit(1)
+		log.Errorf("Error reading from %s: %s", portal, err.Error())
+		return
 	}
-
-	fmt.Printf("%s\n", string(body))
 
 	defer resp.Body.Close()
 
 	var back types.CSRResponse
 	err = json.Unmarshal(body, &back)
 	if err != nil {
-		log.Errorf("Error: %s", err.Error())
-		os.Exit(1)
+		log.Errorf("Error unmarshaling response body: %s", err.Error())
+		return
 	}
 
 	keyBytes := x509.MarshalPKCS1PrivateKey(certKey)
@@ -448,13 +467,27 @@ func main() {
 		log.Errorf("Error in X509KeyPair: %s", err)
 		os.Exit(1)
 	}
-
+	
 	tunnelserver := os.Getenv("TUNNELSERVER")
 
 	ingress, err := CreateTunnel(tunnelserver, &clientCert)
 	if err != nil {
-		os.Exit(1)
+		return
 	}
-	PassTraffic(ingress, customer, connector)
-
+	PassTraffic(ingress, customer)
+}
+func main() {
+	if "true" != os.Getenv("LOCAL_ENVIRONMENT") {
+			go health()
+	}
+	log.Init("connector")
+	
+	// TODO:
+	// UPDATE
+	for {
+		DoConnect()
+		log.Infof("Wait 20 sec before retrying...")
+		time.Sleep(20 * time.Second)
+		log.Infof("Reconnecting...")
+	}
 }
