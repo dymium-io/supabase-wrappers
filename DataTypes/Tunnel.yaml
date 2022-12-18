@@ -41,12 +41,12 @@ RequestUpdate:
     
 ConnectorStatus:
   - provisioned  <*> Provisioned
-  - configured   <*> Configured in Data Source
+  - configured   <*> Used in Data Source
 
 TunnelStatus:
   - provisioned  <*> Provisioned
-  - configured   <*> Configured in Data Source
-  - active       <*> Tunnel Established
+  - configured   <*> Used in Data Source
+  - active       <*> Tunnel Up
 
 Tunnel:
   - id: ?string

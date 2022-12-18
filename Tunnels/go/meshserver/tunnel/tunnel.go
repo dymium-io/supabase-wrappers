@@ -38,6 +38,11 @@ type TunnelPipe struct {
 var pipes (map[string]*TunnelPipe)
 var mupipes sync.RWMutex
 
+type TunnelUpdate struct {
+	 Cid string
+	 Tid string 
+}
+
 func initDB(host, nport, user, password, dbname, usetls string) error {
 	psqlInfo = fmt.Sprintf("host=%s port=%s user=%s "+
 		"dbname=%s sslmode=%s",
@@ -256,7 +261,7 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 		if err != nil {
 			log.ErrorTenantf(customer, "Error creating listener %s", err.Error())
 		} else {
-			log.Infof("Created listener for %s %s\n connector %s, tunnel %s", tg[0], tg[1], tg[2], tg[3])
+			log.Infof("Created listener for %s %s, connector %s, tunnel %s", tg[0], tg[1], tg[2], tg[3])
 		}
 		pipe.tunnelid = append(pipe.tunnelid, tg[3])
 		pipe.targets = append(pipe.targets, tg[0])
@@ -429,9 +434,49 @@ func overseer(customer string) {
 			}
 
 		}
+		var tunnels []TunnelUpdate
+		/*
+		type TunnelUpdate struct {
+			Cid string
+			Tid string 
+	   } */
+		for id, c := range pipes {
+			for i:=0; i < len(c.tunnelid); i++ {
+				a := TunnelUpdate{id, c.tunnelid[i]}
+				tunnels = append(tunnels, a)
+			}
+		}
 		mupipes.Unlock()
+
+		// send update to mark tunnels as used
+		UpdateTunnels(customer, tunnels)
 		
 	}
+}
+
+func UpdateTunnels(customer string, tunnels []TunnelUpdate) {
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancelfunc()
+
+	tx, _ := db.BeginTx(ctx, nil)
+
+	sql := `UPDATE ` + customer + `.connectors set status='provisioned'`
+	tx.ExecContext(ctx, sql)
+
+	for i := 0; i < len(tunnels); i++ {
+		sql = `UPDATE ` + customer + `.connectors set status='active' where id=$1 and id_connectorauth=$2`
+		_, err := tx.ExecContext(ctx, sql, tunnels[i].Tid, tunnels[i].Cid )
+		if err != nil {
+			fmt.Printf("Error: %s\n", err.Error())
+		}
+	}
+
+	err := tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("UpdateTunnels error 4: %s", err.Error())
+		return
+	}	
 }
 
 func Server(address string, port int, customer string,
