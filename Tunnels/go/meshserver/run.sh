@@ -23,7 +23,7 @@ export ADDRESS=localhost
 export DATABASE_PASSWORD=$DATABASE_PASSWORD
 export LOCAL_ENVIRONMENT=true
 
-export LOG_LEVEL=Debug
+export LOG_LEVEL=Info
 
 export PORT=3009
 export CUSTOMER_PORTAL=portal.dymium.local

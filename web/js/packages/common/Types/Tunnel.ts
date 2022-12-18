@@ -15,7 +15,7 @@ export type ConnectorStatus =
 export function humanReadableConnectorStatus(__a__ : ConnectorStatus) : string {
   switch(__a__) {
     case 'provisioned': return 'Provisioned';
-    case 'configured': return 'Configured in Data Source';
+    case 'configured': return 'Used in Data Source';
   }
   return '';
 }
@@ -28,8 +28,8 @@ export type TunnelStatus =
 export function humanReadableTunnelStatus(__a__ : TunnelStatus) : string {
   switch(__a__) {
     case 'provisioned': return 'Provisioned';
-    case 'configured': return 'Configured in Data Source';
-    case 'active': return 'Tunnel Established';
+    case 'configured': return 'Used in Data Source';
+    case 'active': return 'Tunnel Up';
   }
   return '';
 }
