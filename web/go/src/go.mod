@@ -32,7 +32,10 @@ require (
 	github.com/apex/log v1.9.0 // indirect
 )
 
-require github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
+require (
+	github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
+	golang.org/x/exp v0.0.0-20221217163422-3c43f8badb15 // indirect
+)
 
 replace aws => ../../../libs/go/aws
 

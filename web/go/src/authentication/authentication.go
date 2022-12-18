@@ -20,6 +20,7 @@ import (
 	"strings"
 	"encoding/json"
 	"golang.org/x/net/context"
+	_"golang.org/x/exp/constraints"
 	"time"
 	"errors"
 	"io"
@@ -60,7 +61,7 @@ func GenerateRandomString(n int) (string, error) {
 	return string(ret), nil
 }
 
-func contains(s []string, str string) bool {
+func contains[T comparable](s []T, str T) bool {
 	for _, v := range s {
 		if v == str {
 			return true
@@ -68,14 +69,7 @@ func contains(s []string, str string) bool {
 	}
 	return false
 }
-func containsi(s []int, i int) bool {
-	for _, v := range s {
-		if v == i {
-			return true
-		}
-	}
-	return false
-}
+
 var admins = make(map[string]int)
 var users = make(map[string]int)
 func initRBAC() {
@@ -1971,7 +1965,7 @@ func CreateNewConnector(schema string, req *types.AddConnectorRequest) (string, 
 	getport := func() (int, error) {
 		fmt.Printf("LowMeshport %d, HighMeshport %d\n", LowMeshport, HighMeshport)
 		for i := LowMeshport; i < HighMeshport; i++ {
-			if !containsi(ports, i) {
+			if !contains(ports, i) {
 				return i, nil
 			}
 		}
