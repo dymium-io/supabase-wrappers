@@ -32,7 +32,10 @@ require (
 	github.com/apex/log v1.9.0 // indirect
 )
 
-require github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
+require (
+	github.com/aws/aws-secretsmanager-caching-go v1.1.0 // indirect
+	github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
+)
 
 replace aws => ../../../libs/go/aws
 

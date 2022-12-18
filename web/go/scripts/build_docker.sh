@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 build_d=BLD
 
 [ -d $build_d ] && {
