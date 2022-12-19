@@ -870,6 +870,7 @@ export function EditConnectors(props) {
                                         <div style={{ marginLeft: "auto" }}>
                                             <SearchBar size="sm" {...props.searchProps} />
                                             <ClearSearchButton {...props.searchProps} />
+                                            <i onClick={e=>getConnectors()} className="fa fa-refresh ablue cursor-pointer" style={{position: 'relative', top: '2px'}} aria-hidden="true"></i>
                                         </div>
                                     </div>
                                     <div className="d-block">

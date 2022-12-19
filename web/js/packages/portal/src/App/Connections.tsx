@@ -941,6 +941,8 @@ export function EditConnections(props) {
                                         <div style={{ marginLeft: "auto" }}>
                                             <SearchBar size="sm" {...props.searchProps} />
                                             <ClearSearchButton {...props.searchProps} />
+                                            <i onClick={e=>capi.getConnections(setSpinner, setConns, setAlert, undefined, () => { })} className="fa fa-refresh ablue cursor-pointer" style={{position: 'relative', top: '2px'}} aria-hidden="true"></i>
+
                                         </div>
                                     </div>
                                     <div className="d-block">

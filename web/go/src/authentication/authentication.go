@@ -20,6 +20,7 @@ import (
 	"strings"
 	"encoding/json"
 	"golang.org/x/net/context"
+	_"golang.org/x/exp/constraints"
 	"time"
 	"errors"
 	"io"
@@ -60,7 +61,7 @@ func GenerateRandomString(n int) (string, error) {
 	return string(ret), nil
 }
 
-func contains(s []string, str string) bool {
+func contains[T comparable](s []T, str T) bool {
 	for _, v := range s {
 		if v == str {
 			return true
@@ -68,14 +69,7 @@ func contains(s []string, str string) bool {
 	}
 	return false
 }
-func containsi(s []int, i int) bool {
-	for _, v := range s {
-		if v == i {
-			return true
-		}
-	}
-	return false
-}
+
 var admins = make(map[string]int)
 var users = make(map[string]int)
 func initRBAC() {
@@ -1952,7 +1946,7 @@ func getports(schema string, ctx context.Context, tx *sql.Tx) ([]int, error) {
 func getport(ports []int) (int, error) {
 	fmt.Printf("LowMeshport %d, HighMeshport %d\n", LowMeshport, HighMeshport)
 	for i := LowMeshport; i < HighMeshport; i++ {
-		if !containsi(ports, i) {
+		if !contains(ports, i) {
 			return i, nil
 		}
 	}
@@ -1980,24 +1974,28 @@ func CreateNewConnector(schema string, req *types.AddConnectorRequest) (string, 
 		return "", err
 	}	
 
-	ports, err := getports(schema, ctx, tx)
-	if err != nil {
-		tx.Rollback()
-		log.Errorf("CreateNewConnector error 1: %s", err.Error())
-		return "", err
-	}	
+
 	for i := 0; i < len(req.Tunnels); i++ {
-		localport, err := getport(ports)
+		ports, err := getports(schema, ctx, tx)
+
 		if err != nil {
 			tx.Rollback()
 			log.Errorf("CreateNewConnector error 2: %s", err.Error())
+			return "", err
+		}	
+
+		localport, err := getport(ports)
+
+		if err != nil {
+			tx.Rollback()
+			log.Errorf("CreateNewConnector error 3: %s", err.Error())
 			return "", err
 		}	
 		sql = `insert into `+schema+`.connectors(targetaddress,targetport,connectorname,id_connectorauth, localport) values($1,$2,$3,$4,$5) `
 		_, err = tx.ExecContext(ctx, sql, req.Tunnels[i].Address, req.Tunnels[i].Port, req.Tunnels[i].Name, id, localport)
 		if err != nil {
 			tx.Rollback()
-			log.Errorf("CreateNewConnector error 3: %s", err.Error())
+			log.Errorf("CreateNewConnector error 4: %s", err.Error())
 			return "", err
 		}	
 	}
@@ -2005,7 +2003,7 @@ func CreateNewConnector(schema string, req *types.AddConnectorRequest) (string, 
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		log.Errorf("CreateNewConnector error 4: %s", err.Error())
+		log.Errorf("CreateNewConnector error 5: %s", err.Error())
 		return "", err
 	}	
 
