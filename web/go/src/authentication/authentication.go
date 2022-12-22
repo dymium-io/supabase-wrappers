@@ -20,6 +20,7 @@ import (
 	"strings"
 	"encoding/json"
 	"golang.org/x/net/context"
+	_"golang.org/x/exp/constraints"
 	"time"
 	"errors"
 	"io"
@@ -60,7 +61,7 @@ func GenerateRandomString(n int) (string, error) {
 	return string(ret), nil
 }
 
-func contains(s []string, str string) bool {
+func contains[T comparable](s []T, str T) bool {
 	for _, v := range s {
 		if v == str {
 			return true
@@ -68,14 +69,7 @@ func contains(s []string, str string) bool {
 	}
 	return false
 }
-func containsi(s []int, i int) bool {
-	for _, v := range s {
-		if v == i {
-			return true
-		}
-	}
-	return false
-}
+
 var admins = make(map[string]int)
 var users = make(map[string]int)
 func initRBAC() {
@@ -1932,6 +1926,32 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 	return nil
 }
 
+func getports(schema string, ctx context.Context, tx *sql.Tx) ([]int, error) {
+	var ports  []int
+	sqll := `select localport from ` + schema + `.connectors`
+	rows, err  := tx.QueryContext(ctx, sqll)
+	if nil == err {
+		defer rows.Close()
+		for rows.Next() {
+			var p int 
+			rows.Scan(&p)
+			ports = append(ports, p)
+		}
+	} else {
+		log.Errorf("CreateNewConnector error x: %s", err.Error())
+		return []int{}, err
+	}
+	return ports, nil
+}
+func getport(ports []int) (int, error) {
+	fmt.Printf("LowMeshport %d, HighMeshport %d\n", LowMeshport, HighMeshport)
+	for i := LowMeshport; i < HighMeshport; i++ {
+		if !contains(ports, i) {
+			return i, nil
+		}
+	}
+	return 0, errors.New("No ports available")
+}
 func CreateNewConnector(schema string, req *types.AddConnectorRequest) (string, error) {
     ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancelfunc()
@@ -1954,41 +1974,28 @@ func CreateNewConnector(schema string, req *types.AddConnectorRequest) (string, 
 		return "", err
 	}	
 
-	var ports  []int
-	sql = `select localport from ` + schema + `.connectors`
-	rows, err  := tx.QueryContext(ctx, sql)
-	if nil == err {
-		defer rows.Close()
-		for rows.Next() {
-			var p int 
-			rows.Scan(&p)
-			ports = append(ports, p)
-		}
-	} else {
-		log.Errorf("CreateNewConnector error x: %s", err.Error())
-		return "", err
-	}
-	getport := func() (int, error) {
-		fmt.Printf("LowMeshport %d, HighMeshport %d\n", LowMeshport, HighMeshport)
-		for i := LowMeshport; i < HighMeshport; i++ {
-			if !containsi(ports, i) {
-				return i, nil
-			}
-		}
-		return 0, errors.New("No ports available")
-	}
+
 	for i := 0; i < len(req.Tunnels); i++ {
-		localport, err := getport()
+		ports, err := getports(schema, ctx, tx)
+
 		if err != nil {
 			tx.Rollback()
 			log.Errorf("CreateNewConnector error 2: %s", err.Error())
+			return "", err
+		}	
+
+		localport, err := getport(ports)
+
+		if err != nil {
+			tx.Rollback()
+			log.Errorf("CreateNewConnector error 3: %s", err.Error())
 			return "", err
 		}	
 		sql = `insert into `+schema+`.connectors(targetaddress,targetport,connectorname,id_connectorauth, localport) values($1,$2,$3,$4,$5) `
 		_, err = tx.ExecContext(ctx, sql, req.Tunnels[i].Address, req.Tunnels[i].Port, req.Tunnels[i].Name, id, localport)
 		if err != nil {
 			tx.Rollback()
-			log.Errorf("CreateNewConnector error 3: %s", err.Error())
+			log.Errorf("CreateNewConnector error 4: %s", err.Error())
 			return "", err
 		}	
 	}
@@ -1996,7 +2003,7 @@ func CreateNewConnector(schema string, req *types.AddConnectorRequest) (string, 
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		log.Errorf("CreateNewConnector error 4: %s", err.Error())
+		log.Errorf("CreateNewConnector error 5: %s", err.Error())
 		return "", err
 	}	
 
@@ -2155,27 +2162,31 @@ func UpdateConnector(schema string, connector *types.AddConnectorRequest) error 
 			_, err  = tx.ExecContext(ctx, sql, connector.Tunnels[i].Address, connector.Tunnels[i].Port, connector.Tunnels[i].Name, *connector.Tunnels[i].Id)
 			if err != nil {
 				tx.Rollback()
-				log.Errorf("UpdateConnector error 3: %s", err.Error())
+				log.Errorf("UpdateConnector error 4: %s", err.Error())
 				return err
 			}	
 		} else {
 			// insert
-			sql := `WITH CTE AS (SELECT FLOOR(RANDOM()*50000 + 10000) AS rn )
-			SELECT rn FROM CTE WHERE rn NOT IN (SELECT localport FROM `+schema+`.connectors) limit 1;`
-	
-			var localport int
-			row  := tx.QueryRowContext(ctx, sql)
-			err = row.Scan(&localport)
+			ports, err := getports(schema, ctx, tx)
+
 			if err != nil {
 				tx.Rollback()
-				log.Errorf("CreateNewConnector error 2: %s", err.Error())
+				log.Errorf("UpdateConnector error 5: %s", err.Error())
 				return err
 			}	
+
+			localport, err := getport(ports)
+			if err != nil {
+				tx.Rollback()
+				log.Errorf("UpdateConnector error 6: %s", err.Error())
+				return err
+			}	
+
 			sql = `insert into `+schema+`.connectors(targetaddress,targetport,connectorname,id_connectorauth, localport) values($1,$2,$3,$4,$5) `
 			_, err = tx.ExecContext(ctx, sql, connector.Tunnels[i].Address, connector.Tunnels[i].Port, connector.Tunnels[i].Name, connector.Id, localport)
 			if err != nil {
 				tx.Rollback()
-				log.Errorf("CreateNewConnector error 3: %s", err.Error())
+				log.Errorf("UpdateConnector error 7: %s", err.Error())
 				return err
 			}				
 		}
@@ -2184,7 +2195,7 @@ func UpdateConnector(schema string, connector *types.AddConnectorRequest) error 
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		log.Errorf("UpdateConnector error 4: %s", err.Error())
+		log.Errorf("UpdateConnector error 8: %s", err.Error())
 		return err
 	}	
 	return nil

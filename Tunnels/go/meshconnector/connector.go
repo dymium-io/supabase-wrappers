@@ -125,64 +125,6 @@ func generateCSR(customer string) ([]byte, error) {
 	return out, nil
 }
 
-func sendCSR(csr []byte, token string) error {
-	var outbody types.CertificateRequest
-	outbody.Csr = string(csr)
-	js, err := json.Marshal(outbody)
-	if err != nil {
-		log.Errorf("Error: %s", err.Error())
-		os.Exit(1)
-	}
-
-	urlStr := fmt.Sprintf("%sapi/getclientcertificate", portalurl)
-
-	req, err := http.NewRequest("POST", urlStr, bytes.NewBuffer(js))
-	if err != nil {
-		log.Errorf("Error: %s", err.Error())
-		os.Exit(1)
-	}
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer "+token)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Errorf("Error: %s", err.Error())
-		os.Exit(1)
-	}
-
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Errorf("Error: %s", err.Error())
-		os.Exit(1)
-	}
-
-	var back types.CSRResponse
-	err = json.Unmarshal(body, &back)
-	if err != nil {
-		log.Errorf("Error: %s", err.Error())
-		os.Exit(1)
-	}
-
-	keyBytes := x509.MarshalPKCS1PrivateKey(certKey)
-
-	pemBlock := &pem.Block{
-		Type:    "RSA PRIVATE KEY",
-		Headers: nil,
-		Bytes:   keyBytes,
-	}
-	keyPem := pem.EncodeToMemory(pemBlock)
-
-	clientCert, err = tls.X509KeyPair([]byte(back.Certificate), keyPem)
-	if err != nil {
-		log.Errorf("Error in X509KeyPair: %s", err)
-		os.Exit(1)
-	}
-
-	return nil
-}
-
 /*
 func restart() {
 

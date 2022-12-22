@@ -45,6 +45,7 @@ function GroupMapping() {
     setShow(false)
   }
   let getMappings = () => {
+    setSpinner(true)
     http.sendToServer("GET", "/api/getmappings",
       null, "",
       resp => {
@@ -470,6 +471,8 @@ function GroupMapping() {
                   <div style={{ marginLeft: "auto" }}>
                     <SearchBar size="sm" {...props.searchProps} />
                     <ClearSearchButton {...props.searchProps} />
+                    <i onClick={e=>getMappings()} className="fa fa-refresh ablue cursor-pointer" style={{position: 'relative', top: '2px'}} aria-hidden="true"></i>
+
                   </div>
                 </div>
                 <div className="d-block">

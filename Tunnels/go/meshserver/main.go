@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	_ "fmt"
 	"io"
 	"net/http"
@@ -75,7 +74,7 @@ func main() {
 	ca := struct {
 		Certificate string
 	}{}
-	fmt.Println(cajson)
+
 	err = json.Unmarshal([]byte(cajson), &ca)
 	if err != nil {
 		log.Errorf("CA Cert unmarshaling error: %s", err.Error())

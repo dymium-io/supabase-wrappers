@@ -73,7 +73,7 @@ function ConnectionForm(props) {
                 <Row key={"tunnel" + i} className={i % 2 ? "palegray" : "palergray"}>
                     <Col >
                         <Form.Group className="mb-3" controlId={"tname" + i}>
-                            <Form.Label>Name</Form.Label>
+                            <Form.Label>Name:</Form.Label>
                             <Form.Control size="sm" type="text" placeholder="Tunnel name"
                                 required
                                 pattern="[a-zA-Z0-9_ '$#@]+"
@@ -88,7 +88,7 @@ function ConnectionForm(props) {
                     </Col>
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId={"ipaddress" + i}>
-                            <Form.Label>Address</Form.Label>
+                            <Form.Label>Address:</Form.Label>
                             <Form.Control size="sm" type="text" placeholder="DB IP address or host name"
                                 required
                                 pattern="^[a-zA-Z0-9._]+$"
@@ -103,7 +103,7 @@ function ConnectionForm(props) {
                     </Col>
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId={"portnumber" + i}>
-                            <Form.Label>Port</Form.Label>
+                            <Form.Label>Port:</Form.Label>
                             <Form.Control size="sm" type="number"
                                 required
                                 pattern=".+"
@@ -118,8 +118,9 @@ function ConnectionForm(props) {
                         </Form.Group>
                     </Col>
                     <Col xs="auto">
-                    <div>Status</div>
-                    <div style={{marginTop: '0.3em'}}>{ tun.humanReadableConnectorStatus(props.tunnel[i].status)}</div>
+                    <div>Status:</div>
+                    <div style={{marginTop: '0.3em'}} className="thickblue">{ props.tunnel[i].status !== "active" ? 
+                    <i className="fa-solid fa-gears "></i> : <i className="fa-solid fa-thumbs-up "></i> } { tun.humanReadableTunnelStatus(props.tunnel[i].status)}</div>
                     </Col>
                     <Col xs="auto" as="div" className="text-right mx-0 mt-0 px-1 aligh-top">
                         <i hidden={i !== props.tunnel.length - 1} className="far fahover fa-plus-square aligh-top fa-1x mr-1 plusminus" onClick={addTunnel} ></i>
@@ -869,6 +870,7 @@ export function EditConnectors(props) {
                                         <div style={{ marginLeft: "auto" }}>
                                             <SearchBar size="sm" {...props.searchProps} />
                                             <ClearSearchButton {...props.searchProps} />
+                                            <i onClick={e=>getConnectors()} className="fa fa-refresh ablue cursor-pointer" style={{position: 'relative', top: '2px'}} aria-hidden="true"></i>
                                         </div>
                                     </div>
                                     <div className="d-block">

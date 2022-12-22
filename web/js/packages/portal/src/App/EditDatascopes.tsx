@@ -123,14 +123,16 @@ export default function EditDatascopes() {
             appDispatch(setSelectedDatascopeDefault(row["id"]))
         },
     };
-    useEffect(() => {
+    let reload = () => { 
         capi.getConnections(setSpinner, setConns, setAlert, remap, () => {
 
             com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
                 setSelectedDatascope(t)
             })
         })
-
+    }
+    useEffect(() => {
+        reload()
     }, [])
     useEffect(() => {
         if (selectedDatascope === "" )
@@ -441,6 +443,8 @@ export default function EditDatascopes() {
                                             <div style={{ marginLeft: "auto" }}>
                                                 <SearchBar size="sm" {...props.searchProps} />
                                                 <ClearSearchButton {...props.searchProps} />
+                                                <i onClick={e=>reload()} className="fa fa-refresh ablue cursor-pointer" style={{position: 'relative', top: '2px'}} aria-hidden="true"></i>
+
                                             </div>
                                         </div>
                                         <div className="d-block">

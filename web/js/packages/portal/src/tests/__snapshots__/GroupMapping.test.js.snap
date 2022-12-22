@@ -84,6 +84,17 @@ Array [
             >
               Clear
             </button>
+            <i
+              aria-hidden="true"
+              className="fa fa-refresh ablue cursor-pointer"
+              onClick={[Function]}
+              style={
+                Object {
+                  "position": "relative",
+                  "top": "2px",
+                }
+              }
+            />
           </div>
         </div>
         <div
