@@ -24,15 +24,20 @@ docker run --rm  --name db-sync                \
        -e DATABASE_PORT=$DATABASE_PORT         \
        -e DATABASE_DB=$DATABASE_DB             \
        -e DATABASE_USER=$DATABASE_USER         \
-       -e DATABASE_PASSWORD=$DATABASE_PASSWORD \
        -e DATABASE_TLS=$DATABASE_TLS           \
+       -e DATABASE_PASSWORD=DATABASE_PASSWORD  \
+       -e AWS_LAMBDAS="{}"                     \
+       -e AWS_SECRETS="{
+             \"DATABASE_PASSWORD\": \"$DATABASE_PASSWORD\",
+             \"SPOOFCORP_PASSWORD\": \"$DATABASE_PASSWORD\"
+             }"                                \
        -e GUARDIAN_CONF="{ \"DEFAULT\": {
              \"guardian_address\": [\"localhost\"],
              \"guardian_port\": 9090,
              \"guardian_tls\": false,
              \"guardian_user\": \"$DATABASE_USER\",
-             \"guardian_database\": \"postgres\",
-             \"guardian_password\": \"$DATABASE_PASSWORD\"
-             }}"                               \
+             \"guardian_database\": \"postgres\"},
+             { \"spoofcorp\": { \"guardian_password\": \"SPOOFCORP_PASSWORD\" }
+	     }"                                \
        db-sync                                 \
        /main

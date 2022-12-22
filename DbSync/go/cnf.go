@@ -6,6 +6,8 @@ import (
 	"net"
 	"os"
 	"strconv"
+
+	"aws"
 )
 
 type guardianConf struct {
@@ -14,7 +16,7 @@ type guardianConf struct {
 	GuardianTls           *bool    `json:"guardian_tls"`
 	GuardianUser          string   `json:"guardian_user"`
 	GuardianDatabase      string   `json:"guardian_database"`
-	GuardianAdminPassword string   `json:"guardian_password"`
+	GuardianAdminPassword *string  `json:"guardian_password"`
 }
 
 type conf struct {
@@ -33,36 +35,44 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 		return nil, err
 	}
 
+	var ok bool
+
 	cnf := conf{}
 
-	if cnf.DymiumHost = os.Getenv("DATABASE_HOST"); cnf.DymiumHost == "" {
+	if cnf.DymiumHost, ok = os.LookupEnv("DATABASE_HOST"); !ok {
 		return returnError(fmt.Errorf("DATABASE_HOST is not defined"))
 	} else if cnf.DymiumHost == "localhost" {
 		cnf.DymiumHost = "docker.for.mac.host.internal"
 	}
 
-	if port := os.Getenv("DATABASE_PORT"); port == "" {
+	if port, ok := os.LookupEnv("DATABASE_PORT"); !ok {
 		return returnError(fmt.Errorf("DATABASE_PORT is not defined"))
 	} else if cnf.DymiumPort, err = strconv.Atoi(port); err != nil || cnf.DymiumPort < 1 || cnf.DymiumPort >= 0xFFFF {
 		return returnError(fmt.Errorf("Wrong DATABASE_PORT %s", port))
 	}
 
-	if tls := os.Getenv("DATABASE_TLS"); tls == "" {
+	if tls, ok := os.LookupEnv("DATABASE_TLS"); !ok {
 		return returnError(fmt.Errorf("DATABASE_TLS is not defined"))
 	} else if cnf.DymiumTls, err = strconv.ParseBool(tls); err != nil {
 		return returnError(fmt.Errorf("Wrong DATABASE_TLS %s", tls))
 	}
 
-	if cnf.DymiumDatabase = os.Getenv("DATABASE_DB"); cnf.DymiumDatabase == "" {
+	if cnf.DymiumDatabase, ok = os.LookupEnv("DATABASE_DB"); !ok {
 		return returnError(fmt.Errorf("DATABASE_DB is not defined"))
 	}
 
-	if cnf.DymiumUser = os.Getenv("DATABASE_USER"); cnf.DymiumUser == "" {
+	if cnf.DymiumUser, ok = os.LookupEnv("DATABASE_USER"); !ok {
 		return returnError(fmt.Errorf("DATABASE_USER is not defined"))
 	}
 
-	if cnf.DymiumPassword = os.Getenv("DATABASE_PASSWORD"); cnf.DymiumPassword == "" {
+	if cnf.DymiumPassword, ok = os.LookupEnv("DATABASE_PASSWORD"); !ok {
 		return returnError(fmt.Errorf("DATABASE_PASSWORD is not defined"))
+	} else {
+		if p, err := aws.GetSecret(cnf.DymiumPassword); err == nil {
+			cnf.DymiumPassword = p
+		} else {
+			return returnError(fmt.Errorf("DATABASE_PASSWORD is not defined: %v", err))
+		}
 	}
 
 	if !confGuardian {
@@ -71,7 +81,7 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 
 	var cnfM map[string]guardianConf
 
-	if cnfS := os.Getenv("GUARDIAN_CONF"); cnfS != "" {
+	if cnfS, ok := os.LookupEnv("GUARDIAN_CONF"); ok {
 		if err = json.Unmarshal([]byte(cnfS), &cnfM); err != nil {
 			return returnError(fmt.Errorf("wrong GUARDIAN_CONF definition: %v", err))
 		}
@@ -107,12 +117,19 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 			return returnError(fmt.Errorf("Guardian user is not defined"))
 		}
 
-		if r.GuardianAdminPassword != "" {
+		if r.GuardianAdminPassword != nil {
 			cnf.GuardianConf.GuardianAdminPassword = r.GuardianAdminPassword
 		}
-		if cnf.GuardianConf.GuardianAdminPassword == "" {
+		if cnf.GuardianConf.GuardianAdminPassword == nil {
 			return returnError(fmt.Errorf("Guardian admin password is not defined"))
+		} else {
+			if p, err := aws.GetSecret(*cnf.GuardianConf.GuardianAdminPassword); err == nil {
+				*cnf.GuardianConf.GuardianAdminPassword = p
+			} else {
+				return returnError(fmt.Errorf("Gardian admin password not defined: %v", err))
+			}
 		}
+
 		if r.GuardianTls != nil {
 			cnf.GuardianConf.GuardianTls = r.GuardianTls
 		}
@@ -120,6 +137,7 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 		if len(r.GuardianAddress) > 0 {
 			cnf.GuardianConf.GuardianAddress = r.GuardianAddress
 		}
+
 	}
 
 	if len(cnf.GuardianConf.GuardianAddress) == 0 {

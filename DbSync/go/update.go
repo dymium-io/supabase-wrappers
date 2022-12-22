@@ -24,7 +24,7 @@ func doUpdate(
 	}
 
 	connectStr := fmt.Sprintf("host=%%s port=%d dbname='%%s' user=%s password='%s' sslmode=%s",
-		cnf.GuardianPort, cnf.GuardianUser, cnf.GuardianAdminPassword, sslmode_)
+		cnf.GuardianPort, cnf.GuardianUser, *cnf.GuardianAdminPassword, sslmode_)
 
 	localUser := fmt.Sprintf(`_%x_`, md5.Sum([]byte(datascope.Name+"_dymium")))
 
