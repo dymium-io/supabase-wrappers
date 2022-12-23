@@ -2,9 +2,10 @@ package aws
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/aws/aws-secretsmanager-caching-go/secretcache"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 
 	"bytes"
 	"encoding/json"
@@ -21,7 +22,6 @@ var region string
 var lambdas_map map[string]string
 
 var ssm_map map[string]string
-var secretCache *secretcache.Cache
 
 func init() {
 	lambdas, ok := os.LookupEnv("AWS_LAMBDAS")
@@ -44,13 +44,6 @@ func init() {
 		err := json.Unmarshal([]byte(ssm), &ssm_map)
 		if err != nil {
 			log.Printf("can not unmarshall `%s`", ssm)
-			os.Exit(-1)
-		}
-	} else {
-		var err error
-		secretCache, err = secretcache.New()
-		if err != nil {
-			log.Printf("Can not initialize secretCache")
 			os.Exit(-1)
 		}
 	}
@@ -115,17 +108,65 @@ func Invoke(fname string, qualifier *string, payload []byte) (r []byte, err erro
 	}
 }
 
-func GetSecret(secretId string) (v string, err error) {
+func GetSecret(secretName string) (string, error) {
 	if ssm_map == nil {
-		v, err = secretCache.GetSecretString(secretId)
-		return v, err
+		svc := secretsmanager.New(session.New())
+		input := &secretsmanager.GetSecretValueInput{
+			SecretId: aws.String(secretName),
+		}
+
+		result, err := svc.GetSecretValue(input)
+		if err != nil {
+			if aerr, ok := err.(awserr.Error); ok {
+				switch aerr.Code() {
+				case secretsmanager.ErrCodeResourceNotFoundException:
+					return "", fmt.Errorf("Secret `%s`: %v: %v",
+						secretName,
+						secretsmanager.ErrCodeResourceNotFoundException,
+						aerr.Error())
+				case secretsmanager.ErrCodeInvalidParameterException:
+					return "", fmt.Errorf("Secret `%s`: %v: %v",
+						secretName,
+						secretsmanager.ErrCodeInvalidParameterException,
+						aerr.Error())
+				case secretsmanager.ErrCodeInvalidRequestException:
+					return "", fmt.Errorf("Secret `%s`: %v: %v",
+						secretName,
+						secretsmanager.ErrCodeInvalidRequestException,
+						aerr.Error())
+				case secretsmanager.ErrCodeDecryptionFailure:
+					return "", fmt.Errorf("Secret `%s`: %v: %v",
+						secretName,
+						secretsmanager.ErrCodeDecryptionFailure,
+						aerr.Error())
+				case secretsmanager.ErrCodeInternalServiceError:
+					return "", fmt.Errorf("Secret `%s`: %v: %v",
+						secretName,
+						secretsmanager.ErrCodeInternalServiceError,
+						aerr.Error())
+				default:
+					return "", fmt.Errorf("Secret `%s`: %v",
+						secretName,
+						aerr.Error())
+				}
+			} else {
+				// Print the error, cast err to awserr.Error to get the Code and
+				// Message from an error.
+				return "", fmt.Errorf("Secret `%s`: %v",
+					secretName,
+					aerr.Error())
+			}
+			return result.GoString(), nil
+		}
 	} else {
 		var ok bool
-		v, ok = ssm_map[secretId]
+		var v string
+		v, ok = ssm_map[secretName]
 		if ok {
 			return v, nil
 		} else {
-			return v, fmt.Errorf("Secret `%s` is not defined")
+			return v, fmt.Errorf("Secret `%s` is not defined", secretName)
 		}
 	}
+	return "", fmt.Errorf("Secret `%s`: impossible", secretName)
 }
