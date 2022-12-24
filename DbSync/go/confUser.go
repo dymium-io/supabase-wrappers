@@ -43,7 +43,7 @@ func confUser(
 	sort.Slice(ds, func(i, j int) bool { return ds[i].u < ds[j].u })
 
 	connectStr := fmt.Sprintf("host=%%s port=%d dbname='%s' user=%s password='%s' sslmode=%s",
-		cnf.GuardianPort, cnf.GuardianDatabase, cnf.GuardianUser, *cnf.GuardianAdminPassword, sslmode_)
+		cnf.GuardianPort, cnf.GuardianDatabase, cnf.GuardianUser, cnf.GuardianAdminPassword, sslmode_)
 
 	for _, a := range cnf.GuardianAddress {
 		if db, err := sql.Open("postgres", fmt.Sprintf(connectStr, a)); err != nil {

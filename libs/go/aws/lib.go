@@ -110,11 +110,13 @@ func Invoke(fname string, qualifier *string, payload []byte) (r []byte, err erro
 
 func GetSecret(secretName string) (string, error) {
 	if ssm_map == nil {
-		svc := secretsmanager.New(session.New())
+		sess := session.Must(session.NewSessionWithOptions(session.Options{
+			SharedConfigState: session.SharedConfigEnable,
+		}))
+		svc := secretsmanager.New(sess,  &aws.Config{Region: aws.String(region)})
 		input := &secretsmanager.GetSecretValueInput{
 			SecretId: aws.String(secretName),
 		}
-
 		result, err := svc.GetSecretValue(input)
 		if err != nil {
 			if aerr, ok := err.(awserr.Error); ok {
@@ -156,6 +158,7 @@ func GetSecret(secretName string) (string, error) {
 					secretName,
 					aerr.Error())
 			}
+		} else {
 			return result.GoString(), nil
 		}
 	} else {

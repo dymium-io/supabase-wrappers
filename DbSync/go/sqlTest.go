@@ -38,7 +38,7 @@ func sqlTest(
 	}
 
 	connectStr := fmt.Sprintf("host=%s port=%d dbname='%s' user=%s password='%s' sslmode=%s",
-		cnf.GuardianAddress[0], cnf.GuardianPort, *datascope, cnf.GuardianUser, *cnf.GuardianAdminPassword, sslmode_)
+		cnf.GuardianAddress[0], cnf.GuardianPort, *datascope, cnf.GuardianUser, cnf.GuardianAdminPassword, sslmode_)
 
 	var err error
 	var db *sql.DB

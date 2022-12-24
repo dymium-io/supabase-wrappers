@@ -16,7 +16,7 @@ type guardianConf struct {
 	GuardianTls           *bool    `json:"guardian_tls"`
 	GuardianUser          string   `json:"guardian_user"`
 	GuardianDatabase      string   `json:"guardian_database"`
-	GuardianAdminPassword *string  `json:"guardian_password"`
+	GuardianAdminPassword string   `json:"guardian_password"`
 }
 
 type conf struct {
@@ -106,7 +106,7 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 		if r.GuardianDatabase != "" {
 			cnf.GuardianConf.GuardianDatabase = r.GuardianDatabase
 		}
-		if r.GuardianDatabase == "" {
+		if cnf.GuardianConf.GuardianDatabase == "" {
 			return returnError(fmt.Errorf("Guardian database name is not defined"))
 		}
 
@@ -117,14 +117,14 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 			return returnError(fmt.Errorf("Guardian user is not defined"))
 		}
 
-		if r.GuardianAdminPassword != nil {
+		if r.GuardianAdminPassword != "" {
 			cnf.GuardianConf.GuardianAdminPassword = r.GuardianAdminPassword
 		}
-		if cnf.GuardianConf.GuardianAdminPassword == nil {
+		if cnf.GuardianConf.GuardianAdminPassword == "" {
 			return returnError(fmt.Errorf("Guardian admin password is not defined"))
 		} else {
-			if p, err := aws.GetSecret(*cnf.GuardianConf.GuardianAdminPassword); err == nil {
-				*cnf.GuardianConf.GuardianAdminPassword = p
+			if p, err := aws.GetSecret(cnf.GuardianConf.GuardianAdminPassword); err == nil {
+				cnf.GuardianConf.GuardianAdminPassword = p
 			} else {
 				return returnError(fmt.Errorf("Gardian admin password not defined: %v", err))
 			}
