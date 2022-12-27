@@ -2,17 +2,14 @@
 ./Setup.hs,15
 main main1,2
 
-./app/Main.hs,326
+./app/Main.hs,231
 module Main Main1,2
-data Options Options15,16
-data Options = OptionsOptions15,16
-  { optionsVerbose optionsVerbose16,17
-  , optionsPath optionsPath17,18
-  , optionsLanguage optionsLanguage18,19
-  , optionsRoot optionsRoot19,20
-  , optionsMapF optionsMapF20,21
-  , optionsDTD optionsDTD21,22
-main main24,25
+data Options Options13,14
+data Options = OptionsOptions13,14
+  { optionsVerbose optionsVerbose14,15
+  , optionsDTD optionsDTD15,16
+  , optionsInstallations optionsInstallations16,17
+main main19,20
 
 ./test/UtilSpec.hs,45
 module UtilSpec UtilSpec1,2
@@ -20,7 +17,7 @@ spec spec8,9
 
 ./test/Spec.hs,0
 
-./src/Common.hs,342
+./src/Common.hs,387
 module Common Common0,1
 createInstallPaths createInstallPaths16,17
 capitalize capitalize34,35
@@ -29,9 +26,10 @@ capitalizeT capitalizeT44,45
 lowerizeT lowerizeT49,50
 enPairing enPairing54,55
 uniqNames uniqNames57,58
-hashMapper hashMapper77,78
-normalisePath normalisePath87,88
-calcRelativePath calcRelativePath97,98
+checkedUniqNames checkedUniqNames77,78
+hashMapper hashMapper96,97
+normalisePath normalisePath106,107
+calcRelativePath calcRelativePath116,117
 
 ./src/Types/ModuleDef.hs,1333
 module Types.ModuleDef Types.ModuleDef0,1
@@ -85,43 +83,49 @@ data FieldField61,62
           , container container64,65
           , dflt dflt65,66
 
-./src/Types/Ddt.hs,751
+./src/Types/Ddt.hs,946
 module Types.Ddt Types.Ddt0,1
-newtype Ddt Ddt7,8
-newtype Ddt = Ddt { ddtDefinitions ddtDefinitions7,8
-data DdtDefDdtDef10,11
-  = DdtDefDdtDef11,12
-    { ddtSource ddtSource12,13
-    , ddtDestination ddtDestination13,14
-    , ddtMod ddtMod14,15
-data DdtModDdtMod17,18
-  = DdtModDdtMod18,19
-    { ddtPath ddtPath19,20
-    , ddtName ddtName20,21
-instance ToJSON ToJSON DdtMod23,24
-  toJSON toJSON24,25
-instance FromJSON FromJSON DdtMod29,30
-  parseJSON parseJSON30,31
-instance ToJSON ToJSON DdtDef35,36
-  toJSON toJSON36,37
-instance FromJSON FromJSON DdtDef47,48
-  parseJSON parseJSON48,49
-instance ToJSON ToJSON Ddt54,55
-  toJSON toJSON55,56
-instance FromJSON FromJSON Ddt59,60
-  parseJSON parseJSON60,61
+data DdtDefDdtDef7,8
+  = DdtDefDdtDef8,9
+    { ddtLanguage ddtLanguage9,10
+    , ddtRootPath ddtRootPath10,11
+    , ddtRootModule ddtRootModule11,12
+    , ddtMapFile ddtMapFile12,13
+    , ddtModules ddtModules13,14
+data DdtModuleDefDdtModuleDef16,17
+  = DdtModuleDefDdtModuleDef17,18
+    { ddtSource ddtSource18,19
+    , ddtDestination ddtDestination19,20
+    , ddtMod ddtMod20,21
+data DdtModDdtMod23,24
+  = DdtModDdtMod24,25
+    { ddtPath ddtPath25,26
+    , ddtName ddtName26,27
+instance ToJSON ToJSON DdtMod29,30
+  toJSON toJSON30,31
+instance FromJSON FromJSON DdtMod35,36
+  parseJSON parseJSON36,37
+instance ToJSON ToJSON DdtModuleDef41,42
+  toJSON toJSON42,43
+instance FromJSON FromJSON DdtModuleDef53,54
+  parseJSON parseJSON54,55
+instance ToJSON ToJSON DdtDef60,61
+  toJSON toJSON61,62
+instance FromJSON FromJSON DdtDef70,71
+  parseJSON parseJSON71,72
 
-./src/Types/Lang.hs,248
+./src/Types/Lang.hs,264
 module Types.Lang Types.Lang0,1
 data LangLang7,8
   = HaskellHaskell8,9
   | PythonPython9,10
   | GoLangGoLang10,11
   | JSJS11,12
-instance Read Read Lang14,15
-  readPrec readPrec15,16
-instance Show Show Lang26,27
-  show show27,28
+  | TSTS12,13
+instance Read Read Lang15,16
+  readPrec readPrec16,17
+instance Show Show Lang28,29
+  show show29,30
 
 ./src/Camelizer/CamelCase.hs,100
 module Camelizer.CamelCase Camelizer.CamelCase0,1
@@ -132,46 +136,49 @@ camelCase camelCase11,12
 module Camelizer.CamelCase.Words Camelizer.CamelCase.Words0,1
 words words5,6
 
-./src/Camelizer.hs,196
+./src/Camelizer.hs,188
 module Camelizer(Camelizer0,1
 camelizerDef camelizerDef19,20
 getDiff getDiff36,37
 edit edit68,69
 applyEdits applyEdits110,111
-writeHashMap writeHashMap120,121
+writeMap writeMap120,121
 mdsKeys mdsKeys127,128
 
-./src/Run.hs,79
+./src/Run.hs,81
 module RunRun0,1
-run run25,26
-normalizeHddtPaths normalizeHddtPaths55,56
+run run29,30
+normalizeHdtdPaths normalizeHdtdPaths100,101
 
 ./src/Import.hs,25
 module ImportImport0,1
 
-./src/FromYaml.hs,608
+./src/FromYaml.hs,751
 module FromYaml(FromYaml0,1
-data SearchResult SearchResult25,26
-  Err Err26,27
-  StructFound StructFound27,28
-  EnumFound EnumFound28,29
-  Err Err26,27
-  StructFound StructFound27,28
-  EnumFound EnumFound28,29
-fromYaml fromYaml30,31
-searchGen searchGen50,51
-moduleDef moduleDef70,71
-getModuleNamePath getModuleNamePath110,111
-parseEnum parseEnum122,123
-parseField parseField136,137
-parseStr parseStr146,147
-parseObj parseObj211,212
-resolveType resolveType292,293
-specialTypesS specialTypesS317,318
-parseType parseType327,328
-parseDefaultValue parseDefaultValue343,344
+data SearchResult SearchResult29,30
+  Err Err30,31
+  StructFound StructFound31,32
+  EnumFound EnumFound32,33
+  Err Err30,31
+  StructFound StructFound31,32
+  EnumFound EnumFound32,33
+fromYaml fromYaml34,35
+checkModuleNames checkModuleNames59,60
+checkForObjects checkForObjects73,74
+checkCircularDependencies checkCircularDependencies87,88
+searchGen searchGen105,106
+moduleDef moduleDef126,127
+getModuleNamePath getModuleNamePath167,168
+parseEnum parseEnum178,179
+parseField parseField201,202
+parseStr parseStr211,212
+parseObj parseObj276,277
+resolveType resolveType357,358
+specialTypesS specialTypesS382,383
+parseType parseType392,393
+parseDefaultValue parseDefaultValue408,409
 
-./src/Types.hs,631
+./src/Types.hs,596
 module TypesTypes0,1
 newtype InstallPath InstallPath16,17
 newtype InstallPath = InstallPath { getInstallPath getInstallPath16,17
@@ -181,42 +188,41 @@ type    Camelizer Camelizer18,19
 data App App20,21
 data App = AppApp20,21
   { verbose verbose21,22
-  , appHddtName appHddtName22,23
-  , appLogFunc appLogFunc23,24
-  , appProcessContext appProcessContext24,25
-instance HasLogFunc HasLogFunc App27,28
-  logFuncL logFuncL28,29
-instance HasProcessContext HasProcessContext App29,30
-  processContextL processContextL30,31
+  , appLogFunc appLogFunc22,23
+  , appProcessContext appProcessContext23,24
+instance HasLogFunc HasLogFunc App26,27
+  logFuncL logFuncL27,28
+instance HasProcessContext HasProcessContext App28,29
+  processContextL processContextL29,30
 
 ./src/LangGenerators/GoLang.hs,840
-module LangGenerators.GoLang LangGenerators.GoLang3,4
-run run21,22
-data PackagePackage34,35
-  = PackagePackage35,36
-  { pPath pPath36,37
-  , pName pName37,38
-  , pRef pRef38,39
-data NameMappersNameMappers41,42
-  = NameMappersNameMappers42,43
-  { getRoot getRoot43,44
-  , getPackage getPackage44,45
-  , enumNameMapper enumNameMapper45,46
-  , enumFldMapper enumFldMapper46,47
-  , structNameMapper structNameMapper47,48
-  , structFldMapper structFldMapper48,49
-genModule genModule51,52
-enumDef enumDef119,120
-structDef structDef134,135
-genMappers genMappers178,179
-goString goString292,293
-goShow goShow295,296
-goEmptyString goEmptyString298,299
-goNull goNull301,302
-goDate goDate304,305
-sanitizeEnumFld sanitizeEnumFld307,308
-sanitizer sanitizer311,312
-transformPath transformPath318,319
+module LangGenerators.GoLang LangGenerators.GoLang4,5
+run run24,25
+data PackagePackage36,37
+  = PackagePackage37,38
+  { pPath pPath38,39
+  , pName pName39,40
+  , pRef pRef40,41
+data NameMappersNameMappers43,44
+  = NameMappersNameMappers44,45
+  { getRoot getRoot45,46
+  , getPackage getPackage46,47
+  , enumNameMapper enumNameMapper47,48
+  , enumFldMapper enumFldMapper48,49
+  , structNameMapper structNameMapper49,50
+  , structFldMapper structFldMapper50,51
+genModule genModule53,54
+enumDef enumDef123,124
+structDef structDef138,139
+genMappers genMappers182,183
+goString goString360,361
+goShow goShow363,364
+goEmptyString goEmptyString366,367
+goNull goNull369,370
+goDate goDate372,373
+sanitizeEnumFld sanitizeEnumFld375,376
+sanitizer sanitizer379,380
+transformPath transformPath386,387
 
 ./src/LangGenerators/Python.hs,717
 module LangGenerators.Python LangGenerators.Python3,4
@@ -230,17 +236,53 @@ data NameMappers NameMappers27,28
   , structNameMapper structNameMapper33,34
   , structFldMapper structFldMapper34,35
 genModule genModule37,38
-enumDef enumDef96,97
-structDef structDef109,110
-genMappers genMappers147,148
-pyKeywords pyKeywords201,202
-pyString pyString210,211
-pyShow pyShow213,214
-pyEmptyString pyEmptyString216,217
-goNull goNull219,220
-goDate goDate222,223
-sanitize sanitize225,226
-transformPath transformPath233,234
+enumDef enumDef98,99
+structDef structDef111,112
+genMappers genMappers149,150
+pyKeywords pyKeywords203,204
+pyString pyString212,213
+pyShow pyShow215,216
+pyEmptyString pyEmptyString218,219
+goNull goNull221,222
+goDate goDate224,225
+sanitize sanitize227,228
+transformPath transformPath235,236
+
+./src/LangGenerators/Ts.hs,1207
+module LangGenerators.Ts LangGenerators.Ts3,4
+run run20,21
+data NameMappers NameMappers28,29
+  NameMappersNameMappers29,30
+  { nm_modulesPaths nm_modulesPaths30,31
+  , nm_mNameMapper nm_mNameMapper31,32
+  , nm_enumNameMapper nm_enumNameMapper32,33
+  , nm_enumFldMapper nm_enumFldMapper33,34
+  , nm_structNameMapper nm_structNameMapper34,35
+  , nm_structFldMapper nm_structFldMapper35,36
+genModule genModule38,39
+enumDef enumDef131,132
+structDef structDef161,162
+data ReprSelector ReprSelector201,202
+data ReprSelector = RDef RDef201,202
+data ReprSelector = RDef | RGetSet RGetSet201,202
+data ReprSelector = RDef | RGetSet | RJsonRJson201,202
+fldDclr fldDclr203,204
+fldRepr fldRepr234,235
+simpleSetter simpleSetter446,447
+optSetter optSetter452,453
+checkAndSet checkAndSet464,465
+checkAndSetEnum checkAndSetEnum473,474
+readerDef readerDef482,483
+enumReaderDef enumReaderDef667,668
+arrReaderDef arrReaderDef684,685
+jsString jsString711,712
+jsShow jsShow714,715
+jsEmptyString jsEmptyString717,718
+jsNull jsNull720,721
+jsDate jsDate723,724
+genMappers genMappers726,727
+sanitizeEnumFld sanitizeEnumFld793,794
+transformPath transformPath802,803
 
 ./src/LangGenerators/Haskell.hs,703
 module LangGenerators.Haskell LangGenerators.Haskell3,4
@@ -253,16 +295,16 @@ data NameMappers NameMappers27,28
   , structNameMapper structNameMapper32,33
   , structFldMapper structFldMapper33,34
 genModule genModule36,37
-enumDef enumDef208,209
-structDef structDef221,222
-enumJSON enumJSON262,263
-structJSON structJSON292,293
-enumDefault enumDefault351,352
-structDefault structDefault362,363
-genMappers genMappers404,405
-sanitizeEnumFld sanitizeEnumFld498,499
-checkRootModule checkRootModule507,508
-transformPath transformPath520,521
+enumDef enumDef210,211
+structDef structDef223,224
+enumJSON enumJSON264,265
+structJSON structJSON294,295
+enumDefault enumDefault353,354
+structDefault structDefault364,365
+genMappers genMappers406,407
+sanitizeEnumFld sanitizeEnumFld500,501
+checkRootModule checkRootModule509,510
+transformPath transformPath522,523
 
 ./src/LangGenerators/Js.hs,1182
 module LangGenerators.Js LangGenerators.Js3,4
@@ -276,25 +318,25 @@ data NameMappers NameMappers28,29
   , nm_structNameMapper nm_structNameMapper34,35
   , nm_structFldMapper nm_structFldMapper35,36
 genModule genModule38,39
-enumDef enumDef129,130
-structDef structDef143,144
-data ReprSelector ReprSelector175,176
-data ReprSelector = RDef RDef175,176
-data ReprSelector = RDef | RGetSet RGetSet175,176
-data ReprSelector = RDef | RGetSet | RJsonRJson175,176
-fldRepr fldRepr177,178
-simpleSetter simpleSetter387,388
-optSetter optSetter393,394
-checkAndSet checkAndSet405,406
-checkAndSetEnum checkAndSetEnum414,415
-readerDef readerDef423,424
-enumReaderDef enumReaderDef608,609
-arrReaderDef arrReaderDef625,626
-genMappers genMappers652,653
-jsString jsString701,702
-jsShow jsShow704,705
-jsEmptyString jsEmptyString707,708
-jsNull jsNull710,711
-jsDate jsDate713,714
-sanitizeEnumFld sanitizeEnumFld716,717
-transformPath transformPath725,726
+enumDef enumDef131,132
+structDef structDef164,165
+data ReprSelector ReprSelector196,197
+data ReprSelector = RDef RDef196,197
+data ReprSelector = RDef | RGetSet RGetSet196,197
+data ReprSelector = RDef | RGetSet | RJsonRJson196,197
+fldRepr fldRepr198,199
+simpleSetter simpleSetter408,409
+optSetter optSetter414,415
+checkAndSet checkAndSet426,427
+checkAndSetEnum checkAndSetEnum435,436
+readerDef readerDef444,445
+enumReaderDef enumReaderDef629,630
+arrReaderDef arrReaderDef646,647
+genMappers genMappers673,674
+jsString jsString722,723
+jsShow jsShow725,726
+jsEmptyString jsEmptyString728,729
+jsNull jsNull731,732
+jsDate jsDate734,735
+sanitizeEnumFld sanitizeEnumFld737,738
+transformPath transformPath746,747
