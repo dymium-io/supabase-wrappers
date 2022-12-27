@@ -26,12 +26,69 @@ export function humanReadableConnectionType(__a__ : ConnectionType) : string {
   return '';
 }
 
+export type DataHandling =
+  | 'allow'
+  | 'block'
+  | 'obfuscate'
+  | 'redact'
+
+export function humanReadableDataHandling(__a__ : DataHandling) : string {
+  switch(__a__) {
+    case 'allow': return 'Allow';
+    case 'block': return 'Block';
+    case 'obfuscate': return 'Obfuscate';
+    case 'redact': return 'Redact';
+  }
+  return '';
+}
+
 export type DataSemantics =
   | 'FamilyName'
   | 'Email'
   | 'SSN'
 
 
+
+export type PIIDetectionType =
+  | 'comprehend'
+  | 'columnregexp'
+  | 'contentregexp'
+
+export function humanReadablePIIDetectionType(__a__ : PIIDetectionType) : string {
+  switch(__a__) {
+    case 'comprehend': return 'Amazon Comprehend';
+    case 'columnregexp': return 'Regexp for Table Columns';
+    case 'contentregexp': return 'Regexp for Data';
+  }
+  return '';
+}
+
+export class AccessLevels {
+  private '_levels': Array<DataAction>
+
+  constructor() {
+    this['_levels'] = []
+  }
+  get levels(): Array<DataAction> { return this['_levels'] }
+  set levels(__a__: any) {
+    setDirtyFlag()
+    this['_levels'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): AccessLevels {
+    disableDF()
+    let cls = new AccessLevels()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.levels = array1Reader(DataAction.fromJson)(__a__['levels'])
+    } else {
+       doAlert(`AccessLevels: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
 
 export class AuthStatus {
   private '_status': string
@@ -407,6 +464,134 @@ export class ConnectionsQuery {
        cls.records = __a__['records'] == null ? null : array1Reader(ConnectionRecord.fromJson)(__a__['records'])
     } else {
        doAlert(`ConnectionsQuery: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class DataAction {
+  private '_role': string
+  private '_handling': DataHandling
+
+  constructor() {
+    this['_role'] = ''
+    this['_handling'] = 'allow'
+  }
+  get role(): string { return this['_role'] }
+  set role(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_role'])) {
+      setDirtyFlag()
+      this['_role'] = __v__
+    }
+  }
+  get handling(): DataHandling { return this['_handling'] }
+  set handling(__a__: any) {
+    let __v__ = enumReader(['allow','block','obfuscate','redact'],'allow')(__a__)
+    if(!_.isEqual(__v__,this['_handling'])) {
+      setDirtyFlag()
+      this['_handling'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): DataAction {
+    disableDF()
+    let cls = new DataAction()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.role = __a__['role']
+       cls.handling = __a__['handling']
+    } else {
+       doAlert(`DataAction: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class DataActionPositioned {
+  private '_role': string
+  private '_index': number
+  private '_handling': DataHandling
+
+  constructor() {
+    this['_role'] = ''
+    this['_index'] = 0
+    this['_handling'] = 'allow'
+  }
+  get role(): string { return this['_role'] }
+  set role(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_role'])) {
+      setDirtyFlag()
+      this['_role'] = __v__
+    }
+  }
+  get index(): number { return this['_index'] }
+  set index(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_index'])) {
+      setDirtyFlag()
+      this['_index'] = __v__
+    }
+  }
+  get handling(): DataHandling { return this['_handling'] }
+  set handling(__a__: any) {
+    let __v__ = enumReader(['allow','block','obfuscate','redact'],'allow')(__a__)
+    if(!_.isEqual(__v__,this['_handling'])) {
+      setDirtyFlag()
+      this['_handling'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): DataActionPositioned {
+    disableDF()
+    let cls = new DataActionPositioned()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.role = __a__['role']
+       cls.index = __a__['index']
+       cls.handling = __a__['handling']
+    } else {
+       doAlert(`DataActionPositioned: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class DataPolicy {
+  private '_actions': Array<DataActionPositioned>
+  private '_piisuggestions': Array<PIISuggestor>
+
+  constructor() {
+    this['_actions'] = []
+    this['_piisuggestions'] = []
+  }
+  get actions(): Array<DataActionPositioned> { return this['_actions'] }
+  set actions(__a__: any) {
+    setDirtyFlag()
+    this['_actions'] = __a__
+  }
+  get piisuggestions(): Array<PIISuggestor> { return this['_piisuggestions'] }
+  set piisuggestions(__a__: any) {
+    setDirtyFlag()
+    this['_piisuggestions'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): DataPolicy {
+    disableDF()
+    let cls = new DataPolicy()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.actions = array1Reader(DataActionPositioned.fromJson)(__a__['actions'])
+       cls.piisuggestions = array1Reader(PIISuggestor.fromJson)(__a__['piisuggestions'])
+    } else {
+       doAlert(`DataPolicy: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls
@@ -1227,6 +1412,111 @@ export class OperationStatus {
   }
 }
 
+export class PIIDetector {
+  private '_id': string | null
+  private '_name': string
+  private '_method': PIIDetectionType
+  private '_data': string
+
+  constructor() {
+    this['_id'] = null
+    this['_name'] = ''
+    this['_method'] = 'comprehend'
+    this['_data'] = ''
+  }
+  get id(): string | null { return this['_id'] }
+  set id(__a__: any) {
+    if(__a__ == null) {
+      if(this['_id'] == null) { return }
+      setDirtyFlag()
+      this['_id'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_id'])) {
+        setDirtyFlag()
+        this['_id'] = __v__
+      }
+    }
+  }
+  get name(): string { return this['_name'] }
+  set name(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_name'])) {
+      setDirtyFlag()
+      this['_name'] = __v__
+    }
+  }
+  get method(): PIIDetectionType { return this['_method'] }
+  set method(__a__: any) {
+    let __v__ = enumReader(['comprehend','columnregexp','contentregexp'],'comprehend')(__a__)
+    if(!_.isEqual(__v__,this['_method'])) {
+      setDirtyFlag()
+      this['_method'] = __v__
+    }
+  }
+  get data(): string { return this['_data'] }
+  set data(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_data'])) {
+      setDirtyFlag()
+      this['_data'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): PIIDetector {
+    disableDF()
+    let cls = new PIIDetector()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.id = __a__['id'] == null ? null : __a__['id']
+       cls.name = __a__['name']
+       cls.method = __a__['method']
+       cls.data = __a__['data']
+    } else {
+       doAlert(`PIIDetector: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class PIISuggestor {
+  private '_actions': Array<DataAction>
+  private '_detector': PIIDetector
+
+  constructor() {
+    this['_actions'] = []
+    this['_detector'] = new PIIDetector()
+  }
+  get actions(): Array<DataAction> { return this['_actions'] }
+  set actions(__a__: any) {
+    setDirtyFlag()
+    this['_actions'] = __a__
+  }
+  get detector(): PIIDetector { return this['_detector'] }
+  set detector(__a__: any) {
+    setDirtyFlag()
+    this['_detector'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): PIISuggestor {
+    disableDF()
+    let cls = new PIISuggestor()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.actions = array1Reader(DataAction.fromJson)(__a__['actions'])
+       cls.detector = PIIDetector.fromJson(__a__['detector'])
+    } else {
+       doAlert(`PIISuggestor: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class RequestById {
   private '_id': string
 
@@ -1555,6 +1845,19 @@ function array1Reader(__r__) {
       return []
     }
     return __a__.map(__r__)
+  })
+}
+function enumReader(__v__,__dflt__) {
+  return ((__a__) => {
+    if(!_.isString(__a__)) {
+      doAlert(`enumReader: ${__a__} is not a string`)
+      return __dflt__
+    }
+    if(__a__ !== __dflt__ && !_.includes(__v__,__a__)) {
+      doAlert(`enumReader: ${__a__} is not in ${__v__}`)
+      return __dflt__
+    }
+    return __a__
   })
 }
 

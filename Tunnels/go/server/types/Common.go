@@ -14,12 +14,31 @@ const (
   CT_OracleDB ConnectionType = "OracleDB"
 )
 
+type DataHandling string
+const (
+  DH_Allow DataHandling = "allow"
+  DH_Block DataHandling = "block"
+  DH_Obfuscate DataHandling = "obfuscate"
+  DH_Redact DataHandling = "redact"
+)
+
 type DataSemantics string
 const (
   DS_FamilyName DataSemantics = "FamilyName"
   DS_Email DataSemantics = "Email"
   DS_SSN DataSemantics = "SSN"
 )
+
+type PIIDetectionType string
+const (
+  PIIDT_Comprehend PIIDetectionType = "comprehend"
+  PIIDT_Columnregexp PIIDetectionType = "columnregexp"
+  PIIDT_Contentregexp PIIDetectionType = "contentregexp"
+)
+
+type AccessLevels struct {
+   Levels []DataAction `json:"levels"`
+}
 
 type AuthStatus struct {
    Status string `json:"status"`
@@ -56,6 +75,22 @@ type ConnectionsQuery struct {
    Status string `json:"status"`
    Errormessage *string `json:"errormessage"`
    Records *[]ConnectionRecord `json:"records"`
+}
+
+type DataAction struct {
+   Role string `json:"role"`
+   Handling DataHandling `json:"handling"`
+}
+
+type DataActionPositioned struct {
+   Role string `json:"role"`
+   Index int `json:"index"`
+   Handling DataHandling `json:"handling"`
+}
+
+type DataPolicy struct {
+   Actions []DataActionPositioned `json:"actions"`
+   Piisuggestions []PIISuggestor `json:"piisuggestions"`
 }
 
 type Datascope struct {
@@ -144,6 +179,18 @@ type GroupMappingStatus struct {
 type OperationStatus struct {
    Status string `json:"status"`
    Errormessage string `json:"errormessage"`
+}
+
+type PIIDetector struct {
+   Id *string `json:"id"`
+   Name string `json:"name"`
+   Method PIIDetectionType `json:"method"`
+   Data string `json:"data"`
+}
+
+type PIISuggestor struct {
+   Actions []DataAction `json:"actions"`
+   Detector PIIDetector `json:"detector"`
 }
 
 type RequestById struct {

@@ -77,7 +77,7 @@ func initRBAC() {
 	"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
 	"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
 	"getgroupsfordatascopes", "getselect", "getusage", "getaccesskey", "createnewconnector", 
-	"getconnectors", "updateconnector", "deleteconnector"}
+	"getconnectors", "updateconnector", "deleteconnector", "getpolicies"}
 
 	usernames :=  []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getdatascopetables"}	
 
@@ -684,6 +684,19 @@ func GetIdentityFromToken(token string) (string, []string, error) {
 		err = errors.New("Empty schema")
 	}
 	return claim.Email, claim.Groups, err
+}
+
+func GetPolicies(schema string) ([]byte, error) {
+	sqlst := `select policy from ` + schema + `.policies;`
+	row := db.QueryRow(sqlst)
+	var policy []byte
+
+	err := row.Scan(&policy)
+	if err == sql.ErrNoRows {
+		err = nil
+		policy = []byte(`{"error":"no record"}`)
+	}
+	return policy, err
 }
 
 func CreateNewConnection(schema string, con types.ConnectionRecord) (string, error) {

@@ -269,9 +269,11 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 	return back.LoginURL, ProtocolVersion < back.ProtocolVersion
 }
 
-func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, token string, id int) {
+func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, token string, id int, mu sync.RWMutex) {
 	out := protocol.TransmissionUnit{protocol.Open, id, []byte(token)}
+	mu.RLock()
 	log.Debugf("Create proxy connection %d, number of connections %d", id, len(conmap))
+	mu.RUnlock()
 	//write out result
 	messages <- out
 
@@ -315,34 +317,43 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
 		}
 	}
 }
-func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder, messages chan protocol.TransmissionUnit) {
+func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder, messages chan protocol.TransmissionUnit, mu sync.RWMutex) {
 	for {
 		var buff protocol.TransmissionUnit
 		err := dec.Decode(&buff)
 		if err != nil {
 			log.Errorf("Еrror reading from tunnel%s, closing...", err.Error())
+			mu.Lock()
 			for key := range conmap {
 				back := protocol.TransmissionUnit{protocol.Close, key, nil}
 				messages <- back
-
 				conmap[key].Close()
 				delete(conmap, key)
 			}
+			mu.Unlock()
 			egress.Close()
 			os.Exit(1)
 			return
 		}
 		switch buff.Action {
 		case protocol.Close:
+			mu.RLock()
 			sock, ok := conmap[buff.Id]
+			mu.RUnlock()
 			if ok {
+				mu.Lock()
 				sock.Close()
 				delete(conmap, buff.Id)
+				mu.Unlock()
 			}
+			mu.RLock()
 			log.Debugf("Closed connection %d, %d left", buff.Id, len(conmap))
+			mu.RUnlock()
 		case protocol.Send:
 			//fmt.Printf("Send %d bytes", len(buff.Data))
+			mu.RLock()
 			sock, ok := conmap[buff.Id]
+			mu.RUnlock()
 			if ok {
 				_, err := sock.Write(buff.Data)
 				//fmt.Printf("Wrote back to local socket to connection %d, %d bytes out of %d bytes", buff.Id, n, len(buff.Data))
@@ -352,7 +363,9 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder,
 					//os.Exit(1)
 					back := protocol.TransmissionUnit{protocol.Close, buff.Id, nil}
 					sock.Close()
+					mu.Lock()
 					delete(conmap, buff.Id)
+					mu.Unlock()
 					messages <- back
 				}
 			}
@@ -400,12 +413,14 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 	}
 
 	var conmap = make(map[int]net.Conn)
+	var mu sync.RWMutex
+
 	connectionCounter := 0
 	dec := gob.NewDecoder(egress)
 	enc := gob.NewEncoder(egress)
 	messages := make(chan protocol.TransmissionUnit)
 	go MultiplexWriter(messages, enc)
-	go MultiplexReader(egress, conmap, dec, messages)
+	go MultiplexReader(egress, conmap, dec, messages, mu)
 
 	back <- "end"
 
@@ -415,9 +430,10 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 			log.Errorf("Error in Accept: %s", err.Error())
 			panic(err)
 		}
-
+		mu.Lock()
 		conmap[connectionCounter] = ingress
-		go pipe(ingress, messages, conmap, token, connectionCounter)
+		mu.Unlock()
+		go pipe(ingress, messages, conmap, token, connectionCounter, mu)
 		connectionCounter++
 	}
 }

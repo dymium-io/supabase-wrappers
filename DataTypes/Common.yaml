@@ -150,3 +150,43 @@ Usage:
   - connectortunnels: int   
   - bytesin: string
   - bytesout: string
+
+# policy-related stuff
+PIIDetectionType: 
+  - comprehend <*> Amazon Comprehend
+  - columnregexp <*> Regexp for Table Columns
+  - contentregexp <*> Regexp for Data
+
+PIIDetector:
+  - id: ?string
+  - name: string # PII name
+  - method: PIIDetectionType
+  - data: string 
+
+DataHandling:
+  - allow <*> Allow
+  - block  <*> Block
+  - obfuscate  <*> Obfuscate
+  - redact <*> Redact
+#  - smartredact <*> Smart Reduct
+
+DataAction:
+  - role: string  # just a name, given by the customer
+  - handling: DataHandling
+
+DataActionPositioned:
+  - role: ?string  # just a name, given by the customer
+  - index: int # order
+  - handling: DataHandling
+
+PIISuggestor:
+  - actions: <|DataAction|>
+  - detector: PIIDetector
+
+DataPolicy:
+  - actions: <|DataActionPositioned|>
+  - piisuggestions: <|PIISuggestor|>
+
+# GUI handling
+AccessLevels:
+  - levels: <|DataAction|>

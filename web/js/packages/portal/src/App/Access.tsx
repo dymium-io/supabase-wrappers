@@ -253,10 +253,11 @@ function Downloads() {
             </div>
           </div>
         </div>
-        <div className="mb-5">
-        To use the GUI, launch dymiumgui.app on Mac OS, or dymiumgui.exe on Windows.
-        <img src="/dymiumgui.png" style={{width: "540px"}}></img>  
         <div>
+        To use the GUI, launch dymiumgui.app on Mac OS, or dymiumgui.exe on Windows.
+        </div><div>
+        <img src="/dymiumgui.png" style={{width: "540px"}}></img>  
+        <div  className="mb-5">
         Paste the connection string for your OS into the application, and click Connect.
         </div>
         </div>
