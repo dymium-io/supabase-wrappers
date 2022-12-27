@@ -6431,7 +6431,7 @@ Object {
                         style="height: 30px; text-align: center;"
                       >
                         <i
-                          class="fas fa-trash ablue"
+                          class="fas fa- ablue"
                           role="button"
                         />
                       </td>

@@ -904,6 +904,27 @@ func DeleteConnection(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
+func GetPolicies(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	session := r.Context().Value(authenticatedSessionKey).(string)
+	
+	js, err := authentication.GetPolicies(schema)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api GetPolicies, error: %s", err.Error())
+
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	} else {
+		log.InfoUserf(schema, session, email, groups, roles, "Api GetPolicies success")
+
+	}
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
 
 func GetDatascopes(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
@@ -1043,6 +1064,7 @@ func GetLogin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Write(js)
 }
+
 func GetLogout(w http.ResponseWriter, r *http.Request) {
 	domain := os.Getenv("AUTH0_PORTAL_DOMAIN")
 	clientid := os.Getenv("AUTH0_PORTAL_CLIENT_ID")
@@ -1055,7 +1077,7 @@ func GetLogout(w http.ResponseWriter, r *http.Request) {
 	token := common.TokenFromHTTPRequest(r)
 	if token != "" {
 		schema, roles, groups, email, _, session, err := authentication.GetSchemaRolesFromToken(token)
-		if err != nil {
+		if err == nil {
 			log.InfoUserf(schema, session, email, groups, roles, "Api GetLogout, success")
 		} else {
 			log.Infof("Api GetLogout, session expired")			

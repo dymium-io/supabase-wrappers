@@ -395,7 +395,7 @@ export class Connector {
       this['_status'] = null
       return
     } else {
-      let __v__ = enumReader(['provisioned','configured','active'],'provisioned  <*> Provisioned')(__a__)
+      let __v__ = enumReader(['provisioned','configured','active'],'provisioned')(__a__)
       if(!_.isEqual(__v__,this['_status'])) {
         setDirtyFlag()
         this['_status'] = __v__
@@ -714,7 +714,7 @@ export class Tunnel {
       this['_status'] = null
       return
     } else {
-      let __v__ = enumReader(['provisioned','configured'],'provisioned  <*> Provisioned')(__a__)
+      let __v__ = enumReader(['provisioned','configured'],'provisioned')(__a__)
       if(!_.isEqual(__v__,this['_status'])) {
         setDirtyFlag()
         this['_status'] = __v__

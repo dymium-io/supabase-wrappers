@@ -25,6 +25,7 @@ export LOCAL_ENVIRONMENT=true
 export LOG_LEVEL=Debug
 //export LOG_LEVEL=Info
 
+export SESSION_SECRET="b<Qu9K)q}Ksh+R)JzlJJ'X1sHMp$UI@t&OCjDYTEmVe6WZe,rdJ}!I=4N[|yoTq"
 ./server -p 15654 -a 127.0.0.1
 
 
