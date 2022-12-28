@@ -65,7 +65,7 @@ executable mallard
     hs-source-dirs:     app
     default-language:   Haskell2010
 
-    ghc-options:        -Wall
+    ghc-options:        -Wall -threaded
 
     other-modules:      Config
 

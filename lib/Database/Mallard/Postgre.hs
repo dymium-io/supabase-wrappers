@@ -91,18 +91,18 @@ runDB session = do
     pool <- gets (^. postgreConnection)
     res <- liftIO $ Pool.use pool session
     case res of
-        Left (Pool.ConnectionError (Just e)) -> liftIO $ do
+        Left (Pool.ConnectionUsageError (Just e)) -> liftIO $ do
           putStrLn $ unpack $ T.decodeUtf8 e
           exitFailure
-        Left (Pool.ConnectionError Nothing) -> liftIO $do
+        Left (Pool.ConnectionUsageError Nothing) -> liftIO $do
           putStrLn "runDB: connection error"
           exitFailure
-        Left (Pool.SessionError (QueryError q params e)) -> liftIO $ do
+        Left (Pool.SessionUsageError (QueryError q params e)) -> liftIO $ do
           putStrLn $ "Query {"<>unpack (T.decodeUtf8 q)<>"}("<>show params<>") failed:"
           case e of
             ClientError (Just es) -> putStrLn $ unpack $ T.decodeUtf8 es
             ClientError Nothing -> pure ()
-            ResultError (ServerError code message detail hint) -> do
+            ResultError (ServerError code message detail hint _) -> do
               putStrLn $ "Return code: "<> unpack (T.decodeUtf8 code)
               putStrLn $ unpack $ T.decodeUtf8 message
               case detail of

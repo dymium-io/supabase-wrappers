@@ -9,9 +9,8 @@ case ${1:-"--darwin"} in
 	;;
     "--darwin")
 	PATH="/usr/local/bin:$PATH"
-	stack build --copy-bins --local-bin-path .
-	# upx --best mallard
-	mv mallard ../../bin/darwin/mallard
+	stack build --copy-bins --local-bin-path darwin
+        zstd -f --rm --ultra darwin/mallard -o ../../bin/darwin/mallard.zst
 	;;
     "--linux")
 	cat <<EOF | docker run --rm -i -v $HOME/.stack:/root/.stack -v $PWD:/z fpco/stack-build-small:lts /bin/bash -
@@ -22,17 +21,17 @@ printf 'tzdata tzdata/Areas select US\ntzdata tzdata/Zones/US select LosAngeles\
 rm /etc/timezone
 rm /etc/localtime
 dpkg-reconfigure -f noninteractive tzdata
-apt install -y upx libpq-dev
+apt install -y libpq-dev
 cd /z
-stack build --copy-bins --local-bin-path .
-upx --best --color mallard
+stack setup
+stack build --copy-bins --local-bin-path linux
 EOF
 	retval=$?
 	[ $retval -eq 0 ] || {
 	    echo "build failed with error code $retval"
 	    exit $retval
 	}
-	mv mallard ../../bin/linux/mallard
+        zstd -f --rm --ultra linux/mallard -o ../../bin/linux/mallard.zst
 	;;
     *)
 	echo "Usage: ./compile.sh [--darwin|--linux|--all]"

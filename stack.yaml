@@ -1,6 +1,6 @@
 packages:
 - '.'
-resolver: lts-19.13
+resolver: lts-20.4
 extra-deps:
 - Interpolation-0.3.0
 # - hasql-th-0.4.0.11
