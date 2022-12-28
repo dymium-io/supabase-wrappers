@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source "../../libs/shell/aws-include.sh"
+source "../../../libs/shell/aws-include.sh"
 
 if [ "$1" = "-c" ]
 then
@@ -8,7 +8,7 @@ then
     [ -z "$1" ] && {
 	aws_usage -exe "$0 -c <customer> "
     }
-    m="d-$1"
+    c="$1"
     shift
 else
     aws_usage -exe "$0 -c <customer> "
@@ -18,8 +18,8 @@ aws_params -exe "$0 -c <customer> " "$@"
    
 set -x
 aws ecs update-service \
-    --cluster data-guardian-cluster \
-    --service ${m}-srv \
+    --cluster "tunnel-${c}" \
+    --service "service-${c}" \
     --force-new-deployment \
     --profile ${PROFILE} \
     --region ${REGION}
