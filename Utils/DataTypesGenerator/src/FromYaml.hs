@@ -186,7 +186,7 @@ parseEnum (eName', y') =
                        })
     dflt' ->
       (eName', EnumDef { eName = eName'
-                       , eDflt = Just dflt'
+                       , eDflt = Just . fst . parseValue $ dflt'
                        , eValues = y' ^.. _Array .traverse ._String .to parseValue
                        })
   where
