@@ -4,12 +4,26 @@ set -e
 
 d=$(dirname $0)
 
-if [ "${OSTYPE:0:6}" = "darwin" ]
-then
-    export DYLD_LIBRARY_PATH=/usr/local/lib/postgresql@14
-    binary="${d}/darwin/mallard"
+if [ "${OSTYPE:0:6}" = "darwin" ]; then
+	if ! command -v zstd &>/dev/null; then
+		echo "Please install [zstd] (un)compression tool"
+		echo "For example:"
+		echo "  brew install zstd"
+		exit 255
+	fi
+	export DYLD_LIBRARY_PATH=/usr/local/lib/postgresql@14
+	binary="${d}/darwin/mallard"
 else
-    binary="${d}/linux/mallard"
+	if ! command -v zstd &>/dev/null; then
+		echo "Please install [zstd] (un)compression tool"
+		echo "For example:"
+		echo "  apt install zstd"
+		exit 255
+	fi
+	binary="${d}/linux/mallard"
 fi
 
+rm -f "${binary}"
+zstd -d -q -o "${binary}" "${binary}.zst"
 ${binary} "$@"
+rm -f "${binary}"

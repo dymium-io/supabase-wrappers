@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+set -x
+
 cnf="${HOME}/.config/dymium/databases.yaml"
 
 declare -a dbs
@@ -138,7 +140,7 @@ start_postgres_docker() {
     [[ $init -eq 1 ]] && {
 	args+=(-e "POSTGRES_PASSWORD=$(yqv $c '.users.postgres.password')")
     }
-    args+=(postgres)
+    args+=(postgres:14)
     
     echo docker ${args[@]}
     docker ${args[@]}

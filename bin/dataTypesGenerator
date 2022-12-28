@@ -4,20 +4,25 @@ set -e
 
 d=$(dirname $0)
 
-if [ "${OSTYPE:0:6}" = "darwin" ]
-then
-    if ! command -v zstd &> /dev/null
-    then
-	echo "Please install [zstd] (un)compression tool"
-	echo "For example:"
-	echo "  brew install zstd"
-	exit 255
-    fi
-    binary="${d}/darwin/dataTypesGenerator"
-    rm -f "$binary"
-    zstd -d -q -o "${binary}" "${binary}.zst"
+if [ "${OSTYPE:0:6}" = "darwin" ]; then
+	if ! command -v zstd &>/dev/null; then
+		echo "Please install [zstd] (un)compression tool"
+		echo "For example:"
+		echo "  brew install zstd"
+		exit 255
+	fi
+	binary="${d}/darwin/dataTypesGenerator"
 else
-    binary="${d}/linux/dataTypesGenerator"
+	if ! command -v zstd &>/dev/null; then
+		echo "Please install [zstd] (un)compression tool"
+		echo "For example:"
+		echo "  apt install zstd"
+		exit 255
+	fi
+	binary="${d}/linux/dataTypesGenerator"
 fi
 
+rm -f "${binary}"
+zstd -d -q -o "${binary}" "${binary}.zst"
 ${binary} "$@"
+rm -f "${binary}"
