@@ -77,7 +77,7 @@ func initRBAC() {
 	"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
 	"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
 	"getgroupsfordatascopes", "getselect", "getusage", "getaccesskey", "createnewconnector", 
-	"getconnectors", "updateconnector", "deleteconnector", "getpolicies"}
+	"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies"}
 
 	usernames :=  []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getdatascopetables"}	
 
@@ -684,6 +684,17 @@ func GetIdentityFromToken(token string) (string, []string, error) {
 		err = errors.New("Empty schema")
 	}
 	return claim.Email, claim.Groups, err
+}
+
+func SavePolicies(schema string, body []byte) error {
+	sqlst := `INSERT INTO ` + schema + `.policies (policy)
+	VALUES($1) 
+	ON CONFLICT ON CONSTRAINT constr_id_unique
+	DO 
+	   UPDATE SET policy=$1`
+	_, err := db.Exec(sqlst, body)
+
+	return err
 }
 
 func GetPolicies(schema string) ([]byte, error) {

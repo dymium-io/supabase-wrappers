@@ -472,10 +472,12 @@ export class ConnectionsQuery {
 
 export class DataAction {
   private '_role': string
+  private '_index': number | null
   private '_handling': DataHandling
 
   constructor() {
     this['_role'] = ''
+    this['_index'] = null
     this['_handling'] = 'allow'
   }
   get role(): string { return this['_role'] }
@@ -484,6 +486,21 @@ export class DataAction {
     if(!_.isEqual(__v__,this['_role'])) {
       setDirtyFlag()
       this['_role'] = __v__
+    }
+  }
+  get index(): number | null { return this['_index'] }
+  set index(__a__: any) {
+    if(__a__ == null) {
+      if(this['_index'] == null) { return }
+      setDirtyFlag()
+      this['_index'] = null
+      return
+    } else {
+      let __v__ = intReader(0)(__a__)
+      if(!_.isEqual(__v__,this['_index'])) {
+        setDirtyFlag()
+        this['_index'] = __v__
+      }
     }
   }
   get handling(): DataHandling { return this['_handling'] }
@@ -502,6 +519,7 @@ export class DataAction {
     let cls = new DataAction()
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.role = __a__['role']
+       cls.index = __a__['index'] == null ? null : __a__['index']
        cls.handling = __a__['handling']
     } else {
        doAlert(`DataAction: an attempt to initialize from ${__a__}`)
@@ -511,67 +529,15 @@ export class DataAction {
   }
 }
 
-export class DataActionPositioned {
-  private '_role': string
-  private '_index': number
-  private '_handling': DataHandling
-
-  constructor() {
-    this['_role'] = ''
-    this['_index'] = 0
-    this['_handling'] = 'allow'
-  }
-  get role(): string { return this['_role'] }
-  set role(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_role'])) {
-      setDirtyFlag()
-      this['_role'] = __v__
-    }
-  }
-  get index(): number { return this['_index'] }
-  set index(__a__: any) {
-    let __v__ = intReader(0)(__a__)
-    if(!_.isEqual(__v__,this['_index'])) {
-      setDirtyFlag()
-      this['_index'] = __v__
-    }
-  }
-  get handling(): DataHandling { return this['_handling'] }
-  set handling(__a__: any) {
-    let __v__ = enumReader(['allow','block','obfuscate','redact'],'allow')(__a__)
-    if(!_.isEqual(__v__,this['_handling'])) {
-      setDirtyFlag()
-      this['_handling'] = __v__
-    }
-  }
-
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
-
-  static fromJson(__a__: any): DataActionPositioned {
-    disableDF()
-    let cls = new DataActionPositioned()
-    if(typeof __a__ === 'object' && __a__ != null) {
-       cls.role = __a__['role']
-       cls.index = __a__['index']
-       cls.handling = __a__['handling']
-    } else {
-       doAlert(`DataActionPositioned: an attempt to initialize from ${__a__}`)
-    }
-    enableDF()
-    return cls
-  }
-}
-
 export class DataPolicy {
-  private '_actions': Array<DataActionPositioned>
+  private '_actions': Array<DataAction>
   private '_piisuggestions': Array<PIISuggestor>
 
   constructor() {
     this['_actions'] = []
     this['_piisuggestions'] = []
   }
-  get actions(): Array<DataActionPositioned> { return this['_actions'] }
+  get actions(): Array<DataAction> { return this['_actions'] }
   set actions(__a__: any) {
     setDirtyFlag()
     this['_actions'] = __a__
@@ -588,7 +554,7 @@ export class DataPolicy {
     disableDF()
     let cls = new DataPolicy()
     if(typeof __a__ === 'object' && __a__ != null) {
-       cls.actions = array1Reader(DataActionPositioned.fromJson)(__a__['actions'])
+       cls.actions = array1Reader(DataAction.fromJson)(__a__['actions'])
        cls.piisuggestions = array1Reader(PIISuggestor.fromJson)(__a__['piisuggestions'])
     } else {
        doAlert(`DataPolicy: an attempt to initialize from ${__a__}`)

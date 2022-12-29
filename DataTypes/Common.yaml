@@ -172,11 +172,7 @@ DataHandling:
 
 DataAction:
   - role: string  # just a name, given by the customer
-  - handling: DataHandling
-
-DataActionPositioned:
-  - role: ?string  # just a name, given by the customer
-  - index: int # order
+  - index: ?int # order
   - handling: DataHandling
 
 PIISuggestor:
@@ -184,7 +180,7 @@ PIISuggestor:
   - detector: PIIDetector
 
 DataPolicy:
-  - actions: <|DataActionPositioned|>
+  - actions: <|DataAction|>
   - piisuggestions: <|PIISuggestor|>
 
 # GUI handling
