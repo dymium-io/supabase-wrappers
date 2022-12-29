@@ -18,8 +18,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"sync"
-	"sync/atomic"
 	"dymium.com/client/ca"
 	"dymium.com/client/content"
 	"dymium.com/client/selfupdate"
