@@ -424,19 +424,19 @@ let columns = [
     sort: true,
   },
   {
-    dataField: 'typ',
+    dataField: 'method',
     text: 'Type:',
     /*
     isDummyField: true,
     */
     formatter: (cell, row, rowIndex, formatExtraData) => {
-      if (row['typ'] === 'comprehend')
-        return <div>{types.humanReadablePIIDetectionType(row['typ'])}</div>
+      if (row['method'] === 'comprehend')
+        return <div>{types.humanReadablePIIDetectionType(row['method'])}</div>
       else
         return <select
           onChange={e => {
           }}
-          value={row['typ']} >
+          value={row['method']} >
           <option value="columnregexp">Regexp for Table Columns</option>
           <option value="contentregexp">Regexp for Table Columns</option>
 
@@ -452,7 +452,7 @@ let columns = [
     text: 'Regexp:',
     sort: false,
     formatter: (cell, row, rowIndex, formatExtraData) => {
-      if (row['typ'] === 'comprehend')
+      if (row['method'] === 'comprehend')
         return <div></div>
       else
         return <input style={{ width: '40em' }}
@@ -477,13 +477,13 @@ function BuildRules() {
   const [spinner, setSpinner] = useState(false)
   const [alert, setAlert] = useState<JSX.Element>(<></>)
 
-  let getPolicy = () => {
+  let getDefaults = () => {
     setHeaders(columns)
     let det = defaultDetectors.map((x: any) => {
       return {
         id: x.detector.id,
         name: x.detector.name,
-        typ: x.detector.method,
+        method: x.detector.method,
         data: x.detector.data
       }
     })
@@ -491,20 +491,75 @@ function BuildRules() {
       return {
         id: x.detector.id,
         name: x.detector.name,
-        typ: x.detector.method,
+        method: x.detector.method,
         data: x.detector.data
       }
     })
 
     setRules(det.concat(regs))
   }
-  useEffect(() => {
-    getPolicy()
-  }, [])
 
+  let getPolicies = () => {
+    let error = <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+      Error retrieving policy.
+    </Alert>
+    setSpinner(true)
+    http.sendToServer("GET", "/api/getpolicies",
+      null, "",
+      resp => {
+        resp.json().then(js => {
+          setSpinner(false)
+          if (js.error !== undefined) {
+            getDefaults()
+          } else {
+            let prep = types.DataPolicy.fromJson(js)
+            setHeaders(columns)
+            debugger
+            let suggs = JSON.parse(prep.toJson()).piisuggestions.map( x => {
+              return {
+                id: x.detector.id,
+                name: x.detector.name,
+                method: x.detector.method,
+                data: x.detector.data
+              }
+
+            })
+            setRules(suggs)
+
+            
+          }
+        }).catch((error) => {
+          setAlert(
+            error
+          )
+          setSpinner(false)
+        })
+      },
+      resp => {
+        setSpinner(false)
+        setAlert(
+          error
+        )
+        setSpinner(false)
+      },
+      error => {
+        console.log("on exception")
+        setSpinner(false)
+        setAlert(
+          error
+        )
+        setSpinner(false)
+      })
+  }
+  useEffect(() => {
+    getPolicies()
+  }, [])
+  let handleSubmit = event => {
+    
+  }
   return (
     <>
-
+      <Form onSubmit={handleSubmit}>
       <div id="tablecontainer" style={{ width: '90%' }} className="text-center mb-5">
         <ToolkitProvider
           bootstrap4
@@ -543,6 +598,16 @@ function BuildRules() {
           }
         </ToolkitProvider>
       </div>
+
+
+        {rules.length > 0 &&
+          <Row className="mt-5">
+            <Col xs="auto">
+              <Button size="sm" variant="dymium" type="submit">Apply</Button>
+            </Col>
+          </Row>
+        }
+      </Form>
     </>
   )
 }
@@ -562,14 +627,30 @@ function AccessLevels() {
       Error retrieving policy.
     </Alert>
 
+    for(let i = 0; i < actions.length; i++) {
+      actions[i].index = i
+    }
+    policy.current.actions = actions
+
     let js = JSON.parse(policy.current.toJson() )
     // do cleannup
-    js.actions.sort( (a, b) => {
-      return (a.index > b.index) ? 1 : -1
-    })
-    debugger
     for(let i = 0; i < js.piisuggestions.length; i++) {
-
+      let sactions = js.piisuggestions[i].actions
+      let gactions = js.actions
+      let out:types.DataAction[] = []
+      let getAction = l => {
+        for(let i = 0; i < sactions.length; i++) {
+          if(sactions[i].name === l.name) 
+            return sactions[i]
+        }
+        return l
+      }
+      for(let j = 0; j < gactions.length; j++) {
+       let l = getAction(gactions[j])
+       out.push(l)
+      }
+      js.piisuggestions[i].actions = out
+    
     }
     let body = JSON.stringify(js)
     setSpinner(true)
@@ -634,11 +715,14 @@ function AccessLevels() {
               return y
             })
             policy.current.piisuggestions = prep
-            
-            let actions = types.
-          } else {
-            policy.current = types.DataPolicy.fromJson(js)
 
+          } else {
+            let prep = types.DataPolicy.fromJson(js)
+            policy.current = prep
+
+            setActions( prep.actions )
+
+            
           }
         }).catch((error) => {
           setAlert(

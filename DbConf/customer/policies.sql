@@ -8,3 +8,15 @@ CREATE TABLE policies (
     name varchar(128) NOT NULL,
     policy jsonb NOT NULL default '{}'::jsonb
 );
+
+-- #!migration
+-- name: "customer/connectors-enforce-single-row",
+-- requires: ["customer/policies"],
+-- description: "enforce single row";
+ALTER TABLE policies ALTER id SET DEFAULT '0000-0000-0000';
+
+ALTER TABLE policies ADD CONSTRAINT constr_id_unique UNIQUE(id);
+
+ALTER TABLE policies ADD CONSTRAINT constr_id_value CHECK(id='0000-0000-0000');
+
+ALTER TABLE policies DROP column name;

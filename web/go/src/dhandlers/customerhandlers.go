@@ -904,6 +904,39 @@ func DeleteConnection(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
+func SavePolicies(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	session := r.Context().Value(authenticatedSessionKey).(string)
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	err := authentication.SavePolicies(schema, body)
+
+	var status  types.OperationStatus
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api SavePolicies, error: %s", err.Error())
+		status = types.OperationStatus{"Error", err.Error()}
+	} else {
+		log.InfoUserf(schema, session, email, groups, roles, "Api SavePolicies success")
+		status = types.OperationStatus{"OK", "Policies Saved"}
+	}
+
+	js, err := json.Marshal(status)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+		
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+
+}
+
 func GetPolicies(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 	email := r.Context().Value(authenticatedEmailKey).(string)

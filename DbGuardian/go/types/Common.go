@@ -79,17 +79,12 @@ type ConnectionsQuery struct {
 
 type DataAction struct {
    Role string `json:"role"`
-   Handling DataHandling `json:"handling"`
-}
-
-type DataActionPositioned struct {
-   Role string `json:"role"`
-   Index int `json:"index"`
+   Index *int `json:"index"`
    Handling DataHandling `json:"handling"`
 }
 
 type DataPolicy struct {
-   Actions []DataActionPositioned `json:"actions"`
+   Actions []DataAction `json:"actions"`
    Piisuggestions []PIISuggestor `json:"piisuggestions"`
 }
 
