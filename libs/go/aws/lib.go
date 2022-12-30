@@ -159,7 +159,7 @@ func GetSecret(secretName string) (string, error) {
 					aerr.Error())
 			}
 		} else {
-			return result.GoString(), nil
+			return *result.SecretString, nil
 		}
 	} else {
 		var ok bool
