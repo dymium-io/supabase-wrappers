@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-set -x
+set -e
 
 cnf="${HOME}/.config/dymium/databases.yaml"
 
