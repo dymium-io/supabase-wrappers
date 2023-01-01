@@ -62,15 +62,17 @@ done
 DataGuardian=$(docker images data-guardian -q)
 [ -z "$DataGuardian" ] || docker rmi -f "$DataGuardian"
 
-cat <<EOF | docker build --compress --label "git.branch=$(git branch --show-current)" --label "git.commit=$(git rev-parse HEAD)" -t data-guardian -f - .
+cat <<EOF | docker build --platform amd64 --compress --label "git.branch=$(git branch --show-current)" --label "git.commit=$(git rev-parse HEAD)" -t data-guardian -f - .
 FROM ubuntu/postgres
 
 RUN apt update &&                \
   apt upgrade -y &&              \
   apt install -y ca-certificates \
     libmariadb3 libmariadb-dev   \
+    libmysqlclient21             \
     freetds-bin                  \
     libaio1 &&                   \
+  ln -s /usr/lib/x86_64-linux-gnu/libmysqlclient.so.21 /usr/lib/x86_64-linux-gnu/libmysqlclient.so && \
   mkdir -p /opt/oracle
 
 COPY initializer /docker-entrypoint-initdb.d/initializer.sh

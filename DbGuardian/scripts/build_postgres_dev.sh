@@ -31,7 +31,7 @@ done
 PostgresDev=$(docker images postgres-dev -q)
 [ -z "$PostgresDev" ] || docker rmi -f "$PostgresDev"
 
-cat <<EOF | docker build --compress -t postgres-dev -f - .
+cat <<EOF | docker build --platform amd64 --compress -t postgres-dev -f - .
 FROM ubuntu:latest
 
 

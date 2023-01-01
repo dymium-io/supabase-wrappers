@@ -13,19 +13,15 @@ case ${1:-"--darwin"} in
 	;;
     "--linux")
 	cat <<EOF | docker run --rm -i -v $HOME/.stack:/root/.stack -v $PWD:/z fpco/stack-build-small:lts /bin/bash -
-apt update
-apt upgrade -y
-apt install -y upx
 cd /z
 stack build --copy-bins --local-bin-path linux
-upx --best linux/Gen-exe
 EOF
 	retval=$?
 	[ $retval -eq 0 ] || {
 	    echo "build failed with error code $retval"
 	    exit $retval
 	}
-	mv linux/Gen-exe ../../bin/linux/dataTypesGenerator
+	zstd -f --rm --ultra linux/Gen-exe -o ../../bin/linux/dataTypesGenerator.zst
 	;;
     *)
 	echo "Usage: ./compile.sh [--darwin|--linux|--all]"

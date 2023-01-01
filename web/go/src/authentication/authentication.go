@@ -1263,7 +1263,7 @@ func GetDatascopes(schema string) ([]types.DatascopeIdName, error) {
 
 func UpdateDatascope(schema string, dscope types.Datascope) error {
 	// Create a new context, and begin a transaction
-    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 30*time.Second)
     defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {

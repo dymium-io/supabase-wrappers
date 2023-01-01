@@ -19,7 +19,7 @@ match s:
   case '411064808315_AdministratorAccess':
     section = 'dymium'
   case '564835066653_AdministratorAccess':
-    section = 'dymium-def'
+    section = 'dymium-dev'
   case '482973908181_AdministratorAccess':
     section = 'dymium-prod'
   case '655193105197_AdministratorAccess':
