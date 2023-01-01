@@ -4,6 +4,7 @@ import type { RootState } from '../Store'
 // Define a type for the slice state
 interface MenuState {
   activeMenu: string,
+  activeRuleTab: string,
   activeConnectionTab: string,
   activeConnectorTab: string,
   selectedConnector: string,
@@ -16,6 +17,7 @@ interface MenuState {
 // Define the initial state using that type
 const initialState: MenuState = {
   activeMenu: "dashboard",
+  activeRuleTab: "add",
   activeConnectionTab: "add",
   activeConnectorTab: "add",
   selectedConnector: "",
@@ -32,6 +34,9 @@ export const menuSlice = createSlice({
   reducers: {
       setActiveMenu: (state, action) => {
         state.activeMenu = action.payload
+      },
+      setActiveRuleTab: (state, action) => {
+        state.activeRuleTab = action.payload
       },
       setActiveConnectionTab: (state, action) => {
         state.activeConnectionTab = action.payload
@@ -58,10 +63,11 @@ export const menuSlice = createSlice({
 })
 
 
-export const { setActiveMenu, setActiveConnectionTab, setActiveConnectorTab, setSelectedConnectorDefault, setActiveDatascopeTab, setSelectedDatascopeDefault, setActiveAccessTab, setActiveGroupsTab } = menuSlice.actions
+export const { setActiveMenu, setActiveRuleTab, setActiveConnectionTab, setActiveConnectorTab, setSelectedConnectorDefault, setActiveDatascopeTab, setSelectedDatascopeDefault, setActiveAccessTab, setActiveGroupsTab } = menuSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectActiveMenu = (state: RootState) => state.activeMenu
+export const selectActiveRuleTab = (state: RootState) => state.activeRuleTab
 export const selectActiveConnectionTab = (state: RootState) => state.activeConnectionTab
 export const selectActiveConnectorTab = (state: RootState) => state.activeConnectorTab
 export const selectActiveDatascopeTab = (state: RootState) => state.activeDatascopeTab
