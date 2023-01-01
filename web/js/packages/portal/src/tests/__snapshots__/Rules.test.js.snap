@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`test-sql 1`] = `
+exports[`test-rules 1`] = `
 Array [
   <nav
     className="mb-3 text-left nav nav-tabs"
@@ -10,13 +10,24 @@ Array [
     <a
       aria-selected={true}
       className="nav-item nav-link active"
-      data-rb-event-key="build"
+      data-rb-event-key="add"
       href="#"
       onClick={[Function]}
       onKeyDown={[Function]}
       role="tab"
     >
-      Build Rules
+      Access Levels
+    </a>
+    <a
+      aria-selected={false}
+      className="nav-item nav-link"
+      data-rb-event-key="edit"
+      href="#"
+      onClick={[Function]}
+      onKeyDown={[Function]}
+      role="tab"
+    >
+      Rules
     </a>
   </nav>,
   <div
@@ -28,7 +39,152 @@ Array [
       className="fade mx-4 tab-pane active show"
       id={null}
       role="tabpanel"
-    />
+    >
+      <div>
+        <h5>
+          Define Access Levels  
+          <img
+            className="hiddenspinner"
+            src="/logo.png"
+            style={
+              Object {
+                "width": "28px",
+              }
+            }
+          />
+        </h5>
+        <div
+          className="fade alert alert-danger alert-dismissible show"
+          role="alert"
+        >
+          <button
+            className="close"
+            onClick={[Function]}
+            type="button"
+          >
+            <span
+              aria-hidden="true"
+            >
+              ×
+            </span>
+            <span
+              className="sr-only"
+            >
+              Close alert
+            </span>
+          </button>
+          Error retrieving policy.
+        </div>
+        <div>
+          <form
+            className=""
+            onSubmit={[Function]}
+          >
+            <div
+              className="row"
+            >
+              <div
+                className="col-auto"
+              >
+                <div
+                  className="mb-3 form-group"
+                >
+                  <label
+                    className="form-label"
+                    htmlFor="dname"
+                  >
+                    Name:
+                  </label>
+                  <input
+                    className="form-control form-control-sm"
+                    id="dname"
+                    onChange={[Function]}
+                    pattern="[\\\\w '&%]+"
+                    placeholder="alpha_num, small caps"
+                    required={true}
+                    type="text"
+                    value=""
+                  />
+                  <div
+                    className="valid-feedback"
+                  >
+                    Looks good!
+                  </div>
+                  <div
+                    className="invalid-feedback"
+                  >
+                    Type systemwide unique name to use in SQL
+                  </div>
+                </div>
+              </div>
+              <div
+                className="col-auto"
+              >
+                <div
+                  className="mb-3 form-group"
+                >
+                  <label
+                    className="form-label"
+                    htmlFor="daction"
+                  >
+                    Default Action:
+                  </label>
+                  <select
+                    className="form-control form-control-sm"
+                    id="daction"
+                    onChange={[Function]}
+                    required={true}
+                    value=""
+                  >
+                    <option
+                      value="allow"
+                    >
+                      Allow
+                    </option>
+                    <option
+                      value="block"
+                    >
+                      Block
+                    </option>
+                    <option
+                      value="obfuscate"
+                    >
+                      Obfuscate
+                    </option>
+                    <option
+                      value="redact"
+                    >
+                      Redact
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div
+                className="col-auto"
+              >
+                <button
+                  className="mt-4 btn btn-dymium btn-sm"
+                  disabled={false}
+                  style={
+                    Object {
+                      "position": "relative",
+                      "top": "0.16em",
+                    }
+                  }
+                  type="submit"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </form>
+          <form
+            className=""
+            onSubmit={[Function]}
+          />
+        </div>
+      </div>
+    </div>
   </div>,
 ]
 `;

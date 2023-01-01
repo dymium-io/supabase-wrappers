@@ -14,18 +14,19 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '@dymium/common/App.scss';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import mockFetch from "../mocks/mockFetch";
-
+jest.mock('react-sortable-hoc')
 
 beforeEach(() => {
   global.fetch = jest.fn().mockImplementation(() => mockFetch)();
   global.sessionStorage.setItem("Session", "mockJWT");
+
 })
 
 afterEach(() => {
    jest.restoreAllMocks()
 });
 
-test('test-sql', async () => {
+test('test-rules', async () => {
     const component = await act( async () => renderer.create(
         <Provider store={store}>
             <BrowserRouter>

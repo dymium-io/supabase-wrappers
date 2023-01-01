@@ -575,7 +575,7 @@ export class BuildRulesClass extends Component {
     let i = parseInt(ids[2])
     let rrules = this.state.rules.map((rule, ix) => {
       if (index !== ix) return rule
-      
+
       rule = { ...rule }
       rule["actions"] = [...rule["actions"]]
       rule["actions"][i] = { ...rule["actions"][i] }
@@ -605,7 +605,7 @@ export class BuildRulesClass extends Component {
     }
   }
   getPolicies = () => {
-    let error = <Alert variant="danger" onClose={() => this.setState({alert: <></>})} dismissible>
+    let error = <Alert variant="danger" onClose={() => this.setState({ alert: <></> })} dismissible>
       Error retrieving policy.
     </Alert>
 
@@ -639,21 +639,21 @@ export class BuildRulesClass extends Component {
               isDummyField: true,
               sort: false,
               style: (cell, row, rowIndex, colIndex) => {
-                return {textAlign: "center"}
-             
+                return { textAlign: "center" }
+
               },
               formatter: (cell, row, rowIndex, formatExtraData) => {
-                
-                if(row["method"] === "comprehend") return <></>
+
+                if (row["method"] === "comprehend") return <></>
 
                 return <i className="fas fa-trash ablue" onClick={
                   e => {
-                    if(window.confirm("Are you sure you want to delete \n" + row["name"] + "\npolicy suggestion?")) {
+                    if (window.confirm("Are you sure you want to delete \n" + row["name"] + "\npolicy suggestion?")) {
                       let rules = this.state.rules.filter(rule => {
-                        if(rule.index === row.index) return false 
+                        if (rule.index === row.index) return false
                         return true
                       })
-                      this.setState({rules})
+                      this.setState({ rules })
                     }
                   }
 
@@ -681,22 +681,22 @@ export class BuildRulesClass extends Component {
             this.setState({ rules: suggs })
           }
         }).catch((_error) => {
-          this.setState({ alert: error})
+          this.setState({ alert: error })
           this.setState({ spinner: false })
         })
       },
       resp => {
-        this.setState({ alert: error})
+        this.setState({ alert: error })
         this.setState({ spinner: false })
       },
       _error => {
         console.log("on exception")
         this.setState({ spinner: false })
-        this.setState({ alert: error})
+        this.setState({ alert: error })
 
       })
   }
-  savePolicy(newpolicy:types.DataPolicy) {
+  savePolicy(newpolicy: types.DataPolicy) {
     let error = <Alert variant="danger" onClose={() => this.setState({ alert: <></> })} dismissible>
       Error saving policy.
     </Alert>
@@ -712,21 +712,21 @@ export class BuildRulesClass extends Component {
             Policy saved successfully
           </Alert>})
           */
-  
+
         }).catch((_error) => {
-          this.setState({ alert: error})
+          this.setState({ alert: error })
           this.setState({ spinner: false })
         })
       },
       resp => {
-        this.setState({ alert: <Alert variant="danger" onClose={() => this.setState({alert: <></>})} dismissible>{error}</Alert> })
+        this.setState({ alert: <Alert variant="danger" onClose={() => this.setState({ alert: <></> })} dismissible>{error}</Alert> })
         this.setState({ spinner: false })
       },
       _error => {
         console.log("on exception")
         this.setState({ spinner: false })
-        this.setState({ alert: error})
-      })    
+        this.setState({ alert: error })
+      })
   }
   addPII = (e) => {
     if (this.formpii.current == null) {
@@ -740,7 +740,7 @@ export class BuildRulesClass extends Component {
     this.setState({ validatedPII: false })
     e.preventDefault();
     e.stopPropagation();
-    
+
     let rule = {
       id: uuidv4(),
       name: this.state.name,
@@ -748,8 +748,8 @@ export class BuildRulesClass extends Component {
       data: this.state.data,
       actions: this.state.policy != null ? [...this.state.policy.actions] : []
     }
-    
-    let rules = this.state.rules.map(x => {return {...x}})
+
+    let rules = this.state.rules.map(x => { return { ...x } })
     rules.push(rule)
     this.setState({ rules, name: "", data: "" })
     return false
@@ -760,30 +760,30 @@ export class BuildRulesClass extends Component {
       e.preventDefault();
       this.setState({ validated: true })
       return false
-    }    
-    for(let i = 0; i < this.state.rules.length; i++) {
+    }
+    for (let i = 0; i < this.state.rules.length; i++) {
       let rule = this.state.rules[i]
-      if(rule.data === "") {
+      if (rule.data === "") {
         window.alert("One or more of Rule regexps are empty")
         e.preventDefault();
         e.stopPropagation();
-        return false        
+        return false
       }
-      if(rule.name === "") {
+      if (rule.name === "") {
         window.alert("One or more of Rule names are empty")
         e.preventDefault();
         e.stopPropagation();
-        return false        
-      }      
+        return false
+      }
     }
     // 
-    let newpolicy:types.DataPolicy = new types.DataPolicy()
-    if(this.state.policy != null) {
+    let newpolicy: types.DataPolicy = new types.DataPolicy()
+    if (this.state.policy != null) {
       newpolicy.actions = [...this.state.policy.actions]
     }
 
-    for(let i = 0; i < this.state.rules.length; i++) {
-      let pii:types.PIISuggestor = new types.PIISuggestor();
+    for (let i = 0; i < this.state.rules.length; i++) {
+      let pii: types.PIISuggestor = new types.PIISuggestor();
       pii.actions = this.state.rules[i].actions
       pii.detector.data = this.state.rules[i].data
       pii.detector.name = this.state.rules[i].name
@@ -791,9 +791,9 @@ export class BuildRulesClass extends Component {
       pii.detector.method = this.state.rules[i].method
 
       newpolicy.piisuggestions.push(pii)
-    
+
     }
-    
+
     this.savePolicy(newpolicy)
 
     e.preventDefault();
@@ -801,7 +801,7 @@ export class BuildRulesClass extends Component {
     return false
   }
   resetDefaults = () => {
-    if(window.confirm("Are you sure you want to reset defaults?")) {
+    if (window.confirm("Are you sure you want to reset defaults?")) {
       this.getDefaults()
     }
     return true
@@ -851,7 +851,7 @@ export class BuildRulesClass extends Component {
               <Form.Group className="mb-3" controlId="dname">
                 <Form.Label>Regular Expression</Form.Label>
                 <Form.Control size="sm" type="text" placeholder="Regexp"
-                 style={{ width: '40em' }}
+                  style={{ width: '40em' }}
                   required
                   pattern=".+"
                   value={this.state.data}
@@ -870,7 +870,7 @@ export class BuildRulesClass extends Component {
         </Form>
         {this.state.alert}
         {this.state.rules.length > 0 && this.state.headers.length > 0 &&
-          <Form ref={this.formp} onSubmit={this.handleSubmit}  noValidate validated={this.state.validated}>
+          <Form ref={this.formp} onSubmit={this.handleSubmit} noValidate validated={this.state.validated}>
 
             <div id="tablecontainer" style={{ width: '90%' }} className="text-center mb-5">
 
@@ -922,7 +922,7 @@ export class BuildRulesClass extends Component {
   }
 }
 
-function AccessLevels() {
+export function AccessLevels() {
   const [spinner, setSpinner] = useState(false)
   const [alert, setAlert] = useState<JSX.Element>(<></>)
 
@@ -930,11 +930,11 @@ function AccessLevels() {
   const [level, setLevel] = useState("")
   const [actions, setActions] = useState<types.DataAction[]>([])
   let policy = useRef(new types.DataPolicy())
-
+  let errorGet = <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+    Error retrieving policy.
+  </Alert>
   let savePolicies = () => {
-    let error = <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-      Error retrieving policy.
-    </Alert>
+
 
     for (let i = 0; i < actions.length; i++) {
       actions[i].index = i
@@ -968,8 +968,8 @@ function AccessLevels() {
       resp => {
         resp.json().then(js => {
           setSpinner(false)
-          if (js.error !== undefined ) {
-            
+          if (js.error !== undefined) {
+
             getPolicies()
 
           } else {
@@ -989,7 +989,7 @@ function AccessLevels() {
       resp => {
         setSpinner(false)
         setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error}</Alert>
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>Error retrieving policy</Alert>
         )
         setSpinner(false)
       },
@@ -1024,14 +1024,14 @@ function AccessLevels() {
       resp => {
         resp.json().then(js => {
           setSpinner(false)
-          
-          if (js.error !== undefined ) {
+
+          if (js.error !== undefined) {
             // need to initialize the whole iguana
             initializePolicy()
 
           } else {
             let prep = types.DataPolicy.fromJson(js)
-            if(true || js.piisuggestions.length === 0) {
+            if (true || js.piisuggestions.length === 0) {
               initializePolicy()
             } else {
               policy.current = prep
@@ -1040,7 +1040,7 @@ function AccessLevels() {
           }
         }).catch((error) => {
           setAlert(
-            error
+            errorGet
           )
           setSpinner(false)
         })
@@ -1048,15 +1048,14 @@ function AccessLevels() {
       resp => {
         setSpinner(false)
         setAlert(
-          error
+          errorGet
         )
         setSpinner(false)
       },
       error => {
         console.log("on exception")
-        setSpinner(false)
         setAlert(
-          error
+          errorGet
         )
         setSpinner(false)
       })
@@ -1197,14 +1196,17 @@ function AccessLevels() {
         </Row>
       </Form>
       <Form onSubmit={handleSubmit}>
-        <SortableList distance={1} items={actions} onSortEnd={onSortEnd} />
         {actions.length > 0 &&
-          <Row className="mt-5">
-            <Col xs="auto">
-              <Button size="sm" variant="dymium" type="submit">Apply</Button>
-            </Col>
-          </Row>
+          <>
+            <SortableList distance={1} items={actions} onSortEnd={onSortEnd} />
+            <Row className="mt-5">
+              <Col xs="auto">
+                <Button size="sm" variant="dymium" type="submit">Apply</Button>
+              </Col>
+            </Row>
+          </>
         }
+
       </Form>
     </div>
   </div>
@@ -1234,5 +1236,4 @@ export default function Rules() {
     </Tabs>
 
   )
-
 }
