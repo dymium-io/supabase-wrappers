@@ -316,11 +316,9 @@ export class BuildRulesClass extends Component {
       resp => {
         resp.json().then(js => {
           this.setState({ spinner: false })
-          /*
           this.setState({ alert: <Alert variant="success" onClose={() => this.setState({ alert: <></> })} dismissible>
             Policy saved successfully
           </Alert>})
-          */
 
         }).catch((_error) => {
           this.setState({ alert: error })
@@ -577,10 +575,12 @@ export function AccessLevels() {
       resp => {
         resp.json().then(js => {
           setSpinner(false)
-          if (js.error !== undefined) {
+          if (js.status !== "OK") {
 
             getPolicies()
-
+            setAlert(
+              <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{js.error}</Alert>
+            )
           } else {
             setAlert(
               <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>Access levels saved successfully</Alert>
