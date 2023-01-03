@@ -16,8 +16,15 @@ import cloneDeep from 'lodash/cloneDeep';
 import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Internal'
-import * as ctypes from '@dymium/common/Types/Common'
 import * as http from '../Api/Http'
+
+import {PrefillUnclassified, Confidential, Secret, TopSecret} from "./Detectors"
+export const Prefills = {
+  unclassified: PrefillUnclassified,
+  confidential: Confidential,
+  secret: Secret,
+  topsecret: TopSecret
+}
 
 const PIIs = Object.values(com.PII_civilian)
 
@@ -35,15 +42,6 @@ interface Rule {
     action: string
 }
 
-type SubRule = {
-    regexp: string,
-    detection: string,
-    action: string
-}
-type RuleSet = {
-    name: string,
-    rules: SubRule[]
-}
 export interface AddTableProps {
     table: types.TableScope,
     connectionId: string,
@@ -59,8 +57,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
     const [table, setTable] = useState("")
     const [dummy, setDummy] = useState(true)
     const [level, setLevel] = useState("")
-    const [Prefills, setPrefills] = useState<Object>({})
-    const [policy, setPolicy] = useState(new ctypes.DataPolicy())
+
     let emptyarray: any[] = []
     const [tablestructure, setTableStructure] = useState(emptyarray)
 
@@ -93,69 +90,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         setTable("")
         return false
     }
-
-    let createLevel = (policy:ctypes.DataPolicy, index:number) => {
-/******************************
- type SubRule = {
-    regexp: string,
-    detection: string,
-    action: string
-}
-type RuleSet = {
-    name: string,
-    rules: SubRule[]
-}
- */ 
-        let r:RuleSet = {name:policy.actions[index].role, rules:[] }
-     
-        return r
-    }
-    let createLevels = (policy:ctypes.DataPolicy) => {
-        
-        for(let i = 0; i < policy.actions.length; i++) {
-            let role = policy.actions[i].role
-            Prefills[role] = createLevel(policy, i)
-            for(let j = 0; j < policy.piisuggestions.length; j++) {
-                if( policy.piisuggestions[j].detector.method !== "columnregexp" )  continue
-                let rule:SubRule = {detection: policy.piisuggestions[j].detector.name,
-                regexp:  policy.piisuggestions[j].detector.data,
-                action:   ctypes.humanReadableDataHandling(policy.piisuggestions[j].actions[i].handling)}
-                Prefills[role].rules.push(rule)
-            }
-            let defaultrule:SubRule =  {
-                regexp: "",
-                detection: "N/A",
-                action: "Allow"
-            }
-            Prefills[role].rules.push(defaultrule)
-        }
-    }
-
-    let getPolicies = () => {
-
-        //setSpinner(true)
-        http.sendToServer("GET", "/api/getpolicies",
-            null, "",
-            resp => {
-                resp.json().then(js => {
-                    //setSpinner(false)
-                    let po = ctypes.DataPolicy.fromJson(js)
-                    setPolicy(po)
-                    createLevels(po)
-                    
-                }).catch((error) => {
-
-                })
-            },
-            resp => {
-
-            },
-            error => {
-
-            })
-    }
     useEffect(() => {
-        getPolicies()
         if (props.table.connection !== undefined && props.table.connection !== "") {
             setSchema(props.table.schema)
             setTable(props.table.table)
@@ -164,7 +99,7 @@ type RuleSet = {
             let body = JSON.stringify({
                 ConnectionId: props.connectionId
             })
-            http.sendToServer("POST", "/api/queryconnection",
+                http.sendToServer("POST", "/api/queryconnection",
                 null, body,
                 resp => {
                     resp.json().then(js => {
@@ -176,7 +111,7 @@ type RuleSet = {
                             //setSpinner(false)
                             return
                         }
-
+                        
                         setDatabase(js.database)
                         if (props.table.schema !== undefined && props.table.table !== undefined) {
                             setSchema(props.table.schema)
@@ -281,7 +216,7 @@ type RuleSet = {
                 let pattern = "^(" + PIIs.join("|") + ")$"
                 return <Typeahead
                     id={"semantics" + rowIndex}
-                    inputProps={{ required: true, pattern, id: "semantics" + rowIndex }}
+                    inputProps={{ required: true, pattern, id:"semantics" + rowIndex }}
                     key={"semantics" + rowIndex + validated}
                     onChange={selectPII(rowIndex)} size="sm"
                     options={PIIs}
@@ -359,7 +294,6 @@ type RuleSet = {
     }
     let ActionByName = (predo, name: string) => {
         let action = "N/A"
-        debugger
         for (let i = 0; i < predo.rules.length; i++) {
             let re = new RegExp(predo.rules[i].regexp, "i")
             if (name.match(re) != null) {
@@ -372,7 +306,6 @@ type RuleSet = {
     let applyPrefill = () => {
         if (level === "")
             return
-        
         let newtablestructure = cloneDeep(tablestructure)
 
         let predo = Prefills[level]
@@ -387,7 +320,7 @@ type RuleSet = {
 
         setTableStructure(newtablestructure)
     }
-    let correctname = ["MariaDB", "MySQL"].includes(props.currentConnectionType) ? "Database" : "Schema"
+    let correctname = ["MariaDB", "MySQL"].includes(props.currentConnectionType)? "Database" : "Schema" 
     return <div>
 
         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
@@ -396,7 +329,7 @@ type RuleSet = {
                 <Col xs="auto">
                     <Form.Group className="mb-3" controlId="schemaname">
                         <Form.Label>{correctname} Name:</Form.Label>
-                        <Typeahead id="schemaname" inputProps={{ id: "schemaname" }}
+                        <Typeahead id="schemaname" inputProps={{id: "schemaname"}}
                             onChange={selectSchema} size="sm"
                             defaultSelected={props.table.schema != undefined ? [props.table.schema] : []}
                             options={getOptions()}
@@ -434,7 +367,7 @@ type RuleSet = {
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="dbname">
                             <Form.Label>Table Name:</Form.Label>
-                            <Typeahead id="tables" inputProps={{ id: "tables" }} onChange={selectTable} size="sm"
+                            <Typeahead id="tables" inputProps={{id: "tables"}} onChange={selectTable} size="sm"
                                 clearButton
                                 options={getTables()}
                                 defaultOpen={false}

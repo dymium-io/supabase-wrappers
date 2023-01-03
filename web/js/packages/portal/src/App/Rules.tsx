@@ -25,8 +25,6 @@ var _ = require('lodash')
 
 const { SearchBar, ClearSearchButton } = Search;
 
-
-
 let handlingOptions = () => {
   let opts: types.DataHandling[] = ["allow", "block", "obfuscate", "redact"]
 

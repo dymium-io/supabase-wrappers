@@ -388,3 +388,880 @@ export const regexpDetectors = [
   },
 
 ]
+
+
+////// legacy detectors
+
+export const PrefillUnclassified = {
+    name: "Unclassified",
+    rules: [
+
+        {
+            regexp: "homeaddress",
+            detection: "Home address",
+            action: "Allow"
+        },
+        {
+            regexp: "email",
+            detection: "Email address",
+            action: "Allow"
+        },
+        {
+            regexp: "(SSN|ssn|nationalid|national_id)",
+            detection: "Social Security Number",
+            action: "Allow"
+        },
+        {
+            regexp: "(businessentityid|business_entity_id)",
+            detection: "Business entity Id",
+            action: "Allow"
+        },
+        {
+            regexp: "(passport|Passport number|Passport_number)",
+            detection: "Passport number",
+            action: "Allow"
+        },
+        {
+            regexp: "(Driver license|Driver_license|Driverlicense)",
+            detection: "Driver license",
+            action: "Allow"
+        },
+        {
+            regexp: "(Credit card|Credit_card,Creditcard)",
+            detection: "Credit card",
+            action: "Allow"
+        },
+        {
+            regexp: "(dob|dateofbirth|date_of_birth)",
+            detection: "Date of birth",
+            action: "Allow"
+        },
+        {
+            regexp: "(phone|phonenumber|phone_number)",
+            detection: "Telephone number",
+            action: "Allow"
+        },
+        {
+            regexp: "(login|signin|sign_in|username|user_name)",
+            detection: "Login details",
+            action: "Allow"
+        },
+        {
+            regexp: "(serial|serialnumber|serial_number)",
+            detection: "Processor or device serial number",
+            action: "Allow"
+        },
+        {
+            regexp: "(MAC_address|MACaddress)",
+            detection: "MAC address",
+            action: "Allow"
+        },
+        {
+            regexp: "^(ip|ip_address|ipaddress)$",
+            detection: "IP address",
+            action: "Allow"
+        },
+        {
+            regexp: "(device_id|deviceid)",
+            detection: "Device ID",
+            action: "Allow"
+        },
+        {
+            regexp: "(cookie)",
+            detection: "Cookie",
+            action: "Allow"
+        },
+        {
+            regexp: "(Citizenship|nationality)",
+            detection: "Citizenship",
+            action: "Allow"
+        },
+        {
+            regexp: "(visa|immigration)",
+            detection: "Visa or immigration status",
+            action: "Allow"
+        },
+        {
+            regexp: "(Ethnic)",
+            detection: "Ethnic background",
+            action: "Allow"
+        },
+        {
+            regexp: "(Religi)",
+            detection: "Religious affiliation",
+            action: "Allow"
+        },
+        {
+            regexp: "(sexual)",
+            detection: "Sexual orientation",
+            action: "Allow"
+        },
+        {
+            regexp: "(Criminal)",
+            detection: "Criminal history",
+            action: "Allow"
+        },
+        {
+            regexp: "(Medical)",
+            detection: "Medical information",
+            action: "Allow"
+        },
+        {
+            regexp: "(authentication)",
+            detection: "Authentication information",
+            action: "Allow"
+        },
+        {
+            regexp: "(First name|Firstname|First_name)",
+            detection: "First name",
+            action: "Allow"
+        },
+        {
+            regexp: "(Middle name|Middlename|Middle_name)",
+            detection: "Middle name",
+            action: "Allow"
+        },
+        {
+            regexp: "(last name|lastname|last_name)",
+            detection: "Last name",
+            action: "Allow"
+        },
+        {
+            regexp: "(Country)",
+            detection: "Country",
+            action: "Allow"
+        },
+        {
+            regexp: "(state)",
+            detection: "State",
+            action: "Allow"
+        },
+        {
+            regexp: "(City)",
+            detection: "City",
+            action: "Allow"
+        },
+        {
+            regexp: "(Zipcode|zip_code|zip code|postalcode|postal_code)",
+            detection: "Zipcode",
+            action: "Allow"
+        },
+        {
+            regexp: "(Gender)",
+            detection: "Gender",
+            action: "Allow"
+        },
+        {
+            regexp: "(race)",
+            detection: "Race",
+            action: "Allow"
+        },
+        {
+            regexp: "(age)",
+            detection: "Age",
+            action: "Allow"
+        },
+        {
+            regexp: "(job)",
+            detection: "Job position",
+            action: "Allow"
+        },
+        {
+            regexp: "(Company)",
+            detection: "Company",
+            action: "Allow"
+        },
+        {
+            regexp: "(work_place|workplace)",
+            detection: "Work place",
+            action: "Allow"
+        },
+        {
+            regexp: "(Work_Address|WorkAddress)",
+            detection: "Work Address",
+            action: "Allow"
+        },
+        {
+            regexp: "name",
+            detection: "Full Name",
+            action: "Allow"
+        },
+        {
+            regexp: "(vin|VehicleIdentificationNumber|Vehicle_Identification_Number)",
+            detection: "Vehicle Identification Number",
+            action: "Allow"
+        },
+        {
+            regexp: "(address)",
+            detection: "Address",
+            action: "Allow"
+        },
+        {
+            regexp: "(contact)",
+            detection: "Contact Info",
+            action: "Allow"
+        },
+        {
+            regexp: "",
+            detection: "N/A",
+            action: "Allow"
+        },
+    ]
+}
+
+export const Confidential = {
+    name: "Confidential",
+    rules: [
+        {
+            regexp: "homeaddress",
+            detection: "Home address",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(SSN|ssn|nationalid|national_id)",
+            detection: "Social Security Number",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "email",
+            detection: "Email address",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(businessentityid|business_entity_id)",
+            detection: "Business entity Id",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(passport|Passport number|Passport_number)",
+            detection: "Passport number",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(Driver license|Driver_license|Driverlicense)",
+            detection: "Driver license",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(Credit card|Credit_card,Creditcard)",
+            detection: "Credit card",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(dob|dateofbirth|date_of_birth)",
+            detection: "Date of birth",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(phone|phonenumber|phone_number)",
+            detection: "Telephone number",
+            action: "Obfuscate"
+        },
+
+        {
+            regexp: "(login|signin|sign_in|username|user_name)",
+            detection: "Login details",
+            action: "Block"
+        },
+        {
+            regexp: "(serial|serialnumber|serial_number)",
+            detection: "Processor or device serial number",
+            action: "Allow"
+        },
+        {
+            regexp: "(MAC_address|MACaddress)",
+            detection: "MAC address",
+            action: "Allow"
+        },
+        {
+            regexp: "^(ip|ip_address|ipaddress)$",
+            detection: "IP address",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(device_id|deviceid)",
+            detection: "Device ID",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(cookie)",
+            detection: "Cookie",
+            action: "Redact"
+        },
+        {
+            regexp: "(Citizenship|nationality)",
+            detection: "Citizenship",
+            action: "Redact"
+        },
+        {
+            regexp: "(visa|immigration)",
+            detection: "Visa or immigration status",
+            action: "Redact"
+        },
+        {
+            regexp: "(Ethnic)",
+            detection: "Ethnic background",
+            action: "Redact"
+        },
+        {
+            regexp: "(Religi)",
+            detection: "Religious affiliation",
+            action: "Redact"
+        },
+        {
+            regexp: "(sexual)",
+            detection: "Sexual orientation",
+            action: "Redact"
+        },
+        {
+            regexp: "(Criminal)",
+            detection: "Criminal history",
+            action: "Redact"
+        },
+        {
+            regexp: "(Medical)",
+            detection: "Medical information",
+            action: "Smart Redact"
+        },
+        {
+            regexp: "(authentication)",
+            detection: "Authentication information",
+            action: "Redact"
+        },
+        {
+            regexp: "(First name|Firstname|First_name)",
+            detection: "First name",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(Middle name|Middlename|Middle_name)",
+            detection: "Middle name",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(last name|lastname|last_name)",
+            detection: "Last name",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(Country)",
+            detection: "Country",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(state)",
+            detection: "State",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(City)",
+            detection: "City",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(Zipcode|zip_code|zip code|postalcode|postal_code)",
+            detection: "Zipcode",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(Gender)",
+            detection: "Gender",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(race)",
+            detection: "Race",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(age)",
+            detection: "Age",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(job)",
+            detection: "Job position",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(Company)",
+            detection: "Company",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(work_place|workplace)",
+            detection: "Work place",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(Work_Address|WorkAddress)",
+            detection: "Work Address",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "name",
+            detection: "Full Name",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(vin|VehicleIdentificationNumber|Vehicle_Identification_Number)",
+            detection: "Vehicle Identification Number",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(address)",
+            detection: "Address",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(contact)",
+            detection: "Contact Info",
+            action: "Obfuscate"
+        },
+
+        {
+            regexp: "",
+            detection: "N/A",
+            action: "Allow"
+        },
+    ]
+}
+export const Secret = {
+    name: "Secret",
+    rules: [
+
+
+        {
+            regexp: "homeaddress",
+            detection: "Home address",
+            action: "Redact"
+        },
+        {
+            regexp: "email",
+            detection: "Email address",
+            action: "Redact"
+        },
+        {
+            regexp: "(SSN|ssn|nationalid|national_id)",
+            detection: "Social Security Number",
+            action: "Redact"
+        },
+        {
+            regexp: "(businessentityid|business_entity_id)",
+            detection: "Business entity Id",
+            action: "Redact"
+        },
+        {
+            regexp: "(passport|Passport number|Passport_number)",
+            detection: "Passport number",
+            action: "Redact"
+        },
+        {
+            regexp: "(Driver license|Driver_license|Driverlicense)",
+            detection: "Driver license",
+            action: "Redact"
+        },
+        {
+            regexp: "(Credit card|Credit_card,Creditcard)",
+            detection: "Credit card",
+            action: "Redact"
+        },
+        {
+            regexp: "(dob|dateofbirth|date_of_birth)",
+            detection: "Date of birth",
+            action: "Redact"
+        },
+        {
+            regexp: "(phone|phonenumber|phone_number)",
+            detection: "Telephone number",
+            action: "Redact"
+        },
+
+        {
+            regexp: "(login|signin|sign_in|username|user_name)",
+            detection: "Login details",
+            action: "Block"
+        },
+        {
+            regexp: "(serial|serialnumber|serial_number)",
+            detection: "Processor or device serial number",
+            action: "Allow"
+        },
+        {
+            regexp: "(MAC_address|MACaddress)",
+            detection: "MAC address",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "^(ip|ip_address|ipaddress)$",
+            detection: "IP address",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(device_id|deviceid)",
+            detection: "Device ID",
+            action: "Obfuscate"
+        },
+        {
+            regexp: "(cookie)",
+            detection: "Cookie",
+            action: "Redact"
+        },
+        {
+            regexp: "(Citizenship|nationality)",
+            detection: "Citizenship",
+            action: "Redact"
+        },
+        {
+            regexp: "(visa|immigration)",
+            detection: "Visa or immigration status",
+            action: "Redact"
+        },
+        {
+            regexp: "(Ethnic)",
+            detection: "Ethnic background",
+            action: "Redact"
+        },
+        {
+            regexp: "(Religi)",
+            detection: "Religious affiliation",
+            action: "Redact"
+        },
+        {
+            regexp: "(sexual)",
+            detection: "Sexual orientation",
+            action: "Redact"
+        },
+        {
+            regexp: "(Criminal)",
+            detection: "Criminal history",
+            action: "Redact"
+        },
+        {
+            regexp: "(Medical)",
+            detection: "Medical information",
+            action: "Smart Redact"
+        },
+        {
+            regexp: "(authentication)",
+            detection: "Authentication information",
+            action: "Redact"
+        },
+        {
+            regexp: "(First name|Firstname|First_name)",
+            detection: "First name",
+            action: "Redact"
+        },
+        {
+            regexp: "(Middle name|Middlename|Middle_name)",
+            detection: "Middle name",
+            action: "Obfuscate"
+        },
+
+        {
+            regexp: "(last name|lastname|last_name)",
+            detection: "Last name",
+            action: "Redact"
+        },
+        {
+            regexp: "(Country)",
+            detection: "Country",
+            action: "Redact"
+        },
+        {
+            regexp: "(state)",
+            detection: "State",
+            action: "Redact"
+        },
+        {
+            regexp: "(City)",
+            detection: "City",
+            action: "Redact"
+        },
+        {
+            regexp: "(Zipcode|zip_code|zip code|postalcode|postal_code)",
+            detection: "Zipcode",
+            action: "Redact"
+        },
+        {
+            regexp: "(Gender)",
+            detection: "Gender",
+            action: "Redact"
+        },
+        {
+            regexp: "(race)",
+            detection: "Race",
+            action: "Redact"
+        },
+        {
+            regexp: "(age)",
+            detection: "Age",
+            action: "Redact"
+        },
+        {
+            regexp: "(job)",
+            detection: "Job position",
+            action: "Redact"
+        },
+        {
+            regexp: "(Company)",
+            detection: "Company",
+            action: "Redact"
+        },
+        {
+            regexp: "(work_place|workplace)",
+            detection: "Work place",
+            action: "Redact"
+        },
+        {
+            regexp: "(Work_Address|WorkAddress)",
+            detection: "Work Address",
+            action: "Redact"
+        },
+        {
+            regexp: "name",
+            detection: "Full Name",
+            action: "Redact"
+        },
+        {
+            regexp: "(vin|VehicleIdentificationNumber|Vehicle_Identification_Number)",
+            detection: "Vehicle Identification Number",
+            action: "Redact"
+        },
+        {
+            regexp: "(address)",
+            detection: "Address",
+            action: "Redact"
+        },
+        {
+            regexp: "(contact)",
+            detection: "Contact Info",
+            action: "Redact"
+        },
+
+        {
+            regexp: "",
+            detection: "N/A",
+            action: "Allow"
+        }
+    ]
+}
+export const TopSecret = {
+    name: "Top Secret",
+    rules: [
+        {
+            regexp: "homeaddress",
+            detection: "Home address",
+            action: "Block"
+        },
+        {
+            regexp: "email",
+            detection: "Email address",
+            action: "Block"
+        },
+        {
+            regexp: "(SSN|ssn|nationalid|national_id)",
+            detection: "Social Security Number",
+            action: "Block"
+        },
+        {
+            regexp: "(businessentityid|business_entity_id)",
+            detection: "Business entity Id",
+            action: "Block"
+        },
+        {
+            regexp: "(passport|Passport number|Passport_number)",
+            detection: "Passport number",
+            action: "Block"
+        },
+        {
+            regexp: "(Driver license|Driver_license|Driverlicense)",
+            detection: "Driver license",
+            action: "Block"
+        },
+        {
+            regexp: "(Credit card|Credit_card,Creditcard)",
+            detection: "Credit card",
+            action: "Block"
+        },
+        {
+            regexp: "(dob|dateofbirth|date_of_birth)",
+            detection: "Date of birth",
+            action: "Block"
+        },
+        {
+            regexp: "(phone|phonenumber|phone_number)",
+            detection: "Telephone number",
+            action: "Block"
+        },
+
+        {
+            regexp: "(login|signin|sign_in|username|user_name)",
+            detection: "Login details",
+            action: "Block"
+        },
+        {
+            regexp: "(serial|serialnumber|serial_number)",
+            detection: "Processor or device serial number",
+            action: "Block"
+        },
+        {
+            regexp: "(MAC_address|MACaddress)",
+            detection: "MAC address",
+            action: "Block"
+        },
+        {
+            regexp: "^(ip|ip_address|ipaddress)$",
+            detection: "IP address",
+            action: "Block"
+        },
+        {
+            regexp: "(device_id|deviceid)",
+            detection: "Device ID",
+            action: "Block"
+        },
+        {
+            regexp: "(cookie)",
+            detection: "Cookie",
+            action: "Block"
+        },
+        {
+            regexp: "(Citizenship|nationality)",
+            detection: "Citizenship",
+            action: "Block"
+        },
+        {
+            regexp: "(visa|immigration)",
+            detection: "Visa or immigration status",
+            action: "Block"
+        },
+        {
+            regexp: "(Ethnic)",
+            detection: "Ethnic background",
+            action: "Block"
+        },
+        {
+            regexp: "(Religi)",
+            detection: "Religious affiliation",
+            action: "Block"
+        },
+        {
+            regexp: "(sexual)",
+            detection: "Sexual orientation",
+            action: "Block"
+        },
+        {
+            regexp: "(Criminal)",
+            detection: "Criminal history",
+            action: "Block"
+        },
+        {
+            regexp: "(Medical)",
+            detection: "Medical information",
+            action: "Block"
+        },
+        {
+            regexp: "(authentication)",
+            detection: "Authentication information",
+            action: "Block"
+        },
+        {
+            regexp: "(First name|Firstname|First_name)",
+            detection: "First name",
+            action: "Block"
+        },
+        {
+            regexp: "(Middle name|Middlename|Middle_name)",
+            detection: "Middle name",
+            action: "Block"
+        },
+
+        {
+            regexp: "(last name|lastname|last_name)",
+            detection: "Last name",
+            action: "Block"
+        },
+        {
+            regexp: "(Country)",
+            detection: "Country",
+            action: "Block"
+        },
+        {
+            regexp: "(state)",
+            detection: "State",
+            action: "Block"
+        },
+        {
+            regexp: "(City)",
+            detection: "City",
+            action: "Block"
+        },
+        {
+            regexp: "(Zipcode|zip_code|zip code|postalcode|postal_code)",
+            detection: "Zipcode",
+            action: "Block"
+        },
+        {
+            regexp: "(Gender)",
+            detection: "Gender",
+            action: "Block"
+        },
+        {
+            regexp: "(race)",
+            detection: "Race",
+            action: "Block"
+        },
+        {
+            regexp: "(age)",
+            detection: "Age",
+            action: "Block"
+        },
+        {
+            regexp: "(job)",
+            detection: "Job position",
+            action: "Block"
+        },
+        {
+            regexp: "(Company)",
+            detection: "Company",
+            action: "Block"
+        },
+        {
+            regexp: "(work_place|workplace)",
+            detection: "Work place",
+            action: "Block"
+        },
+        {
+            regexp: "(Work_Address|WorkAddress)",
+            detection: "Work Address",
+            action: "Block"
+        },
+        {
+            regexp: "name",
+            detection: "Full Name",
+            action: "Block"
+        },
+        {
+            regexp: "(vin|VehicleIdentificationNumber|Vehicle_Identification_Number)",
+            detection: "Vehicle Identification Number",
+            action: "Block"
+        },
+        {
+            regexp: "(address)",
+            detection: "Address",
+            action: "Block"
+        },
+        {
+            regexp: "(contact)",
+            detection: "Contact Info",
+            action: "Block"
+        },
+
+        {
+            regexp: "",
+            detection: "N/A",
+            action: "Allow"
+        },
+    ]
+}
+
