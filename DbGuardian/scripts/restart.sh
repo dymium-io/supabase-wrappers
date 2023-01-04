@@ -8,7 +8,7 @@ then
     [ -z "$1" ] && {
 	aws_usage -exe "$0 -c <customer> "
     }
-    m="d-$1"
+    m="$1"
     shift
 else
     aws_usage -exe "$0 -c <customer> "
@@ -18,7 +18,7 @@ aws_params -exe "$0 -c <customer> " "$@"
    
 set -x
 aws ecs update-service \
-    --cluster data-guardian-cluster \
+    --cluster dymium \
     --service ${m}-srv \
     --force-new-deployment \
     --profile ${PROFILE} \
