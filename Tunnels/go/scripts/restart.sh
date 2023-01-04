@@ -18,8 +18,8 @@ aws_params -exe "$0 -c <customer> " "$@"
    
 set -x
 aws ecs update-service \
-    --cluster "tunnel-${c}" \
-    --service "service-${c}" \
+    --cluster "dymium" \
+    --service "${c}-tunnel-srv" \
     --force-new-deployment \
     --profile ${PROFILE} \
     --region ${REGION}

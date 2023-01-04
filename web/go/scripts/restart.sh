@@ -1,7 +1,7 @@
 #!/bin/sh
 
-CLUSTER="webserver"
-SERVICE="w"
+CLUSTER="dymium"
+SERVICE="webserver-srv"
 
 source "../../../libs/shell/aws-include.sh"
 aws_params "$@"
