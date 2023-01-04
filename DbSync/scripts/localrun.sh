@@ -17,8 +17,8 @@ DATABASE_TLS=${DATABASE_TLS:-false}
 # docker.for.mac.host.internal
 
 set -x
-docker run --rm  --name db-sync                \
-       --network dymium \
+docker run --rm  --name db-sync.dymium.local   \
+       --network dymium                        \
        -p ${PORT}:8080                         \
        -e DATABASE_HOST=localhost              \
        -e DATABASE_PORT=$DATABASE_PORT         \

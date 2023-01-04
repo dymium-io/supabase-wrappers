@@ -18,7 +18,10 @@ CUSTOMER=spoofcorp
 
 LOCAL_ENVIRONMENT=${LOCAL_ENVIRONMENT:-true}
 
-docker run --rm --name tunnel -p 8088:80  -p 8443:443 \
+docker run \
+       --name ${CUSTOMER}.tunnel.local \
+       --network dymium \
+       --rm -p 8088:80  -p 8443:443 \
        -e PASSPHRASE="$PASSPHRASE" \
        -e CERTIFICATE="$CERTIFICATE" \
        -e CA_CERTIFICATE="$CA_CERTIFICATE" \
