@@ -1148,8 +1148,8 @@ fmt.Printf("in GetConnection ")
 				log.Errorf("GetConnection error 1: %s", err.Error())
 				return con, err
 			}
-			host := os.Getenv("CONNECTOR_SERVER")
-			con.Address = host
+			host := os.Getenv("CONNECTOR_DOMAIN")
+			con.Address = schema + host
 			con.Port = localport
 			fmt.Printf("conn: %v\n", con)
 		}
