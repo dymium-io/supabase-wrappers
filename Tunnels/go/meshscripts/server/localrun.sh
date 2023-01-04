@@ -31,8 +31,9 @@ export PORT=3009
 export CUSTOMER_PORTAL=portal.dymium.local
 
 echo "Starting..."
-docker run --rm  -m="0.5Gb" --cpus="0.5"  --name meshserver \
+docker run --rm  -m="0.5Gb" --cpus="0.5"  \
        --network dymium \
+       --name ${CUSTOMER}.mesh.local \
        -p 3009:3009 \
        -p 30000-30050:30000-30050 \
        -p 8080:80 \
@@ -43,7 +44,7 @@ docker run --rm  -m="0.5Gb" --cpus="0.5"  --name meshserver \
        -e DATABASE_TLS=$DATABASE_TLS \
        -e ADDRESS=localhost \
        -e PORT=3009 \
-       -e CUSTOMER=spoofcorp \
+       -e CUSTOMER=${CUSTOMER} \
        -e CA_CERTIFICATE="$CA_CERTIFICATE" \
        -e CERTIFICATE="$CERTIFICATE" \
        -e PASSPHRASE=$PASSPHRASE \

@@ -16,11 +16,12 @@ CUSTOMER=${CUSTOMER:-spoofcorp}
 }
 
 set -x
-docker run --rm  --name data-guardian                \
+docker run --rm  --name ${CUSTOMER}.guardian.local     \
+       --network dymium                              \
        -p ${PORT}:5432                               \
        -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD"     \
        -e DATABASE_USER=$DATABASE_USER               \
        -e DATABASE_PASSWORD="$DATABASE_PASSWORD"     \
        -e CUSTOMER=$CUSTOMER                         \
-       -e AWS_LAMBDAS='{ "DbSync": "docker.for.mac.host.internal:9081" }' \
+       -e AWS_LAMBDAS='{ "DbSync": "db-sync.dymium.local:8080" }' \
        data-guardian
