@@ -61,7 +61,7 @@ exports[`add-connection 1`] = `
               className="form-label"
               htmlFor="dbtype"
             >
-              Database type
+              Database type:
             </label>
             <select
               className="form-control form-control-sm"
@@ -492,7 +492,7 @@ exports[`add-connection 1`] = `
               className="form-label"
               htmlFor="description"
             >
-              Description
+              Description:
             </label>
             <textarea
               className="form-control"

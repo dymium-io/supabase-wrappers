@@ -140,7 +140,7 @@ exports[`edit-connections-form 1`] = `
                 class="form-label"
                 for="dbtype"
               >
-                Database type
+                Database type:
               </label>
               <select
                 class="form-control form-control-sm"
@@ -467,7 +467,7 @@ exports[`edit-connections-form 1`] = `
                 class="form-label"
                 for="description"
               >
-                Description
+                Description:
               </label>
               <textarea
                 class="form-control"
