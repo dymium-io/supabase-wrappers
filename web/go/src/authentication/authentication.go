@@ -19,6 +19,7 @@ import (
 	"os"
 	"strings"
 	"encoding/json"
+	"encoding/hex"
 	"golang.org/x/net/context"
 	_"golang.org/x/exp/constraints"
 	"time"
@@ -357,7 +358,7 @@ func generateAdminJWT(picture string, name string, email string, groups []string
 			Name: name,
 			Email: email,
 			Groups: groups,
-			Picture: picture,
+			Picture: hex.EncodeToString([]byte(picture)),
 			StandardClaims: jwt.StandardClaims{
 				// In JWT, the expiry time is expressed as unix milliseconds
 				ExpiresAt: expirationTime.Unix(),
@@ -837,6 +838,7 @@ func GetRoles(schema string, groups []string) []string {
 	var roles []string
 	roles = append(roles, gotypes.RoleUser)
 	var count int	
+	log.Infof("GetRoles: groups: %v\n", groups)
 	if(len(groups) == 0) {
 
 		// let's see if mapping is present at all
@@ -854,15 +856,16 @@ func GetRoles(schema string, groups []string) []string {
 			return roles
 		}
 	}
-	sql := `select count(*) from ` + schema + `.groupmapping where innergroup = any ($1) and adminaccess=true;`;
+	sql := `select count(*) from ` + schema + `.groupmapping where outergroup = any ($1) and adminaccess=true;`;
 
-
+	log.Infof("GetRoles: sql: %s\n", sql)
 	row := db.QueryRow(sql, pq.Array(groups))
 	err := row.Scan(&count)
 	if(err != nil) {
 		log.Errorf("GetRoles error quering mapping: %s", err.Error())
 		return roles;
 	} else {
+		log.Infof("groups: %v, count: %d\n", groups, count)
 		if(count > 0) {
 			roles = append(roles, gotypes.RoleAdmin)
 		}
@@ -874,6 +877,7 @@ func GeneratePortalJWT(picture string, schema string, name string, email string,
 	// generate JWT right header
 	issueTime := time.Now()
 	expirationTime := issueTime.Add(timeOut * time.Minute)
+	p := hex.EncodeToString([]byte(picture))
 
 	session, _ := GenerateRandomString(32) //ignore the error for now
 	claim := &gotypes.Claims{
@@ -883,7 +887,7 @@ func GeneratePortalJWT(picture string, schema string, name string, email string,
 		Groups: groups,
 		Roles: roles,
 		Email: email,
-		Picture: picture ,
+		Picture:  p,
 		Schema: schema,
 		Port: DefaultPort,
 		Orgid: org_id,
@@ -1130,14 +1134,13 @@ func GetConnection(schema, id string) (types.Connection, error) {
 	var con types.Connection
 	var use_connector bool
 	var connector_id, tunnel_id string
-fmt.Printf("in GetConnection ")
+
 	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &con.Password, 
 		&con.Database, &con.Tls, &use_connector, &connector_id, &tunnel_id)
 	if(err != nil) {
 		log.Errorf("GetConnection error 0: %s", err.Error())
 		return con, err
 	} else {
-		fmt.Printf("use_connector: %t\n", use_connector)
 		if use_connector {
 			// get the connector information
 			var localport int
@@ -1151,7 +1154,6 @@ fmt.Printf("in GetConnection ")
 			host := os.Getenv("CONNECTOR_DOMAIN")
 			con.Address = schema + host
 			con.Port = localport
-			fmt.Printf("conn: %v\n", con)
 		}
 	}
 	return con, err
@@ -1673,7 +1675,7 @@ func GetTargets(schema, key, secret string, ) ([]string, error) {
 			var connid, tunnelid string
 			err := rows.Scan(&address, &port, &localport, &connid, &tunnelid)	
 			if err != nil {
-				fmt.Printf("Error: %s\n", err.Error())
+				log.Errorf("Error: %s\n", err.Error())
 				return nil, err
 			}
 			s := fmt.Sprintf("%s:%d,%d,%s,%s", address, port, localport, connid, tunnelid)
@@ -1819,11 +1821,11 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		org := r.URL.Query().Get("organization")
 		var newquery string
 		if org == "" {
-			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&organization=%s&audience=%s&scope=%s", 
+			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&organization=%s&audience=%s&scope=%s&prompt=login", 
 				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect),
 				auth_admin_organization, url.QueryEscape(auth_admin_audience ),  url.QueryEscape("groups") )
 		} else {
-			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&audience=%s&scope=%s", 
+			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&audience=%s&scope=%s&prompt=login", 
 				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect), url.QueryEscape(auth_admin_audience ),  url.QueryEscape("groups") )
 
 		}
@@ -1899,6 +1901,10 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		id_token, ok := jsonParsed.Path("id_token").Data().(string)
 		picture, name, email, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
 
+		log.Infof("ID Tolen: %s", id_token)
+		log.Infof("Access Tolen: %s", access_token)
+		log.Infof("Groupsn: %v", groups)
+
 		sql := fmt.Sprintf("select schema_name from global.customers where organization=$1;")
 
 		row := db.QueryRow(sql, org_id)
@@ -1922,7 +1928,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		}
 		recordLogin(schema)
 		if(err == nil){
-			log.InfoUserf(schema, session, email, groups,  GetRoles(schema, groups), "Successful portal login")
+			log.InfoUserf(schema, session, email, groups,  GetRoles(schema, groups), "Successful portal login, token: %s", token)
 		}
 		w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")
@@ -1940,7 +1946,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 	}).Methods("GET")
 
 	p.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
-		newquery := fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&scope=%s", 
+		newquery := fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&scope=%s&prompt=login", 
 			auth_portal_domain, r.URL.RawQuery, auth_portal_client_id, url.QueryEscape(auth_portal_redirect), url.QueryEscape("openid profile email"))
 
 		http.Redirect(w, r, newquery, http.StatusFound)
@@ -1968,7 +1974,6 @@ func getports(schema string, ctx context.Context, tx *sql.Tx) ([]int, error) {
 	return ports, nil
 }
 func getport(ports []int) (int, error) {
-	fmt.Printf("LowMeshport %d, HighMeshport %d\n", LowMeshport, HighMeshport)
 	for i := LowMeshport; i < HighMeshport; i++ {
 		if !contains(ports, i) {
 			return i, nil
@@ -2116,7 +2121,6 @@ func GetConnectors(schema string) ( []types.Connector, error) {
 		return out, err
 	}	
 
-	fmt.Printf("Return correctly %v\n", out)
 	return out, nil
 }
 

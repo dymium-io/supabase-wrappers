@@ -691,8 +691,8 @@ export function AccessLevels() {
     }
     return <li className="card licard">
       <Row>
-        <Col>
-          {value}
+        <Col><div  style={{marginTop: '4px'}}>
+          {value}</div>
         </Col>
         <Col xs="auto">
 

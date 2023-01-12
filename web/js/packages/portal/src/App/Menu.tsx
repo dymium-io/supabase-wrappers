@@ -6,7 +6,7 @@ import Col from 'react-bootstrap/Col'
 import Nav from 'react-bootstrap/Nav'
 import Modal from 'react-bootstrap/Modal'
 import * as com from '../Common'
-
+import * as hex from '../Utils/Hex'
 
 
 function Menu() {
@@ -14,7 +14,8 @@ function Menu() {
     let [avatar, setAvatar] = useState('/avatar.png') // eslint-disable-line no-unused-vars
     let [show, setShow] = useState(false) 
 
-    let picture = com.getTokenProperty("picture")
+    let p = hex.HexStringToByteArray(com.getTokenProperty("picture"))
+    let picture = hex.StringFromUTF8Array(p)
     let onAva = e => {
         setShow(true)
     }

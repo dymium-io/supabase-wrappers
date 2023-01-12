@@ -15,7 +15,7 @@ import '@dymium/common/App.scss';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import mockFetch from "../mocks/mockFetch";
 
-
+jest.setTimeout(40000)
 beforeEach(() => {
   global.fetch = jest.fn().mockImplementation(() => mockFetch)();
   global.sessionStorage.setItem("Session", "mockJWT");
@@ -60,6 +60,7 @@ test('add-datascope', async () => {
     await act(async () => {    
         fireEvent.click(addconnection)
     })
+    await new Promise((r) => setTimeout(r, 1000));
     // take snapshot and run expect
     expect(component).toMatchSnapshot()
 
@@ -72,6 +73,7 @@ test('add-datascope', async () => {
     await act(async () => {    
         fireEvent.click(addtable)
     })
+    await new Promise((r) => setTimeout(r, 1000));
     // the add table sidebar should open, snapshot and expect it
     expect(component).toMatchSnapshot()
 

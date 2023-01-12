@@ -53,7 +53,7 @@ Object {
         <h5>
            Create New Ghost Database 
           <img
-            class="spinner"
+            class="hiddenspinner"
             src="/logo.png"
             style="width: 28px;"
           />
@@ -268,7 +268,7 @@ Object {
       <h5>
          Create New Ghost Database 
         <img
-          class="spinner"
+          class="hiddenspinner"
           src="/logo.png"
           style="width: 28px;"
         />
@@ -631,7 +631,7 @@ Object {
         <h5>
            Create New Ghost Database 
           <img
-            class="spinner"
+            class="hiddenspinner"
             src="/logo.png"
             style="width: 28px;"
           />
@@ -937,7 +937,7 @@ Object {
       <h5>
          Create New Ghost Database 
         <img
-          class="spinner"
+          class="hiddenspinner"
           src="/logo.png"
           style="width: 28px;"
         />

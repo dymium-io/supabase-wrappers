@@ -76,9 +76,12 @@ func health() {
 		io.WriteString(w, "<html><body>OK</body></html>")
 
 	}).Methods("GET")
-
-	log.Infof("Listen for health on :80")
-	http.ListenAndServe(":80", p)
+	port := os.Getenv("HEALTHPORT")
+	if port == "" {
+		port = "80"
+	}
+	log.Infof("Listen for health on :%s", port)
+	http.ListenAndServe(":"+port, p)
 }
 
 func displayBuff(what string, buff []byte) {
@@ -403,6 +406,8 @@ func DoConnect() {
 		Bytes:   keyBytes,
 	}
 	keyPem := pem.EncodeToMemory(pemBlock)
+	log.Infof("client cert: %s", back.Certificate)
+
 
 	clientCert, err = tls.X509KeyPair([]byte(back.Certificate), keyPem)
 	if err != nil {

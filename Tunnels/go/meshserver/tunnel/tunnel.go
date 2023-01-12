@@ -529,7 +529,7 @@ func Server(address string, port int, customer string,
 		}
 		// perform handshake
 		if err := tlsConn.Handshake(); err != nil {
-			log.Errorf("client: error during handshake, error: %s", err.Error())
+			log.Errorf("Error during handshake: %s", err.Error())
 			continue
 		}
 

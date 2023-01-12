@@ -118,7 +118,7 @@ function ConnectionForm(props) {
             <Row>
                 <Col xs="auto">
                     <Form.Group className="mb-3" controlId="dbtype" >
-                        <Form.Label >Database type</Form.Label>
+                        <Form.Label >Database type:</Form.Label>
                         <Form.Control as="select" required size="sm" value={props.dbtype}
                             onChange={e => {
                                 let key = e.target.value
@@ -204,7 +204,7 @@ function ConnectionForm(props) {
         <>
             <Col xs="auto">
                 <Form.Group className="mb-3" controlId="connector" >
-                    <Form.Label >Connector</Form.Label>
+                    <Form.Label >Connector:</Form.Label>
                     <Form.Control as="select" required size="sm"
                         value={props.connectorid}
                         onChange={e => {
@@ -228,7 +228,7 @@ function ConnectionForm(props) {
             </Col>
             <Col xs="auto">
                 <Form.Group className="mb-3" controlId="tunnrl" >
-                    <Form.Label >Connector</Form.Label>
+                    <Form.Label >Tunnel:</Form.Label>
                     <Form.Control as="select" required size="sm"
                         value={props.tunnelid}
                         onChange={e => {
@@ -359,7 +359,7 @@ function ConnectionForm(props) {
 <Row>
     <Col xs>
         <Form.Group className="mb-3" controlId="description">
-            <Form.Label>Description</Form.Label>
+            <Form.Label>Description:</Form.Label>
             <Form.Control as="textarea" rows={3} style={{ width: '100%' }}
                 required
                 placeholder="Please put in the description of this connection"
