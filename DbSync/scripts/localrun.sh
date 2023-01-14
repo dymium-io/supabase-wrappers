@@ -28,16 +28,20 @@ docker run --rm  --name db-sync.dymium.local   \
        -e DATABASE_PASSWORD=DATABASE_PASSWORD  \
        -e AWS_LAMBDAS="{}"                     \
        -e AWS_SECRETS="{
-             \"DATABASE_PASSWORD\": \"$DATABASE_PASSWORD\",
-             \"SPOOFCORP_PASSWORD\": \"$DATABASE_PASSWORD\"
+               \"DATABASE_PASSWORD\": \"$DATABASE_PASSWORD\",
+               \"SPOOFCORP_PASSWORD\": \"$DATABASE_PASSWORD\"
              }"                                \
-       -e GUARDIAN_CONF="{ \"DEFAULT\": {
-             \"guardian_address\": [\"localhost\"],
-             \"guardian_port\": 9090,
-             \"guardian_tls\": false,
-             \"guardian_user\": \"$DATABASE_USER\",
-             \"guardian_database\": \"postgres\"},
-             { \"spoofcorp\": { \"guardian_password\": \"SPOOFCORP_PASSWORD\" }
-	     }"                                \
+       -e GUARDIAN_CONF="{
+             \"DEFAULT\": {
+                 \"guardian_address\": [\"localhost\"],
+                 \"guardian_port\": 9090,
+                 \"guardian_tls\": false,
+                 \"guardian_user\": \"$DATABASE_USER\",
+                 \"guardian_database\": \"postgres\"
+             },
+             \"spoofcorp\": {
+                 \"guardian_password\": \"SPOOFCORP_PASSWORD\"
+             }
+	  }"                                   \
        db-sync                                 \
        /main
