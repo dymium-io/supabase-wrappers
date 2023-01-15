@@ -544,7 +544,7 @@ Object {
                     class="row"
                   >
                     <div
-                      class="col-auto"
+                      class="mr-0 pr-0 col-auto"
                     >
                       <div
                         class="mb-3 form-group"
@@ -618,6 +618,15 @@ Object {
                           Client side name for Dymium database
                         </div>
                       </div>
+                    </div>
+                    <div
+                      class="ml-0 pl-0 col-auto"
+                    >
+                      <img
+                        class="hiddenspinner"
+                        src="/logo.png"
+                        style="margin-top: 26px; width: 28px;"
+                      />
                     </div>
                     <div
                       class="col"
@@ -850,7 +859,7 @@ Object {
                   class="row"
                 >
                   <div
-                    class="col-auto"
+                    class="mr-0 pr-0 col-auto"
                   >
                     <div
                       class="mb-3 form-group"
@@ -924,6 +933,15 @@ Object {
                         Client side name for Dymium database
                       </div>
                     </div>
+                  </div>
+                  <div
+                    class="ml-0 pl-0 col-auto"
+                  >
+                    <img
+                      class="hiddenspinner"
+                      src="/logo.png"
+                      style="margin-top: 26px; width: 28px;"
+                    />
                   </div>
                   <div
                     class="col"
@@ -1213,7 +1231,7 @@ Object {
                     class="row"
                   >
                     <div
-                      class="col-auto"
+                      class="mr-0 pr-0 col-auto"
                     >
                       <div
                         class="mb-3 form-group"
@@ -1287,6 +1305,15 @@ Object {
                           Client side name for Dymium database
                         </div>
                       </div>
+                    </div>
+                    <div
+                      class="ml-0 pl-0 col-auto"
+                    >
+                      <img
+                        class="hiddenspinner"
+                        src="/logo.png"
+                        style="margin-top: 26px; width: 28px;"
+                      />
                     </div>
                     <div
                       class="col"
@@ -3505,7 +3532,7 @@ Object {
                   class="row"
                 >
                   <div
-                    class="col-auto"
+                    class="mr-0 pr-0 col-auto"
                   >
                     <div
                       class="mb-3 form-group"
@@ -3579,6 +3606,15 @@ Object {
                         Client side name for Dymium database
                       </div>
                     </div>
+                  </div>
+                  <div
+                    class="ml-0 pl-0 col-auto"
+                  >
+                    <img
+                      class="hiddenspinner"
+                      src="/logo.png"
+                      style="margin-top: 26px; width: 28px;"
+                    />
                   </div>
                   <div
                     class="col"

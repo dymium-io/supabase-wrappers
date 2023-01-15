@@ -480,7 +480,7 @@ func UpdateTunnels(customer string, tunnels []TunnelUpdate) {
 }
 
 func Server(address string, port int, customer string,
-	certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte,
+	certPEMBlock, keyPEMBlock []byte, caCert []byte,
 	dbDomain, dbPort, dbUsername, dbPassword, dbName, usetls string) {
 	var err error
 
@@ -495,8 +495,10 @@ func Server(address string, port int, customer string,
 		os.Exit(1)
 	}
 
+	log.Infof("CA cert: %s", caCert)
 	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
+	ok := caCertPool.AppendCertsFromPEM(caCert)
+	log.Infof("AppendCertsFromPEM returned %t", ok)
 
 	config := &tls.Config{
 		Certificates: []tls.Certificate{cer},

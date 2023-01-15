@@ -623,7 +623,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 			log.InfoUserf(schema, session, email, groups, roles, "Api Connection to %s created", conn.Database)
 			conn.TestOnly = true
 			bconn, err := json.Marshal(conn)
-
+			log.Infof("conn: %s", string(bconn))
 			invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 			if err != nil {
 				log.ErrorUserf(schema, session, email, groups, roles, "Api DbAnalyzer Error: %s", err.Error())
@@ -1324,8 +1324,8 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
         SerialNumber: big.NewInt(2),
         Issuer:       authentication.CaCert.Subject,
         Subject:      clientCSR.Subject,
-        NotBefore:    time.Now().Add(-90 * time.Second), // grace time
-        NotAfter:     time.Now().Add(90 * time.Second),
+        NotBefore:    time.Now().Add(-600 * time.Second), // grace time
+        NotAfter:     time.Now().Add(600 * time.Second), // REMOVE ME extra 0
         KeyUsage:     x509.KeyUsageDigitalSignature,
         ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		DNSNames: clientCSR.DNSNames,
@@ -1404,8 +1404,8 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
         SerialNumber: big.NewInt(2),
         Issuer:       authentication.CaCert.Subject,
         Subject:      clientCSR.Subject,
-        NotBefore:    time.Now().Add(-90 * time.Second), // grace time
-        NotAfter:     time.Now().Add(90 * time.Second),
+        NotBefore:    time.Now().Add(-600 * time.Second), // grace time
+        NotAfter:     time.Now().Add(600 * time.Second), // DELETE ME
         KeyUsage:     x509.KeyUsageDigitalSignature,
         ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		DNSNames: 		targets,

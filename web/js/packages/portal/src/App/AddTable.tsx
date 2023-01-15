@@ -67,6 +67,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
     const [table, setTable] = useState("")
     const [dummy, setDummy] = useState(true)
     const [level, setLevel] = useState("")
+    const [spinner, setSpinner] = useState(false)
     const [Prefills, setPrefills] = useState<Object>(DefaultPrefills)
     const [policy, setPolicy] = useState(new ctypes.DataPolicy())
     let emptyarray: any[] = []
@@ -166,6 +167,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             let body = JSON.stringify({
                 ConnectionId: props.connectionId
             })
+                setSpinner(true)
                 http.sendToServer("POST", "/api/queryconnection",
                 null, body,
                 resp => {
@@ -175,7 +177,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                                 {js.errormessage}
                             </Alert>)
                             props.onHide()
-                            //setSpinner(false)
+                            setSpinner(false)
                             return
                         }
                         
@@ -184,19 +186,20 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                             setSchema(props.table.schema)
                             setTable(props.table.table)
                         }
-                        //setSpinner(false)
+                        setSpinner(false)
 
                     }).catch((error) => {
                         console.log("exception: ", error.message)
+                        setSpinner(false)
                     })
                 },
                 resp => {
                     console.log("on error")
-                    //setSpinner(false)
+                    setSpinner(false)
                 },
                 error => {
                     console.log("on exception: ", error.message)
-                    //setSpinner(false)
+                    setSpinner(false)
 
                 })
         }
@@ -393,7 +396,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
 
             <Row>
-                <Col xs="auto">
+                <Col xs="auto" className="mr-0 pr-0">
                     <Form.Group className="mb-3" controlId="schemaname">
                         <Form.Label>{correctname} Name:</Form.Label>
                         <Typeahead id="schemaname" inputProps={{ id: "schemaname" }}
@@ -411,6 +414,9 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Col>
+      
+                    <Col xs="auto" className="ml-0 pl-0"><Spinner show={spinner} style={{ marginTop: '26px', width: '28px' }}></Spinner></Col>
+             
                 <Col>
                     {schema !== "" && schema != undefined && table !== "" && table != undefined && tablestructure != [] &&
                         <Form.Group className="mb-3" controlId="connection" >

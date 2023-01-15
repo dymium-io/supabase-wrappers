@@ -2,8 +2,9 @@
 
 export LOG_LEVEL=Info
 export PORTAL=https://portal.dymium.local:3001/
-export KEY=ADSFHPOLQREEQWEQRQWE
-export SECRET=M6qcdRW9SpTUSVGzHLTyH5eSKwWEbaeR0bV45nIpSm6FdrO5C7sXHL9OB79m4zCDrbSTjqk9CmZFq+iAGRgm0E4PIl1pnbqPH6hZWDFXrKJ2TkHALF+nO9HT3rkmqw
+export CONNECTOR=4a87fb02-f76c-4a0d-82b1-cfdcc23bdb6b
+export KEY=QtWHYSxMFeXG
+export SECRET=Ec0HnhNm4UtwNrKBFZC69ptQMD9UwNQF7Ngh-OnUxUfJGL3L8pNXQreZDA10g2hdlyLX8QTkLWv0PhOkXrkn9J7fL2tILvbxGABKvaVU0NzT6ZAY0sp2yQxJAXezhovp
 export CUSTOMER=spoofcorp
 export TUNNELSERVER=portal.dymium.local:3009
 export LOCAL_ENVIRONMENT=true

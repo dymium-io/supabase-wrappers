@@ -1127,8 +1127,8 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 func GetConnection(schema, id string) (types.Connection, error) {
 	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls, a.use_connector,
 	coalesce(a.connector_id, ''), coalesce(a.tunnel_id, '') from 
-		spoofcorp.connections as a join spoofcorp.admincredentials as b on a.id=b.connection_id 
-			join spoofcorp.passwords as c on b.id=c.id where a.id=$1;`
+		`+schema+`.connections as a join `+schema+`.admincredentials as b on a.id=b.connection_id 
+			join `+schema+`.passwords as c on b.id=c.id where a.id=$1;`
 
 	row := db.QueryRow(sql, id)
 	var con types.Connection

@@ -15,14 +15,15 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"encoding/pem"
-	"sync"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"os"
-	"time"
 	"strings"
+	"sync"
+	"time"
+
 	"dymium.com/dymium/log"
 	"dymium.com/meshconnector/ca"
 	"dymium.com/meshconnector/types"
@@ -57,7 +58,6 @@ type Virtcon struct {
 	accumUpstream   int
 	totalUpstream   int
 }
-
 
 func health() {
 	p := mux.NewRouter()
@@ -161,9 +161,8 @@ func restart() {
 }
 */
 
-
-func pipe(conmap map[int]*Virtcon, egress net.Conn, 
-	messages chan protocol.TransmissionUnit, id int, 
+func pipe(conmap map[int]*Virtcon, egress net.Conn,
+	messages chan protocol.TransmissionUnit, id int,
 	token string, mu *sync.RWMutex) {
 
 	for {
@@ -175,15 +174,15 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn,
 		if err != nil {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				// no op
-			} else {	
+			} else {
 				if ok {
 					es := err.Error()
-					if( !strings.Contains(es, "EOF")) {
+					if !strings.Contains(es, "EOF") {
 						log.ErrorTenantf(conn.tenant, "Db read failed '%s', id:%d", err.Error(), id)
 					}
 				} else {
 					es := err.Error()
-					if( !strings.Contains(es, "EOF")) {
+					if !strings.Contains(es, "EOF") {
 						log.Errorf("Db read failed '%s', id:%d", err.Error(), id)
 					}
 				}
@@ -191,7 +190,7 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn,
 			egress.Close()
 			out := protocol.TransmissionUnit{protocol.Close, id, nil}
 			messages <- out
-	
+
 			return
 		}
 		b := buff[:n]
@@ -202,7 +201,7 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn,
 	}
 }
 
-func MultiplexWriter(messages chan protocol.TransmissionUnit, 
+func MultiplexWriter(messages chan protocol.TransmissionUnit,
 	enc *gob.Encoder, ingress net.Conn) {
 	for {
 		buff, ok := <-messages
@@ -219,6 +218,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 	}
 }
 func PassTraffic(ingress *tls.Conn, customer string) {
+//	log.Info("in PassTraffic")
 	var conmap = make(map[int]*Virtcon)
 	var mu sync.RWMutex
 
@@ -230,10 +230,11 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 
 	for {
 		var buff protocol.TransmissionUnit
+//		log.Info("Wait in Decode")
 		err := dec.Decode(&buff)
 
 		if err != nil {
-			log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!", 
+			log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!",
 				customer, err.Error())
 			// close all outgoing connections
 			mu.Lock()
@@ -272,7 +273,7 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			conn, ok := conmap[buff.Id]
 			l := len(conmap)
 			mu.RUnlock()
-			if  ok {
+			if ok {
 				log.InfoTenantf(conn.tenant, "Connection #%d closing, %d left", buff.Id, l-1)
 				conn.sock.Close()
 				mu.Lock()
@@ -301,16 +302,21 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 }
 func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, error) {
 	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM([]byte(ca.RootCApem))
+	for i := 0; i < len(ca.RootCApem); i++ {
+
+		ok := caCertPool.AppendCertsFromPEM([]byte(ca.RootCApem[i]))
+		log.Infof("add ca #%d, status %t", i, ok)
+	}
 
 	config := &tls.Config{
 		RootCAs:      caCertPool,
-		Certificates: []tls.Certificate{*clientCert}}
+		Certificates: []tls.Certificate{*clientCert},
+	}
 
-	log.Infof("tls.Dial to %s", tunnelserver)
+	log.Infof("tls.Dial %s", tunnelserver)
 	egress, err := tls.Dial("tcp", tunnelserver, config) // *Conn
 	if err != nil {
-		log.Errorf("Error connecting to %s: %s", tunnelserver, err.Error() )
+		log.Errorf("Error connecting to %s: %s", tunnelserver, err.Error())
 
 		return nil, err
 	}
@@ -318,14 +324,14 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 	log.Info("Connected to Dymium!")
 
 	state := egress.ConnectionState()
-/*
-	log.Debugf("Version: %x", state.Version)
-	log.Debugf("HandshakeComplete: %t", state.HandshakeComplete)
-	log.Debugf("DidResume: %t", state.DidResume)
-	log.Debugf("CipherSuite: %x", state.CipherSuite)
-	log.Debugf("NegotiatedProtocol: %s", state.NegotiatedProtocol)
-	log.Debugf("NegotiatedProtocolIsMutual: %t", state.NegotiatedProtocolIsMutual)
-*/
+	/*
+		log.Debugf("Version: %x", state.Version)
+		log.Debugf("HandshakeComplete: %t", state.HandshakeComplete)
+		log.Debugf("DidResume: %t", state.DidResume)
+		log.Debugf("CipherSuite: %x", state.CipherSuite)
+		log.Debugf("NegotiatedProtocol: %s", state.NegotiatedProtocol)
+		log.Debugf("NegotiatedProtocolIsMutual: %t", state.NegotiatedProtocolIsMutual)
+	*/
 	log.Debugf("Certificate chain:")
 
 	for i, cert := range state.PeerCertificates {
@@ -334,7 +340,7 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 		log.Debugf(" %d s:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s", i, subject.Country, subject.Province, subject.Locality, subject.Organization, subject.OrganizationalUnit, subject.CommonName)
 		log.Debugf("   i:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s", issuer.Country, issuer.Province, issuer.Locality, issuer.Organization, issuer.OrganizationalUnit, issuer.CommonName)
 	}
-
+	log.Info("Tunnel created")
 	return egress, nil
 }
 
@@ -390,7 +396,6 @@ func DoConnect() {
 	}
 
 	defer resp.Body.Close()
-
 	var back types.CSRResponse
 	err = json.Unmarshal(body, &back)
 	if err != nil {
@@ -406,29 +411,28 @@ func DoConnect() {
 		Bytes:   keyBytes,
 	}
 	keyPem := pem.EncodeToMemory(pemBlock)
-	log.Infof("client cert: %s", back.Certificate)
-
-
+	//log.Infof("key: %s", string(keyPem))
 	clientCert, err = tls.X509KeyPair([]byte(back.Certificate), keyPem)
 	if err != nil {
 		log.Errorf("Error in X509KeyPair: %s", err)
 		os.Exit(1)
 	}
-	
+
 	tunnelserver := os.Getenv("TUNNELSERVER")
 
 	ingress, err := CreateTunnel(tunnelserver, &clientCert)
 	if err != nil {
+		log.Infof("CreateTunnel failed, %s", err.Error())
 		return
 	}
 	PassTraffic(ingress, customer)
 }
 func main() {
 	if "true" != os.Getenv("LOCAL_ENVIRONMENT") {
-			go health()
+		go health()
 	}
 	log.Init("connector")
-	
+
 	// TODO:
 	// UPDATE
 	for {
