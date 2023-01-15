@@ -20,13 +20,14 @@ type guardianConf struct {
 }
 
 type conf struct {
-	DymiumHost     string `json:"dymium_host"`
-	DymiumPort     int    `json:"dymium_port"`
-	DymiumTls      bool   `json:"dymium_tls"`
-	DymiumDatabase string `json:"dymium_database"`
-	DymiumUser     string `json:"dymium_user"`
-	DymiumPassword string `json:"dymium_password"`
-	GuardianConf   guardianConf
+	DymiumHost      string `json:"dymium_host"`
+	DymiumPort      int    `json:"dymium_port"`
+	DymiumTls       bool   `json:"dymium_tls"`
+	DymiumDatabase  string `json:"dymium_database"`
+	DymiumUser      string `json:"dymium_user"`
+	DymiumPassword  string `json:"dymium_password"`
+	ConnectorDomain string `json:"connector_domain"`
+	GuardianConf    guardianConf
 }
 
 func getConf(customer string, confGuardian bool) (c *conf, err error) {
@@ -63,6 +64,10 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 
 	if cnf.DymiumUser, ok = os.LookupEnv("DATABASE_USER"); !ok {
 		return returnError(fmt.Errorf("DATABASE_USER is not defined"))
+	}
+
+	if cnf.ConnectorDomain, ok = os.LookupEnv("CONNECTOR_DOMAIN"); !ok {
+		cnf.ConnectorDomain = ".mesh.local"
 	}
 
 	if cnf.DymiumPassword, ok = os.LookupEnv("DATABASE_PASSWORD"); !ok {

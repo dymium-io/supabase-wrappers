@@ -74,7 +74,6 @@ func sqlTest(
 			}
 		}
 	}
-	log.Println("rows types:", columnTypes)
 	result := types.SqlTestResult{
 		Columns: columns,
 		Records: make([][]string, 0, 20),
