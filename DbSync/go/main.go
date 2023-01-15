@@ -64,7 +64,7 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	connections, err := getConnections(db, c.Customer)
+	connections, err := getConnections(db, c.Customer, cnf.ConnectorDomain)
 	if err != nil {
 		return nil, err
 	}
@@ -116,9 +116,12 @@ func getCredentials(db *sql.DB, infoSchema string) (*map[string]types.Credential
 	return &creds, nil
 }
 
-func getConnections(db *sql.DB, infoSchema string) (*map[string]types.Connection, error) {
-	rows, err := db.Query(fmt.Sprintf(`SELECT c.id, c.address, c.port, c.name, c.database_type, c.use_tls, c.dbname
-                                           FROM %s.connections c`, infoSchema))
+func getConnections(db *sql.DB, infoSchema, connectorDomain string) (*map[string]types.Connection, error) {
+	rows, err := db.Query(fmt.Sprintf(`SELECT c.id, c.address, c.port, c.name, c.database_type, c.use_tls, c.dbname,
+                                           c.use_connector, c.tunnel_id, connector.localport
+                                           FROM %s.connections c
+                                           LEFT JOIN %s.connectors connector ON c.tunnel_id = connector.id`,
+		infoSchema, infoSchema))
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +129,18 @@ func getConnections(db *sql.DB, infoSchema string) (*map[string]types.Connection
 	connections := map[string]types.Connection{}
 	for rows.Next() {
 		var c types.Connection
-		rows.Scan(&c.Id, &c.Address, &c.Port, &c.Name, &c.Database_type, &c.Use_tls, &c.Dbname)
+		var useConnector bool
+		var connectorPort *int
+		var tunnelId string
+		rows.Scan(&c.Id, &c.Address, &c.Port, &c.Name, &c.Database_type, &c.Use_tls, &c.Dbname,
+			&useConnector, &tunnelId, &connectorPort)
+		if useConnector {
+			if connectorPort == nil {
+				return &connections,fmt.Errorf("localport for connection %v with tunnel_id=%v is not defined",c.Id,tunnelId)
+			}
+			c.Address = infoSchema + connectorDomain
+			c.Port = *connectorPort
+		}
 		if c.Address == "localhost" {
 			c.Address = "docker.for.mac.host.internal"
 		}
