@@ -148,6 +148,10 @@ export function AddDatascope(props) {
     let onTablesMapUpdate = (t: internal.TablesMap) => {
         setDatascope(t)
     }
+    let onDeleteConnection = (c:string) => {
+        delete datascope[c]
+        setDatascope(datascope)
+    }
     return (
         <div className=" text-left">
             {alert}
@@ -162,6 +166,7 @@ export function AddDatascope(props) {
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                     <DatascopeForm edit={false} dbname={dbname} onDbname={setDbname} onTablesMapUpdate={onTablesMapUpdate} 
                     onEditTable={onEditTable} AddNewTable={addNewTable} 
+                    onDeleteConnection={onDeleteConnection}
                     onAddTableRef={onAddTableRef} connections={conns} setAlert={setAlert} 
                     nameToConnection={remap}/>
 

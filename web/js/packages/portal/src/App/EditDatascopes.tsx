@@ -372,6 +372,10 @@ export default function EditDatascopes() {
             })
 
     }
+    let onDeleteConnection = (c:string) => {
+        delete datascope[c]
+        setDatascope(datascope)
+    }
     return (
         <div className=" text-left">
             {alert}
@@ -471,6 +475,7 @@ export default function EditDatascopes() {
                         <h5>{selectedDatascopeDetails?.name}</h5>
                         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                             <DatascopeForm edit={true} dbname={dbname} onDbname={setDbname}
+                                onDeleteConnection={onDeleteConnection}
                                 onTablesMapUpdate={onTablesMapUpdate} onEditTable={onEditTable}
                                 AddNewTable={addNewTable} onAddTableRef={onAddTableRef} connections={conns}
                                 setAlert={setAlert} nameToConnection={remap}

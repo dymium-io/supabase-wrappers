@@ -36,6 +36,7 @@ export interface DatascopeFormProps {
     onTablesMapUpdate: (ar: internal.TablesMap) => void,
     onAddTableRef: (ar: any) => void,
     connections: internal.Connection[],
+    onDeleteConnection: (c: string) => void,
     AddNewTable: (ar: string, dbtype: string, schema?: string, table?: string) => void,
     nameToConnection: internal.ConnectionMap,
     dbname: string,
@@ -261,7 +262,10 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
             let d = connections.filter(function (value, index, arr) {
                 return value !== db.name;
             })
+            // need to send upstream
+            
             setConnections(d)
+            props.onDeleteConnection(db.name)
         }
         let showDependencies = () => {
             // map tables
