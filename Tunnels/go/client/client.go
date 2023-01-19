@@ -380,7 +380,7 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 	for i := 0; i < len(ca.RootCApem); i++ {
 
 		ok := caCertPool.AppendCertsFromPEM([]byte(ca.RootCApem[i]))
-		log.Infof("add ca #%d, status %t", i, ok)
+		log.Debugf("add ca #%d, status %t", i, ok)
 	}
 
 	config := &tls.Config{

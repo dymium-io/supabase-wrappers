@@ -2,9 +2,10 @@ package protocol
 
 const (
 	Close = iota
- 	Open
+	Open
 	Send
 	Ping
+	Error
 )
 
 type TransmissionUnit struct {
@@ -12,4 +13,3 @@ type TransmissionUnit struct {
 	Id     int
 	Data   []byte
 }
-

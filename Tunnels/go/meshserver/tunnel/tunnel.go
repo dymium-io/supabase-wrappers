@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"io"
 	"strconv"
 	"strings"
 	"sync"
@@ -43,6 +44,17 @@ type TunnelUpdate struct {
 	 Tid string 
 }
 
+func displayBuff(what string, buff []byte) {
+	if len(buff) > 32 {
+		head := buff[:16]
+		tail := buff[len(buff)-16:]
+		log.Debugf("%s head: %v, tail: %v", what, head, tail)
+	} else {
+		log.Debugf("%s buffer: %v", what, buff)
+	}
+	log.Debugf("%s ", string(buff) )
+}
+
 func initDB(host, nport, user, password, dbname, usetls string) error {
 	psqlInfo = fmt.Sprintf("host=%s port=%s user=%s "+
 		"dbname=%s sslmode=%s",
@@ -74,8 +86,7 @@ func createListener(customer, target, sport string) (*net.TCPListener, error) {
 	}
 	listener, err := net.ListenTCP("tcp", addr)
 	if err != nil {
-		log.Errorf("Error in ListenTCP(%s): %s, can't continue", addr, err.Error())
-		os.Exit(1)
+		return listener, err
 	}
 	return listener, err
 }
@@ -88,12 +99,15 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 	go func(messages chan protocol.TransmissionUnit, enc *gob.Encoder) {
 		for {
 			tosend := <-messages
+			//displayBuff("From database: ", tosend.Data)
 			err := enc.Encode(tosend)
 			if err != nil {
 				log.ErrorTenantf(customer, "Error in Encode: %s", err.Error())
 				return
 			} else {
-				log.Debugf("sent %d bytes to connector", len(tosend.Data))
+				if len(tosend.Data) > 0 {
+					log.Debugf("sent %d bytes to connector", len(tosend.Data))
+				}
 			}
 		}
 
@@ -103,7 +117,12 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 		err := dec.Decode(&buff)
 
 		if err != nil {
-			log.ErrorTenantf(customer, "Read from client failed '%s', cleanup the proxy connection!", err.Error())
+			if err == io.EOF {
+				log.ErrorTenantf(customer, "Connection closed, cleanup the proxy connection!", err.Error())
+				 
+			} else {
+				log.ErrorTenantf(customer, "Read from client failed '%s', cleanup the proxy connection!", err.Error())
+			}
 			// close all outgoing connections
 			mu.Lock()
 			for key := range conmap {
@@ -119,6 +138,11 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 		}
 
 		switch buff.Action {
+		case protocol.Ping:
+			out := protocol.TransmissionUnit{protocol.Ping, buff.Id, []byte{} }
+			log.Debugf("Got ping, return ack %d", buff.Id)
+			messages <- out
+
 		case protocol.Open:
 			log.Debugf("protocol.Open. Should not happen")
 		case protocol.Close:
@@ -139,6 +163,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 			mu.RLock()
 			conn, ok := conmap[buff.Id]
 			mu.RUnlock()
+			displayBuff("To database: ", buff.Data)
 			if  ok {
 				_, err = conn.sock.Write(buff.Data)
 
@@ -260,6 +285,13 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 		listen, err := createListener(customer, tg[0], tg[1])
 		if err != nil {
 			log.ErrorTenantf(customer, "Error creating listener %s", err.Error())
+			e := protocol.TransmissionUnit{protocol.Error, 0, []byte("Could not create a listener, probably another connector running")}
+			enc.Encode(e)
+			time.Sleep(2 * time.Second)
+			for _, l := range listeners {
+				l.Close()
+			}
+			return
 		} else {
 			log.Infof("Created listener for %s %s, connector %s, tunnel %s", tg[0], tg[1], tg[2], tg[3])
 		}
@@ -478,7 +510,22 @@ func UpdateTunnels(customer string, tunnels []TunnelUpdate) {
 		return
 	}	
 }
-
+func setTCPKeepAlive(clientHello *tls.ClientHelloInfo) (*tls.Config, error) {
+	// Check that the underlying connection really is TCP.
+	if tcpConn, ok := clientHello.Conn.(*net.TCPConn); ok {
+	  // we want to protect against NLB timeouts
+	  if err := tcpConn.SetKeepAlivePeriod(60 * time.Second); err != nil {
+		log.Infof("Could not set keep alive period %s", err.Error())
+	  } else {
+		log.Info("update keep alive period")
+	  }
+	} else {
+	  log.Error("TLS over non-TCP connection")
+	}
+  
+	// Make sure to return nil, nil to let the caller fall back on the default behavior.
+	return nil, nil
+  }
 func Server(address string, port int, customer string,
 	certPEMBlock, keyPEMBlock []byte, caCert []byte,
 	dbDomain, dbPort, dbUsername, dbPassword, dbName, usetls string) {
@@ -504,6 +551,7 @@ func Server(address string, port int, customer string,
 		Certificates: []tls.Certificate{cer},
 		ClientCAs:    caCertPool,
 		ClientAuth:   tls.RequireAndVerifyClientCert,
+		GetConfigForClient: setTCPKeepAlive,
 	}
 	connect := fmt.Sprintf("%s:%d", address, port)
 	log.Debugf("TLS listen on %s", connect)
@@ -522,7 +570,7 @@ func Server(address string, port int, customer string,
 			log.Errorf("Error in tls.Accept: %s", err.Error())
 			continue
 		}
-		log.Debugf("Accepted!")
+		log.Debugf("Accepted call from a connector!")
 		// get the underlying tls connection
 		tlsConn, ok := egress.(*tls.Conn)
 		if !ok {
