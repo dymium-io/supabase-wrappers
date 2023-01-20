@@ -58,6 +58,9 @@ type Virtcon struct {
 	accumUpstream   int
 	totalUpstream   int
 }
+var pingCounter = 0 
+var ackCounter = 0 
+var pingLock sync.RWMutex
 
 func health() {
 	p := mux.NewRouter()
@@ -82,16 +85,6 @@ func health() {
 	}
 	log.Infof("Listen for health on :%s", port)
 	http.ListenAndServe(":"+port, p)
-}
-
-func displayBuff(what string, buff []byte) {
-	if len(buff) > 10 {
-		head := buff[:6]
-		tail := buff[len(buff)-6:]
-		log.Debugf("%s head: %v, tail: %v", what, head, tail)
-	} else {
-		log.Debugf("%s buffer: %v", what, buff)
-	}
 }
 
 // convert DER to PEM format
@@ -176,13 +169,11 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn,
 				// no op
 			} else {
 				if ok {
-					es := err.Error()
-					if !strings.Contains(es, "EOF") {
+					if  err != io.EOF {
 						log.ErrorTenantf(conn.tenant, "Db read failed '%s', id:%d", err.Error(), id)
 					}
 				} else {
-					es := err.Error()
-					if !strings.Contains(es, "EOF") {
+					if err != io.EOF {
 						log.Errorf("Db read failed '%s', id:%d", err.Error(), id)
 					}
 				}
@@ -217,10 +208,46 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 		}
 	}
 }
+func Pinger(enc *gob.Encoder, ingress net.Conn, wake chan int ) {
+	var ping protocol.TransmissionUnit
+	// log.Infof("In Pinger")
+	ping.Action = protocol.Ping
+
+	for {
+		select {
+			case  <- wake:
+				return
+			case <-time.After(20 * time.Second):
+		}
+
+		if pingCounter - ackCounter > 2 {
+			ingress.Close()
+			log.Errorf("Ping ack missing: %d %d", pingCounter, ackCounter)
+			return			
+		}
+		pingLock.Lock()
+		ping.Id = pingCounter
+		curr := pingCounter
+		pingCounter++
+		pingLock.Unlock()
+
+		log.Debugf("Ping %d", curr)
+
+		err := enc.Encode(ping)
+		if err != nil {
+			ingress.Close()
+			if !strings.Contains(err.Error(),  "closed network connection ") {
+				log.Errorf("Ping failed: %s", err.Error())
+			}
+			return
+		}
+	}
+}
 func PassTraffic(ingress *tls.Conn, customer string) {
 //	log.Info("in PassTraffic")
 	var conmap = make(map[int]*Virtcon)
 	var mu sync.RWMutex
+	defer ingress.Close()
 
 	dec := gob.NewDecoder(ingress)
 	enc := gob.NewEncoder(ingress)
@@ -228,15 +255,23 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 	messages := make(chan protocol.TransmissionUnit, 50)
 	go MultiplexWriter(messages, enc, ingress)
 
+	wake := make(chan int)
+	go Pinger(enc, ingress, wake )
+
 	for {
 		var buff protocol.TransmissionUnit
 //		log.Info("Wait in Decode")
 		err := dec.Decode(&buff)
 
 		if err != nil {
-			log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!",
-				customer, err.Error())
+			if err == io.EOF {
+				log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!",
+					customer, err.Error())
+			} else {
+				log.Errorf("Server closed connection, cleanup the proxy")
+			}
 			// close all outgoing connections
+			wake <- 1
 			mu.Lock()
 			for key := range conmap {
 				conmap[key].sock.Close()
@@ -246,8 +281,25 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			ingress.Close()
 			return
 		}
-
+	
 		switch buff.Action {
+		case protocol.Error:
+			log.Errorf("Server returned error: %s", string(buff.Data))
+			mu.Lock()
+			for key := range conmap {
+				conmap[key].sock.Close()
+				delete(conmap, key)
+			}
+			mu.Unlock()
+			ingress.Close()
+			wake <- 0
+			return
+		case protocol.Ping: 
+			pingLock.Lock()
+			ackCounter = buff.Id
+			log.Debugf("Ack: %d", ackCounter)
+			pingLock.Unlock()
+
 		case protocol.Open:
 
 			conn := &Virtcon{}
@@ -305,7 +357,9 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 	for i := 0; i < len(ca.RootCApem); i++ {
 
 		ok := caCertPool.AppendCertsFromPEM([]byte(ca.RootCApem[i]))
-		log.Infof("add ca #%d, status %t", i, ok)
+		if !ok {
+			log.Errorf("add ca #%d, status %t", i, ok)
+		}
 	}
 
 	config := &tls.Config{
@@ -347,7 +401,10 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 func DoConnect() {
 	// -------------------
 	customer := os.Getenv("CUSTOMER")
-
+	pingLock.Lock()
+	ackCounter = 0
+	pingCounter = 0
+	pingLock.Unlock()
 	csr, err := generateCSR(customer)
 	if err != nil {
 		log.Errorf("Error generating CSR %s", err.Error())
