@@ -35,6 +35,54 @@ const databases = Object.keys(com.databaseTypes).map(key => {
     </option>
 })
 
+function Downloads(props) {
+    return <div className=" text-left">
+
+        <h5 > Connector Binary Downloads</h5>
+        <div className="viewport">
+            <div>For MS Windows:</div>
+            <a href="/meshconnector_windows_amd64.zip" download="meshconnector.zip"> <i className="fab fa-windows mr-2" aria-hidden="true"></i>Click to Download MS Windows Connector</a>
+            <div>
+
+                <div style={{ display: "flex" }}>
+                    Usage: <div className="terminal ml-2">
+                        &gt;meshconnector.exe
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div className="viewport">
+            <div>For x64 Linux:</div>
+            <a href="/meshconnector_linux_amd64.tar.gz" download="meshconnector.tar.gz"> <i className="fab fa-linux mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
+            <div>
+
+                <div style={{ display: "flex" }}>
+                    Usage: <div className="terminal ml-2">
+                        &gt;./meshconnector
+                    </div>
+
+                </div>
+            </div>
+        </div>        
+
+        <div className="viewport">
+            <div>For Mac OS X:</div>
+            <a href="/meshconnector_darwin_amd64.tar.gz" download="meshconnector.tar.gz"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
+            <div>
+
+                <div style={{ display: "flex" }}>
+                    Usage: <div className="terminal ml-2">
+                        &gt;./meshconnector
+                    </div>
+
+                </div>
+            </div>
+        </div>     
+
+    </div>
+
+}
 function ConnectionForm(props) {
     let regenerate = () => {
 
@@ -118,9 +166,9 @@ function ConnectionForm(props) {
                         </Form.Group>
                     </Col>
                     <Col xs="auto">
-                    <div>Status:</div>
-                    <div style={{marginTop: '0.3em'}} className="thickblue">{ props.tunnel[i].status !== "active" ? 
-                    <i className="fa-solid fa-gears "></i> : <i className="fa-solid fa-thumbs-up "></i> } { tun.humanReadableTunnelStatus(props.tunnel[i].status)}</div>
+                        <div>Status:</div>
+                        <div style={{ marginTop: '0.3em' }} className="thickblue">{props.tunnel[i].status !== "active" ?
+                            <i className="fa-solid fa-gears "></i> : <i className="fa-solid fa-thumbs-up "></i>} {tun.humanReadableTunnelStatus(props.tunnel[i].status)}</div>
                     </Col>
                     <Col xs="auto" as="div" className="text-right mx-0 mt-0 px-1 aligh-top">
                         <i hidden={i !== props.tunnel.length - 1} className="far fahover fa-plus-square aligh-top fa-1x mr-1 plusminus" onClick={addTunnel} ></i>
@@ -181,10 +229,10 @@ function ConnectionForm(props) {
                     </Form.Group>
                 </Col>
                 <Col xs="auto" style={{ display: 'flex' }}  >
-                
+
                     <Form.Group className="mb-3" controlId="key">
                         <Form.Label
-                        hidden={ props.context === "add" ? true : false}
+                            hidden={props.context === "add" ? true : false}
                         >{tooltip('Access Key',
                             <div className="d-block">
                                 Identifier for Access Secret.
@@ -192,7 +240,7 @@ function ConnectionForm(props) {
                             </div>
                             , 'auto', '', false)}</Form.Label>
                         <Form.Control size="sm" type="text"
-                            hidden={ props.context === "add" ? true : false}
+                            hidden={props.context === "add" ? true : false}
                             required
                             pattern=".+"
                             readOnly
@@ -204,10 +252,10 @@ function ConnectionForm(props) {
                             Type systemwide unique name to use in SQL
                         </Form.Control.Feedback>
                     </Form.Group>
-                  
-                    <i  hidden={ props.context === "add" ? true : false}
-                    onClick={copykey()} style={{ marginTop: '1.75em' }} className="fas fa-copy clipbtn"></i>
-       
+
+                    <i hidden={props.context === "add" ? true : false}
+                        onClick={copykey()} style={{ marginTop: '1.75em' }} className="fas fa-copy clipbtn"></i>
+
                 </Col>
                 <Col style={{ display: 'flex' }}>
 
@@ -231,7 +279,7 @@ function ConnectionForm(props) {
                             Type systemwide unique name to use in SQL
                         </Form.Control.Feedback>
                     </Form.Group>
-                    { (props.context === "edit" && props.secret[0] !== '*') &&
+                    {(props.context === "edit" && props.secret[0] !== '*') &&
                         <i style={{ marginTop: '1.75em' }} onClick={copysecret()} className="fas fa-copy clipbtn"></i>
                     }
                     {props.context === "edit" &&
@@ -241,26 +289,26 @@ function ConnectionForm(props) {
                 </Col>
             </Row>
             {props.context === "edit" &&
-            <Row>
-                <Col xs="auto" className="d-flex">
-                <Form.Group className="mb-3" controlId="cid">
-                        <Form.Label>Connector ID:</Form.Label>
-                        <Form.Control size="sm" type="text" style={{width:'24em'}}
-                            required
+                <Row>
+                    <Col xs="auto" className="d-flex">
+                        <Form.Group className="mb-3" controlId="cid">
+                            <Form.Label>Connector ID:</Form.Label>
+                            <Form.Control size="sm" type="text" style={{ width: '24em' }}
+                                required
 
-                            readOnly
-                            value={props.id}
-  
-                        />
+                                readOnly
+                                value={props.id}
 
-                    </Form.Group>                
-                    <i onClick={copyid()} style={{ marginTop: '1.75em' }} className="fas fa-copy clipbtn"></i>
-                
-                </Col>
+                            />
 
-            </Row> }
-            { (props.context === "edit" && props.secret[0] !== '*') &&
-                <div style={{fontStyle: 'italic', fontWeight: 'bold'}}>{guidance}</div>
+                        </Form.Group>
+                        <i onClick={copyid()} style={{ marginTop: '1.75em' }} className="fas fa-copy clipbtn"></i>
+
+                    </Col>
+
+                </Row>}
+            {(props.context === "edit" && props.secret[0] !== '*') &&
+                <div style={{ fontStyle: 'italic', fontWeight: 'bold' }}>{guidance}</div>
             }
             <div className="mt-3 ml-1 mb-1">Configure Tunnels to Data Sources:</div>
             <div className="view  mx-3 mb-2">
@@ -270,11 +318,11 @@ function ConnectionForm(props) {
     )
 }
 
-let getAccessKey = (setKey: React.Dispatch<React.SetStateAction<string>>, 
+let getAccessKey = (setKey: React.Dispatch<React.SetStateAction<string>>,
     setSecret: React.Dispatch<React.SetStateAction<string>>,
-    setSpinner: React.Dispatch<React.SetStateAction<boolean>>, 
+    setSpinner: React.Dispatch<React.SetStateAction<boolean>>,
     setAlert: React.Dispatch<React.SetStateAction<JSX.Element>>
-    ) => {
+) => {
     setSpinner(true)
     http.sendToServer("GET", "/api/getaccesskey",
         null, "",
@@ -332,7 +380,7 @@ export function AddConnector() {
     const [alert, setAlert] = useState<JSX.Element>(<></>)
 
     useEffect(() => {
-        getAccessKey(setKey, setSecret,setSpinner, setAlert)
+        getAccessKey(setKey, setSecret, setSpinner, setAlert)
     }, [])
     const appDispatch = useAppDispatch()
     let sendConnector = () => {
@@ -355,8 +403,8 @@ export function AddConnector() {
                         setKey("")
                         setSecret("")
                         setTunnel([tun.Tunnel.fromJson({ id: "", name: "", address: "", port: "" })])
-        
-                        appDispatch(setSelectedConnectorDefault(js.token) )
+
+                        appDispatch(setSelectedConnectorDefault(js.token))
                         appDispatch(setActiveConnectorTab("edit"))
                         navigate('/app/connectors/redirect#bookmark')
 
@@ -532,7 +580,7 @@ export function EditConnectors(props) {
     const defaultSorted = [{
         dataField: 'name',
         order: 'asc'
-      }];
+    }];
     let columns = [
         {
             dataField: 'id',
@@ -552,7 +600,7 @@ export function EditConnectors(props) {
                 return <div>{tun.humanReadableConnectorStatus(row["status"])}</div>
             },
             headerStyle: { width: '200px' },
-        },        
+        },
         {
             text: 'Tunnels',
             dataField: 'tunnels',
@@ -654,9 +702,9 @@ export function EditConnectors(props) {
         let body = {
             Id: selectedId,
         }
-        if(selectedId ===  rememberedSelection) {
+        if (selectedId === rememberedSelection) {
             appDispatch(setSelectedConnectorDefault(""))
-        }        
+        }
         setSpinner(true)
         http.sendToServer("POST", "/api/deleteconnector",
             "", JSON.stringify(body),
@@ -811,20 +859,20 @@ export function EditConnectors(props) {
 
         return state.reducer.activeConnectorTab
     }
-    )    
+    )
     const refb = useRef<HTMLDivElement>(null);
 
     const history = useNavigate();
     useEffect(() => {
-        
-      if (location.hash === '#bookmark') {
-        window.history.replaceState("", "Edit Connectors", '/app/connectors');
-        setTimeout( () => {
-            if(refb.current != null)
-            refb.current.scrollIntoView({ behavior: "smooth", block: "end" });       
-         
-        }, 300 )
-      }
+
+        if (location.hash === '#bookmark') {
+            window.history.replaceState("", "Edit Connectors", '/app/connectors');
+            setTimeout(() => {
+                if (refb.current != null)
+                    refb.current.scrollIntoView({ behavior: "smooth", block: "end" });
+
+            }, 300)
+        }
     }, [t])
 
     return (
@@ -870,7 +918,7 @@ export function EditConnectors(props) {
                                         <div style={{ marginLeft: "auto" }}>
                                             <SearchBar size="sm" {...props.searchProps} />
                                             <ClearSearchButton {...props.searchProps} />
-                                            <i onClick={e=>getConnectors()} className="fa fa-refresh ablue cursor-pointer" style={{position: 'relative', top: '2px'}} aria-hidden="true"></i>
+                                            <i onClick={e => getConnectors()} className="fa fa-refresh ablue cursor-pointer" style={{ position: 'relative', top: '2px' }} aria-hidden="true"></i>
                                         </div>
                                     </div>
                                     <div className="d-block">
@@ -889,7 +937,7 @@ export function EditConnectors(props) {
                         }
                     </ToolkitProvider>
                 </div>}
-            { (location.hash === '#bookmark') && "fafafafa" }
+            {(location.hash === '#bookmark') && "fafafafa"}
             {
                 rememberedSelection !== "" && displayConnector()
             }
@@ -899,7 +947,7 @@ export function EditConnectors(props) {
 }
 function useQuery() {
     const { search } = useLocation();
-  
+
     return React.useMemo(() => new URLSearchParams(search), [search]);
 }
 function Connectors() {
@@ -914,12 +962,12 @@ function Connectors() {
     let query = useQuery();
 
     useEffect(() => {
-      if (location.pathname === '/app/connectors/redirect#bookmark') {
-        navigate('/app/connectors#bookmark')
-      }
+        if (location.pathname === '/app/connectors/redirect#bookmark') {
+            navigate('/app/connectors#bookmark')
+        }
     }, [t])
 
-    
+
 
     return (
         <Tabs activeKey={t} id="connectors"
@@ -931,6 +979,9 @@ function Connectors() {
             </Tab>
             <Tab eventKey="edit" title="Connectors" className="mx-4">
                 <EditConnectors />
+            </Tab>
+            <Tab eventKey="download" title="Downloads" className="mx-4">
+                <Downloads />
             </Tab>
         </Tabs>
     )

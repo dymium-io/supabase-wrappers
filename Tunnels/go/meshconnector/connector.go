@@ -439,14 +439,14 @@ func DoConnect() {
 		log.Errorf("Error connecting to %s: %s", portal, err.Error())
 		return
 	}
-	if resp.StatusCode != 200 {
-		log.Errorf("Invalid response %d from %s", resp.StatusCode, portal)
-		return
-
-	}
-
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
+
+	if resp.StatusCode != 200 {
+		log.Errorf("Invalid response %d from %s: %s", resp.StatusCode, portal, string(body))
+		return
+	}
+
 	if err != nil {
 		log.Errorf("Error reading from %s: %s", portal, err.Error())
 		return
@@ -473,6 +473,16 @@ func DoConnect() {
 	if err != nil {
 		log.Errorf("Error in X509KeyPair: %s", err)
 		os.Exit(1)
+	}
+	
+	c, e := x509.ParseCertificate([]byte(back.Certificate))
+	if e == nil{
+		log.Info("cert parsed")
+		for nm, _ := range c.DNSNames {
+			log.Infof("Tunnel: %s", nm)
+		}
+	} else {
+		log.Infof("error parsing %s\n%s", e.Error(), back.Certificate)
 	}
 
 	tunnelserver := os.Getenv("TUNNELSERVER")

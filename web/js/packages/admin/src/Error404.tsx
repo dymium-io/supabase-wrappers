@@ -19,8 +19,8 @@ export default function Error404() {
                <Link className="linklink" to="/" > Dymium </Link></h1>
             </div>
             <div className="col-sm mt-5  text-center">
-              <h1 className="mt-5 logoheader">Error 404.</h1>
-              <h1 className="logoheader">Page Not Found.</h1>
+              <h1 className="mt-5 logoheader">Error 404</h1>
+              <h1 className="logoheader">Page Not Found</h1>
               <div className="pt-2 logofooter">
                 The application is still under construction. Please be patient!
               </div>
