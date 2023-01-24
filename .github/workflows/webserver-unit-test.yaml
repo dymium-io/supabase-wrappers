@@ -46,7 +46,8 @@ jobs:
         run: apt-get install -y build-essential
       - name: Set up libpq
         run: apt-get install -y libpq5
-
+      - name: Install zstd
+        run: apt install zstd
       - name: Run tests
         working-directory: ./web/go/src
         env:
