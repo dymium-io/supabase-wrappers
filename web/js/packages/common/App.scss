@@ -36,6 +36,12 @@ body, #root  {
     color: white !important;
     text-shadow: 1px 1px 0 rgb(58 58 58 / 67%);
 }
+.unauthorized {
+  font-family: "Roboto";
+  text-transform: uppercase;
+  color: $main-yellow;
+  text-shadow: 1px 1px 0 rgb(58 58 58 / 67%);
+}
 .logofooter {
   font-family: "Roboto";
   color: white !important;

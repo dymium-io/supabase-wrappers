@@ -1370,11 +1370,17 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 	key := t.Key
 	secret := t.Secret
 
+	aerr := authentication.CheckConnectorAuth(schema, key, secret)
+	if aerr != nil {
+		http.Error(w, aerr.Error(), http.StatusInternalServerError)
+		return
+	}
 	//fmt.Printf("schema: %s, key: %s, secret %s\n", schema, key, secret)
 
 	if err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error unmarshaling cert: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
     
 	pemBlock, _ := pem.Decode( []byte(t.Csr) )
@@ -1418,6 +1424,7 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
     if err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
     }
 
     out := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: clientCRTRaw})

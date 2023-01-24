@@ -251,7 +251,7 @@ export default function EditDatascopes() {
                     if (js.status === "OK") {
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
-                                Data scope {dbname} updated successfully!
+                                Ghost Database {dbname} updated successfully!
                             </Alert>
                         )
                         capi.getConnections(setSpinner, setConns, setAlert, remap, () => {
@@ -343,7 +343,7 @@ export default function EditDatascopes() {
                     if (js.status === "OK") {
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
-                                Data scope {dbname} updated successfully!
+                                Ghost Database {dbname} updated successfully!
                             </Alert>
                         )
                         capi.getConnections(setSpinner, setConns, setAlert, remap, () => {

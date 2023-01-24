@@ -308,7 +308,7 @@ function Test() {
           <Row>
             <Col xs="auto">
               <Form.Group className="mb-3" controlId="connection" >
-                <Form.Label >Select Data Scope</Form.Label>
+                <Form.Label >Select Ghost Database</Form.Label>
                 <Form.Control as="select" size="sm"
                   onChange={e => {
 

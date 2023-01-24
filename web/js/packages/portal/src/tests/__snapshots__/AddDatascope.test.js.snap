@@ -6569,7 +6569,7 @@ Object {
               Close alert
             </span>
           </button>
-          Data scope 
+          Ghost Database 
           testdb
            created successfully!
         </div>
@@ -6918,7 +6918,7 @@ Object {
             Close alert
           </span>
         </button>
-        Data scope 
+        Ghost Database 
         testdb
          created successfully!
       </div>

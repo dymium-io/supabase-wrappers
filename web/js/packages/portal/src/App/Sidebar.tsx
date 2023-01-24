@@ -15,8 +15,8 @@ export default function Sidebar() {
   })
   const appDispatch = useAppDispatch()
   let roles = com.getTokenProperty("roles")
-  if (roles === undefined) {
-    roles = ["user"]
+  if (roles == null || roles.length == 0) {
+    return <></>
   }
   let isadmin = roles.includes("admin")
   let isuser = roles.includes("user")

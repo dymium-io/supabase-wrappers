@@ -89,7 +89,7 @@ Array [
                     className="form-label"
                     htmlFor="connection"
                   >
-                    Select Data Scope
+                    Select Ghost Database
                   </label>
                   <select
                     className="form-control form-control-sm"

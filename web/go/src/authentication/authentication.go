@@ -836,42 +836,44 @@ return "", err
 }
 func GetRoles(schema string, groups []string) []string {
 	var roles []string
-	roles = append(roles, gotypes.RoleUser)
-	var count int	
 	log.Infof("GetRoles: groups: %v\n", groups)
 	if(len(groups) == 0) {
-
-		// let's see if mapping is present at all
-		sql := `select count(*) from ` + schema + `.groupmapping;`;
-		row := db.QueryRow(sql)
-		err := row.Scan(&count)
-		if(err != nil) {
-			log.Errorf("GetRoles error quering mapping: %s", err.Error())
-			return roles;
-		} else {
-			if(count > 0) {
-				return roles
-			}
-			roles = append(roles, gotypes.RoleAdmin)
-			return roles
-		}
+		return roles;
 	}
-	sql := `select count(*) from ` + schema + `.groupmapping where outergroup = any ($1) and adminaccess=true;`;
+	sql := `select outergroup,adminaccess from ` + schema + `.groupmapping where outergroup = any ($1);`;
+
 
 	log.Infof("GetRoles: sql: %s\n", sql)
-	row := db.QueryRow(sql, pq.Array(groups))
-	err := row.Scan(&count)
+	rows, err := db.Query(sql, pq.Array(groups))
 	if(err != nil) {
 		log.Errorf("GetRoles error quering mapping: %s", err.Error())
 		return roles;
 	} else {
-		log.Infof("groups: %v, count: %d\n", groups, count)
-		if(count > 0) {
-			roles = append(roles, gotypes.RoleAdmin)
+		defer rows.Close()
+		var hasadmin, hasuser bool
+
+		var group string
+		var admin bool
+		for rows.Next() {
+			err = rows.Scan(&group, &admin)
+			if(err != nil) {
+				log.Errorf("GetRoles error quering mapping: %s", err.Error())
+				return roles;
+			}
+			if admin {
+				hasadmin = true
+			}
+			hasuser = true
+		}
+		if hasadmin {
+			roles = append(roles, gotypes.RoleAdmin)	
+		}
+		if hasuser {
+			roles = append(roles, gotypes.RoleUser)	
 		}
 	}
+	return roles
 
-	return roles;
 }
 func GeneratePortalJWT(picture string, schema string, name string, email string, groups []string, roles []string, org_id  string) (string, error) {
 	// generate JWT right header
@@ -1661,6 +1663,22 @@ func GetFakeAuthentication () []byte{
 	</html>`)
 	
 }
+
+func CheckConnectorAuth(schema, key, secret string) error {
+	sql := `select accesssecret from ` + schema + `.connectorauth where accesskey=$1;`
+
+	row  := db.QueryRow(sql, key)
+	var realsecret string
+	err := row.Scan(&realsecret)
+	if err != nil {
+		return err
+	}
+	if  secret != realsecret {
+		return errors.New("Invalid secret")
+	}
+	return nil
+}
+
 func GetTargets(schema, key, secret string, ) ([]string, error) {
 	var targets []string 	
 	sql := `select a.targetaddress, a.targetport, a.localport, b.id, a.id from ` + schema + `.connectors as a 
@@ -2046,17 +2064,16 @@ func GetConnectors(schema string) ( []types.Connector, error) {
     defer cancelfunc()
 
 	tx, err := db.BeginTx(ctx, nil)
-	sql := `select a.id, a.name, a.accesskey, a.accesssecret, EXTRACT(epoch from (now() - a.createdat)), COALESCE(b.use_connector, false) from `+schema+`.connectorauth as a left join `+schema+`.connections as b on a.id=b.connector_id`
-
+	sql := ` select a.id, a.name, a.accesskey, a.accesssecret, EXTRACT(epoch from (now() - a.createdat)), (select count(*) from `+schema+`.connections where connector_id=a.id) from `+schema+`.connectorauth as a;`
 	rows, err  := tx.QueryContext(ctx, sql)
 	if nil == err {
 		defer rows.Close()
 		for rows.Next() {
 			var id, name, accesskey, accesssecret string 
-			var status bool
+			var nstatus int
 			var age float64
 
-			err = rows.Scan(&id, &name, &accesskey, &accesssecret, &age, &status)
+			err = rows.Scan(&id, &name, &accesskey, &accesssecret, &age, &nstatus)
 			if err != nil {
 				tx.Rollback()
 				log.Errorf("GetConnectors error 0: %s", err.Error())
@@ -2072,7 +2089,7 @@ func GetConnectors(schema string) ( []types.Connector, error) {
 				o.Secret = &accesssecret
 			}
 			var st string
-			if status {
+			if nstatus > 0 {
 				st = "provisioned"
 			} else {
 				st = "configured"

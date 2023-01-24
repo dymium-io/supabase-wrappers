@@ -46,7 +46,8 @@ jobs:
         run: apt-get install -y build-essential
       - name: Set up libpq
         run: apt-get install -y libpq5
-
+      - name: Install zstd
+        run: apt install zstd
       - name: Run tests
         working-directory: ./web/go/src
         env:
@@ -78,7 +79,7 @@ jobs:
           AUTH0_PORTAL_RETURN_URL: 'https://portal.dymium.local:3001/app/logout'
           AUTH0_PORTAL_AUDIENCE: 'https://portal.dymium.local/api/handler'
 
-          MESH_PORT_RANGE=30000-30050
+          MESH_PORT_RANGE: '30000-30050'
           SESSION_SECRET: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
           CUSTOMER_HOST: 'portal.dymium.local'
           ADMIN_HOST: 'admin.dymium.local'
