@@ -8,7 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { act } from 'react-dom/test-utils';
 import { Provider } from 'react-redux'
 import store from '../Store/index'
-import { Http } from '../Api/Http'
+import { Http } from '@dymium/common/Api/Http'
 import { EditConnections } from '../App/Connections'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@dymium/common/App.scss';

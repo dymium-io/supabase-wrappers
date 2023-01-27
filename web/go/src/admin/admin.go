@@ -16,17 +16,22 @@ import (
 	"github.com/gorilla/mux"
 	"dymium.com/dymium/common"
 	_ "dymium.com/dymium/log"
+	"dymium.com/dymium/ahandlers"
 )
 
 func AdminHandlers(p *mux.Router) {
 	host := os.Getenv("ADMIN_HOST")
-	b := p.Host(host).Subrouter()
+	nonauthenticated := p.Host(host).Subrouter()
+	authenticated := nonauthenticated.Host(host).Subrouter()
+	authenticated.Use(ahandlers.AuthMiddleware)
 
 	commonheaders := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", common.Cachedirective)
 		w.Header().Set("x-content-type-options", "nosniff")
 		w.Header().Set("strict-transport-security", "max-age=31536000")
 	}
+
+	authenticated.HandleFunc("/api/createnewcustomer", ahandlers.CreateNewCustomer).Methods("POST").Name("createnewcustomer")
 
 	getImages := func(w http.ResponseWriter, r *http.Request) {
 
@@ -53,15 +58,15 @@ func AdminHandlers(p *mux.Router) {
 		}
 	}
 
-	b.PathPrefix("/static").HandlerFunc(getImages)
-	b.HandleFunc("/{name:.*\\.png}", getImages)
-	b.HandleFunc("/{name:.*\\.gif}", getImages)
-	b.HandleFunc("/{name:.*\\.svg}", getImages)
-	b.HandleFunc("/{name:.*\\.jpg}", getImages)
-	b.HandleFunc("/{name:.*\\.ico}", getImages)
+	nonauthenticated.PathPrefix("/static").HandlerFunc(getImages)
+	nonauthenticated.HandleFunc("/{name:.*\\.png}", getImages)
+	nonauthenticated.HandleFunc("/{name:.*\\.gif}", getImages)
+	nonauthenticated.HandleFunc("/{name:.*\\.svg}", getImages)
+	nonauthenticated.HandleFunc("/{name:.*\\.jpg}", getImages)
+	nonauthenticated.HandleFunc("/{name:.*\\.ico}", getImages)
 
 
-	b.HandleFunc("/api/logout", func(w http.ResponseWriter, r *http.Request) {
+	nonauthenticated.HandleFunc("/api/logout", func(w http.ResponseWriter, r *http.Request) {
 		domain := os.Getenv("AUTH0_ADMIN_DOMAIN")
 		clientid := os.Getenv("AUTH0_ADMIN_CLIENT_ID")
 		returnurl := os.Getenv("AUTH0_ADMIN_RETURN_URL")
@@ -77,20 +82,20 @@ func AdminHandlers(p *mux.Router) {
 
 
 	// For React to work properly, ensure that the URLs going into the React router return index.html
-	b.PathPrefix("/app/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	nonauthenticated.PathPrefix("/app/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		commonheaders(w, r)
 		http.ServeFile(w, r, "./admin/index.html")
 	})
-	b.PathPrefix("/services/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	nonauthenticated.PathPrefix("/services/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		commonheaders(w, r)
 		http.ServeFile(w, r, "./admin/index.html")
 	})
-	b.PathPrefix("/resources/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	nonauthenticated.PathPrefix("/resources/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		commonheaders(w, r)
 		http.ServeFile(w, r, "./admin/index.html")
 	})
 
-	b.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	nonauthenticated.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("in /!")
 		http.ServeFile(w, r, "./admin/index.html")
 	}).Methods("GET")

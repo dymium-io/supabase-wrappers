@@ -9,7 +9,7 @@ import Col from 'react-bootstrap/Col'
 import { Link } from "react-router-dom";
 import Alert from 'react-bootstrap/Alert'
 import Spinner from '@dymium/common/Components/Spinner'
-import * as http from '../Api/Http'
+import * as http from '@dymium/common/Api/Http'
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Common'
 import * as internal from '@dymium/common/Types/Internal'
@@ -119,7 +119,7 @@ let getDatascopeAccess = () => {
         setSpinner(false)
       }).catch((error) => {
         setAlert(
-          error
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>                  
         )
         setSpinner(false)
       })
@@ -127,7 +127,8 @@ let getDatascopeAccess = () => {
     resp => {
       setSpinner(false)
       setAlert(
-        error
+        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>Get datascope access failed</Alert>                  
+
       )
       setSpinner(false)
     },
@@ -135,7 +136,8 @@ let getDatascopeAccess = () => {
       console.log("on exception")
       setSpinner(false)
       setAlert(
-        error
+        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>                  
+
       )
       setSpinner(false)
     })
@@ -154,15 +156,14 @@ let regenerate = () => {
         setSpinner(false)
       }).catch((error) => {
         setAlert(
-          error
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>                  
         )
         setSpinner(false)
       })
     },
     resp => {
       setSpinner(false)
-      setAlert(
-        error
+      setAlert(  <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>"Regenerate password failed"</Alert>        
       )
       setSpinner(false)
     },
@@ -170,7 +171,7 @@ let regenerate = () => {
       console.log("on exception")
       setSpinner(false)
       setAlert(
-        error
+        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>        
       )
       setSpinner(false)
     })

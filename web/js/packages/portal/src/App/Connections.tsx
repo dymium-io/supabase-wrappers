@@ -21,7 +21,7 @@ import PasswordField from '@dymium/common/Components/PasswordField'
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Common'
 import * as capi from '../Api/Connections'
-import * as http from '../Api/Http'
+import * as http from '@dymium/common/Api/Http'
 import * as tun from '@dymium/common/Types/Tunnel'
 import Spinner from '@dymium/common/Components/Spinner'
 import { useInitialize } from '../Utils/CustomHooks'
@@ -729,7 +729,7 @@ export function EditConnections(props) {
         setSpinner(true)
 
         http.sendToServer("POST", "/api/updateconnection",
-            "", JSON.stringify(body),
+            null, JSON.stringify(body),
             resp => {
                 resp.json().then(js => {
 
@@ -779,7 +779,7 @@ export function EditConnections(props) {
 
         setSpinner(true)
         http.sendToServer("POST", "/api/deleteconnection",
-            "", JSON.stringify(body),
+            null, JSON.stringify(body),
             resp => {
                 resp.json().then(js => {
                     if (js.status === "OK") {

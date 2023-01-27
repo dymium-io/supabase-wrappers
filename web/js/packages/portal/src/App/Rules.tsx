@@ -13,7 +13,7 @@ import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import Spinner from '@dymium/common/Components/Spinner'
 import Alert from 'react-bootstrap/Alert'
 import * as types from '@dymium/common/Types/Common'
-import * as http from '../Api/Http'
+import * as http from '@dymium/common/Api/Http'
 import { v4 as uuidv4 } from 'uuid'
 import { Link } from "react-router-dom";
 import Tabs from 'react-bootstrap/Tabs'
@@ -606,7 +606,8 @@ export function AccessLevels() {
         console.log("on exception")
         setSpinner(false)
         setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error}</Alert>
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>                  
+
         )
         setSpinner(false)
       })
@@ -649,7 +650,8 @@ export function AccessLevels() {
           }
         }).catch((error) => {
           setAlert(
-            errorGet
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>                  
+
           )
           setSpinner(false)
         })
@@ -657,14 +659,15 @@ export function AccessLevels() {
       resp => {
         setSpinner(false)
         setAlert(
-          errorGet
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>getpolicies failed</Alert>                  
+
         )
         setSpinner(false)
       },
       error => {
         console.log("on exception")
         setAlert(
-          errorGet
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>                  
         )
         setSpinner(false)
       })

@@ -17,7 +17,7 @@ import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Internal'
 import * as ctypes from '@dymium/common/Types/Common'
-import * as http from '../Api/Http'
+import * as http from '@dymium/common/Api/Http'
 
 import {PrefillUnclassified, Confidential, Secret, TopSecret} from "./Detectors"
 export const DefaultPrefills = {

@@ -1,7 +1,7 @@
 import Alert from 'react-bootstrap/Alert'
 import * as types from '@dymium/common/Types/Common'
 import * as internal from '@dymium/common/Types/Internal'
-import * as http from './Api/Http'
+import * as http from '@dymium/common/Api/Http'
 
 
 export function getTokenProperty(prop) {

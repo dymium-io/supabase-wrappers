@@ -19,7 +19,7 @@ import Spinner from '@dymium/common/Components/Spinner'
 import cloneDeep from 'lodash/cloneDeep';
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Internal'
-import * as http from '../Api/Http'
+import * as http from '@dymium/common/Api/Http'
 import { useInitialize } from '../Utils/CustomHooks'
 import { useAppDispatch, useAppSelector } from './hooks'
 import { setActiveGroupsTab } from '../Slices/menuSlice'

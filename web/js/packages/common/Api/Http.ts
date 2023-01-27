@@ -1,6 +1,11 @@
 
-export function sendToServer(method: string, url: string,
-    headers, body: string, onsuccess, onfailure, onexception) {
+export function sendToServer(method: string, 
+    url: string,
+    headers: string[] | null, 
+    body: string, 
+    onsuccess: (a: Response) => void, 
+    onfailure: (a: Response | null) => void, 
+    onexception: (a: Error) => void ) {
     let token = window.sessionStorage.getItem("Session");
 
     if (token === null) {
@@ -25,7 +30,6 @@ export function sendToServer(method: string, url: string,
         params = { ...params, body: body }
     }
   
-
     fetch(url, params
     ).then(response => {
 

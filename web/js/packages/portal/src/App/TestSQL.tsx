@@ -15,7 +15,7 @@ import * as com from '../Common'
 import * as types from '@dymium/common/Types/Internal'
 import * as ctypes from '@dymium/common/Types/Common'
 import * as stypes from '@dymium/common/Types/DbSyncCommon'
-import * as http from '../Api/Http'
+import * as http from '@dymium/common/Api/Http'
 import { debugPort } from 'process';
 import * as b64 from '../Utils/Base64'
 import * as hex from '../Utils/Hex'

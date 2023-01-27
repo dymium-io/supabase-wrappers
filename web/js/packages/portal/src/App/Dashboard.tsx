@@ -5,7 +5,7 @@ import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
-import * as http from '../Api/Http'
+import * as http from '@dymium/common/Api/Http'
 import './Dashboard.scss';
 
 function getReadableSizeString(fileSizeInBytes) {

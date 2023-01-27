@@ -35,7 +35,8 @@ web-go:
     - source: DbSyncCommon.yaml
     - source: Common.yaml
     - source: Tunnel.yaml
-
+    - source: Admin.yaml
+    
 web-ts:
   language: TypeScript
   path: ../web/js/packages/common/Types
@@ -44,6 +45,8 @@ web-ts:
     - source: DbSyncCommon.yaml
     - source: Common.yaml
     - source: Tunnel.yaml
+    - source: Admin.yaml
+
 tclient:
   language: GoLang
   path: ../Tunnels/go/client/types
@@ -75,3 +78,4 @@ meshconnector:
   modules:
     - source: Tunnel.yaml    
     - source: Common.yaml
+

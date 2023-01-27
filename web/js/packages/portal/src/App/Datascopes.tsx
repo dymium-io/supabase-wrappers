@@ -25,7 +25,7 @@ import * as com from '../Common'
 import * as internal from '@dymium/common/Types/Internal'
 import * as types from '@dymium/common/Types/Common'
 import * as capi from '../Api/Connections'
-import * as http from '../Api/Http'
+import * as http from '@dymium/common/Api/Http'
 
 let remap =  new internal.ConnectionMap();
 

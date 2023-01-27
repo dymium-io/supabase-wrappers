@@ -73,7 +73,7 @@ Array [
               Close alert
             </span>
           </button>
-          Error retrieving policy.
+          Unhandled request: /api/getpolicies
         </div>
         <div>
           <form

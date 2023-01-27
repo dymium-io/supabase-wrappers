@@ -1,0 +1,11 @@
+---
+module: Admin
+
+
+Customer:
+  - id: ?string
+  - name: string
+  - orgid: string
+  - schema: string  
+  - domain: string
+  - admingroup: string

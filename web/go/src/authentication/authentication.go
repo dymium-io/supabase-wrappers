@@ -427,8 +427,24 @@ func GetSchemaFromToken(token string) (string, error) {
 		err = errors.New("Empty schema")
 	}
 	return claim.Schema, err
-
 }
+
+func ValidateAdminToken(token string) (error) {
+	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
+	claim := &gotypes.AdminClaims{}
+
+	tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+	if nil == err {
+		if !tkn.Valid {
+			err = errors.New("No error, but invalid token")
+		}
+	}
+
+	return err
+}
+
 func GetSessionFromToken(token string) (string, error) {
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
 	claim := &gotypes.Claims{}
@@ -1814,7 +1830,9 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		access_token, ok := jsonParsed.Path("access_token").Data().(string)
 		id_token, ok := jsonParsed.Path("id_token").Data().(string)
 		picture, name, email, groups, org_id, err := getUserInfoFromToken(auth_admin_domain, access_token, id_token)
-
+		fmt.Printf("id_token: %s\n", id_token)
+		fmt.Printf("access_token: %s\n", access_token)
+		fmt.Printf("name: %s, email: %s\n",  name, email)
 		token, err := generateAdminJWT(picture, name, email, groups, org_id)
 		if(err != nil){
 			log.Errorf("Redirect error: %s", err.Error() )
