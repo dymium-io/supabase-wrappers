@@ -102,6 +102,47 @@ export class Customer {
   }
 }
 
+export class DeleteCustomer {
+  private '_id': string
+  private '_schema': string
+
+  constructor() {
+    this['_id'] = ''
+    this['_schema'] = ''
+  }
+  get id(): string { return this['_id'] }
+  set id(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_id'])) {
+      setDirtyFlag()
+      this['_id'] = __v__
+    }
+  }
+  get schema(): string { return this['_schema'] }
+  set schema(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_schema'])) {
+      setDirtyFlag()
+      this['_schema'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): DeleteCustomer {
+    disableDF()
+    let cls = new DeleteCustomer()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.id = __a__['id']
+       cls.schema = __a__['schema']
+    } else {
+       doAlert(`DeleteCustomer: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 function stringReader(__dflt__) {
   return ((__a__) => {
     if(_.isString(__a__)) {

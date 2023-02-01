@@ -327,6 +327,9 @@ input:-internal-autofill-selected {
   padding-top: 0.3em;
   font-size: .875rem;
 }
+#scaledtable {
+  table-layout: auto !important;
+}
 #scaledtable-pageDropDown {
   padding-bottom: 0.3em;
   padding-top: 0.3em;

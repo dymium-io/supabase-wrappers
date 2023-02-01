@@ -32,6 +32,9 @@ func AdminHandlers(p *mux.Router) {
 	}
 
 	authenticated.HandleFunc("/api/createnewcustomer", ahandlers.CreateNewCustomer).Methods("POST").Name("createnewcustomer")
+	authenticated.HandleFunc("/api/getcustomers", ahandlers.GetCustomers).Methods("GET").Name("getcustomers")
+	authenticated.HandleFunc("/api/deletecustomer", ahandlers.DeleteCustomer).Methods("POST").Name("deletecustomer")
+	authenticated.HandleFunc("/api/updatecustomer", ahandlers.UpdateCustomer).Methods("POST").Name("updatecustomer")
 
 	getImages := func(w http.ResponseWriter, r *http.Request) {
 

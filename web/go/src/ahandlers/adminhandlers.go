@@ -38,7 +38,7 @@ func AuthMiddleware(h http.Handler) http.Handler {
 				return
 			}
 			w.Header().Set("Cache-Control", common.Nocache)
-			w.Header().Set("Content-Type", "text/html")
+			w.Header().Set("Content-Type", "application/json")
 			w.Write(js)
 			return
 		}
@@ -60,17 +60,87 @@ func CreateNewCustomer(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	t := types.Customer{}
 	err := json.Unmarshal(body, &t)
-
-	fmt.Printf("in CreateNewCustomer %v\n", t)
 	
 	js, err := json.Marshal(status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	err = authentication.CreateNewCustomer(t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Cache-Control", common.Nocache)
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
 
+func GetCustomers(w http.ResponseWriter, r *http.Request)  {
+	customers, err := authentication.GetCustomers()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return		
+	}
+
+	js, err := json.Marshal(customers)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func DeleteCustomer(w http.ResponseWriter, r *http.Request) {
+	status := types.OperationStatus{"OK", ""}
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.DeleteCustomer{}
+	err := json.Unmarshal(body, &t)
+
+	fmt.Printf("in DeleteCustomer %v\n", t)
+	
+	js, err := json.Marshal(status)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = authentication.DeleteCustomer(t.Id, t.Schema)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
+	status := types.OperationStatus{"OK", ""}
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.Customer{}
+	err := json.Unmarshal(body, &t)
+	
+	js, err := json.Marshal(status)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = authentication.UpdateCustomer(t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
