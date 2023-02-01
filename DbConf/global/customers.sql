@@ -16,3 +16,12 @@ CREATE TABLE global.customers (
 -- requires: ["global/customers"];
 
 ALTER TABLE global.customers ADD COLUMN admin_group character varying(128) DEFAULT ''; 
+
+-- #!migration
+-- name: "global/unique",
+-- description: "Add restrictions",
+-- requires: ["global/defgroup"];
+ALTER TABLE global.customers ADD CONSTRAINT unique_customer_id UNIQUE (id);
+ALTER TABLE global.customers ADD CONSTRAINT unique_customer_name UNIQUE (company_name);
+ALTER TABLE global.customers ADD CONSTRAINT unique_customer_schema UNIQUE (schema_name);
+ALTER TABLE global.customers ADD CONSTRAINT unique_customer_org UNIQUE (organization);

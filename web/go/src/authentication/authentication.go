@@ -564,7 +564,6 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	snc, _ := json.Marshal(rq)	
 	_, err = Invoke("DbSync", nil, snc)
 	if(err != nil) {
-		// TODO - pass this error
 		log.Errorf("DatascopePassword error: syncing datascopes: %s", err.Error())
 		return out, err
 	}
@@ -679,10 +678,9 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 	_, err = Invoke("DbSync", nil, snc)
 
 	if(err != nil) {
-		// TODO - pass this error
 		log.Errorf("GetDatascopesForGroups error: %s", err.Error())
 	}
-	return out, nil
+	return out, err
 }
 
 func GetIdentityFromToken(token string) (string, []string, error) {
@@ -2295,4 +2293,51 @@ func DeleteConnector(schema, Id string) error {
 		return err
 	}	
 	return nil
+}
+
+func CreateNewCustomer(customer types.Customer) error {
+	sql := `insert into global.customers(company_name, schema_name, organization, domain, admin_group)
+		values($1,$2,$3,$4,$5);`
+	_, err := db.Exec(sql, customer.Name, customer.Schema, customer.Orgid, customer.Domain, customer.Admingroup)
+
+	return err
+}
+func GetCustomers() ([]types.Customer, error) {
+	var ret []types.Customer
+	sql := `select id, company_name, schema_name, organization, domain, admin_group from global.customers;`
+
+	rows, err := db.Query(sql)
+	if nil == err {
+		defer rows.Close()
+
+		for rows.Next() {
+			var id, company_name, schema_name, organization, domain, admin_group string
+			err = rows.Scan(&id, &company_name, &schema_name, &organization, &domain, &admin_group)
+			if err != nil {
+				break
+			}
+			c := types.Customer{&id, company_name, organization, schema_name, domain, admin_group}
+			ret = append(ret, c)
+		}
+	}
+	return ret, err
+}
+
+func DeleteCustomer(id string, schema string) error {
+	sql := `delete from global.customers where id=$1;`
+	_, err := db.Exec(sql, id)
+	if err != nil {return err}
+
+	sql = `drop schema if exists `+schema+` cascade;`
+	_, err = db.Exec(sql)
+
+	return err
+}
+
+func UpdateCustomer(customer types.Customer) error {
+	sql := `update global.customers set organization=$1, domain=$2, admin_group=$3 where id=$4;`
+	_, err := db.Exec(sql, customer.Orgid, customer.Domain, customer.Admingroup, customer.Id)
+	if err != nil {return err}
+
+	return err
 }

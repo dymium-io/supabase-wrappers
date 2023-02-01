@@ -15,3 +15,8 @@ type Customer struct {
    Domain string `json:"domain"`
    Admingroup string `json:"admingroup"`
 }
+
+type DeleteCustomer struct {
+   Id string `json:"id"`
+   Schema string `json:"schema"`
+}
