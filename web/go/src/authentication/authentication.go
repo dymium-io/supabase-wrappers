@@ -32,6 +32,7 @@ import (
 	"dymium.com/dymium/gotypes"
 	"dymium.com/dymium/log"
 	"path/filepath"
+	"os/exec"
 	"aws"
 	"crypto/rand"
 	"math/big"
@@ -1769,9 +1770,9 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id,
 func AuthenticationAdminHandlers(h *mux.Router) error {
 	host := os.Getenv("ADMIN_HOST")
 	log.Debugf("ADMIN_HOST: %s", host)	
-	p := h.Host(host).Subrouter()
+	a := h.Host(host).Subrouter()
 
-	p.HandleFunc("/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
+	a.HandleFunc("/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
 		var status types.AuthStatus
 
 		token := common.TokenFromHTTPRequest(r)
@@ -1796,7 +1797,7 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		w.Write(js)
 	}).Methods("POST")
 
-	p.HandleFunc("/auth/redirect", func(w http.ResponseWriter, r *http.Request) {
+	a.HandleFunc("/auth/redirect", func(w http.ResponseWriter, r *http.Request) {
 		error, _ := mux.Vars(r)["error"]
 		error_description, _ := mux.Vars(r)["error_description"]		
 
@@ -1806,7 +1807,7 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 	Queries("error", "{error}").
     Queries("error_description", "{error_description}").Methods("GET")
 
-	p.HandleFunc("/auth/redirect", func(w http.ResponseWriter, r *http.Request) {
+	a.HandleFunc("/auth/redirect", func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
 		if code == "" {
 			generateError(w, r, "Error: ", r.URL.Query().Get("error_description"))
@@ -1851,7 +1852,7 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		
 	}).Methods("GET")
 
-	p.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
+	a.HandleFunc("/auth/login", func(w http.ResponseWriter, r *http.Request) {
 		org := r.URL.Query().Get("organization")
 		var newquery string
 		if org == "" {
@@ -1859,8 +1860,8 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect),
 				auth_admin_organization, url.QueryEscape(auth_admin_audience ),  url.QueryEscape("groups") )
 		} else {
-			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&audience=%s&scope=%s&prompt=login", 
-				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect), url.QueryEscape(auth_admin_audience ),  url.QueryEscape("groups") )
+			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&scope=%s&prompt=login", 
+				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect), url.QueryEscape("groups") )
 
 		}
 	
@@ -2299,7 +2300,36 @@ func CreateNewCustomer(customer types.Customer) error {
 	sql := `insert into global.customers(company_name, schema_name, organization, domain, admin_group)
 		values($1,$2,$3,$4,$5);`
 	_, err := db.Exec(sql, customer.Name, customer.Schema, customer.Orgid, customer.Domain, customer.Admingroup)
-
+	if err != nil {
+		return err
+	}
+	var mallard string
+	var where string
+	if "" == os.Getenv("LOCAL_ENVIRONMENT") {
+		// cloud, hence linux
+		mallard = "./mallard"
+		where = "./mallard"
+	} else {
+		// local Mac
+		mallard = "../bin/mallard"
+		where = "../../../dbConf"
+	}
+	dbhost := os.Getenv("DATABASE_HOST")
+	dbpassword := os.Getenv("DATABASE_PASSWORD")
+	dbport := os.Getenv("DATABASE_PORT")
+	dbuser := os.Getenv("DATABASE_USER")
+	dbname := os.Getenv("DATABASE_NAME")
+	
+	cmd := exec.Command(mallard, "migrate", "-s", customer.Schema, "-r", "customer", 
+		"--host", dbhost, 
+		"--port", dbport, 
+		"--user", dbuser, 
+		"--password", dbpassword, 
+		"--database", dbname,
+		"--apply")
+	cmd.Dir = where
+	stdout, err := cmd.Output()
+	fmt.Print(string(stdout))
 	return err
 }
 func GetCustomers() ([]types.Customer, error) {
@@ -2328,8 +2358,32 @@ func DeleteCustomer(id string, schema string) error {
 	_, err := db.Exec(sql, id)
 	if err != nil {return err}
 
-	sql = `drop schema if exists `+schema+` cascade;`
-	_, err = db.Exec(sql)
+	var mallard, where string
+
+	if "" == os.Getenv("LOCAL_ENVIRONMENT") {
+		// cloud, hence linux
+		mallard = "./mallard"
+		where = "./mallard"
+	} else {
+		// local Mac
+		mallard = "../bin/mallard"
+		where = "../../../dbConf"
+	}
+	dbhost := os.Getenv("DATABASE_HOST")
+	dbpassword := os.Getenv("DATABASE_PASSWORD")
+	dbport := os.Getenv("DATABASE_PORT")
+	dbuser := os.Getenv("DATABASE_USER")
+	dbname := os.Getenv("DATABASE_NAME")
+	
+	cmd := exec.Command(mallard, "drop", "-s", schema, 
+		"--host", dbhost, 
+		"--port", dbport, 
+		"--user", dbuser, 
+		"--password", dbpassword, 
+		"--database", dbname)
+	cmd.Dir = where		
+	stdout, err := cmd.Output()
+	fmt.Print(string(stdout))
 
 	return err
 }
