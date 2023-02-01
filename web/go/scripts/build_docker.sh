@@ -91,6 +91,10 @@ cd ../../../web/go/scripts/
 
 cp -r ../assets/admin $build_d/
 cp -r ../assets/customer $build_d/
+mkdir $build_d/mallard
+unzstd ../../../bin/linux/mallard.zst -o $build_d/mallard/mallard
+cp -r ../../../DbConf/global $build_d/mallard/
+cp -r ../../../DbConf/customer $build_d/mallard/
 
 dymium=$(docker images dymium -q)
 [ -z "$dymium" ] || docker rmi -f "$dymium"
