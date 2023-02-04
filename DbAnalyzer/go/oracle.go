@@ -14,7 +14,6 @@ import (
 func getOraInfo(c types.Connection) (interface{}, error) {
 
 	query := url.Values{}
-	query.Add("database", c.Database)
 	if c.Tls {
 		query.Add("SSL", "true")
 	} else {
@@ -24,7 +23,7 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 		Scheme:   "oracle",
 		User:     url.UserPassword(c.User, c.Password),
 		Host:     fmt.Sprintf("%s:%d", c.Address, c.Port),
-		Path:     "XEPDB1",
+		Path:     strings.ToUpper(c.Database),
 		RawQuery: query.Encode(),
 	}
 	oracleconn := u.String()
@@ -143,7 +142,7 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 		}
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
 			switch schema {
-			case "information_schema", "mysql", "sys", "performance_schema":
+			case "RDSADMIN":
 				isSystem = true
 			default:
 				isSystem = false

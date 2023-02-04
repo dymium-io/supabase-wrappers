@@ -1437,7 +1437,7 @@ postgresGetForeignPlan(PlannerInfo *root,
  * Construct a tuple descriptor for the scan tuples handled by a foreign join.
  */
 static TupleDesc
-get_tupdesc_for_join_scan_tuples(ForeignScanState *node)
+get_tupdesc_for_join_scan_tuples(ForeignScanState *node, int **how_to_redact /* !Dymium */)
 {
 	ForeignScan *fsplan = (ForeignScan *) node->ss.ps.plan;
 	EState	   *estate = node->ss.ps.state;
@@ -1453,6 +1453,9 @@ get_tupdesc_for_join_scan_tuples(ForeignScanState *node)
 	 * we can convert them to a composite type the local server knows.
 	 */
 	tupdesc = CreateTupleDescCopy(node->ss.ss_ScanTupleSlot->tts_tupleDescriptor);
+
+	*how_to_redact = (int*)palloc0(sizeof(int) * tupdesc->natts);
+
 	for (int i = 0; i < tupdesc->natts; i++)
 	{
 		Form_pg_attribute att = TupleDescAttr(tupdesc, i);
@@ -1460,9 +1463,8 @@ get_tupdesc_for_join_scan_tuples(ForeignScanState *node)
 		RangeTblEntry *rte;
 		Oid			reltype;
 
-		/* Nothing to do if it's not a generic RECORD attribute */
-		if (att->atttypid != RECORDOID || att->atttypmod >= 0)
-			continue;
+		List *options;
+		ListCell *lc;
 
 		/*
 		 * If we can't identify the referenced table, do nothing.  This'll
@@ -1470,7 +1472,7 @@ get_tupdesc_for_join_scan_tuples(ForeignScanState *node)
 		 */
 		var = (Var *) list_nth_node(TargetEntry, fsplan->fdw_scan_tlist,
 									i)->expr;
-		if (!IsA(var, Var) || var->varattno != 0)
+		if (!IsA(var, Var) /* !Dymium: move this condition down: || var->varattno != 0 */)
 			continue;
 		rte = list_nth(estate->es_range_table, var->varno - 1);
 		if (rte->rtekind != RTE_RELATION)
@@ -1478,6 +1480,29 @@ get_tupdesc_for_join_scan_tuples(ForeignScanState *node)
 		reltype = get_rel_type_id(rte->relid);
 		if (!OidIsValid(reltype))
 			continue;
+
+
+		/* !Dymium: find how_to_redact */
+		options = GetForeignColumnOptions(rte->relid, att->attnum);
+		foreach(lc, options)
+		  {
+			DefElem    *def = (DefElem *) lfirst(lc);
+			if (strcmp(def->defname, "redact") == 0)
+			  {
+				char *redact = defGetString(def);
+				(*how_to_redact)[i] = atoi(redact);
+				break;
+			  }
+		  }
+
+		/* !Dymium: move these conditions here */
+		/* Nothing to do if it's not a generic RECORD attribute */
+		if (att->atttypid != RECORDOID || att->atttypmod >= 0)
+			continue;
+
+		if (var->varattno != 0)
+		  continue;
+
 		att->atttypid = reltype;
 		/* shouldn't need to change anything else */
 	}
@@ -1508,7 +1533,9 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 		return;
 
 	// Dymium
+	// puts("===== FSPLAN START =====");
 	// pprint(fsplan);
+	// puts("===== FSPLAN END =====");
 	
 	/*
 	 * We'll save private state in node->fdw_state.
@@ -1546,6 +1573,7 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 	/* Get private info created by planner functions. */
 	fsstate->query = strVal(list_nth(fsplan->fdw_private,
 									 FdwScanPrivateSelectSql));
+	// puts(fsstate->query);
 	fsstate->retrieved_attrs = (List *) list_nth(fsplan->fdw_private,
 												 FdwScanPrivateRetrievedAttrs);
 	fsstate->fetch_size = intVal(list_nth(fsplan->fdw_private,
@@ -1592,7 +1620,7 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 	else
 	{
 		fsstate->rel = NULL;
-		fsstate->tupdesc = get_tupdesc_for_join_scan_tuples(node);
+		fsstate->tupdesc = get_tupdesc_for_join_scan_tuples(node, &fsstate->how_to_redact);
 	}
 
 	fsstate->attinmeta = TupleDescGetAttInMetadata(fsstate->tupdesc);
@@ -2730,8 +2758,11 @@ postgresBeginDirectModify(ForeignScanState *node, int eflags)
 	{
 		TupleDesc	tupdesc;
 
-		if (fsplan->scan.scanrelid == 0)
-			tupdesc = get_tupdesc_for_join_scan_tuples(node);
+		if (fsplan->scan.scanrelid == 0) {
+		  /* !Dymium: not used */
+		  int *how_to_redact;
+		  tupdesc = get_tupdesc_for_join_scan_tuples(node, &how_to_redact);
+		}
 		else
 			tupdesc = RelationGetDescr(dmstate->rel);
 
