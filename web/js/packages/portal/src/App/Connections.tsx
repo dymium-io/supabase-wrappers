@@ -12,7 +12,8 @@ import paginationFactory from 'react-bootstrap-table2-paginator';
 import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import Toggle from 'react-toggle'
-
+import Offcanvas from '@dymium/common/Components/Offcanvas'
+import {Link} from "react-router-dom";
 const { SearchBar, ClearSearchButton } = Search;
 
 
@@ -181,7 +182,7 @@ function ConnectionForm(props) {
                     }
                 </Col>
             </Row>
-            {conns.length > 0 &&
+            
                 < Row >
                 <Col className="mt-1" style={{ paddingLeft: '1.5em' }}>
                     <Toggle className="yellowtoggle"
@@ -198,7 +199,7 @@ function ConnectionForm(props) {
                     <label className="form-check-label" style={{ marginLeft: '0.5em', position: 'relative', top: '-0.38em' }} htmlFor='conn-status'>Use Connector instead of direct addressing</label>
                 </Col>
             </Row>
-            }
+         
 <Row>
     {props.usesconnector ?
         <>
@@ -397,6 +398,7 @@ export function AddConnection() {
     const [tunnelid, setTunnelid] = useState("")
     const [tunnelName, setTunnelName] = useState("")
     const [usesconnector, setUsesconnector] = useState(false)
+    const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
 
     let sendConnection = () => {
         setSpinner(true)
@@ -483,8 +485,27 @@ export function AddConnection() {
     return (
         <div className=" text-left">
             {alert}
-            <h5 > Connect to New Data Source <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+            <h5 > Connect to New Data Source <i onClick={e => { setShowOffcanvas(!showOffcanvas) }} className="trash fa-solid fa-circle-info mr-1"></i> <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+            <Offcanvas modal={false} width={300} show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}>
+                <h5>Adding Data Source</h5>
+                <div className="mb-3">
+                    Data Source is a connection into your database. We recommend to use admin-level credentials. Dymium will overlay access policy to the data.
+                </div>
 
+                <div className="mb-3">
+                    Connection can either be direct, and for this a Private Link must be provisioned, or via Dymium Connector. In the latter case, the connector must be configured, and running.
+                </div>
+                <div className="mb-3">
+                    On pressing Apply, Dymium will check the connection to the Data Source.
+                </div>
+
+                <div className="mb-3">
+                    Once one or more Data Sources are configured, proceed to <Link to="/app/datascopes">creation of Ghost Databases.</Link>
+                    </div>
+                <div>
+
+                </div>
+            </Offcanvas>
             <div className=" text-left">
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                     <ConnectionForm
@@ -556,6 +577,8 @@ export function EditConnections(props) {
     const [validated, setValidated] = useState(false)
     const [cred, setCred] = useState(false)
     const [alert, setAlert] = useState<JSX.Element>(<></>)
+    const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
+
     let form = useRef<HTMLFormElement>(null)
 
     let handleSubmit = event => {
@@ -921,7 +944,21 @@ export function EditConnections(props) {
                     </Modal.Footer>
                 </Form>
             </Modal>
+            <Offcanvas modal={false} width={300} show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}>
+                <h5>Editing Data Sources</h5>
+                <div className="mb-3">
+                            This page allows to edit and delete previously configured data sources.
+                </div>
+                <div className="mb-3">
+                            If a data source is used in a Ghost Database, it should first be unlinked from it before deletion.
+                </div>             
+                <div className="mb-3">
+                    If parameters of a Data Source are edited, the connection will be checked on pressing Apply.
+                </div>
+                <div>
 
+                </div>
+            </Offcanvas>
             {conns !== [] &&
                 <div id="tablecontainer" style={{ width: '90%' }} className="text-center">
                     <ToolkitProvider
@@ -935,7 +972,7 @@ export function EditConnections(props) {
                                 <div className="text-left">
                                     {alert}
                                     <div className="d-flex">
-                                        <h5 >Edit Data Sources  <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+                                        <h5 >Edit Data Sources <i onClick={e => { setShowOffcanvas(!showOffcanvas) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
 
 
                                         <div style={{ marginLeft: "auto" }}>

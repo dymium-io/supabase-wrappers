@@ -296,7 +296,7 @@ function EditCustomers() {
                     GetCustomers()
                     setAlert(
                         <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
-                            Customer {customerName()}s' record updated
+                            Customer {customerName()}'s record updated
                         </Alert>
                     )
 
@@ -377,7 +377,7 @@ function EditCustomers() {
                     appDispatch(setActiveCustomer(""))
                     setAlert(
                         <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
-                            Customer {customerName()} deleted successfully
+                            Customer {customerName()}'s record deleted successfully
                         </Alert>
                     )
                     setTimeout(() => setSpinner(false), 500)

@@ -849,14 +849,15 @@ func  CheckAndRefreshToken(token string, sport string) (string, error) {
 
 return "", err
 }
-func GetRoles(schema string, groups []string) []string {
+func GetRoles(schema string, groups []string, admin_group string) []string {
 	var roles []string
 	log.Infof("GetRoles: groups: %v\n", groups)
 	if(len(groups) == 0) {
 		return roles;
 	}
-	sql := `select outergroup,adminaccess from ` + schema + `.groupmapping where outergroup = any ($1);`;
+	sql := `select outergroup, adminaccess from ` + schema + `.groupmapping where outergroup = any ($1);`;
 
+	var hasadmin, hasuser bool
 
 	log.Infof("GetRoles: sql: %s\n", sql)
 	rows, err := db.Query(sql, pq.Array(groups))
@@ -865,7 +866,7 @@ func GetRoles(schema string, groups []string) []string {
 		return roles;
 	} else {
 		defer rows.Close()
-		var hasadmin, hasuser bool
+
 
 		var group string
 		var admin bool
@@ -887,8 +888,32 @@ func GetRoles(schema string, groups []string) []string {
 			roles = append(roles, gotypes.RoleUser)	
 		}
 	}
-	return roles
+	if !hasadmin && !hasuser {
+		// check if there are any group mappings
+		log.Infof("In GetRoles, not admin, not user")
+		sql := `select count(*) from ` + schema + `.groupmapping;`;
+		row := db.QueryRow(sql)
+		var count int
+		err := row.Scan(&count)
+		log.Infof("In GetRoles, count: %d, err: %v", count, err)
 
+		if err == nil && count == 0 {
+			// do the privilege elevation
+			for _, gr := range groups {
+				if gr == admin_group {
+					roles = append(roles, gotypes.RoleAdmin)
+					roles = append(roles, gotypes.RoleUser)	
+					roles = append(roles, gotypes.RoleInstaller)	
+					log.Infof("%s == %s", gr, admin_group)
+					
+					break
+				} else {
+					log.Infof("%s != %s", gr, admin_group)
+				}
+			}
+		}
+	}
+	return roles
 }
 func GeneratePortalJWT(picture string, schema string, name string, email string, groups []string, roles []string, org_id  string) (string, error) {
 	// generate JWT right header
@@ -940,7 +965,7 @@ func refreshPortalToken(token string) (string, error) {
 			Session: claim.Session,
 			Email: claim.Email,
 			Groups: claim.Groups,
-			Roles: GetRoles(claim.Schema, claim.Groups),
+			Roles: claim.Roles,
 			Picture: claim.Picture,
 			Schema: claim.Schema ,
 			Port: claim.Port,
@@ -1749,12 +1774,12 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id,
 
 
 	if(err != nil){
-		log.ErrorUserf(schema, "", email, groups, GetRoles(schema, groups), "Error in tunnel login: %s", err.Error())
+		log.ErrorUserf(schema, "", email, groups, GetRoles(schema, groups, ""), "Error in tunnel login: %s", err.Error())
 	
 		return	"", "", []string{}, "", "", []string{}, err
 	} 
 
-	token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups), org_id)
+	token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups, ""), org_id)
 
 	session, _ := GetSessionFromToken(token)
 
@@ -1765,7 +1790,7 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id,
 	if(err == nil) {
 		log.InfoUserf(schema, session, email, groups, []string{}, "Successful tunnel login")
 	}
-	return token, name, groups, schema, email, GetRoles(schema, groups), err
+	return token, name, groups, schema, email, GetRoles(schema, groups, ""), err
 }
 func AuthenticationAdminHandlers(h *mux.Router) error {
 	host := os.Getenv("ADMIN_HOST")
@@ -1856,9 +1881,9 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		org := r.URL.Query().Get("organization")
 		var newquery string
 		if org == "" {
-			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&organization=%s&audience=%s&scope=%s&prompt=login", 
+			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&organization=%s&scope=%s&prompt=login", 
 				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect),
-				auth_admin_organization, url.QueryEscape(auth_admin_audience ),  url.QueryEscape("groups") )
+				auth_admin_organization, url.QueryEscape("groups") )
 		} else {
 			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&scope=%s&prompt=login", 
 				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect), url.QueryEscape("groups") )
@@ -1940,11 +1965,12 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		log.Infof("Access Tolen: %s", access_token)
 		log.Infof("Groupsn: %v", groups)
 
-		sql := fmt.Sprintf("select schema_name from global.customers where organization=$1;")
+		sql := fmt.Sprintf("select schema_name, admin_group from global.customers where organization=$1;")
 
 		row := db.QueryRow(sql, org_id)
 		var schema string
-		err = row.Scan(&schema)
+		var admin_group string
+		err = row.Scan(&schema, &admin_group)
 
 
 		if(err != nil){
@@ -1956,14 +1982,14 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 			return		
 		} 
 
-		token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups), org_id)
+		token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups, admin_group), org_id)
 		session, _ := GetSessionFromToken(token)
 		if(err != nil){
-			log.ErrorUserf(schema, session, email, groups,  GetRoles(schema, groups), "Error in portal JWT generation: %s", err.Error() )
+			log.ErrorUserf(schema, session, email, groups,  GetRoles(schema, groups, admin_group), "Error in portal JWT generation: %s", err.Error() )
 		}
 		recordLogin(schema)
 		if(err == nil){
-			log.InfoUserf(schema, session, email, groups,  GetRoles(schema, groups), "Successful portal login, token: %s", token)
+			log.InfoUserf(schema, session, email, groups,  GetRoles(schema, groups, admin_group), "Successful portal login, token: %s", token)
 		}
 		w.Header().Set("Cache-Control", common.Nocache)
 		w.Header().Set("Content-Type", "text/html")

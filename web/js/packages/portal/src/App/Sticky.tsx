@@ -18,7 +18,12 @@ export default function Sticky() {
   })
   const appDispatch = useAppDispatch()
 
-
+  if(com.isInstaller()) {
+    return (
+      <Navigate to={"/app/groups"} />
+  
+    )    
+  }
   return (
     <Navigate to={"/app/"+selected} />
 

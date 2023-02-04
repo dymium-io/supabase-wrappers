@@ -49,8 +49,76 @@ exports[`add-datascope 1`] = `
         onMouseDown={[Function]}
       />
       <div
-        className="col"
+        className="pl-0 col"
+        style={
+          Object {
+            "paddingRight": "10px",
+          }
+        }
       />
+    </div>
+  </div>
+  <div
+    className="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+    style={
+      Object {
+        "right": -300,
+        "width": 0,
+      }
+    }
+  >
+    <div>
+      <div
+        className="row"
+      >
+        <div
+          className="col"
+        >
+           
+          <h5>
+             
+          </h5>
+        </div>
+        <div
+          className="col-auto"
+        >
+          <i
+            aria-hidden="true"
+            className="cursor-pointer fa fa-times mr-1 fa-2x close"
+            onClick={[Function]}
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="offcanvas_handle p-0 m-0 px-2 col-auto"
+        onMouseDown={[Function]}
+      />
+      <div
+        className="pl-0 col"
+        style={
+          Object {
+            "paddingRight": "10px",
+          }
+        }
+      >
+        <h5>
+          Editing Ghost Database
+        </h5>
+        <div
+          className="mb-3"
+        >
+          This page allows to edit or remove a Ghost Database.
+        </div>
+        <div
+          className="mb-3"
+        >
+          The same interface as for adding a Ghost Database is used. You select Data Sources and tables that you want to expose
+        </div>
+      </div>
     </div>
   </div>
   <div
@@ -70,6 +138,10 @@ exports[`add-datascope 1`] = `
           >
             <h5>
               Edit Ghost Databases  
+              <i
+                className="trash fa-solid fa-circle-info mr-1"
+                onClick={[Function]}
+              />
               <img
                 className="spinner"
                 src="/logo.png"

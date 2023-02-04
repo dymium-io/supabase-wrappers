@@ -5,7 +5,7 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import { SortableContainer, SortableElement, SortableContainerProps, SortableElementProps, arrayMove } from 'react-sortable-hoc';
 
-
+import Offcanvas from '@dymium/common/Components/Offcanvas'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
@@ -14,6 +14,7 @@ import Spinner from '@dymium/common/Components/Spinner'
 import Alert from 'react-bootstrap/Alert'
 import * as types from '@dymium/common/Types/Common'
 import * as http from '@dymium/common/Api/Http'
+import * as com from '../Common'
 import { v4 as uuidv4 } from 'uuid'
 import { Link } from "react-router-dom";
 import Tabs from 'react-bootstrap/Tabs'
@@ -50,7 +51,8 @@ type BuildState = {
   policy: types.DataPolicy | null,
   name: string,
   method: string,
-  data: string
+  data: string,
+  showOffhelp: boolean
 }
 
 type Rule = {
@@ -77,8 +79,10 @@ export class BuildRulesClass extends Component {
     policy: null,
     name: "",
     method: "columnregexp",
-    data: ""
+    data: "",
+    showOffhelp: com.isInstaller()
   }
+
   counter = 0
   constructor(props) {
     super(props)
@@ -416,8 +420,31 @@ export class BuildRulesClass extends Component {
   render() {
     return (
       <>
-        <h5 >Edit Policy Suggestions  <Spinner show={this.state.spinner} style={{ width: '28px' }}></Spinner></h5>
+        <h5 >Edit Policy Suggestions  <i onClick={e => {  this.setState({showOffhelp: !this.state.showOffhelp}) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={this.state.spinner} style={{ width: '28px' }}></Spinner></h5>
+        <Offcanvas modal={false} width={300} show={this.state.showOffhelp} onClose={(e) => { this.setState({showOffhelp: false}) }}>
+          <h5>Policy Suggestions</h5>
+          <div className="mb-3">
+            This page allows to craft the policy suggestions for table access in Ghost Database interface.
+          </div>
+          <div className="mb-3">
+            The access levels must be pre-defined in the Access Levels tab.
+          </div>
 
+          <div className="mb-3">
+            There are three ways to detect PII content: 
+            <ul>
+              <li>Amazon Comprehend</li>
+              <li>Regexp on the data content in the column (using a subsample)</li>
+              <li>Regexp on the column names</li>
+            </ul>
+            The latter two types can be used to extend the set of detectable PIIs.
+          </div>
+
+          <div className="mb-3">
+            
+          </div>
+
+        </Offcanvas>
         <Form ref={this.formpii} onSubmit={this.addPII} noValidate validated={this.state.validatedPII}>
           <Row >
             <Col xs="auto">
@@ -536,6 +563,8 @@ export function AccessLevels() {
   const [name, setName] = useState("")
   const [level, setLevel] = useState("")
   const [actions, setActions] = useState<types.DataAction[]>([])
+  const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
+
   let policy = useRef(new types.DataPolicy())
   let errorGet = <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
     Error retrieving policy.
@@ -768,7 +797,31 @@ export function AccessLevels() {
   }
 
   return <div>
-    <h5 >Define Access Levels  <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+    <h5 >Define Access Levels <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i> <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+    <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
+          <h5>Access Levels</h5>
+          <div className="mb-3">
+            Access levels are the templates for access rights when you define the Ghost Databases. For example, you can define levels 
+            <ul>
+              <li>
+              Administrator
+              </li>
+              <li>
+              Data Engineer
+              </li>         
+              <li>
+              Data Scientist
+              </li>                       
+            </ul>
+           
+          </div>
+          <div className="mb-3">
+            Once you defined the levels, go to the next tab Rules, and set the suggestion for data handling for various PIIs
+          </div>
+
+
+
+        </Offcanvas>
     {alert}
     <div>
       <Form onSubmit={addLevel}>

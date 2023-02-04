@@ -6,6 +6,11 @@ exports[`add-connection 1`] = `
 >
   <h5>
      Connect to New Data Source 
+    <i
+      className="trash fa-solid fa-circle-info mr-1"
+      onClick={[Function]}
+    />
+     
     <img
       className="hiddenspinner"
       src="/logo.png"
@@ -16,6 +21,86 @@ exports[`add-connection 1`] = `
       }
     />
   </h5>
+  <div
+    className="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+    style={
+      Object {
+        "right": -300,
+        "width": 0,
+      }
+    }
+  >
+    <div>
+      <div
+        className="row"
+      >
+        <div
+          className="col"
+        >
+           
+          <h5>
+             
+          </h5>
+        </div>
+        <div
+          className="col-auto"
+        >
+          <i
+            aria-hidden="true"
+            className="cursor-pointer fa fa-times mr-1 fa-2x close"
+            onClick={[Function]}
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="offcanvas_handle p-0 m-0 px-2 col-auto"
+        onMouseDown={[Function]}
+      />
+      <div
+        className="pl-0 col"
+        style={
+          Object {
+            "paddingRight": "10px",
+          }
+        }
+      >
+        <h5>
+          Adding Data Source
+        </h5>
+        <div
+          className="mb-3"
+        >
+          Data Source is a connection into your database. We recommend to use admin-level credentials. Dymium will overlay access policy to the data.
+        </div>
+        <div
+          className="mb-3"
+        >
+          Connection can either be direct, and for this a Private Link must be provisioned, or via Dymium Connector. In the latter case, the connector must be configured, and running.
+        </div>
+        <div
+          className="mb-3"
+        >
+          On pressing Apply, Dymium will check the connection to the Data Source.
+        </div>
+        <div
+          className="mb-3"
+        >
+          Once one or more Data Sources are configured, proceed to 
+          <a
+            href="/app/datascopes"
+            onClick={[Function]}
+          >
+            creation of Ghost Databases.
+          </a>
+        </div>
+        <div />
+      </div>
+    </div>
+  </div>
   <div
     className=" text-left"
   >
@@ -222,6 +307,86 @@ exports[`add-connection 1`] = `
               Type systemwide unique name to use in SQL
             </div>
           </div>
+        </div>
+      </div>
+      <div
+        className="row"
+      >
+        <div
+          className="mt-1 col"
+          style={
+            Object {
+              "paddingLeft": "1.5em",
+            }
+          }
+        >
+          <div
+            className="react-toggle yellowtoggle"
+            onClick={[Function]}
+            onTouchEnd={[Function]}
+            onTouchMove={[Function]}
+            onTouchStart={[Function]}
+          >
+            <div
+              className="react-toggle-track"
+            >
+              <div
+                className="react-toggle-track-check"
+              >
+                <svg
+                  height="11"
+                  viewBox="0 0 14 11"
+                  width="14"
+                >
+                  <path
+                    d="M11.264 0L5.26 6.004 2.103 2.847 0 4.95l5.26 5.26 8.108-8.107L11.264 0"
+                    fill="#fff"
+                    fillRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div
+                className="react-toggle-track-x"
+              >
+                <svg
+                  height="10"
+                  viewBox="0 0 10 10"
+                  width="10"
+                >
+                  <path
+                    d="M9.9 2.12L7.78 0 4.95 2.828 2.12 0 0 2.12l2.83 2.83L0 7.776 2.123 9.9 4.95 7.07 7.78 9.9 9.9 7.776 7.072 4.95 9.9 2.12"
+                    fill="#fff"
+                    fillRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div
+              className="react-toggle-thumb"
+            />
+            <input
+              checked={false}
+              className="react-toggle-screenreader-only"
+              id="conn-status"
+              onBlur={[Function]}
+              onChange={[Function]}
+              onFocus={[Function]}
+              type="checkbox"
+            />
+          </div>
+          <label
+            className="form-check-label"
+            htmlFor="conn-status"
+            style={
+              Object {
+                "marginLeft": "0.5em",
+                "position": "relative",
+                "top": "-0.38em",
+              }
+            }
+          >
+            Use Connector instead of direct addressing
+          </label>
         </div>
       </div>
       <div

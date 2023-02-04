@@ -42,7 +42,12 @@ Array [
     >
       <div>
         <h5>
-          Define Access Levels  
+          Define Access Levels 
+          <i
+            className="trash fa-solid fa-circle-info mr-1"
+            onClick={[Function]}
+          />
+           
           <img
             className="hiddenspinner"
             src="/logo.png"
@@ -53,6 +58,80 @@ Array [
             }
           />
         </h5>
+        <div
+          className="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+          style={
+            Object {
+              "right": -300,
+              "width": 0,
+            }
+          }
+        >
+          <div>
+            <div
+              className="row"
+            >
+              <div
+                className="col"
+              >
+                 
+                <h5>
+                   
+                </h5>
+              </div>
+              <div
+                className="col-auto"
+              >
+                <i
+                  aria-hidden="true"
+                  className="cursor-pointer fa fa-times mr-1 fa-2x close"
+                  onClick={[Function]}
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            className="row"
+          >
+            <div
+              className="offcanvas_handle p-0 m-0 px-2 col-auto"
+              onMouseDown={[Function]}
+            />
+            <div
+              className="pl-0 col"
+              style={
+                Object {
+                  "paddingRight": "10px",
+                }
+              }
+            >
+              <h5>
+                Access Levels
+              </h5>
+              <div
+                className="mb-3"
+              >
+                Access levels are the templates for access rights when you define the Ghost Databases. For example, you can define levels
+                <ul>
+                  <li>
+                    Administrator
+                  </li>
+                  <li>
+                    Data Engineer
+                  </li>
+                  <li>
+                    Data Scientist
+                  </li>
+                </ul>
+              </div>
+              <div
+                className="mb-3"
+              >
+                Once you defined the levels, go to the next tab Rules, and set the suggestion for data handling for various PIIs
+              </div>
+            </div>
+          </div>
+        </div>
         <div
           className="fade alert alert-danger alert-dismissible show"
           role="alert"

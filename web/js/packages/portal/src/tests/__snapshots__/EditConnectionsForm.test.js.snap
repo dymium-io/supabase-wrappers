@@ -297,6 +297,68 @@ exports[`edit-connections-form 1`] = `
           class="row"
         >
           <div
+            class="mt-1 col"
+            style="padding-left: 1.5em;"
+          >
+            <div
+              class="react-toggle yellowtoggle"
+            >
+              <div
+                class="react-toggle-track"
+              >
+                <div
+                  class="react-toggle-track-check"
+                >
+                  <svg
+                    height="11"
+                    viewBox="0 0 14 11"
+                    width="14"
+                  >
+                    <path
+                      d="M11.264 0L5.26 6.004 2.103 2.847 0 4.95l5.26 5.26 8.108-8.107L11.264 0"
+                      fill="#fff"
+                      fill-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div
+                  class="react-toggle-track-x"
+                >
+                  <svg
+                    height="10"
+                    viewBox="0 0 10 10"
+                    width="10"
+                  >
+                    <path
+                      d="M9.9 2.12L7.78 0 4.95 2.828 2.12 0 0 2.12l2.83 2.83L0 7.776 2.123 9.9 4.95 7.07 7.78 9.9 9.9 7.776 7.072 4.95 9.9 2.12"
+                      fill="#fff"
+                      fill-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="react-toggle-thumb"
+              />
+              <input
+                class="react-toggle-screenreader-only"
+                id="conn-status"
+                type="checkbox"
+              />
+            </div>
+            <label
+              class="form-check-label"
+              for="conn-status"
+              style="margin-left: 0.5em; position: relative; top: -0.38em;"
+            >
+              Use Connector instead of direct addressing
+            </label>
+          </div>
+        </div>
+        <div
+          class="row"
+        >
+          <div
             class="col-auto"
           >
             <div

@@ -284,7 +284,7 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 
 		listen, err := createListener(customer, tg[0], tg[1])
 		if err != nil {
-			log.ErrorTenantf(customer, "Error creating listener %s", err.Error())
+			log.ErrorTenantf(customer, "Error creating listener for %s %s, connector %s, tunnel %s; %s",  tg[0], tg[1], tg[2], tg[3], err.Error())
 			e := protocol.TransmissionUnit{protocol.Error, 0, []byte("Could not create a listener, probably another connector running")}
 			enc.Encode(e)
 			time.Sleep(2 * time.Second)
@@ -516,9 +516,7 @@ func setTCPKeepAlive(clientHello *tls.ClientHelloInfo) (*tls.Config, error) {
 	  // we want to protect against NLB timeouts
 	  if err := tcpConn.SetKeepAlivePeriod(60 * time.Second); err != nil {
 		log.Infof("Could not set keep alive period %s", err.Error())
-	  } else {
-		log.Info("update keep alive period")
-	  }
+	  } 
 	} else {
 	  log.Error("TLS over non-TCP connection")
 	}
@@ -570,7 +568,7 @@ func Server(address string, port int, customer string,
 			log.Errorf("Error in tls.Accept: %s", err.Error())
 			continue
 		}
-		log.Debugf("Accepted call from a connector!")
+		log.Infof("Accepted call from a connector!")
 		// get the underlying tls connection
 		tlsConn, ok := egress.(*tls.Conn)
 		if !ok {
@@ -589,7 +587,7 @@ func Server(address string, port int, customer string,
 		for _, cert := range state.PeerCertificates {
 			log.Debugf("Subject %s", cert.Subject)
 			for _, name := range cert.DNSNames {
-				log.Debugf("Remote Connector requested: %s", name)
+				log.Infof("Remote Connector requested: %s", name)
 				connections = append(connections, name)
 			}
 		}
