@@ -38,6 +38,15 @@ export default function Sidebar() {
           to: '/app/dashboard',
           id: 'dashboard'
         })
+
+    if (isadmin)
+      items.push(
+        {
+          item: <div className='darkblue'>  <i className="fas fa-users mr-2 fa-fw"></i>Groups </div>,
+          to: '/app/groups',
+          id: 'groups'
+        })
+
     if (isadmin)
       items.push(
         {
@@ -52,13 +61,7 @@ export default function Sidebar() {
           to: '/app/connections',
           id: 'connections'
         })
-    if (isadmin)
-      items.push(
-        {
-          item: <div className='darkblue'>  <i className="fas fa-users mr-2 fa-fw"></i>Groups </div>,
-          to: '/app/groups',
-          id: 'groups'
-        })
+
     if (isadmin)
       items.push(
         {
@@ -68,19 +71,19 @@ export default function Sidebar() {
         })
 
 
-    if (isadmin)
-      items.push(
-        {
-          item: <div className='darkblue'> <i className="fa fa-gavel mr-2 fa-fw"></i>Rules </div>,
-          to: '/app/rules',
-          id: 'rules'
-        })
     if (isuser)
       items.push(
         {
           item: <div className='darkblue'> <i className="fa fa-key mr-2 fa-fw"></i>User Access </div>,
           to: '/app/access',
           id: 'access'
+        })
+    if (isadmin)
+      items.push(
+        {
+          item: <div className='darkblue'> <i className="fa fa-gavel mr-2 fa-fw"></i>Rules </div>,
+          to: '/app/rules',
+          id: 'rules'
         })
 
     items.push(

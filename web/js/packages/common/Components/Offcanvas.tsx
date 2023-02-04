@@ -6,14 +6,16 @@ import useGlobalEvent from 'beautiful-react-hooks/useGlobalEvent';
 import './Offcanvas.scss'
 const initialwidth=600
 export default function Offcanvas(props) {
-    let [width, setWidth] = useState(initialwidth)
+    let iw = initialwidth
+    if(props.width !== undefined) iw = props.width
+    let [width, setWidth] = useState(iw)
     let [ismousedown, setIsmousedown] = useState(false)
 
     let closeIt = () => {
         if(props.onClose != undefined) 
             props.onClose()
     }
-    let widthRef = useRef(initialwidth)
+    let widthRef = useRef(iw)
     let Xorig = useRef(0)
     let Xtrack = useRef(0)
 
@@ -53,15 +55,19 @@ export default function Offcanvas(props) {
     if(!ismousedown) {
         cls = cls + " bs-offcanvas-anim "
     }
-
+    if(props.modal === false) {
+        cls = cls + " cthrough"
+    }
     return (
         <>
+            {props.modal !== false &&
             <div id="bs-offcanvas-overlay"  className={clo}>
-             
-            </div>        
+            </div>   
+            }
+     
             <div className={cls} style={props.show ? {width: width, right: 0} : {width: 0, right: -width}} >
                 <div><Row><Col> <h5>{props.title} </h5></Col><Col xs="auto"><i onClick={closeIt} className="cursor-pointer fa fa-times mr-1 fa-2x close" aria-hidden="true"></i></Col></Row></div>
-                <Row><Col xs="auto" onMouseDown={onDown} className="offcanvas_handle p-0 m-0 px-2"></Col><Col>{props.children}</Col></Row>
+                <Row><Col xs="auto" onMouseDown={onDown} className="offcanvas_handle p-0 m-0 px-2"></Col><Col className="pl-0" style={{paddingRight: '10px'}}>{props.children}</Col></Row>
             </div>
         </>
     )

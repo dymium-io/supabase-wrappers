@@ -9,6 +9,75 @@ Object {
         class=" text-left"
       >
         <div
+          class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+          style="width: 0px; right: -300px;"
+        >
+          <div>
+            <div
+              class="row"
+            >
+              <div
+                class="col"
+              >
+                 
+                <h5>
+                   
+                </h5>
+              </div>
+              <div
+                class="col-auto"
+              >
+                <i
+                  aria-hidden="true"
+                  class="cursor-pointer fa fa-times mr-1 fa-2x close"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            class="row"
+          >
+            <div
+              class="offcanvas_handle p-0 m-0 px-2 col-auto"
+            />
+            <div
+              class="pl-0 col"
+              style="padding-right: 10px;"
+            >
+              <h5>
+                Creating Ghost Database
+              </h5>
+              <div
+                class="mb-3"
+              >
+                This page allows to create a Ghost Database.
+              </div>
+              <div
+                class="mb-3"
+              >
+                Select one or more Data Source. In each Data Source link tables that you want to expose to the users.
+              </div>
+              <div
+                class="mb-3"
+              >
+                In each table define access policy for PIIs.
+              </div>
+              <div
+                class="mb-3"
+              >
+                Important! A Ghost Database must be associated with one or more Dymium Group! Once the group is created, go to 
+                <a
+                  href="/app/datascopes?key=groups"
+                >
+                   Assign Groups
+                </a>
+                .
+              </div>
+              <div />
+            </div>
+          </div>
+        </div>
+        <div
           class="bs-canvas-overlay position-fixed  w-100 h-100"
           id="bs-offcanvas-overlay"
         />
@@ -46,12 +115,16 @@ Object {
               class="offcanvas_handle p-0 m-0 px-2 col-auto"
             />
             <div
-              class="col"
+              class="pl-0 col"
+              style="padding-right: 10px;"
             />
           </div>
         </div>
         <h5>
            Create New Ghost Database 
+          <i
+            class="trash fa-solid fa-circle-info mr-1"
+          />
           <img
             class="hiddenspinner"
             src="/logo.png"
@@ -224,6 +297,75 @@ Object {
       class=" text-left"
     >
       <div
+        class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+        style="width: 0px; right: -300px;"
+      >
+        <div>
+          <div
+            class="row"
+          >
+            <div
+              class="col"
+            >
+               
+              <h5>
+                 
+              </h5>
+            </div>
+            <div
+              class="col-auto"
+            >
+              <i
+                aria-hidden="true"
+                class="cursor-pointer fa fa-times mr-1 fa-2x close"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          class="row"
+        >
+          <div
+            class="offcanvas_handle p-0 m-0 px-2 col-auto"
+          />
+          <div
+            class="pl-0 col"
+            style="padding-right: 10px;"
+          >
+            <h5>
+              Creating Ghost Database
+            </h5>
+            <div
+              class="mb-3"
+            >
+              This page allows to create a Ghost Database.
+            </div>
+            <div
+              class="mb-3"
+            >
+              Select one or more Data Source. In each Data Source link tables that you want to expose to the users.
+            </div>
+            <div
+              class="mb-3"
+            >
+              In each table define access policy for PIIs.
+            </div>
+            <div
+              class="mb-3"
+            >
+              Important! A Ghost Database must be associated with one or more Dymium Group! Once the group is created, go to 
+              <a
+                href="/app/datascopes?key=groups"
+              >
+                 Assign Groups
+              </a>
+              .
+            </div>
+            <div />
+          </div>
+        </div>
+      </div>
+      <div
         class="bs-canvas-overlay position-fixed  w-100 h-100"
         id="bs-offcanvas-overlay"
       />
@@ -261,12 +403,16 @@ Object {
             class="offcanvas_handle p-0 m-0 px-2 col-auto"
           />
           <div
-            class="col"
+            class="pl-0 col"
+            style="padding-right: 10px;"
           />
         </div>
       </div>
       <h5>
          Create New Ghost Database 
+        <i
+          class="trash fa-solid fa-circle-info mr-1"
+        />
         <img
           class="hiddenspinner"
           src="/logo.png"
@@ -496,6 +642,75 @@ Object {
         class=" text-left"
       >
         <div
+          class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+          style="width: 0px; right: -300px;"
+        >
+          <div>
+            <div
+              class="row"
+            >
+              <div
+                class="col"
+              >
+                 
+                <h5>
+                   
+                </h5>
+              </div>
+              <div
+                class="col-auto"
+              >
+                <i
+                  aria-hidden="true"
+                  class="cursor-pointer fa fa-times mr-1 fa-2x close"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            class="row"
+          >
+            <div
+              class="offcanvas_handle p-0 m-0 px-2 col-auto"
+            />
+            <div
+              class="pl-0 col"
+              style="padding-right: 10px;"
+            >
+              <h5>
+                Creating Ghost Database
+              </h5>
+              <div
+                class="mb-3"
+              >
+                This page allows to create a Ghost Database.
+              </div>
+              <div
+                class="mb-3"
+              >
+                Select one or more Data Source. In each Data Source link tables that you want to expose to the users.
+              </div>
+              <div
+                class="mb-3"
+              >
+                In each table define access policy for PIIs.
+              </div>
+              <div
+                class="mb-3"
+              >
+                Important! A Ghost Database must be associated with one or more Dymium Group! Once the group is created, go to 
+                <a
+                  href="/app/datascopes?key=groups"
+                >
+                   Assign Groups
+                </a>
+                .
+              </div>
+              <div />
+            </div>
+          </div>
+        </div>
+        <div
           class="bs-canvas-overlay-show position-fixed  w-100 h-100"
           id="bs-offcanvas-overlay"
         />
@@ -533,7 +748,8 @@ Object {
               class="offcanvas_handle p-0 m-0 px-2 col-auto"
             />
             <div
-              class="col"
+              class="pl-0 col"
+              style="padding-right: 10px;"
             >
               <div>
                 <form
@@ -639,6 +855,9 @@ Object {
         </div>
         <h5>
            Create New Ghost Database 
+          <i
+            class="trash fa-solid fa-circle-info mr-1"
+          />
           <img
             class="hiddenspinner"
             src="/logo.png"
@@ -811,6 +1030,75 @@ Object {
       class=" text-left"
     >
       <div
+        class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+        style="width: 0px; right: -300px;"
+      >
+        <div>
+          <div
+            class="row"
+          >
+            <div
+              class="col"
+            >
+               
+              <h5>
+                 
+              </h5>
+            </div>
+            <div
+              class="col-auto"
+            >
+              <i
+                aria-hidden="true"
+                class="cursor-pointer fa fa-times mr-1 fa-2x close"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          class="row"
+        >
+          <div
+            class="offcanvas_handle p-0 m-0 px-2 col-auto"
+          />
+          <div
+            class="pl-0 col"
+            style="padding-right: 10px;"
+          >
+            <h5>
+              Creating Ghost Database
+            </h5>
+            <div
+              class="mb-3"
+            >
+              This page allows to create a Ghost Database.
+            </div>
+            <div
+              class="mb-3"
+            >
+              Select one or more Data Source. In each Data Source link tables that you want to expose to the users.
+            </div>
+            <div
+              class="mb-3"
+            >
+              In each table define access policy for PIIs.
+            </div>
+            <div
+              class="mb-3"
+            >
+              Important! A Ghost Database must be associated with one or more Dymium Group! Once the group is created, go to 
+              <a
+                href="/app/datascopes?key=groups"
+              >
+                 Assign Groups
+              </a>
+              .
+            </div>
+            <div />
+          </div>
+        </div>
+      </div>
+      <div
         class="bs-canvas-overlay-show position-fixed  w-100 h-100"
         id="bs-offcanvas-overlay"
       />
@@ -848,7 +1136,8 @@ Object {
             class="offcanvas_handle p-0 m-0 px-2 col-auto"
           />
           <div
-            class="col"
+            class="pl-0 col"
+            style="padding-right: 10px;"
           >
             <div>
               <form
@@ -954,6 +1243,9 @@ Object {
       </div>
       <h5>
          Create New Ghost Database 
+        <i
+          class="trash fa-solid fa-circle-info mr-1"
+        />
         <img
           class="hiddenspinner"
           src="/logo.png"
@@ -1183,6 +1475,75 @@ Object {
         class=" text-left"
       >
         <div
+          class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+          style="width: 0px; right: -300px;"
+        >
+          <div>
+            <div
+              class="row"
+            >
+              <div
+                class="col"
+              >
+                 
+                <h5>
+                   
+                </h5>
+              </div>
+              <div
+                class="col-auto"
+              >
+                <i
+                  aria-hidden="true"
+                  class="cursor-pointer fa fa-times mr-1 fa-2x close"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            class="row"
+          >
+            <div
+              class="offcanvas_handle p-0 m-0 px-2 col-auto"
+            />
+            <div
+              class="pl-0 col"
+              style="padding-right: 10px;"
+            >
+              <h5>
+                Creating Ghost Database
+              </h5>
+              <div
+                class="mb-3"
+              >
+                This page allows to create a Ghost Database.
+              </div>
+              <div
+                class="mb-3"
+              >
+                Select one or more Data Source. In each Data Source link tables that you want to expose to the users.
+              </div>
+              <div
+                class="mb-3"
+              >
+                In each table define access policy for PIIs.
+              </div>
+              <div
+                class="mb-3"
+              >
+                Important! A Ghost Database must be associated with one or more Dymium Group! Once the group is created, go to 
+                <a
+                  href="/app/datascopes?key=groups"
+                >
+                   Assign Groups
+                </a>
+                .
+              </div>
+              <div />
+            </div>
+          </div>
+        </div>
+        <div
           class="bs-canvas-overlay-show position-fixed  w-100 h-100"
           id="bs-offcanvas-overlay"
         />
@@ -1220,7 +1581,8 @@ Object {
               class="offcanvas_handle p-0 m-0 px-2 col-auto"
             />
             <div
-              class="col"
+              class="pl-0 col"
+              style="padding-right: 10px;"
             >
               <div>
                 <form
@@ -3312,6 +3674,9 @@ Object {
         </div>
         <h5>
            Create New Ghost Database 
+          <i
+            class="trash fa-solid fa-circle-info mr-1"
+          />
           <img
             class="hiddenspinner"
             src="/logo.png"
@@ -3484,6 +3849,75 @@ Object {
       class=" text-left"
     >
       <div
+        class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+        style="width: 0px; right: -300px;"
+      >
+        <div>
+          <div
+            class="row"
+          >
+            <div
+              class="col"
+            >
+               
+              <h5>
+                 
+              </h5>
+            </div>
+            <div
+              class="col-auto"
+            >
+              <i
+                aria-hidden="true"
+                class="cursor-pointer fa fa-times mr-1 fa-2x close"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          class="row"
+        >
+          <div
+            class="offcanvas_handle p-0 m-0 px-2 col-auto"
+          />
+          <div
+            class="pl-0 col"
+            style="padding-right: 10px;"
+          >
+            <h5>
+              Creating Ghost Database
+            </h5>
+            <div
+              class="mb-3"
+            >
+              This page allows to create a Ghost Database.
+            </div>
+            <div
+              class="mb-3"
+            >
+              Select one or more Data Source. In each Data Source link tables that you want to expose to the users.
+            </div>
+            <div
+              class="mb-3"
+            >
+              In each table define access policy for PIIs.
+            </div>
+            <div
+              class="mb-3"
+            >
+              Important! A Ghost Database must be associated with one or more Dymium Group! Once the group is created, go to 
+              <a
+                href="/app/datascopes?key=groups"
+              >
+                 Assign Groups
+              </a>
+              .
+            </div>
+            <div />
+          </div>
+        </div>
+      </div>
+      <div
         class="bs-canvas-overlay-show position-fixed  w-100 h-100"
         id="bs-offcanvas-overlay"
       />
@@ -3521,7 +3955,8 @@ Object {
             class="offcanvas_handle p-0 m-0 px-2 col-auto"
           />
           <div
-            class="col"
+            class="pl-0 col"
+            style="padding-right: 10px;"
           >
             <div>
               <form
@@ -5613,6 +6048,9 @@ Object {
       </div>
       <h5>
          Create New Ghost Database 
+        <i
+          class="trash fa-solid fa-circle-info mr-1"
+        />
         <img
           class="hiddenspinner"
           src="/logo.png"
@@ -5842,6 +6280,75 @@ Object {
         class=" text-left"
       >
         <div
+          class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+          style="width: 0px; right: -300px;"
+        >
+          <div>
+            <div
+              class="row"
+            >
+              <div
+                class="col"
+              >
+                 
+                <h5>
+                   
+                </h5>
+              </div>
+              <div
+                class="col-auto"
+              >
+                <i
+                  aria-hidden="true"
+                  class="cursor-pointer fa fa-times mr-1 fa-2x close"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            class="row"
+          >
+            <div
+              class="offcanvas_handle p-0 m-0 px-2 col-auto"
+            />
+            <div
+              class="pl-0 col"
+              style="padding-right: 10px;"
+            >
+              <h5>
+                Creating Ghost Database
+              </h5>
+              <div
+                class="mb-3"
+              >
+                This page allows to create a Ghost Database.
+              </div>
+              <div
+                class="mb-3"
+              >
+                Select one or more Data Source. In each Data Source link tables that you want to expose to the users.
+              </div>
+              <div
+                class="mb-3"
+              >
+                In each table define access policy for PIIs.
+              </div>
+              <div
+                class="mb-3"
+              >
+                Important! A Ghost Database must be associated with one or more Dymium Group! Once the group is created, go to 
+                <a
+                  href="/app/datascopes?key=groups"
+                >
+                   Assign Groups
+                </a>
+                .
+              </div>
+              <div />
+            </div>
+          </div>
+        </div>
+        <div
           class="bs-canvas-overlay position-fixed  w-100 h-100"
           id="bs-offcanvas-overlay"
         />
@@ -5879,12 +6386,16 @@ Object {
               class="offcanvas_handle p-0 m-0 px-2 col-auto"
             />
             <div
-              class="col"
+              class="pl-0 col"
+              style="padding-right: 10px;"
             />
           </div>
         </div>
         <h5>
            Create New Ghost Database 
+          <i
+            class="trash fa-solid fa-circle-info mr-1"
+          />
           <img
             class="hiddenspinner"
             src="/logo.png"
@@ -6168,6 +6679,75 @@ Object {
       class=" text-left"
     >
       <div
+        class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+        style="width: 0px; right: -300px;"
+      >
+        <div>
+          <div
+            class="row"
+          >
+            <div
+              class="col"
+            >
+               
+              <h5>
+                 
+              </h5>
+            </div>
+            <div
+              class="col-auto"
+            >
+              <i
+                aria-hidden="true"
+                class="cursor-pointer fa fa-times mr-1 fa-2x close"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          class="row"
+        >
+          <div
+            class="offcanvas_handle p-0 m-0 px-2 col-auto"
+          />
+          <div
+            class="pl-0 col"
+            style="padding-right: 10px;"
+          >
+            <h5>
+              Creating Ghost Database
+            </h5>
+            <div
+              class="mb-3"
+            >
+              This page allows to create a Ghost Database.
+            </div>
+            <div
+              class="mb-3"
+            >
+              Select one or more Data Source. In each Data Source link tables that you want to expose to the users.
+            </div>
+            <div
+              class="mb-3"
+            >
+              In each table define access policy for PIIs.
+            </div>
+            <div
+              class="mb-3"
+            >
+              Important! A Ghost Database must be associated with one or more Dymium Group! Once the group is created, go to 
+              <a
+                href="/app/datascopes?key=groups"
+              >
+                 Assign Groups
+              </a>
+              .
+            </div>
+            <div />
+          </div>
+        </div>
+      </div>
+      <div
         class="bs-canvas-overlay position-fixed  w-100 h-100"
         id="bs-offcanvas-overlay"
       />
@@ -6205,12 +6785,16 @@ Object {
             class="offcanvas_handle p-0 m-0 px-2 col-auto"
           />
           <div
-            class="col"
+            class="pl-0 col"
+            style="padding-right: 10px;"
           />
         </div>
       </div>
       <h5>
          Create New Ghost Database 
+        <i
+          class="trash fa-solid fa-circle-info mr-1"
+        />
         <img
           class="hiddenspinner"
           src="/logo.png"
@@ -6574,6 +7158,75 @@ Object {
            created successfully!
         </div>
         <div
+          class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+          style="width: 0px; right: -300px;"
+        >
+          <div>
+            <div
+              class="row"
+            >
+              <div
+                class="col"
+              >
+                 
+                <h5>
+                   
+                </h5>
+              </div>
+              <div
+                class="col-auto"
+              >
+                <i
+                  aria-hidden="true"
+                  class="cursor-pointer fa fa-times mr-1 fa-2x close"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            class="row"
+          >
+            <div
+              class="offcanvas_handle p-0 m-0 px-2 col-auto"
+            />
+            <div
+              class="pl-0 col"
+              style="padding-right: 10px;"
+            >
+              <h5>
+                Creating Ghost Database
+              </h5>
+              <div
+                class="mb-3"
+              >
+                This page allows to create a Ghost Database.
+              </div>
+              <div
+                class="mb-3"
+              >
+                Select one or more Data Source. In each Data Source link tables that you want to expose to the users.
+              </div>
+              <div
+                class="mb-3"
+              >
+                In each table define access policy for PIIs.
+              </div>
+              <div
+                class="mb-3"
+              >
+                Important! A Ghost Database must be associated with one or more Dymium Group! Once the group is created, go to 
+                <a
+                  href="/app/datascopes?key=groups"
+                >
+                   Assign Groups
+                </a>
+                .
+              </div>
+              <div />
+            </div>
+          </div>
+        </div>
+        <div
           class="bs-canvas-overlay position-fixed  w-100 h-100"
           id="bs-offcanvas-overlay"
         />
@@ -6611,12 +7264,16 @@ Object {
               class="offcanvas_handle p-0 m-0 px-2 col-auto"
             />
             <div
-              class="col"
+              class="pl-0 col"
+              style="padding-right: 10px;"
             />
           </div>
         </div>
         <h5>
            Create New Ghost Database 
+          <i
+            class="trash fa-solid fa-circle-info mr-1"
+          />
           <img
             class="hiddenspinner"
             src="/logo.png"
@@ -6923,6 +7580,75 @@ Object {
          created successfully!
       </div>
       <div
+        class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+        style="width: 0px; right: -300px;"
+      >
+        <div>
+          <div
+            class="row"
+          >
+            <div
+              class="col"
+            >
+               
+              <h5>
+                 
+              </h5>
+            </div>
+            <div
+              class="col-auto"
+            >
+              <i
+                aria-hidden="true"
+                class="cursor-pointer fa fa-times mr-1 fa-2x close"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          class="row"
+        >
+          <div
+            class="offcanvas_handle p-0 m-0 px-2 col-auto"
+          />
+          <div
+            class="pl-0 col"
+            style="padding-right: 10px;"
+          >
+            <h5>
+              Creating Ghost Database
+            </h5>
+            <div
+              class="mb-3"
+            >
+              This page allows to create a Ghost Database.
+            </div>
+            <div
+              class="mb-3"
+            >
+              Select one or more Data Source. In each Data Source link tables that you want to expose to the users.
+            </div>
+            <div
+              class="mb-3"
+            >
+              In each table define access policy for PIIs.
+            </div>
+            <div
+              class="mb-3"
+            >
+              Important! A Ghost Database must be associated with one or more Dymium Group! Once the group is created, go to 
+              <a
+                href="/app/datascopes?key=groups"
+              >
+                 Assign Groups
+              </a>
+              .
+            </div>
+            <div />
+          </div>
+        </div>
+      </div>
+      <div
         class="bs-canvas-overlay position-fixed  w-100 h-100"
         id="bs-offcanvas-overlay"
       />
@@ -6960,12 +7686,16 @@ Object {
             class="offcanvas_handle p-0 m-0 px-2 col-auto"
           />
           <div
-            class="col"
+            class="pl-0 col"
+            style="padding-right: 10px;"
           />
         </div>
       </div>
       <h5>
          Create New Ghost Database 
+        <i
+          class="trash fa-solid fa-circle-info mr-1"
+        />
         <img
           class="hiddenspinner"
           src="/logo.png"

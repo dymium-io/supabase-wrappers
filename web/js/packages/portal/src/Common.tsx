@@ -10,6 +10,8 @@ export function getTokenProperty(prop) {
         return undefined
 
     let sp = token.split('.')
+    if(sp.length !== 3)
+        return undefined
     let b64 = sp[1]
     while(b64.length % 4 !== 0) {
         b64 += "="
@@ -17,6 +19,16 @@ export function getTokenProperty(prop) {
     let claims = atob(b64)
     let j = JSON.parse(claims)
     return j[prop]
+}
+export function isInstaller() {
+    let roles = getTokenProperty("roles")
+    if(roles === undefined)
+        return false
+    for(let role of roles) {
+        if(role === "installer")
+            return true
+    }
+    return false
 }
 
 export const databaseTypes = {

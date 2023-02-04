@@ -31,8 +31,99 @@ Array [
       id="groups-tabpane-groups"
       role="tabpanel"
     >
+      <div
+        className="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+        style={
+          Object {
+            "right": -300,
+            "width": 0,
+          }
+        }
+      >
+        <div>
+          <div
+            className="row"
+          >
+            <div
+              className="col"
+            >
+               
+              <h5>
+                 
+              </h5>
+            </div>
+            <div
+              className="col-auto"
+            >
+              <i
+                aria-hidden="true"
+                className="cursor-pointer fa fa-times mr-1 fa-2x close"
+                onClick={[Function]}
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          className="row"
+        >
+          <div
+            className="offcanvas_handle p-0 m-0 px-2 col-auto"
+            onMouseDown={[Function]}
+          />
+          <div
+            className="pl-0 col"
+            style={
+              Object {
+                "paddingRight": "10px",
+              }
+            }
+          >
+            <div>
+              <h5>
+                Group mapping
+              </h5>
+              <div
+                className="mb-4"
+              >
+                This page serves to map the groups a given user is a part of in the Company's directory to the corresponding Dymium groups.
+              </div>
+              <div
+                className="mb-4"
+              >
+                Dymium groups are used to manage access to the Ghost Databases.
+              </div>
+              <div
+                className="mb-4"
+              >
+                One group must be designated to possess administrative privileges.
+              </div>
+              <div>
+                Your current groups are:
+                None returned by the directory! Please configure the directory appropriately!
+              </div>
+              <div
+                className="mb-4"
+              >
+                After filling it in, proceed to configure 
+                <a
+                  href="/app/connectors"
+                  onClick={[Function]}
+                >
+                  Connectors
+                </a>
+                !
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <h5>
-         Group mapping from your directory to Dymium
+         Group mapping from your directory to Dymium 
+        <i
+          className="trash fa-solid fa-circle-info"
+          onClick={[Function]}
+        />
+         
         <img
           className="hiddenspinner"
           src="/logo.png"

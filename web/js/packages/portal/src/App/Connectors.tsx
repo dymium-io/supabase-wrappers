@@ -7,13 +7,14 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Modal from 'react-bootstrap/Modal'
 import Alert from 'react-bootstrap/Alert'
+import {Link} from "react-router-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import * as tun from '@dymium/common/Types/Tunnel'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
-
+import Offcanvas from '@dymium/common/Components/Offcanvas'
 const { SearchBar, ClearSearchButton } = Search;
 
 
@@ -207,7 +208,7 @@ function ConnectionForm(props) {
     return (
         <>
             <Row>
-                <Col >
+                <Col  xs="auto">
                     <Form.Group className="mb-3" controlId="name">
                         <Form.Label>{tooltip('Connector name',
                             <div className="d-block">
@@ -378,6 +379,7 @@ export function AddConnector() {
     const [tunnel, setTunnel] = useState<tun.Tunnel[]>([tun.Tunnel.fromJson({ id: "", name: "", address: "", port: "" })])
     const [spinner, setSpinner] = useState(false)
     const [alert, setAlert] = useState<JSX.Element>(<></>)
+    const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
 
     useEffect(() => {
         getAccessKey(setKey, setSecret, setSpinner, setAlert)
@@ -466,8 +468,26 @@ export function AddConnector() {
     return (
         <div className=" text-left">
             {alert}
-            <h5 > Provision New Connector <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+            <h5 > Provision New Connector <i onClick={e => { setShowOffcanvas(!showOffcanvas) }} className="trash fa-solid fa-circle-info"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+            <Offcanvas modal={false} width={300} show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}>
+                <h5>Provisioning New Connector</h5>
+                <div className="mb-3">
+                    Dymium offers a reverse tunneling technology solution that facilitates easy access to database servers, regardless of their location. 
+                </div>
+                <div className="mb-3">
+                    If you have provisioned Private Link from Dymium to your data sources, you can skip this configuration page and go straight to <Link to="/app/connections">Data Sources</Link>.
+                </div>
+                <div className="mb-3">
+                    Create a new connector by specifying name, target address in your address space, and port. Multiple targets can be specified.
+                    After clicking Apply, you will be taken to the Edit Connectors tab that will display the parameters for configuring the connector binary.
+                </div>
+                <div>
+                    You  need to download and run the connector client on your network. <Link to="/app/connectors?key=download">Click here to go to Downloads</Link>
+                </div>
+                <div>
 
+                </div>
+            </Offcanvas>
             <div className=" text-left">
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                     <ConnectionForm
@@ -506,6 +526,7 @@ export function EditConnectors(props) {
     const [tunnel, setTunnel] = useState<tun.Tunnel[]>([tun.Tunnel.fromJson({ id: "", name: "", address: "", port: "" })])
     const [spinner, setSpinner] = useState(false)
     const [alert, setAlert] = useState<JSX.Element>(<></>)
+    const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
 
     let rememberedSelection = useAppSelector((state) => {
         return state.reducer.selectedConnector
@@ -779,6 +800,13 @@ export function EditConnectors(props) {
                         return
                     }
                     setConns(js)
+                    if(js.length === 0) {
+                        setAlert(
+                            <Alert variant="warning" onClose={() => setAlert(<></>)} dismissible>
+                                Please configure some connectors first!
+                            </Alert>
+                        )
+                    }
                 }).catch((error) => {
                     setSpinner(false)
                     setAlert(
@@ -878,6 +906,46 @@ export function EditConnectors(props) {
     return (
 
         <div className=" text-left">
+            <Offcanvas modal={false} width={300} show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}>
+                <h5>Editing Connectors</h5>
+                <div className="mb-3">
+                    If you just created a new connector, please save the parameters. The Secret will only be visible in the GUI for a day. These parameters must be passed to the
+                    connector executable via environment variables. 
+                </div>
+                <div className="mb-3">
+                    Below is the complete list of necessary variables, in an example bash script.
+                </div>
+                <div className="mb-3">
+<div className="d-block " style={{fontFamily: "monospace", fontSize: "0.6em", overflow: "hidden", color: '#33cc33', backgroundColor: 'black'}}>
+    <div className=" text-nowrap p-1" >
+<div >
+ #!/bin/bash
+</div><div>
+export LOG_LEVEL=Info
+</div><div>
+export PORTAL=https://portal.dymium.io/
+</div><div>
+export CONNECTOR=<span style={{fontStyle:'italic'}}>your connector id</span>
+</div><div>
+export KEY=<span style={{fontStyle:'italic'}}>your secret key</span>
+</div><div>
+export SECRET=<span style={{fontStyle:'italic'}}>your secret</span>
+</div><div>
+export CUSTOMER={com.getTokenProperty("schema")}
+</div><div>
+export TUNNELSERVER={com.getTokenProperty("schema")}.dymium.io:3009
+</div><div>
+./meshconnector
+</div>
+</div>
+</div>
+
+<div className="my-3">
+    Please keep in mind that when you edit tunnels and connectors, the connector binary must be restarted with the updated environment variables!
+</div>
+</div>
+
+            </Offcanvas>
 
             <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
                 <Modal.Header closeButton>
@@ -895,7 +963,7 @@ export function EditConnectors(props) {
                         }}>Cancel</Button>
                 </Modal.Footer>
             </Modal>
-
+            {conns.length == 0 && alert}
             {conns.length > 0 &&
                 <div id="tablecontainer" style={{ width: '90%' }} className="text-center">
                     <ToolkitProvider
@@ -952,7 +1020,7 @@ function useQuery() {
 }
 function Connectors() {
     const navigate = useNavigate();
-    const t = useAppSelector((state) => {
+    let t = useAppSelector((state) => {
 
         return state.reducer.activeConnectorTab
     }
@@ -961,10 +1029,22 @@ function Connectors() {
     const appDispatch = useAppDispatch()
     let query = useQuery();
 
+    let tt = query.get("key")
+    if (tt !== null) {
+      t = tt
+    }
+    if (t == null) {
+        t = "add"
+    }
     useEffect(() => {
         if (location.pathname === '/app/connectors/redirect#bookmark') {
             navigate('/app/connectors#bookmark')
         }
+        if (query.get("key") != null) {
+  
+            appDispatch(setActiveConnectorTab(query.get("key")))
+            navigate("/app/connectors")
+          }        
     }, [t])
 
 

@@ -5,6 +5,75 @@ exports[`test-connections 1`] = `
   className=" text-left"
 >
   <div
+    className="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+    style={
+      Object {
+        "right": -300,
+        "width": 0,
+      }
+    }
+  >
+    <div>
+      <div
+        className="row"
+      >
+        <div
+          className="col"
+        >
+           
+          <h5>
+             
+          </h5>
+        </div>
+        <div
+          className="col-auto"
+        >
+          <i
+            aria-hidden="true"
+            className="cursor-pointer fa fa-times mr-1 fa-2x close"
+            onClick={[Function]}
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="offcanvas_handle p-0 m-0 px-2 col-auto"
+        onMouseDown={[Function]}
+      />
+      <div
+        className="pl-0 col"
+        style={
+          Object {
+            "paddingRight": "10px",
+          }
+        }
+      >
+        <h5>
+          Editing Data Sources
+        </h5>
+        <div
+          className="mb-3"
+        >
+          This page allows to edit and delete previously configured data sources.
+        </div>
+        <div
+          className="mb-3"
+        >
+          If a data source is used in a Ghost Database, it should first be unlinked from it before deletion.
+        </div>
+        <div
+          className="mb-3"
+        >
+          If parameters of a Data Source are edited, the connection will be checked on pressing Apply.
+        </div>
+        <div />
+      </div>
+    </div>
+  </div>
+  <div
     className="text-center"
     id="tablecontainer"
     style={
@@ -20,7 +89,11 @@ exports[`test-connections 1`] = `
         className="d-flex"
       >
         <h5>
-          Edit Data Sources  
+          Edit Data Sources 
+          <i
+            className="trash fa-solid fa-circle-info mr-1"
+            onClick={[Function]}
+          />
           <img
             className="spinner"
             src="/logo.png"
