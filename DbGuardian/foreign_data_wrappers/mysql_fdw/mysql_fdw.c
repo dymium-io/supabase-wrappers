@@ -65,6 +65,8 @@
 #include "utils/selfuncs.h"
 #include "utils/syscache.h"
 
+#include "nodes/print.h"
+
 /* Declarations for dynamic loading */
 PG_MODULE_MAGIC;
 
@@ -687,7 +689,6 @@ mysqlBeginForeignScan(ForeignScanState *node, int eflags)
 	else
 	{
 		for(int k = 0; k != tupleDescriptor->natts; ++k) {
-		  Form_pg_attribute att = TupleDescAttr(tupleDescriptor, k);
 		  Var		   *var;
 		  RangeTblEntry *rte;
 		  Oid			reltype;
@@ -700,6 +701,8 @@ mysqlBeginForeignScan(ForeignScanState *node, int eflags)
 		   */
 		  var = (Var *) list_nth_node(TargetEntry, fsplan->fdw_scan_tlist,
 									  k)->expr;
+		  // printf("var[%d]:\n",k);
+		  // pprint(var);
 		  if (!IsA(var, Var) /* !Dymium: move this condition down: || var->varattno != 0 */)
 			continue;
 		  rte = list_nth(estate->es_range_table, var->varno - 1);
@@ -709,7 +712,7 @@ mysqlBeginForeignScan(ForeignScanState *node, int eflags)
 		  if (!OidIsValid(reltype))
 			continue;
 
-		  options = GetForeignColumnOptions(rte->relid, att->attnum);
+		  options = GetForeignColumnOptions(rte->relid, var->varattno);
 		  foreach(lc, options)
 			{
 			  DefElem    *def = (DefElem *) lfirst(lc);
