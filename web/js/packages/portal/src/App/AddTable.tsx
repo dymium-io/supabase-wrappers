@@ -19,12 +19,12 @@ import * as types from '@dymium/common/Types/Internal'
 import * as ctypes from '@dymium/common/Types/Common'
 import * as http from '@dymium/common/Api/Http'
 
-import {PrefillUnclassified, Confidential, Secret, TopSecret} from "./Detectors"
+import { PrefillUnclassified, Confidential, Secret, TopSecret } from "./Detectors"
 export const DefaultPrefills = {
-  unclassified: PrefillUnclassified,
-  confidential: Confidential,
-  secret: Secret,
-  topsecret: TopSecret
+    unclassified: PrefillUnclassified,
+    confidential: Confidential,
+    secret: Secret,
+    topsecret: TopSecret
 }
 
 const PIIs = Object.values(com.PII_civilian)
@@ -103,24 +103,26 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         return false
     }
 
-    let createLevel = (policy:ctypes.DataPolicy, index:number) => {
-        let r:RuleSet = {name:policy.actions[index].role, rules:[] }
-     
+    let createLevel = (policy: ctypes.DataPolicy, index: number) => {
+        let r: RuleSet = { name: policy.actions[index].role, rules: [] }
+
         return r
     }
-    let createLevels = (policy:ctypes.DataPolicy) => {
+    let createLevels = (policy: ctypes.DataPolicy) => {
         let Prefills = {}
-        for(let i = 0; i < policy.actions.length; i++) {
+        for (let i = 0; i < policy.actions.length; i++) {
             let role = policy.actions[i].role
             Prefills[role] = createLevel(policy, i)
-            for(let j = 0; j < policy.piisuggestions.length; j++) {
-                if( policy.piisuggestions[j].detector.method !== "columnregexp" )  continue
-                let rule:SubRule = {detection: policy.piisuggestions[j].detector.name,
-                regexp:  policy.piisuggestions[j].detector.data,
-                action:   ctypes.humanReadableDataHandling(policy.piisuggestions[j].actions[i].handling)}
+            for (let j = 0; j < policy.piisuggestions.length; j++) {
+                if (policy.piisuggestions[j].detector.method !== "columnregexp") continue
+                let rule: SubRule = {
+                    detection: policy.piisuggestions[j].detector.name,
+                    regexp: policy.piisuggestions[j].detector.data,
+                    action: ctypes.humanReadableDataHandling(policy.piisuggestions[j].actions[i].handling)
+                }
                 Prefills[role].rules.push(rule)
             }
-            let defaultrule:SubRule =  {
+            let defaultrule: SubRule = {
                 regexp: "",
                 detection: "N/A",
                 action: "Allow"
@@ -138,14 +140,14 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             resp => {
                 resp.json().then(js => {
                     //setSpinner(false)                    
-                    if(js.error === undefined) {
+                    if (js.error === undefined) {
                         let po = ctypes.DataPolicy.fromJson(js)
                         setPolicy(po)
                         createLevels(po)
                     } else {
-                       setPrefills(DefaultPrefills)
+                        setPrefills(DefaultPrefills)
                     }
-                    
+
                 }).catch((error) => {
 
                 })
@@ -167,8 +169,8 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             let body = JSON.stringify({
                 ConnectionId: props.connectionId
             })
-                setSpinner(true)
-                http.sendToServer("POST", "/api/queryconnection",
+            setSpinner(true)
+            http.sendToServer("POST", "/api/queryconnection",
                 null, body,
                 resp => {
                     resp.json().then(js => {
@@ -180,7 +182,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                             setSpinner(false)
                             return
                         }
-                        
+
                         setDatabase(js.database)
                         if (props.table.schema !== undefined && props.table.table !== undefined) {
                             setSchema(props.table.schema)
@@ -196,6 +198,9 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 resp => {
                     console.log("on error")
                     setSpinner(false)
+                    resp != null && resp.text().then(t =>
+                        props.onAlert(<Alert variant="danger" onClose={() => props.onAlert(<></>)} dismissible>Query Connection failed: {t}</Alert>
+                        ))
                 },
                 error => {
                     console.log("on exception: ", error.message)
@@ -414,9 +419,9 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Col>
-      
-                    <Col xs="auto" className="ml-0 pl-0"><Spinner show={spinner} style={{ marginTop: '26px', width: '28px' }}></Spinner></Col>
-             
+
+                <Col xs="auto" className="ml-0 pl-0"><Spinner show={spinner} style={{ marginTop: '26px', width: '28px' }}></Spinner></Col>
+
                 <Col>
                     {schema !== "" && schema != undefined && table !== "" && table != undefined && tablestructure != [] &&
                         <Form.Group className="mb-3" controlId="connection" >

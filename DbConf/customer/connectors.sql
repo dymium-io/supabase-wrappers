@@ -53,3 +53,10 @@ ALTER TABLE connectors ALTER COLUMN status SET DEFAULT 'provisioned';
 -- requires: ["customer/conectors", "customer/connectors-add-connectorname", "customer/connectors-add-auth", "customer/connectors-add-foreignkey"],
 -- description: "change default status";
 ALTER TABLE connectorauth ALTER COLUMN status SET DEFAULT 'provisioned';
+
+
+-- #!migration
+-- name: "customer/extend-connector-host",
+-- requires: ["customer/connectors-change-default-status1"],
+-- description: "Change targetaddress length";
+ALTER TABLE connectors ALTER COLUMN targetaddress TYPE varchar (253);

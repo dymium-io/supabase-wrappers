@@ -147,11 +147,12 @@ function Test() {
       },
       resp => {
         setSpinner(false)
+        resp != null && resp.text().then(t =>
         setAlert(
           <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-            Error creating connection.
+            Error creating connection: {t}
           </Alert>
-        )
+        ))
 
       },
       error => {
@@ -274,11 +275,12 @@ function Test() {
       },
       resp => {
         setSpinner(false)
+        resp != null && resp.text().then(t =>
         setAlert(
           <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-            Error executing query.
+            Error executing query: {t}
           </Alert>
-        )
+        ))
 
       },
       error => {

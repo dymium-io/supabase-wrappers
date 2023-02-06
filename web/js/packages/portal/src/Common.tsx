@@ -79,10 +79,11 @@ export function getDatascopes(setSpinner, setAlert, setDatascopes, onSuccess)  {
       resp => {
         console.log("on error")
         setSpinner(false)
+        resp != null && resp.text().then(t=>
         setAlert(
             <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                Error retrieving datascopes
-            </Alert>
+                Error retrieving datascopes: {t}
+            </Alert>)
         )        
       },
       error => {

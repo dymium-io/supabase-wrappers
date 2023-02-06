@@ -63,20 +63,21 @@ function GroupMapping() {
       },
       resp => {
         setSpinner(false)
-        setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-            Error retrieving mapping.
-          </Alert>
-        )
+        resp != null && resp.text().then(t =>
+          setAlert(
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+              Error retrieving mapping: {t}
+            </Alert>
+          ))
         setShow(false)
       },
       error => {
         console.log("on exception")
         setSpinner(false)
-        setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-            Error retrieving mapping.
-          </Alert>
+          setAlert(
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+            Error retrieving mapping: {error.message}
+            </Alert>
         )
         setShow(false)
       })
@@ -114,11 +115,12 @@ function GroupMapping() {
       },
       resp => {
         setSpinner(false)
-        setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-            Error creating mapping.
-          </Alert>
-        )
+        resp != null && resp.text().then(t =>
+          setAlert(
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+              Error creating mapping: {t}
+            </Alert>
+          ))
         setShow(false)
       },
       error => {
@@ -163,11 +165,12 @@ function GroupMapping() {
       },
       resp => {
         setSpinner(false)
-        setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-            Error creating mapping.
-          </Alert>
-        )
+        resp != null && resp.text().then(t =>
+          setAlert(
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+              Error creating mapping: {t}
+            </Alert>
+          ))
         setShow(false)
       },
       error => {
@@ -211,11 +214,12 @@ function GroupMapping() {
       },
       resp => {
         setSpinner(false)
-        setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-            Error deleting mapping.
-          </Alert>
-        )
+        resp != null && resp.text().then(t =>
+          setAlert(
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+              Error deleting mapping: {t}
+            </Alert>
+          ))
         setShow(false)
       },
       error => {

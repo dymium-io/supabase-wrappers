@@ -6,7 +6,7 @@ import * as com from '../Common'
 import * as http from '@dymium/common/Api/Http'
 
 
-export function getConnections(setSpinner, setConns, setAlert, remap:internal.ConnectionMap|undefined, onSuccess) {
+export function getConnections(setSpinner, setConns, setAlert, remap: internal.ConnectionMap | undefined, onSuccess) {
     setSpinner(true)
     setConns([])
     http.sendToServer("GET", "/api/getconnections",
@@ -24,7 +24,7 @@ export function getConnections(setSpinner, setConns, setAlert, remap:internal.Co
                     setTimeout(() => setSpinner(false), 500)
                     return
                 }
-            
+
                 let cc = js.data.map(x => {
                     let ob = types.ConnectionRecord.fromJson({
                         id: x.id,
@@ -43,13 +43,13 @@ export function getConnections(setSpinner, setConns, setAlert, remap:internal.Co
                         tunnelname: x.tunnelname
 
                     })
-                    if(undefined != remap && x.name != null)
+                    if (undefined != remap && x.name != null)
                         remap[x.name] = ob
                     return ob
                 })
 
                 setConns(cc)
-                if(onSuccess != undefined) {
+                if (onSuccess != undefined) {
                     onSuccess()
                 }
             })
@@ -58,7 +58,14 @@ export function getConnections(setSpinner, setConns, setAlert, remap:internal.Co
         },
         resp => {
             console.log("on error")
+            console.log("on error")
             setSpinner(false)
+            resp != null && resp.text().then(t =>
+                setAlert(
+                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                        Error retrieving connections: {t}
+                    </Alert>)
+            )
         },
         error => {
             console.log("on exception: " + error)

@@ -212,6 +212,13 @@ export default function EditDatascopes() {
             resp => {
                 console.log("on error")
                 setSpinner(false)
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            {t}
+                        </Alert>
+                    )                    
+                )
             },
             error => {
                 console.log("on exception: " + error)
@@ -274,6 +281,12 @@ export default function EditDatascopes() {
             resp => {
                 console.log("on error")
                 setSpinner(false)
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error updating {dbname}:  {t}
+                        </Alert>
+                    ))
             },
             error => {
                 console.log("on exception: " + error)
@@ -356,7 +369,7 @@ export default function EditDatascopes() {
                     } else {
                         setAlert(
                             <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                                Error updating {dbname}:  {js.errormessage}!
+                                Error updating {dbname}:  {js.errormessage}
                             </Alert>
                         )
                     }
@@ -366,6 +379,13 @@ export default function EditDatascopes() {
             resp => {
                 console.log("on error")
                 setSpinner(false)
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error updating {dbname}:  {t}
+                        </Alert>
+                    )
+                )
             },
             error => {
                 console.log("on exception: " + error)

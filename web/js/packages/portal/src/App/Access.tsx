@@ -87,7 +87,7 @@ function YourDatascopes() {
           </div>
 
           <div className="mb-3">
-            Note that before accessing a Ghost Database, a Dymium tunneling client must be downloaded and run. 
+            Note that before accessing a Ghost Database, a Dymium tunneling client must be downloaded and run.
             Please go to the <Link to="/app/access?key=download">Client Download And Use tab</Link>.
           </div>
 
@@ -145,10 +145,11 @@ function YourDatascopes() {
       },
       resp => {
         setSpinner(false)
-        setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>Get datascope access failed</Alert>
+        resp != null && resp.text().then(t =>
+          setAlert(
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>Get datascope access failed: {t}</Alert>
 
-        )
+          ))
         setSpinner(false)
       },
       error => {
@@ -182,9 +183,9 @@ function YourDatascopes() {
       },
       resp => {
         setSpinner(false)
-        setAlert(<Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>"Regenerate password failed"</Alert>
-        )
-        setSpinner(false)
+        resp != null && resp.text().then(t =>
+          setAlert(<Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>Regenerate password failed: {t}</Alert>
+          ))
       },
       error => {
         console.log("on exception")
@@ -225,23 +226,23 @@ function Downloads() {
 
   return (
     <div className=" text-left">
-        <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
-          <h5>Clients</h5>
-          <div className="mb-3">
-            This page give you access to the tunneling clients, and their launch parameters.
-          </div>
-          <div className="mb-3">
-            Both command line and GUI clients are available. Download a client for your OS.
-          </div>
-          <div className="mb-3">
-            You will get authenticated through the browser, and the connection will be established.
-          </div>
-          <div className="mb-3">
-            Go to <Link to="/app/access?key=datascopes">Your Ghost Databases</Link> to learn how to run the client.
-            Copy/paste the command for CLI, or run the GUI client, and copy/paste the parameters into the GUI.
-          </div>
+      <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
+        <h5>Clients</h5>
+        <div className="mb-3">
+          This page give you access to the tunneling clients, and their launch parameters.
+        </div>
+        <div className="mb-3">
+          Both command line and GUI clients are available. Download a client for your OS.
+        </div>
+        <div className="mb-3">
+          You will get authenticated through the browser, and the connection will be established.
+        </div>
+        <div className="mb-3">
+          Go to <Link to="/app/access?key=datascopes">Your Ghost Databases</Link> to learn how to run the client.
+          Copy/paste the command for CLI, or run the GUI client, and copy/paste the parameters into the GUI.
+        </div>
 
-        </Offcanvas>
+      </Offcanvas>
       <h5 > Client Downloads <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i></h5>
       <div className=" text-left">
 
@@ -328,7 +329,7 @@ export default function Access() {
       appDispatch(setActiveAccessTab(t))
       //location.href = "/app/access"
       console.log("navigate!")
-      navigate( "/app/access", { replace: true })
+      navigate("/app/access", { replace: true })
     }
   }, [t])
   console.log(t)
