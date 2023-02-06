@@ -65,6 +65,8 @@
 #include "utils/selfuncs.h"
 #include "utils/syscache.h"
 
+#include "nodes/print.h"
+
 /* Declarations for dynamic loading */
 PG_MODULE_MAGIC;
 
@@ -664,9 +666,9 @@ mysqlBeginForeignScan(ForeignScanState *node, int eflags)
 	options = mysql_get_options(rte->relid, true);
 
 	/* Dymium */
+	festate->how_to_redact = (int*)palloc0(sizeof(int) * tupleDescriptor->natts);
 	if (fsplan->scan.scanrelid > 0)
 	{
-		festate->how_to_redact = (int*)palloc0(sizeof(int) * tupleDescriptor->natts);
 		/* !Dymium! */
 		for(int k = 0; k != tupleDescriptor->natts; ++k) {
 			List *options = GetForeignColumnOptions(rte->relid, TupleDescAttr(tupleDescriptor, k)->attnum);
@@ -680,6 +682,45 @@ mysqlBeginForeignScan(ForeignScanState *node, int eflags)
 					char *redact = defGetString(def);
 					festate->how_to_redact[k] = atoi(redact);
 					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		for(int k = 0; k != tupleDescriptor->natts; ++k) {
+		  Var		   *var;
+		  RangeTblEntry *rte;
+		  Oid			reltype;
+		  List *options;
+		  ListCell *lc;
+
+		  /*
+		   * If we can't identify the referenced table, do nothing.  This'll
+		   * likely lead to failure later, but perhaps we can muddle through.
+		   */
+		  var = (Var *) list_nth_node(TargetEntry, fsplan->fdw_scan_tlist,
+									  k)->expr;
+		  // printf("var[%d]:\n",k);
+		  // pprint(var);
+		  if (!IsA(var, Var) /* !Dymium: move this condition down: || var->varattno != 0 */)
+			continue;
+		  rte = list_nth(estate->es_range_table, var->varno - 1);
+		  if (rte->rtekind != RTE_RELATION)
+			continue;
+		  reltype = get_rel_type_id(rte->relid);
+		  if (!OidIsValid(reltype))
+			continue;
+
+		  options = GetForeignColumnOptions(rte->relid, var->varattno);
+		  foreach(lc, options)
+			{
+			  DefElem    *def = (DefElem *) lfirst(lc);
+			  if (strcmp(def->defname, "redact") == 0)
+				{
+				  char *redact = defGetString(def);
+				  festate->how_to_redact[k] = atoi(redact);
+				  break;
 				}
 			}
 		}

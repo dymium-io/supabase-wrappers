@@ -3,6 +3,7 @@ import "github.com/dgrijalva/jwt-go"
 
 const RoleUser = "user"
 const RoleAdmin = "admin"
+const RoleInstaller = "installer"
 
 type Claims struct {
 	Name       string`json:"name"`

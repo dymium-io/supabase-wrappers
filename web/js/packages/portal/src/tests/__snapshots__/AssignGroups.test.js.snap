@@ -6,6 +6,10 @@ exports[`assign-groups 1`] = `
 >
   <h5>
      Associate groups with Ghost Databases 
+    <i
+      className="trash fa-solid fa-circle-info mr-1"
+      onClick={[Function]}
+    />
     <img
       className="spinner"
       src="/logo.png"
@@ -16,6 +20,75 @@ exports[`assign-groups 1`] = `
       }
     />
   </h5>
+  <div
+    className="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
+    style={
+      Object {
+        "right": -300,
+        "width": 0,
+      }
+    }
+  >
+    <div>
+      <div
+        className="row"
+      >
+        <div
+          className="col"
+        >
+           
+          <h5>
+             
+          </h5>
+        </div>
+        <div
+          className="col-auto"
+        >
+          <i
+            aria-hidden="true"
+            className="cursor-pointer fa fa-times mr-1 fa-2x close"
+            onClick={[Function]}
+          />
+        </div>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="offcanvas_handle p-0 m-0 px-2 col-auto"
+        onMouseDown={[Function]}
+      />
+      <div
+        className="pl-0 col"
+        style={
+          Object {
+            "paddingRight": "10px",
+          }
+        }
+      >
+        <h5>
+          Associate Groups
+        </h5>
+        <div
+          className="mb-3"
+        >
+          This page allows to associate Dymium groups with the Ghost Databases. Until this association is established, the Ghost Database remains unaccessible.
+        </div>
+        <div
+          className="mb-3"
+        >
+          Select a Ghost Database from the list.
+        </div>
+        <div
+          className="mb-3"
+        >
+          Select one or more groups from the dropout. Hit Apply. The association is done!
+        </div>
+        <div />
+      </div>
+    </div>
+  </div>
   <div
     className="react-bootstrap-table"
   >

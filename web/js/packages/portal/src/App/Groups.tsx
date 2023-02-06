@@ -9,6 +9,7 @@ import Card from 'react-bootstrap/Card'
 import Offcanvas from '@dymium/common/Components/Offcanvas'
 import { Typeahead } from 'react-bootstrap-typeahead';
 import Modal from 'react-bootstrap/Modal'
+import { Link } from "react-router-dom";
 import Alert from 'react-bootstrap/Alert'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
@@ -41,6 +42,8 @@ function GroupMapping() {
   const [id, setId] = useState("")
   const [alert, setAlert] = useState<JSX.Element>(<></>)
   const [mappings, setMappings] = useState<types.Mapping[]>([])
+  const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
+
   let AddMapping = () => {
     setShow(false)
   }
@@ -132,7 +135,7 @@ function GroupMapping() {
 
   let updateMapping = () => {
     setSpinner(true)
-    
+
     let body = JSON.stringify({ id, dymiumgroup, directorygroup, comments, adminaccess })
     http.sendToServer("POST", "/api/updatemapping",
       null, body,
@@ -306,7 +309,7 @@ function GroupMapping() {
       dataField: 'adminaccess',
 
       formatter: (cell, row, rowIndex, formatExtraData) => {
-        if(row["adminaccess"] ) {
+        if (row["adminaccess"]) {
           return <i className="fas fa-check blue" ></i>
         } else {
           return <></>
@@ -316,7 +319,7 @@ function GroupMapping() {
       headerStyle: { width: '140px' },
       style: { height: '30px' },
       align: 'center'
-    },    {
+    }, {
       text: 'Edit',
       dataField: 'edit',
       isDummyField: true,
@@ -344,10 +347,50 @@ function GroupMapping() {
       align: 'center'
     }
   ]
-
+  let listGroups = () => {
+    let gr = com.getTokenProperty("groups")
+    if (gr == null) {
+      return "None returned by the directory! Please configure the directory appropriately!"
+    }
+    return <ul>{gr.map(x => {
+      return <li>{x}</li>
+    })}</ul>
+  }
   return (
     <>
-      <h5 > Group mapping from your directory to Dymium<Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+      <Offcanvas modal={false} width={300} show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}>
+        <div >
+          <h5>Group mapping</h5>
+          {com.isInstaller() &&
+            <div className="mb-4">
+              Welcome to the first configuration page! Let's get started!
+            </div>
+          }
+          <div className="mb-4">
+            This page serves to map the groups a given user is a part of in the Company's directory to the corresponding Dymium groups.
+          </div><div className="mb-4">
+            Dymium groups are used to manage access to the Ghost Databases.
+          </div>
+          <div className="mb-4">
+            One group must be designated to possess administrative privileges.
+          </div>
+          <div>
+            Your current groups are:
+            {listGroups()}
+          </div>
+
+          <div className="mb-4">
+            After filling it in, proceed to configure <Link to="/app/connectors">Connectors</Link>!
+          </div>
+          {com.isInstaller() &&
+            <div className="mb-4">
+              This help sidebar will be open by default only for your first session until you define the group mapping and relogin with admin privileges.
+              To invoke help, just click on <i className="trash fa-solid fa-circle-info"></i> to the right of the page heading.
+            </div>
+          }
+        </div>
+      </Offcanvas>
+      <h5 > Group mapping from your directory to Dymium <i onClick={e => { setShowOffcanvas(!showOffcanvas) }} className="trash fa-solid fa-circle-info"></i> <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
 
       <Modal size="lg" centered show={show} onHide={() => setShow(false)} >
         <Modal.Header closeButton>
@@ -396,20 +439,20 @@ function GroupMapping() {
                 </Form.Group>
 
               </Col>
-                <Col  style={{ marginTop: '1.7em' }}>
+              <Col style={{ marginTop: '1.7em' }}>
 
                 <Form.Check
-                                style={{ marginTop: '0.2em' }}
-                                type="checkbox"
-                                label="Admin access"
-                                id="adminaccess"
-                                defaultChecked={adminaccess}
-                                onChange={e => {
-                                   setAdminaccess(e.target.checked)
-                                }}
-                            />
+                  style={{ marginTop: '0.2em' }}
+                  type="checkbox"
+                  label="Admin access"
+                  id="adminaccess"
+                  defaultChecked={adminaccess}
+                  onChange={e => {
+                    setAdminaccess(e.target.checked)
+                  }}
+                />
 
-                </Col>
+              </Col>
             </Row>
             <Row>
               <Col>
@@ -471,7 +514,7 @@ function GroupMapping() {
                   <div style={{ marginLeft: "auto" }}>
                     <SearchBar size="sm" {...props.searchProps} />
                     <ClearSearchButton {...props.searchProps} />
-                    <i onClick={e=>getMappings()} className="fa fa-refresh ablue cursor-pointer" style={{position: 'relative', top: '2px'}} aria-hidden="true"></i>
+                    <i onClick={e => getMappings()} className="fa fa-refresh ablue cursor-pointer" style={{ position: 'relative', top: '2px' }} aria-hidden="true"></i>
 
                   </div>
                 </div>

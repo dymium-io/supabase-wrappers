@@ -5,10 +5,11 @@ import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
+import { Link } from "react-router-dom";
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import ToolkitProvider, { ColumnToggle } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
-
+import Offcanvas from '@dymium/common/Components/Offcanvas'
 import Alert from 'react-bootstrap/Alert'
 import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
@@ -98,6 +99,8 @@ function Test() {
   const [tables, setTables] = useState<ctypes.DatascopeTable[]>([])
   const [selectedTable, setSelectedTable] = useState<ctypes.DatascopeTable>()
   const [data, setData] = useState<{}[]>([])
+  const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
+
   useEffect(() => {
     com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
 
@@ -301,8 +304,24 @@ function Test() {
   return (
     <div className=" text-left">
       {alert}
+            <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
+                <h5>Testing SQL</h5>
+                <div className="mb-3">
+                    Here you can run small select queries with a limit of 20 records to test the work of Ghost Database, data access and transformation.
+                </div>
+                <div className="mb-3">
+                    Select ghost database, select a table, and hit Apply.
+                </div>
+                <div className="mb-3">
+                    This tool also demonstrates the namespace transformation from the original schemas and tables into the Ghost Database.
+                </div>
 
-      <h5 > Test data access and transformation<Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+
+                <div>
+
+                </div>
+            </Offcanvas>
+      <h5 > Test data access and transformation <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
       <div className=" text-left">
         <Form onSubmit={handleSubmit} noValidate >
           <Row>

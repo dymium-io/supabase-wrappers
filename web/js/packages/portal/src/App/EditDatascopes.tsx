@@ -46,6 +46,7 @@ export default function EditDatascopes() {
     const [datascope, setDatascope] = useState({})
     const [currentConnectionId, setCurrentConnectionId] = useState("")
     const [currentConnectionType, setCurrentConnectionType] = useState("")
+    const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
 
     let t = useAppSelector((state) => {
 
@@ -378,13 +379,22 @@ export default function EditDatascopes() {
     }
     return (
         <div className=" text-left">
-            {alert}
+            {alert}            
             <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
                 title={table["connection"] === undefined ? "Register table" : "Edit table"}>
                 {showOffcanvas &&
                     <AddTable onHide={() => { setShowOffcanvas(false) }} onAlert={setAlert} onAddTable={onAddTable} table={table} currentConnectionType={currentConnectionType}  connectionId={currentConnectionId} />
                 }
             </Offcanvas>
+            <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
+                <h5>Editing Ghost Database</h5>
+                <div className="mb-3">
+                    This page allows to edit or remove a Ghost Database.
+                </div>
+                <div className="mb-3">
+                    The same interface as for adding a Ghost Database is used. You select Data Sources and tables that you want to expose
+                </div>
+            </Offcanvas>            
             <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
                 <Modal.Header closeButton>
                     <Modal.Title>Delete Datascope {nameById(slatedToDelete)}?</Modal.Title>
@@ -441,7 +451,7 @@ export default function EditDatascopes() {
                                     <div className="text-left">
                                    
                                         <div className="d-flex">
-                                            <h5 >Edit Ghost Databases  <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+                                            <h5 >Edit Ghost Databases  <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
 
 
                                             <div style={{ marginLeft: "auto" }}>

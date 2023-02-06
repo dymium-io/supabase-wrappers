@@ -87,12 +87,12 @@ func options(connectionType types.ConnectionType) iOptions {
 					host, port, strings.ToUpper(dbname))
 			},
 			userMapping: func(user, password string) string {
-				return fmt.Sprintf("username '%s', password '%s'",
+				return fmt.Sprintf("user '%s', password '%s'",
 					esc(user), esc(password))
 			},
 			table: func(remoteSchema, remoteTable string) string {
 				return fmt.Sprintf("schema '%s', table '%s'",
-					esc(remoteSchema), esc(strings.ToUpper(remoteTable)))
+					esc(remoteSchema), esc(remoteTable))
 			},
 		}
 	}
@@ -218,21 +218,21 @@ func configureDatabase(db *sql.DB,
 	}
 
 	for k := range shortSchemas {
-		if err := exec("CREATE SCHEMA IF NOT EXISTS " + k); err != nil {
+		if err := exec("CREATE SCHEMA IF NOT EXISTS " + strings.ToLower(k)); err != nil {
 			return err
 		}
-		if err := exec("GRANT USAGE ON SCHEMA " + k + " TO " + localUser); err != nil {
+		if err := exec("GRANT USAGE ON SCHEMA " + strings.ToLower(k) + " TO " + localUser); err != nil {
 			return err
 		}
-		if err := exec("ALTER DEFAULT PRIVILEGES IN SCHEMA " + k + " GRANT SELECT ON TABLES TO " + localUser); err != nil {
+		if err := exec("ALTER DEFAULT PRIVILEGES IN SCHEMA " + strings.ToLower(k) + " GRANT SELECT ON TABLES TO " + localUser); err != nil {
 			return err
 		}
-		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", k); err != nil {
-			return rollback(err, "Registering schema "+k+"_server failed")
+		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", strings.ToLower(k)); err != nil {
+			return rollback(err, "Registering schema "+strings.ToLower(k)+"_server failed")
 		}
 	}
 	for k := range longSchemas {
-		kk := k.k1 + "_" + k.k2
+		kk := strings.ToLower(k.k1 + "_" + k.k2)
 		if err := exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %q", kk)); err != nil {
 			return err
 		}
@@ -341,7 +341,7 @@ func configureDatabase(db *sql.DB,
 						rtyp = uuid
 					}
 					defs = append(defs, fmt.Sprintf("  %q %s OPTIONS( redact '%d' )%s",
-						c.Name, c.Typ, int(ract)|(rnul<<2)|(int(rtyp)<<3), notNull))
+						strings.ToLower(c.Name), c.Typ, int(ract)|(rnul<<2)|(int(rtyp)<<3), notNull))
 				}
 			}
 			e := "CREATE FOREIGN TABLE %q.%q (\n" + strings.Join(defs, ",\n") + "\n)\n" +
@@ -358,7 +358,7 @@ func configureDatabase(db *sql.DB,
 				}
 			}
 			for _, sch := range schs {
-				if err := exec(fmt.Sprintf(e, sch, t.Name, con.Name, opts.table(s.Name, t.Name))); err != nil {
+				if err := exec(fmt.Sprintf(e, strings.ToLower(sch), strings.ToLower(t.Name), con.Name, opts.table(s.Name, t.Name))); err != nil {
 					return err
 				}
 			}

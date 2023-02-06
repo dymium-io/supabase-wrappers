@@ -6,6 +6,7 @@ import Alert from 'react-bootstrap/Alert'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import Spinner from '@dymium/common/Components/Spinner'
+import Offcanvas from '@dymium/common/Components/Offcanvas'
 import cloneDeep from 'lodash/cloneDeep'
 import BootstrapTable from 'react-bootstrap-table-next';
 import Multiselect from 'multiselect-react-dropdown';
@@ -30,6 +31,7 @@ export default function AssignGroups() {
     const [groups, setGroups] = useState<types.Group[]>([])
     const [selectedgroups, setSelectedgroups] = useState<[]>([])
     const [alert, setAlert] = useState<JSX.Element>(<></>)
+    const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
 
     let form = useRef<HTMLFormElement>(null)
     const [show, setShow] = useState(false)
@@ -151,7 +153,7 @@ export default function AssignGroups() {
             null, JSON.stringify(body),
             resp => {
                 resp.json().then(js => {
-                    
+
                     if (js.status !== "OK") {
                         setAlert(
                             <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
@@ -196,7 +198,7 @@ export default function AssignGroups() {
     useEffect(() => {
         com.getDatascopes(setSpinner, setAlert, setDatascopes, (js) => {
             getGroups(js)
-        }) 
+        })
     }, [])
 
     let onEdit = (id, name, groups) => {
@@ -296,7 +298,24 @@ export default function AssignGroups() {
     }
     return (
         <div className=" text-left">
-            <h5 > Associate groups with Ghost Databases <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+            <h5 > Associate groups with Ghost Databases <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+            <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
+                <h5>Associate Groups</h5>
+                <div className="mb-3">
+                    This page allows to associate Dymium groups with the Ghost Databases. Until this association is established, the Ghost Database remains unaccessible.
+                </div>
+                <div className="mb-3">
+                    Select a Ghost Database from the list.
+                </div>
+                <div className="mb-3">
+                    Select one or more groups from the dropout. Hit Apply. The association is done!
+                </div>
+
+
+                <div>
+
+                </div>
+            </Offcanvas>
             {alert}
             <Modal centered size="lg" show={show} onHide={() => setShow(false)} >
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
