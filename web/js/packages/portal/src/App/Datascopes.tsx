@@ -97,6 +97,13 @@ export function AddDatascope(props) {
             resp => {
                 console.log("on error")
                 setSpinner(false)
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error creating {dbname}:  {t}!
+                        </Alert>
+                    )                    
+                )
             },
             error => {
                 console.log("on exception: " + error)

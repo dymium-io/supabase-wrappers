@@ -60,3 +60,9 @@ ALTER TABLE connections ADD column connector_id varchar(128) ;
 ALTER TABLE connections ADD CONSTRAINT connectorid_fk FOREIGN KEY (connector_id) REFERENCES connectorauth(id);
 ALTER TABLE connections ADD column tunnel_id varchar(128) ;
 ALTER TABLE connections ADD CONSTRAINT tunnelid_fk FOREIGN KEY (tunnel_id) REFERENCES connectors(id);
+
+-- #!migration
+-- name: "customer/connections-fix-hostname",
+-- description: "Fix address length",
+-- requires: ["customer/connections-ftkeys"];
+ALTER TABLE connections ALTER COLUMN address TYPE varchar (253);

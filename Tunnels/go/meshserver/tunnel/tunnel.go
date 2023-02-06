@@ -194,7 +194,7 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 		mu.RLock()
 		conn, ok := conmap[id]
 		mu.RUnlock()
-		if err != nil {
+		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				// no op
 			} else {

@@ -262,11 +262,12 @@ function EditCustomers() {
             },
             resp => {
                 console.log("on error")
-                setAlert(
-                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                        Error getting customers.
-                    </Alert>
-                )
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error getting customers: {t}
+                        </Alert>
+                    ))
                 setSpinner(false)
             },
             error => {
@@ -311,11 +312,12 @@ function EditCustomers() {
             },
             resp => {
                 console.log("on error")
-                setAlert(
-                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                        Error updating customer {customerName()}.
-                    </Alert>
-                )
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error updating customer {customerName()} : {t}.
+                        </Alert>
+                    ))
                 setSpinner(false)
             },
             error => {

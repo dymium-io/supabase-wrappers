@@ -7,7 +7,7 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Modal from 'react-bootstrap/Modal'
 import Alert from 'react-bootstrap/Alert'
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import * as tun from '@dymium/common/Types/Tunnel'
 import BootstrapTable from 'react-bootstrap-table-next';
@@ -65,7 +65,7 @@ function Downloads(props) {
 
                 </div>
             </div>
-        </div>        
+        </div>
 
         <div className="viewport">
             <div>For Mac OS X:</div>
@@ -79,7 +79,7 @@ function Downloads(props) {
 
                 </div>
             </div>
-        </div>     
+        </div>
 
     </div>
 
@@ -208,7 +208,7 @@ function ConnectionForm(props) {
     return (
         <>
             <Row>
-                <Col  xs="auto">
+                <Col xs="auto">
                     <Form.Group className="mb-3" controlId="name">
                         <Form.Label>{tooltip('Connector name',
                             <div className="d-block">
@@ -351,11 +351,12 @@ let getAccessKey = (setKey: React.Dispatch<React.SetStateAction<string>>,
         },
         resp => {
             setSpinner(false)
-            setAlert(
-                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                    Error retrieving access key.
-                </Alert>
-            )
+            resp != null && resp.text().then(t =>
+                setAlert(
+                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                        Error retrieving access key: {t}
+                    </Alert>
+                ))
 
         },
         error => {
@@ -429,11 +430,15 @@ export function AddConnector() {
             },
             resp => {
                 setSpinner(false)
-                setAlert(
-                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                        Error creating connection.
-                    </Alert>
-                )
+                if (resp != null) {
+                    resp.text().then(t => {
+                        setAlert(
+                            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                                Error creating connection {t}
+                            </Alert>
+                        )
+                    })
+                }
 
             },
             error => {
@@ -472,7 +477,7 @@ export function AddConnector() {
             <Offcanvas modal={false} width={300} show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}>
                 <h5>Provisioning New Connector</h5>
                 <div className="mb-3">
-                    Dymium offers a reverse tunneling technology solution that facilitates easy access to database servers, regardless of their location. 
+                    Dymium offers a reverse tunneling technology solution that facilitates easy access to database servers, regardless of their location.
                 </div>
                 <div className="mb-3">
                     If you have provisioned Private Link from Dymium to your data sources, you can skip this configuration page and go straight to <Link to="/app/connections">Data Sources</Link>.
@@ -707,6 +712,13 @@ export function EditConnectors(props) {
             },
             resp => {
                 console.log("on error")
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error updating connection {name}: {t}
+                        </Alert>
+                    )
+                )
                 setSpinner(false)
                 setShowedit(false)
                 getConnectors()
@@ -762,11 +774,12 @@ export function EditConnectors(props) {
             },
             resp => {
                 console.log("on error")
-                setAlert(
-                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                        Error deleting connection
-                    </Alert>
-                )
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error deleting connection: {t}
+                        </Alert>
+                    ))
                 setSpinner(false)
                 setShowdelete(false)
                 getConnectors()
@@ -800,7 +813,7 @@ export function EditConnectors(props) {
                         return
                     }
                     setConns(js)
-                    if(js.length === 0) {
+                    if (js.length === 0) {
                         setAlert(
                             <Alert variant="warning" onClose={() => setAlert(<></>)} dismissible>
                                 Please configure some connectors first!
@@ -818,18 +831,20 @@ export function EditConnectors(props) {
             },
             resp => {
                 setSpinner(false)
-                setAlert(
-                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                        Error retrieving access key.
-                    </Alert>
-                )
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error retrieving access key: {t}
+                        </Alert>
+                    ))
+
             },
             error => {
                 console.log("on exception")
                 setSpinner(false)
                 setAlert(
                     <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                        Error retrieving access key: {error.message} { }
+                        Error retrieving access key: {error.message}
                     </Alert>
                 )
             })
@@ -910,40 +925,40 @@ export function EditConnectors(props) {
                 <h5>Editing Connectors</h5>
                 <div className="mb-3">
                     If you just created a new connector, please save the parameters. The Secret will only be visible in the GUI for a day. These parameters must be passed to the
-                    connector executable via environment variables. 
+                    connector executable via environment variables.
                 </div>
                 <div className="mb-3">
                     Below is the complete list of necessary variables, in an example bash script.
                 </div>
                 <div className="mb-3">
-<div className="d-block " style={{fontFamily: "monospace", fontSize: "0.6em", overflow: "hidden", color: '#33cc33', backgroundColor: 'black'}}>
-    <div className=" text-nowrap p-1" >
-<div >
- #!/bin/bash
-</div><div>
-export LOG_LEVEL=Info
-</div><div>
-export PORTAL=https://portal.dymium.io/
-</div><div>
-export CONNECTOR=<span style={{fontStyle:'italic'}}>your connector id</span>
-</div><div>
-export KEY=<span style={{fontStyle:'italic'}}>your secret key</span>
-</div><div>
-export SECRET=<span style={{fontStyle:'italic'}}>your secret</span>
-</div><div>
-export CUSTOMER={com.getTokenProperty("schema")}
-</div><div>
-export TUNNELSERVER={com.getTokenProperty("schema")}.dymium.io:3009
-</div><div>
-./meshconnector
-</div>
-</div>
-</div>
+                    <div className="d-block " style={{ fontFamily: "monospace", fontSize: "0.6em", overflow: "hidden", color: '#33cc33', backgroundColor: 'black' }}>
+                        <div className=" text-nowrap p-1" >
+                            <div >
+                                #!/bin/bash
+                            </div><div>
+                                export LOG_LEVEL=Info
+                            </div><div>
+                                export PORTAL=https://portal.dymium.io/
+                            </div><div>
+                                export CONNECTOR=<span style={{ fontStyle: 'italic' }}>your connector id</span>
+                            </div><div>
+                                export KEY=<span style={{ fontStyle: 'italic' }}>your secret key</span>
+                            </div><div>
+                                export SECRET=<span style={{ fontStyle: 'italic' }}>your secret</span>
+                            </div><div>
+                                export CUSTOMER={com.getTokenProperty("schema")}
+                            </div><div>
+                                export TUNNELSERVER={com.getTokenProperty("schema")}.dymium.io:3009
+                            </div><div>
+                                ./meshconnector
+                            </div>
+                        </div>
+                    </div>
 
-<div className="my-3">
-    Please keep in mind that when you edit tunnels and connectors, the connector binary must be restarted with the updated environment variables!
-</div>
-</div>
+                    <div className="my-3">
+                        Please keep in mind that when you edit tunnels and connectors, the connector binary must be restarted with the updated environment variables!
+                    </div>
+                </div>
 
             </Offcanvas>
 
@@ -1031,7 +1046,7 @@ function Connectors() {
 
     let tt = query.get("key")
     if (tt !== null) {
-      t = tt
+        t = tt
     }
     if (t == null) {
         t = "add"
@@ -1041,10 +1056,10 @@ function Connectors() {
             navigate('/app/connectors#bookmark')
         }
         if (query.get("key") != null) {
-  
+
             appDispatch(setActiveConnectorTab(query.get("key")))
             navigate("/app/connectors")
-          }        
+        }
     }, [t])
 
 

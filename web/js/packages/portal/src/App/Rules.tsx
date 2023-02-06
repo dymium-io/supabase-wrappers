@@ -21,7 +21,7 @@ import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
 import { useAppDispatch, useAppSelector } from './hooks'
 import { setActiveRuleTab } from '../Slices/menuSlice'
-import {defaultDetectors, regexpDetectors} from "./Detectors"
+import { defaultDetectors, regexpDetectors } from "./Detectors"
 var _ = require('lodash')
 
 const { SearchBar, ClearSearchButton } = Search;
@@ -320,9 +320,11 @@ export class BuildRulesClass extends Component {
       resp => {
         resp.json().then(js => {
           this.setState({ spinner: false })
-          this.setState({ alert: <Alert variant="success" onClose={() => this.setState({ alert: <></> })} dismissible>
-            Policy saved successfully
-          </Alert>})
+          this.setState({
+            alert: <Alert variant="success" onClose={() => this.setState({ alert: <></> })} dismissible>
+              Policy saved successfully
+            </Alert>
+          })
 
         }).catch((_error) => {
           this.setState({ alert: error })
@@ -330,7 +332,9 @@ export class BuildRulesClass extends Component {
         })
       },
       resp => {
-        this.setState({ alert: <Alert variant="danger" onClose={() => this.setState({ alert: <></> })} dismissible>{error}</Alert> })
+        resp != null && resp.text().then(t =>
+          this.setState({ alert: <Alert variant="danger" onClose={() => this.setState({ alert: <></> })} dismissible>{t}</Alert> })
+        )
         this.setState({ spinner: false })
       },
       _error => {
@@ -420,8 +424,8 @@ export class BuildRulesClass extends Component {
   render() {
     return (
       <>
-        <h5 >Edit Policy Suggestions  <i onClick={e => {  this.setState({showOffhelp: !this.state.showOffhelp}) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={this.state.spinner} style={{ width: '28px' }}></Spinner></h5>
-        <Offcanvas modal={false} width={300} show={this.state.showOffhelp} onClose={(e) => { this.setState({showOffhelp: false}) }}>
+        <h5 >Edit Policy Suggestions  <i onClick={e => { this.setState({ showOffhelp: !this.state.showOffhelp }) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={this.state.spinner} style={{ width: '28px' }}></Spinner></h5>
+        <Offcanvas modal={false} width={300} show={this.state.showOffhelp} onClose={(e) => { this.setState({ showOffhelp: false }) }}>
           <h5>Policy Suggestions</h5>
           <div className="mb-3">
             This page allows to craft the policy suggestions for table access in Ghost Database interface.
@@ -431,7 +435,7 @@ export class BuildRulesClass extends Component {
           </div>
 
           <div className="mb-3">
-            There are three ways to detect PII content: 
+            There are three ways to detect PII content:
             <ul>
               <li>Amazon Comprehend</li>
               <li>Regexp on the data content in the column (using a subsample)</li>
@@ -441,7 +445,7 @@ export class BuildRulesClass extends Component {
           </div>
 
           <div className="mb-3">
-            
+
           </div>
 
         </Offcanvas>
@@ -626,16 +630,17 @@ export function AccessLevels() {
       },
       resp => {
         setSpinner(false)
+        resp != null && resp.text().then(t =>
         setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>Error retrieving policy</Alert>
-        )
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>Error retrieving policy: {t}</Alert>
+        ))
         setSpinner(false)
       },
       error => {
         console.log("on exception")
         setSpinner(false)
         setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>                  
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>
 
         )
         setSpinner(false)
@@ -679,7 +684,7 @@ export function AccessLevels() {
           }
         }).catch((error) => {
           setAlert(
-            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>                  
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>
 
           )
           setSpinner(false)
@@ -687,16 +692,17 @@ export function AccessLevels() {
       },
       resp => {
         setSpinner(false)
+        resp != null && resp.text().then(t =>
         setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>getpolicies failed</Alert>                  
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>getpolicies failed: {t}</Alert>
 
-        )
+        ))
         setSpinner(false)
       },
       error => {
         console.log("on exception")
         setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>                  
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>{error.message}</Alert>
         )
         setSpinner(false)
       })
@@ -723,7 +729,7 @@ export function AccessLevels() {
     }
     return <li className="card licard">
       <Row>
-        <Col><div  style={{marginTop: '4px'}}>
+        <Col><div style={{ marginTop: '4px' }}>
           {value}</div>
         </Col>
         <Col xs="auto">
@@ -799,29 +805,29 @@ export function AccessLevels() {
   return <div>
     <h5 >Define Access Levels <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i> <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
     <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
-          <h5>Access Levels</h5>
-          <div className="mb-3">
-            Access levels are the templates for access rights when you define the Ghost Databases. For example, you can define levels 
-            <ul>
-              <li>
-              Administrator
-              </li>
-              <li>
-              Data Engineer
-              </li>         
-              <li>
-              Data Scientist
-              </li>                       
-            </ul>
-           
-          </div>
-          <div className="mb-3">
-            Once you defined the levels, go to the next tab Rules, and set the suggestion for data handling for various PIIs
-          </div>
+      <h5>Access Levels</h5>
+      <div className="mb-3">
+        Access levels are the templates for access rights when you define the Ghost Databases. For example, you can define levels
+        <ul>
+          <li>
+            Administrator
+          </li>
+          <li>
+            Data Engineer
+          </li>
+          <li>
+            Data Scientist
+          </li>
+        </ul>
+
+      </div>
+      <div className="mb-3">
+        Once you defined the levels, go to the next tab Rules, and set the suggestion for data handling for various PIIs
+      </div>
 
 
 
-        </Offcanvas>
+    </Offcanvas>
     {alert}
     <div>
       <Form onSubmit={addLevel}>

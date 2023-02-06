@@ -62,11 +62,12 @@ export default function AssignGroups() {
             },
             resp => {
                 setSpinner(false)
-                setAlert(
-                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                        Error retrieving mapping.
-                    </Alert>
-                )
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error retrieving mapping: {t}
+                        </Alert>
+                    ))
                 setSpinner(false)
             },
             error => {
@@ -116,12 +117,14 @@ export default function AssignGroups() {
                 })
             },
             resp => {
-                setAlert(
-                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                        Error retrieving group assignments.
-                    </Alert>
-                )
                 setSpinner(false)
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error retrieving group assignments: {t}.
+                        </Alert>
+                    ))
+
             },
             error => {
                 setAlert(
@@ -178,11 +181,12 @@ export default function AssignGroups() {
                 })
             },
             resp => {
-                setAlert(
-                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                        Error saving group assignments.
-                    </Alert>
-                )
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error saving group assignments: {t}
+                        </Alert>
+                    ))
                 setSpinner(false)
             },
             error => {
