@@ -1483,7 +1483,7 @@ get_tupdesc_for_join_scan_tuples(ForeignScanState *node, int **how_to_redact /* 
 
 
 		/* !Dymium: find how_to_redact */
-		options = GetForeignColumnOptions(rte->relid, att->attnum);
+		options = GetForeignColumnOptions(rte->relid, var->varattno);
 		foreach(lc, options)
 		  {
 			DefElem    *def = (DefElem *) lfirst(lc);
