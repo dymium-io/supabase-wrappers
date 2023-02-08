@@ -427,7 +427,7 @@ export const PrefillUnclassified = {
             action: "Allow"
         },
         {
-            regexp: "(Credit card|Credit_card,Creditcard)",
+            regexp: "(Credit card|Credit_card|Creditcard)",
             detection: "Credit card",
             action: "Allow"
         },
@@ -643,7 +643,7 @@ export const Confidential = {
             action: "Obfuscate"
         },
         {
-            regexp: "(Credit card|Credit_card,Creditcard)",
+            regexp: "(Credit card|Credit_card|Creditcard)",
             detection: "Credit card",
             action: "Obfuscate"
         },
@@ -862,7 +862,7 @@ export const Secret = {
             action: "Redact"
         },
         {
-            regexp: "(Credit card|Credit_card,Creditcard)",
+            regexp: "(Credit card|Credit_card|Creditcard)",
             detection: "Credit card",
             action: "Redact"
         },
