@@ -2421,3 +2421,13 @@ func UpdateCustomer(customer types.Customer) error {
 
 	return err
 }
+
+func GetGlobalUsage() (types.GlobalUsage, error) {
+	var usage types.GlobalUsage
+	sql := `select count(*) from global.customers;`
+	row := db.QueryRow(sql)
+
+	err := row.Scan(&usage.Customers)
+	
+	return usage, err
+}

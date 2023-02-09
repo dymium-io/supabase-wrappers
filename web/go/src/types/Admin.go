@@ -20,3 +20,7 @@ type DeleteCustomer struct {
    Id string `json:"id"`
    Schema string `json:"schema"`
 }
+
+type GlobalUsage struct {
+   Customers string `json:"customers"`
+}

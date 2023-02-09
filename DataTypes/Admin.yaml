@@ -13,3 +13,5 @@ DeleteCustomer:
   - id: string
   - schema: string 
 
+GlobalUsage:
+  - customers: string 

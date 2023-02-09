@@ -4,7 +4,7 @@ import AuthenticatedApp from './App/AuthenticatedApp'
 import Error404 from "./Error404"
 import Logout from "./Logout"
 import Error from "./Error"
-import Invitation from "./Invitation"
+import Sticky from "./App/Sticky"
 import Dashboard from "./App/Dashboard"
 import Customers from "./App/Customers"
 import Help from "./App/Help"
@@ -29,12 +29,11 @@ function App() {
             <Route path="/app/dashboard" element={<Dashboard />} />
             <Route path="/app/customers" element={<Customers />} />
             <Route path="/app/help" element={<Help />} />
+            <Route path="/app/" element={<Sticky />} />   
           </Route>
           <Route  path="/app/logout" element={<Logout/>} />
           <Route path="/app/error" element={<Error />} />
-          {/*
-          <Route path="/login" element={<Invitation />} />
-         */}
+
           <Route path="*" element={<Error404 />} />
         </Routes>
       </BrowserRouter>

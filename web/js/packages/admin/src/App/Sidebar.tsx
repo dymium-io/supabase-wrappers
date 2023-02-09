@@ -5,32 +5,69 @@ import { Link } from 'react-router-dom'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Button from 'react-bootstrap/Button'
-
+import { useAppDispatch, useAppSelector } from './hooks'
+import { setActiveMenu } from '../Slices/menuSlice'
 
 import '@dymium/common/Sidebar.scss';
 
 
 
 export default function Sidebar() {
+  let selected = useAppSelector((state) => {
+
+    return state.reducer.activeMenu
+  })
+  const appDispatch = useAppDispatch()
+
+  let getMenuItems = () => {
+
+
+    let items: any[] = []
+    items.push(
+      {
+        item: <div className='darkblue'> <i className="fas fa-tachometer-alt mr-2 fa-fw "></i>Dashboard </div>,
+        to: '/app/dashboard',
+        id: 'dashboard'
+      }
+    )
+    items.push(
+      {
+        item: <div className='darkblue'> <i className="fas fa-users mr-2 fa-fw "></i>Customers </div>,
+        to: '/app/customers',
+        id: 'customers'
+      }
+    )
+    
+    items.push(
+      {
+        item: <div className='darkblue'> <i className="fas fa-question-circle mr-2 fa-fw "></i>HowTos </div>,
+        to: '/app/help',
+        id: 'help'
+      }
+    )
+
+    return items.map(ob => {
+      let cl = 'hover-sidebar '
+
+      if (ob.id === selected) {
+        cl = 'hover-sidebar navselected '
+      }
+      return <Link onClick={(k) => appDispatch(setActiveMenu(ob.id))} key={ob.id} id={ob.id} className={cl} to={ob.to} > {ob.item} </Link>
+    }
+    )
+
+  }
 
   return (
     <div className="sidenav h-100" id="sidebar">
-      <Link className='hover-sidebar'
-        to='/app/dashboard' > <div className='darkblue'> <i className="fas  fa-fw fa-tachometer-alt mr-1"></i>Dashboard</div></Link >
+      {getMenuItems()}
 
-      <Link className='hover-sidebar'
-        to='/app/customers' > <div className='darkblue'> <i className="fa  fa-fw fa-users mr-1"></i>Customers</div></Link >
-
-      <Link className='hover-sidebar'
-        to='/app/help' > <div className='darkblue'> <i className="fa  fa-fw fa-question-circle mr-1"></i>HowTos</div></Link >
-
-
-      <a className='hover-sidebar'
-        href="/app/logout"
+      <a className='darkblue hover-sidebar '
+        href="/api/logout"
       >
-        <div className='darkblue'> <i className="fa  fa-fw fa-sign-out" aria-hidden="true"></i>Logout </div></a >
-
+        <i className="fas fa-sign-out mr-2 fa-fw " aria-hidden="true"></i><span className="">Logout</span></a >
     </div>
+
 
   )
 }

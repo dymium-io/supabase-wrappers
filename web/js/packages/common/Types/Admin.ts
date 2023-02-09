@@ -143,6 +143,36 @@ export class DeleteCustomer {
   }
 }
 
+export class GlobalUsage {
+  private '_customers': string
+
+  constructor() {
+    this['_customers'] = ''
+  }
+  get customers(): string { return this['_customers'] }
+  set customers(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_customers'])) {
+      setDirtyFlag()
+      this['_customers'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): GlobalUsage {
+    disableDF()
+    let cls = new GlobalUsage()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.customers = __a__['customers']
+    } else {
+       doAlert(`GlobalUsage: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 function stringReader(__dflt__) {
   return ((__a__) => {
     if(_.isString(__a__)) {

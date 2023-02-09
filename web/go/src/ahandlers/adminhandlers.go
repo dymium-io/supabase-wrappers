@@ -95,6 +95,24 @@ func GetCustomers(w http.ResponseWriter, r *http.Request)  {
 	w.Write(js)
 }
 
+func GetGlobalUsage(w http.ResponseWriter, r *http.Request)  {
+	usage, err := authentication.GetGlobalUsage()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return		
+	}
+
+	js, err := json.Marshal(usage)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Cache-Control", common.Nocache)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
 func DeleteCustomer(w http.ResponseWriter, r *http.Request) {
 	status := types.OperationStatus{"OK", ""}
 

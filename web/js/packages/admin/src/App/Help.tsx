@@ -5,6 +5,21 @@ import Tab from 'react-bootstrap/Tab'
 import Spinner from '@dymium/common/Components/Spinner'
 
 
+function LoadBalancers() {
+    
+    return (
+        <div style={{ margin: '0px', padding: '0px' }}>
+            <iframe className="embed" src="https://docs.google.com/document/d/1w9izb-ikd5TzKWFc8zpFNo7tltGJ_zgQtP_rLBkpaVI/edit?usp=sharing"></iframe>
+        </div>
+    )}
+
+function Client() {
+    
+    return (
+        <div style={{ margin: '0px', padding: '0px' }}>
+            <iframe className="embed" src="https://docs.google.com/document/d/1BnlwVB3uQ8bWkL0YhSy0FzpZfj_q_BKwAUWMTHoUCKI/edit?usp=sharing"></iframe>
+        </div>
+    )}
 
 function Logging() {
     
@@ -90,7 +105,9 @@ function Help() {
             <Tab eventKey="microservices" title="Microservices" className="mx-0 helptab">
                 <Microservices />
             </Tab>
-
+            <Tab eventKey="loadbalancers" title="Load Balancers" className="mx-0 helptab">
+                <LoadBalancers />
+            </Tab>
             <Tab eventKey="route53" title="Route 53" className="mx-0 helptab">
                 <Route53 />
             </Tab>
@@ -105,6 +122,9 @@ function Help() {
             </Tab>
             <Tab eventKey="" title="Logging" className="mx-0 helptab">
                 <Logging />
+            </Tab>            
+            <Tab eventKey="client" title="Clients" className="mx-0 helptab">
+                <Client />
             </Tab>            
         </Tabs>
     )
