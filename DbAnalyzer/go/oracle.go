@@ -46,6 +46,7 @@ func getOraInfo(c types.Connection) (interface{}, error) {
                                       c.COLUMN_ID,
                                       c.COLUMN_NAME,
                                       c.DATA_TYPE,
+                                      c.DATA_LENGTH,
                                       c.CHAR_LENGTH,
                                       c.DATA_PRECISION,
                                       c.DATA_SCALE,
@@ -72,6 +73,7 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 	isSystem := false
 	for rows.Next() {
 		var schema, tblName, cName string
+		var cDataLen int
 		var pos *int
 		var cIsNullable *string
 		var cDflt *string
@@ -79,12 +81,27 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 		var cCharMaxLen, cPrecision, cScale *int
 		var dLength *int
 		err = rows.Scan(&schema, &tblName, &pos, &cName,
-			&cTyp, &cCharMaxLen, &cPrecision, &cScale,
+			&cTyp, &cDataLen, &cCharMaxLen, &cPrecision, &cScale,
 			&cIsNullable, &dLength, &cDflt)
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(schema, tblName, pos, cName, cTyp, cCharMaxLen, cPrecision, cScale, cIsNullable, dLength, cDflt)
+
+		/*
+		{
+			var pos_, cPrecision_, cCharMaxLen_, cScale_, dLength_ int
+			var cTyp_, cIsNullable_, cDflt_ string
+			if pos == nil { pos_ = -1 } else { pos_ = *pos }
+			if cCharMaxLen == nil { cCharMaxLen_ = -1 } else { cCharMaxLen_ = *cCharMaxLen }
+			if cPrecision == nil { cPrecision_ = -1 } else { cPrecision_ = *cPrecision }
+			if cScale == nil { cScale_ = -1 } else { cScale_ = *cScale }
+			if dLength == nil { dLength_ = -1 } else { dLength_ = *dLength }
+			if cTyp == nil { cTyp_ = "<empty>" } else { cTyp_ = *cTyp }
+			if cIsNullable == nil { cIsNullable_ = "<empty>" } else { cIsNullable_ = *cIsNullable }
+			if cDflt == nil { cDflt_ = "<empty>" } else { cDflt_ = *cDflt }
+			fmt.Println(schema, tblName, pos_, cName, cTyp_, cDataLen, cCharMaxLen_, cPrecision_, cScale_, cIsNullable_, dLength_, cDflt_)
+		}
+		*/
 		isNullable := true
 		if cIsNullable != nil && *cIsNullable == "N" {
 			isNullable = false
@@ -102,7 +119,7 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 						t = fmt.Sprintf("numeric(%d)", *cPrecision)
 					}
 				} else {
-					t = "numeric"
+					t = fmt.Sprintf("numeric(%d)",cDataLen)
 				}
 			case "varchar2", "nvarchar2":
 				if cCharMaxLen != nil {
@@ -116,8 +133,15 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 				} else {
 					t = "bpchar"
 				}
+			case "clob", "nclob", "long":
+				t = "text"
+			case "blob", "bfile", "long raw":
+				t = "bytea"
+			case "date":
+				t = "date"
 			default:
-				t = *cTyp
+				// ignore other datatypes (e.g. GEOM)
+				continue
 			}
 		}
 		if pos == nil {

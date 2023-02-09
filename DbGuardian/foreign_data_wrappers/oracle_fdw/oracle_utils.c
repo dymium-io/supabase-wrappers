@@ -833,7 +833,8 @@ oracleIsStatementOpen(oracleSession *session)
  * 		Returns a palloc'ed data structure with the results.
  */
 struct oraTable
-*oracleDescribe(oracleSession *session, char *dblink, char *schema, char *table, char *pgname, long max_long)
+*oracleDescribe(oracleSession *session, char *dblink, char *schema, char *table, char *pgname, long max_long,
+				const char* columnNames)
 {
 	struct oraTable *reply;
 	OCIStmt *stmthp;
@@ -881,9 +882,11 @@ struct oraTable
 		oracleFree(qschema);
 
 	/* construct a "SELECT * FROM ..." query to describe columns */
-	length += 14;
+	length += strlen("SELECT  FROM ") + strlen(columnNames);
 	query = oracleAlloc(length + 1);
-	strcpy(query, "SELECT * FROM ");
+	strcpy(query, "SELECT ");
+	strcat(query, columnNames);
+	strcat(query, " FROM ");
 	strcat(query, tablename);
 
 	/* create statement handle */

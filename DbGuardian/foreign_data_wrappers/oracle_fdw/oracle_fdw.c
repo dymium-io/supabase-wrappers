@@ -2550,6 +2550,7 @@ oracleImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 }
 #endif  /* IMPORT_API */
 
+static StringInfo getColumnNames(Oid);
 /*
  * getFdwState
  * 		Construct an OracleFdwState from the options of the foreign table.
@@ -2663,8 +2664,14 @@ struct OracleFdwState
 		GetCurrentTransactionNestLevel()
 	);
 
-	/* get remote table description */
-	fdwState->oraTable = oracleDescribe(fdwState->session, dblink, schema, table, pgtablename, max_long);
+	{
+	  /* get list of postgresql column names */
+	  StringInfo columnNames = getColumnNames(foreigntableid);
+
+	  /* get remote table description */
+	  fdwState->oraTable = oracleDescribe(fdwState->session, dblink, schema, table, pgtablename, max_long,
+										  columnNames->data);
+	}
 
 	/* add PostgreSQL data to table description */
 	getColumnData(foreigntableid, fdwState->oraTable);
@@ -2762,13 +2769,50 @@ getColumnData(Oid foreigntableid, struct oraTable *oraTable)
 			}
 			else if (strcmp(def->defname, OPT_STRIP_ZEROS) == 0 && optionIsTrue(strVal(def->arg)))
 				oraTable->cols[index-1]->strip_zeros = 1;
-			else if (strcmp(def->defname, OPT_DYMIUM_REDACT))
+			else if (strcmp(def->defname, OPT_DYMIUM_REDACT) == 0)
 			    oraTable->cols[index-1]->how_to_redact = atoi(strVal(def->arg));
 		}
 	}
 
 	table_close(rel, NoLock);
 }
+
+/*
+ * getColumnNames
+ * 		Get PostgreSQL column name
+ */
+static
+StringInfo getColumnNames(Oid foreigntableid)
+{
+	Relation rel;
+	TupleDesc tupdesc;
+	int i;
+
+	StringInfo columnNames = makeStringInfo();
+
+	rel = table_open(foreigntableid, NoLock);
+	tupdesc = rel->rd_att;
+
+	/* loop through foreign table columns */
+	for (i=0; i<tupdesc->natts; ++i)
+	{
+		Form_pg_attribute att_tuple = TupleDescAttr(tupdesc, i);
+
+		/* ignore dropped columns */
+		if (att_tuple->attisdropped)
+			continue;
+
+		if (i != 0) {
+		  appendStringInfoString(columnNames, ", ");
+		}
+		appendStringInfoString(columnNames, NameStr(att_tuple->attname));
+	}
+
+	table_close(rel, NoLock);
+
+	return columnNames;
+}
+
 
 /*
  * createQuery
@@ -5773,6 +5817,8 @@ struct OracleFdwState
 		copy->oraTable->cols[i]->val_len = 0;
 		copy->oraTable->cols[i]->val_len4 = 0;
 		copy->oraTable->cols[i]->val_null = 0;
+		/* Dymium */
+		copy->oraTable->cols[i]->how_to_redact = orig->oraTable->cols[i]->how_to_redact;
 	}
 	copy->startup_cost = 0.0;
 	copy->total_cost = 0.0;
@@ -6474,8 +6520,7 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 
 		/* get the data and its length */
 		if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_BLOB
-				|| fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_BFILE
-				|| fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_CLOB)
+				|| fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_BFILE)
 		{
 			/* for LOBs, get the actual LOB contents (palloc'ed), truncated if desired */
 			oracleGetLob(fdw_state->session,
@@ -6483,6 +6528,17 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 				&value, &value_len, trunc_lob ? (WIDTH_THRESHOLD+1) : 0);
 			if(act == 1) {
 			  redact_bytea(value, value_len);
+			}
+		}
+		else if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_CLOB)
+		{
+			oracleGetLob(fdw_state->session,
+				(void *)fdw_state->oraTable->cols[index]->val, fdw_state->oraTable->cols[index]->oratype,
+				&value, &value_len, trunc_lob ? (WIDTH_THRESHOLD+1) : 0);
+			if(act == 1) {
+			  redact_text(value, value_len);
+			} else if(act == 2 || act == 3) {
+			  obfuscate(value, value_len);
 			}
 		}
 		else if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_GEOMETRY)
@@ -6501,8 +6557,7 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 
 			value = NULL;  /* we will fetch that later to avoid unnecessary copying */
 		}
-		else if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_LONG
-				|| fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_LONGRAW)
+		else if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_LONGRAW)
 		{
 			/* for LONG and LONG RAW, the first 4 bytes contain the length */
 			value_len = *((int32 *)fdw_state->oraTable->cols[index]->val);
@@ -6512,6 +6567,20 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 			value[value_len] = '\0';
 			if(act == 1) {
 			  redact_bytea(value, value_len);
+			}
+		}
+		else if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_LONG)
+		{
+			/* for LONG and LONG RAW, the first 4 bytes contain the length */
+			value_len = *((int32 *)fdw_state->oraTable->cols[index]->val);
+			/* the rest is the actual data */
+			value = fdw_state->oraTable->cols[index]->val + 4;
+			/* terminating zero byte (needed for LONGs) */
+			value[value_len] = '\0';
+			if(act == 1) {
+			  redact_text(value, value_len);
+			} else if(act == 2 || act == 3) {
+			  obfuscate(value, value_len);
 			}
 		}
 		else
