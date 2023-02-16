@@ -65,11 +65,18 @@ export default function Sidebar() {
     if (isadmin)
       items.push(
         {
+          item: <div className='darkblue'> <i className="fa fa-gavel mr-2 fa-fw"></i>Rules </div>,
+          to: '/app/rules',
+          id: 'rules'
+        })
+
+    if (isadmin)
+      items.push(
+        {
           item: <div className='darkblue'><i className="fas fa-ghost mr-2  fa-fw"></i>Ghost Databases</div>,
           to: '/app/datascopes',
           id: 'datascopes'
         })
-
 
     if (isuser)
       items.push(
@@ -77,13 +84,6 @@ export default function Sidebar() {
           item: <div className='darkblue'> <i className="fa fa-key mr-2 fa-fw"></i>User Access </div>,
           to: '/app/access',
           id: 'access'
-        })
-    if (isadmin)
-      items.push(
-        {
-          item: <div className='darkblue'> <i className="fa fa-gavel mr-2 fa-fw"></i>Rules </div>,
-          to: '/app/rules',
-          id: 'rules'
         })
 
     items.push(

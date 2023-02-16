@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"fmt"
+	"bytes"
 	"strconv"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
@@ -645,11 +646,7 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 	}
 	sql := `select distinct a.name, a.id from `+schema+`.datascopes as a  join `+schema+`.groupsfordatascopes as b on a.id=b.datascope_id join `+schema+`.groupmapping as c on c.id=b.group_id where c.outergroup = any ($1)`
 
-	if age >  60*60*24 {
-		password = pswd
-	}
-    out.Username = username
-	out.Password = password
+
 	out.Schema = schema
 
 	rq.UserConf.Name = username
@@ -674,9 +671,14 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 		log.Errorf("GetDatascopesForGroups error: %s", err.Error())
 	}
 
-
 	snc, _ := json.Marshal(rq)	
 	_, err = Invoke("DbSync", nil, snc)
+
+	if age >  60*60*24 {
+		password = pswd
+	}
+    out.Username = username
+	out.Password = password
 
 	if(err != nil) {
 		log.Errorf("GetDatascopesForGroups error: %s", err.Error())
@@ -2334,7 +2336,7 @@ func CreateNewCustomer(customer types.Customer) error {
 	if "" == os.Getenv("LOCAL_ENVIRONMENT") {
 		// cloud, hence linux
 		mallard = "./mallard"
-		where = "./mallard"
+		where = "/mallard"
 	} else {
 		// local Mac
 		mallard = "../bin/mallard"
@@ -2345,7 +2347,12 @@ func CreateNewCustomer(customer types.Customer) error {
 	dbport := os.Getenv("DATABASE_PORT")
 	dbuser := os.Getenv("DATABASE_USER")
 	dbname := os.Getenv("DATABASE_NAME")
-	
+	if dbport == "" {
+		dbport = "5432"
+	}
+	if dbname == "" {
+		dbname = "dymium"
+	}
 	cmd := exec.Command(mallard, "migrate", "-s", customer.Schema, "-r", "customer", 
 		"--host", dbhost, 
 		"--port", dbport, 
@@ -2353,10 +2360,20 @@ func CreateNewCustomer(customer types.Customer) error {
 		"--password", dbpassword, 
 		"--database", dbname,
 		"--apply")
+
+	fmt.Printf("Run %s in dir: %s, port: %s\n", mallard, where, dbport)		
+	fmt.Printf("args: %v\n", cmd.Args)
 	cmd.Dir = where
-	stdout, err := cmd.Output()
-	fmt.Print(string(stdout))
-	return err
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr	
+	err = cmd.Run()
+	if err != nil {
+		return errors.New( fmt.Sprintf("%s, mallard output: %s", err.Error(), stderr.String())  )
+	} else {
+		return err
+	}
 }
 func GetCustomers() ([]types.Customer, error) {
 	var ret []types.Customer
@@ -2400,7 +2417,13 @@ func DeleteCustomer(id string, schema string) error {
 	dbport := os.Getenv("DATABASE_PORT")
 	dbuser := os.Getenv("DATABASE_USER")
 	dbname := os.Getenv("DATABASE_NAME")
-	
+	if dbport == "" {
+		dbport = "5432"
+	}
+	if dbname == "" {
+		dbname = "dymium"
+	}
+
 	cmd := exec.Command(mallard, "drop", "-s", schema, 
 		"--host", dbhost, 
 		"--port", dbport, 
@@ -2408,10 +2431,17 @@ func DeleteCustomer(id string, schema string) error {
 		"--password", dbpassword, 
 		"--database", dbname)
 	cmd.Dir = where		
-	stdout, err := cmd.Output()
-	fmt.Print(string(stdout))
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr	
+	err = cmd.Run()
+	if err != nil {
+		return errors.New( fmt.Sprintf("%s, mallard output: %s", err.Error(), stderr.String())  )
+	} else {
+		return err
+	}
 
-	return err
 }
 
 func UpdateCustomer(customer types.Customer) error {

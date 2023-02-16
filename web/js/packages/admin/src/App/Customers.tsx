@@ -25,107 +25,152 @@ const { SearchBar, ClearSearchButton } = Search;
 
 function CustomerForm(props) {
     return <Form onSubmit={props.handleSubmit} ref={props.form} noValidate validated={props.validated}>
-        <Row>
-            <Col xs="auto">
-                <Form.Group className="mb-3" controlId="ccname">
-                    <Form.Label>Customer name:</Form.Label>
-                    <Form.Control size="sm" type="text"
-                        required placeholder="anything goes"
-                        style={{ width: '40em' }}
-                        pattern=".+"
-                        disabled={props.edit === true}
-                        value={props.name}
-                        onChange={e => {
-                            props.setName(e.target.value)
-                        }}
-                    />
-                    <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                    <Form.Control.Feedback type="invalid" >
-                        Enter customer name
-                    </Form.Control.Feedback>
-                </Form.Group>
-            </Col>
-        </Row>
-        <Row>
-            <Col xs="auto">
-                <Form.Group className="mb-3" controlId="schemaid" >
-                    <Form.Label>Schema name:</Form.Label>
-                    <Form.Control size="sm" type="text"
-                        required placeholder="small cap alphanum"
-                        style={{ width: '40em' }}
-                        pattern="[-a-zA-Z0-9_]+"
-                        value={props.schema}
-                        disabled={props.edit === true}
-                        onChange={e => {
-                            props.setSchema(e.target.value)
-                        }}
-                    />
-                    <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                    <Form.Control.Feedback type="invalid" >
-                        Enter schema
-                    </Form.Control.Feedback>
-                </Form.Group>
-            </Col>
-        </Row>
-        <Row>
-            <Col xs="auto">
-                <Form.Group className="mb-3" controlId="orgid">
-                    <Form.Label>Auth0 ord_id:</Form.Label>
-                    <Form.Control size="sm" type="text"
-                        required placeholder="small cap alphanum"
-                        style={{ width: '40em' }}
-                        pattern="[-a-zA-Z0-9_]+"
-                        value={props.orgid}
-                        onChange={e => {
-                            props.setOrgid(e.target.value)
-                        }}
-                    />
-                    <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                    <Form.Control.Feedback type="invalid" >
-                        Enter orgid
-                    </Form.Control.Feedback>
-                </Form.Group>
-            </Col>
-        </Row>
-        <Row>
-            <Col xs="auto">
-                <Form.Group className="mb-3" controlId="domainid">
-                    <Form.Label>Domain:</Form.Label>
-                    <Form.Control size="sm" type="text"
-                        required placeholder="small cap alphanum"
-                        style={{ width: '40em' }}
-                        pattern="[a-z0-9_.]+"
-                        value={props.domain}
-                        onChange={e => {
-                            props.setDomain(e.target.value)
-                        }}
-                    />
-                    <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                    <Form.Control.Feedback type="invalid" >
-                        Enter domain
-                    </Form.Control.Feedback>
-                </Form.Group>
-            </Col>
-        </Row>
-        <Row>
-            <Col xs="auto">
-                <Form.Group className="mb-3" controlId="domainid">
-                    <Form.Label>Fallback Admin Group:</Form.Label>
-                    <Form.Control size="sm" type="text"
-                        required placeholder=""
-                        style={{ width: '40em' }}
-                        pattern=".+"
-                        value={props.group}
-                        onChange={e => {
-                            props.setGroup(e.target.value)
-                        }}
-                    />
-                    <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
-                    <Form.Control.Feedback type="invalid" >
-                        Enter fallback admin group
-                    </Form.Control.Feedback>
-                </Form.Group>
-            </Col>
+        <Row><Col>
+            <Row>
+                <Col xs="auto">
+                    <Form.Group className="mb-3" controlId="ccname">
+                        <Form.Label>Customer name:</Form.Label>
+                        <Form.Control size="sm" type="text"
+                            required placeholder="anything goes"
+                            style={{ width: '40em' }}
+                            pattern=".+"
+                            disabled={props.edit === true}
+                            value={props.name}
+                            onChange={e => {
+                                props.setName(e.target.value)
+                            }}
+                        />
+                        <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid" >
+                            Enter customer name
+                        </Form.Control.Feedback>
+                    </Form.Group>
+                </Col>
+            </Row>
+            <Row>
+                <Col xs="auto">
+                    <Form.Group className="mb-3" controlId="schemaid" >
+                        <Form.Label>Schema name:</Form.Label>
+                        <Form.Control size="sm" type="text"
+                            required placeholder="small cap alphanum"
+                            style={{ width: '40em' }}
+                            pattern="[a-zA-Z0-9_]+"
+                            value={props.schema}
+                            disabled={props.edit === true}
+                            onChange={e => {
+                                props.setSchema(e.target.value)
+                            }}
+                        />
+                        <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid" >
+                            Enter schema
+                        </Form.Control.Feedback>
+                    </Form.Group>
+                </Col>
+            </Row>
+            <Row>
+                <Col xs="auto">
+                    <Form.Group className="mb-3" controlId="orgid">
+                        <Form.Label>Auth0 ord_id:</Form.Label>
+                        <Form.Control size="sm" type="text"
+                            required placeholder="small cap alphanum"
+                            style={{ width: '40em' }}
+                            pattern="[-a-zA-Z0-9_]+"
+                            value={props.orgid}
+                            onChange={e => {
+                                props.setOrgid(e.target.value)
+                            }}
+                        />
+                        <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid" >
+                            Enter orgid
+                        </Form.Control.Feedback>
+                    </Form.Group>
+                </Col>
+            </Row>
+            <Row>
+                <Col xs="auto">
+                    <Form.Group className="mb-3" controlId="domainid">
+                        <Form.Label>Domain:</Form.Label>
+                        <Form.Control size="sm" type="text"
+                            required placeholder="small cap alphanum"
+                            style={{ width: '40em' }}
+                            pattern="[a-z0-9_.]+"
+                            value={props.domain}
+                            onChange={e => {
+                                props.setDomain(e.target.value)
+                            }}
+                        />
+                        <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid" >
+                            Enter domain
+                        </Form.Control.Feedback>
+                    </Form.Group>
+                </Col>
+            </Row>
+            <Row>
+                <Col xs="auto">
+                    <Form.Group className="mb-3" controlId="domainid">
+                        <Form.Label>Fallback Admin Group:</Form.Label>
+                        <Form.Control size="sm" type="text"
+                            required placeholder=""
+                            style={{ width: '40em' }}
+                            pattern=".+"
+                            value={props.group}
+                            onChange={e => {
+                                props.setGroup(e.target.value)
+                            }}
+                        />
+                        <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid" >
+                            Enter fallback admin group
+                        </Form.Control.Feedback>
+                    </Form.Group>
+                </Col>
+            </Row>
+        </Col>
+        <Col>
+                            <h5>Onboarding a customer</h5>
+            <div>
+                This form only creates or updates a global database record for a customer, as well as a dedicated database schema.
+            </div>
+            <div className="mt-3">
+                The following steps must be taken in addition:
+                <ul>
+                    <li>
+                        <a href="https://docs.google.com/document/d/1LveztkbSUWUK6CFm08Nrsm5L7upOp7BsGz2NA3DT1kw/edit?usp=sharing" target="terraform">Terraform script executed</a> to bring up all the necessary microservices.
+                    </li>
+                    <li>
+                        <a href="https://docs.google.com/document/d/1yJWNfuAovcdQCAeSm-sThp8MQt5sm3AlK_1TZXqghPM/edit?usp=sharing" target="route53">Hostnames added</a> to Amazons Route53 in the dymium subaccount
+                    </li>
+                    <li>
+                       Auth0 configured either for  <a href="https://docs.google.com/document/d/1CYW7AFfZByBNDZdhWpAJcLD6uNtHfJuaFuXEQaMsl0o/edit?usp=sharing" target="okta">Okta</a> or <a href="https://docs.google.com/document/d/1U1YZ1xm5n89ch0oQKYhiqIAxzlPUmzlIw-uPlU4BlQM/edit?usp=sharing" target="azure">AzureAD</a> integration
+                    </li>
+                    <li>
+                      Group mapping set up for access control in the customer's portal. Unless there is a reason to change group names, just use 1:1 mapping
+                    </li>
+                    <li>
+                      Connectivity to the data sources provisioned either via <a href="" target="route53">PrivateLink </a> or <a href="https://docs.google.com/document/d/1U1YZ1xm5n89ch0oQKYhiqIAxzlPUmzlIw-uPlU4BlQM/edit?usp=sharing" target="route53">Dymium Connector</a>  in the customer's portal.
+                      Dymium Connector is easier to set up, and can be used with on-prem installations, as well as less supported clouds.
+                    </li>
+                    <li>
+                        Data Sources created in the customer's portal.
+                    </li>      
+                    <li>
+                       Access levels and Rules defined in the customer's portal.
+                    </li>                      
+                    <li>
+                        Ghost Databases defined in the customer's portal.
+                    </li>
+                    <li>
+                        Groups assigned to Ghost Databases.
+                    </li>
+                    <li>
+                        The customer provided with instruction on the proper use of the tunneling client.
+                    </li>
+                </ul>
+            </div>
+        </Col>
         </Row>
         <Button variant="dymium" size="sm" className="mt-4" type="submit">
             Apply
