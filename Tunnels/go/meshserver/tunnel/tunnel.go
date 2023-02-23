@@ -4,20 +4,21 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
+	"dymium.com/dymium/log"
+	"dymium.com/meshserver/types"
+	"dymium.com/server/protocol"
 	"encoding/gob"
+	"encoding/pem"
 	"fmt"
+	_ "github.com/lib/pq"
+	"golang.org/x/net/context"
+	"io"
 	"net"
 	"os"
-	"io"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"dymium.com/dymium/log"
-	"golang.org/x/net/context"
-	"dymium.com/server/protocol"
-	"dymium.com/meshserver/types"	
-	_ "github.com/lib/pq"
 )
 
 var psqlInfo string
@@ -30,18 +31,18 @@ type Virtcon struct {
 }
 
 type TunnelPipe struct {
-	sock      net.Conn 
-	connid    string 
-	targets   []string
-	tunnelid  []string
+	sock     net.Conn
+	connid   string
+	targets  []string
+	tunnelid []string
 }
 
 var pipes (map[string]*TunnelPipe)
 var mupipes sync.RWMutex
 
 type TunnelUpdate struct {
-	 Cid string
-	 Tid string 
+	Cid string
+	Tid string
 }
 
 func displayBuff(what string, buff []byte) {
@@ -52,7 +53,7 @@ func displayBuff(what string, buff []byte) {
 	} else {
 		log.Debugf("%s buffer: %v", what, buff)
 	}
-	log.Debugf("%s ", string(buff) )
+	log.Debugf("%s ", string(buff))
 }
 
 func initDB(host, nport, user, password, dbname, usetls string) error {
@@ -119,7 +120,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 		if err != nil {
 			if err == io.EOF {
 				log.ErrorTenantf(customer, "Connection closed, cleanup the proxy connection!", err.Error())
-				 
+
 			} else {
 				log.ErrorTenantf(customer, "Read from client failed '%s', cleanup the proxy connection!", err.Error())
 			}
@@ -131,7 +132,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 			}
 			mu.Unlock()
 			egress.Close()
-			for i:= 0; i < len(listeners); i++ {
+			for i := 0; i < len(listeners); i++ {
 				listeners[i].Close()
 			}
 			return
@@ -139,7 +140,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 
 		switch buff.Action {
 		case protocol.Ping:
-			out := protocol.TransmissionUnit{protocol.Ping, buff.Id, []byte{} }
+			out := protocol.TransmissionUnit{protocol.Ping, buff.Id, []byte{}}
 			log.Debugf("Got ping, return ack %d", buff.Id)
 			messages <- out
 
@@ -150,7 +151,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 			mu.RLock()
 			conn, ok := conmap[buff.Id]
 			mu.RUnlock()
-			if  ok {
+			if ok {
 				log.InfoTenantf(customer, "Connection #%d closing, %d left", buff.Id, len(conmap)-1)
 				conn.sock.Close()
 				mu.Lock()
@@ -164,7 +165,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 			conn, ok := conmap[buff.Id]
 			mu.RUnlock()
 			displayBuff("To database: ", buff.Data)
-			if  ok {
+			if ok {
 				_, err = conn.sock.Write(buff.Data)
 
 				if err != nil {
@@ -182,11 +183,11 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 
 func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.TransmissionUnit,
 	conmap map[int]*Virtcon, id int, connectionString string, mu *sync.RWMutex) {
-	
+
 	// open connection on the other side
 	log.Infof("send open to connector for %s", connectionString)
-	out := protocol.TransmissionUnit{protocol.Open, id, []byte(connectionString) }
-	messages <- out 
+	out := protocol.TransmissionUnit{protocol.Open, id, []byte(connectionString)}
+	messages <- out
 
 	for {
 		buff := make([]byte, 0xffff)
@@ -226,20 +227,20 @@ func listenLocally(egress net.Conn, listener *net.TCPListener, customer string,
 	connectionString string, messages chan protocol.TransmissionUnit,
 	conmap map[int]*Virtcon, counter chan int, mu *sync.RWMutex, localport string) {
 
-	listener.SetDeadline(time.Now().Add(30*time.Second))
+	listener.SetDeadline(time.Now().Add(30 * time.Second))
 	log.Infof("Listener waits for local connection for %s on :%s", connectionString, localport)
 	for {
 		ingress, err := listener.Accept() //*TCPConn
 		if err, ok := err.(*net.OpError); ok && err.Timeout() {
-				listener.SetDeadline(time.Now().Add(30*time.Second))
-				continue
+			listener.SetDeadline(time.Now().Add(30 * time.Second))
+			continue
 		} else {
 			if err != nil {
 				log.Errorf("Error in Accept: %s", err.Error())
 				return
 			}
 		}
-		
+
 		log.Infof("accepted local connection for %s", connectionString)
 		v := Virtcon{}
 		v.sock = ingress
@@ -273,10 +274,9 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 		}
 	}(counter)
 
-
 	var listeners []*net.TCPListener
-	var pipe TunnelPipe 
-	pipe.sock = egress 
+	var pipe TunnelPipe
+	pipe.sock = egress
 
 	for i := 0; i < len(connections); i++ {
 		tg := strings.Split(connections[i], ",")
@@ -284,7 +284,7 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 
 		listen, err := createListener(customer, tg[0], tg[1])
 		if err != nil {
-			log.ErrorTenantf(customer, "Error creating listener for %s %s, connector %s, tunnel %s; %s",  tg[0], tg[1], tg[2], tg[3], err.Error())
+			log.ErrorTenantf(customer, "Error creating listener for %s %s, connector %s, tunnel %s; %s", tg[0], tg[1], tg[2], tg[3], err.Error())
 			e := protocol.TransmissionUnit{protocol.Error, 0, []byte("Could not create a listener, probably another connector running")}
 			enc.Encode(e)
 			time.Sleep(2 * time.Second)
@@ -305,30 +305,28 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 
 		go listenLocally(egress, listen, customer, tg[0], messages, conmap, counter, &mu, tg[1])
 	}
-	
+
 	// read and write from and to connector over tls
 	go remotepipe(customer, messages, enc, dec, egress, conmap, counter, &mu, listeners)
 
-	
 }
 
-
-func GetConnectors(schema string) ( []types.Connector, error) {
+func GetConnectors(schema string) ([]types.Connector, error) {
 	var ctx context.Context
 	var out []types.Connector //
 	var pswd = "***********"
 
-    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
-    defer cancelfunc()
+	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelfunc()
 
 	tx, err := db.BeginTx(ctx, nil)
-	sql := `select a.id, a.name, a.accesskey, a.accesssecret, EXTRACT(epoch from (now() - a.createdat)), COALESCE(b.use_connector, false) from `+schema+`.connectorauth as a left join `+schema+`.connections as b on a.id=b.connector_id`
+	sql := `select a.id, a.name, a.accesskey, a.accesssecret, EXTRACT(epoch from (now() - a.createdat)), COALESCE(b.use_connector, false) from ` + schema + `.connectorauth as a left join ` + schema + `.connections as b on a.id=b.connector_id`
 
-	rows, err  := tx.QueryContext(ctx, sql)
+	rows, err := tx.QueryContext(ctx, sql)
 	if nil == err {
 		defer rows.Close()
 		for rows.Next() {
-			var id, name, accesskey, accesssecret string 
+			var id, name, accesskey, accesssecret string
 			var status bool
 			var age float64
 
@@ -336,12 +334,12 @@ func GetConnectors(schema string) ( []types.Connector, error) {
 			if err != nil {
 				tx.Rollback()
 				log.Errorf("GetConnectors error 0: %s", err.Error())
-				return out, err			
+				return out, err
 			}
-			var o  types.Connector 
-			o.Name = name 
-			o.Id = id 
-			o.Accesskey = &accesskey 
+			var o types.Connector
+			o.Name = name
+			o.Id = id
+			o.Accesskey = &accesskey
 			if age > 60*60*24 {
 				o.Secret = &pswd
 			} else {
@@ -358,31 +356,31 @@ func GetConnectors(schema string) ( []types.Connector, error) {
 			out = append(out, o)
 		}
 
-		for i:=0; i < len(out); i++ {
-			sql := `select id, targetaddress, targetport, localport, connectorname, status from ` +schema+ 
-			`.connectors where id_connectorauth=$1;`
+		for i := 0; i < len(out); i++ {
+			sql := `select id, targetaddress, targetport, localport, connectorname, status from ` + schema +
+				`.connectors where id_connectorauth=$1;`
 
-			trows, err  := tx.QueryContext(ctx, sql, out[i].Id)
+			trows, err := tx.QueryContext(ctx, sql, out[i].Id)
 			if err != nil {
 				tx.Rollback()
 				log.Errorf("GetConnectors error 1: %s", err.Error())
-				return out, err			
+				return out, err
 			}
 			defer trows.Close()
 			out[i].Tunnels = []types.Tunnel{}
 			for trows.Next() {
-				var id, targetaddress, targetport, localport, connectorname string 
+				var id, targetaddress, targetport, localport, connectorname string
 				var status types.ConnectorStatus
 
 				err = trows.Scan(&id, &targetaddress, &targetport, &localport, &connectorname, &status)
 				if err != nil {
 					tx.Rollback()
 					log.Errorf("GetConnectors error 2: %s", err.Error())
-					return out, err			
+					return out, err
 				}
-				t := types.Tunnel{ &id, connectorname, targetaddress, targetport, &localport, &status }		
-				out[i].Tunnels = append(out[i].Tunnels, t)		
-			}			
+				t := types.Tunnel{&id, connectorname, targetaddress, targetport, &localport, &status}
+				out[i].Tunnels = append(out[i].Tunnels, t)
+			}
 		}
 	} else {
 		tx.Rollback()
@@ -395,15 +393,15 @@ func GetConnectors(schema string) ( []types.Connector, error) {
 		tx.Rollback()
 		log.Errorf("CreateNewConnector error 4: %s", err.Error())
 		return out, err
-	}	
+	}
 
 	return out, nil
 }
 func overseer(customer string) {
-	
+
 	for {
 		time.Sleep(60 * time.Second)
-		// pull down the current configuration 
+		// pull down the current configuration
 		conns, err := GetConnectors(customer)
 		if err != nil {
 			log.Errorf("Error getting connector info: %s", err.Error())
@@ -428,16 +426,16 @@ func overseer(customer string) {
 				continue
 			}
 			// figure out if connector has changed
-			if( len(c.tunnelid) != len(conns[ifound].Tunnels) ) {
-				log.Infof("Connector %s changed: %d tunnels to %d tunnels\npreparing to reset, disconnecting...", 
+			if len(c.tunnelid) != len(conns[ifound].Tunnels) {
+				log.Infof("Connector %s changed: %d tunnels to %d tunnels\npreparing to reset, disconnecting...",
 					id, len(c.tunnelid), len(conns[ifound].Tunnels))
 				c.sock.Close()
 				delete(pipes, id)
-				continue				
+				continue
 			}
 
 			// ok, same length, then we can iterate over one, and should find a counterpart
-			for i:=0; i < len(c.tunnelid); i++ {
+			for i := 0; i < len(c.tunnelid); i++ {
 				tid := c.tunnelid[i]
 				target := c.targets[i]
 				jfound := -1
@@ -446,21 +444,21 @@ func overseer(customer string) {
 						jfound = j
 						s := fmt.Sprintf("%s:%s", conns[ifound].Tunnels[j].Address, conns[ifound].Tunnels[j].Port)
 						if target != s {
-							log.Infof("Connector %s changed: tunnel %s has target changed\npreparing to reset, disconnecting...", 
-							id, tid)
+							log.Infof("Connector %s changed: tunnel %s has target changed\npreparing to reset, disconnecting...",
+								id, tid)
 							c.sock.Close()
 							delete(pipes, id)
 							i = len(c.tunnelid)
-							break			
+							break
 						}
 					}
 				}
 				if jfound == -1 {
-					log.Infof("Connector %s changed: tunnel %s not found\npreparing to reset, disconnecting...", 
-					id, tid)
+					log.Infof("Connector %s changed: tunnel %s not found\npreparing to reset, disconnecting...",
+						id, tid)
 					c.sock.Close()
 					delete(pipes, id)
-					continue							
+					continue
 				}
 
 			}
@@ -468,12 +466,12 @@ func overseer(customer string) {
 		}
 		var tunnels []TunnelUpdate
 		/*
-		type TunnelUpdate struct {
-			Cid string
-			Tid string 
-	   } */
+			type TunnelUpdate struct {
+				Cid string
+				Tid string
+		   } */
 		for id, c := range pipes {
-			for i:=0; i < len(c.tunnelid); i++ {
+			for i := 0; i < len(c.tunnelid); i++ {
 				a := TunnelUpdate{id, c.tunnelid[i]}
 				tunnels = append(tunnels, a)
 			}
@@ -482,13 +480,13 @@ func overseer(customer string) {
 
 		// send update to mark tunnels as used
 		UpdateTunnels(customer, tunnels)
-		
+
 	}
 }
 
 func UpdateTunnels(customer string, tunnels []TunnelUpdate) {
-    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
-    defer cancelfunc()
+	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelfunc()
 
 	tx, _ := db.BeginTx(ctx, nil)
 
@@ -497,7 +495,7 @@ func UpdateTunnels(customer string, tunnels []TunnelUpdate) {
 
 	for i := 0; i < len(tunnels); i++ {
 		sql = `UPDATE ` + customer + `.connectors set status='active' where id=$1 and id_connectorauth=$2`
-		_, err := tx.ExecContext(ctx, sql, tunnels[i].Tid, tunnels[i].Cid )
+		_, err := tx.ExecContext(ctx, sql, tunnels[i].Tid, tunnels[i].Cid)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err.Error())
 		}
@@ -508,33 +506,49 @@ func UpdateTunnels(customer string, tunnels []TunnelUpdate) {
 		tx.Rollback()
 		log.Errorf("UpdateTunnels error 4: %s", err.Error())
 		return
-	}	
+	}
 }
 func setTCPKeepAlive(clientHello *tls.ClientHelloInfo) (*tls.Config, error) {
 	// Check that the underlying connection really is TCP.
 	if tcpConn, ok := clientHello.Conn.(*net.TCPConn); ok {
-	  // we want to protect against NLB timeouts
-	  if err := tcpConn.SetKeepAlivePeriod(60 * time.Second); err != nil {
-		log.Infof("Could not set keep alive period %s", err.Error())
-	  } 
+		// we want to protect against NLB timeouts
+		if err := tcpConn.SetKeepAlivePeriod(60 * time.Second); err != nil {
+			log.Infof("Could not set keep alive period %s", err.Error())
+		}
 	} else {
-	  log.Error("TLS over non-TCP connection")
+		log.Error("TLS over non-TCP connection")
 	}
-  
+
 	// Make sure to return nil, nil to let the caller fall back on the default behavior.
 	return nil, nil
-  }
+}
 func Server(address string, port int, customer string,
-	certPEMBlock, keyPEMBlock []byte, caCert []byte,
+	certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte,
 	dbDomain, dbPort, dbUsername, dbPassword, dbName, usetls string) {
 	var err error
-
+	var pkey []byte
 	initDB(dbDomain, dbPort, dbUsername, dbPassword, dbName, usetls)
 	//go logBandwidth(customer)
 
 	pipes = make(map[string]*TunnelPipe)
 
-	cer, err := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
+	v, _ := pem.Decode(keyPEMBlock)
+	if v != nil {
+
+		if v.Type == "RSA PRIVATE KEY" {
+			if x509.IsEncryptedPEMBlock(v) {
+				pkey, _ = x509.DecryptPEMBlock(v, []byte(passphrase))
+				pkey = pem.EncodeToMemory(&pem.Block{
+					Type:  v.Type,
+					Bytes: pkey,
+				})
+			} else {
+				pkey = pem.EncodeToMemory(v)
+			}
+		}
+	}
+
+	cer, err := tls.X509KeyPair(certPEMBlock, pkey)
 	if err != nil {
 		log.Errorf("Error decoding KeyPair", err.Error())
 		os.Exit(1)
@@ -546,9 +560,9 @@ func Server(address string, port int, customer string,
 	log.Infof("AppendCertsFromPEM returned %t", ok)
 
 	config := &tls.Config{
-		Certificates: []tls.Certificate{cer},
-		ClientCAs:    caCertPool,
-		ClientAuth:   tls.RequireAndVerifyClientCert,
+		Certificates:       []tls.Certificate{cer},
+		ClientCAs:          caCertPool,
+		ClientAuth:         tls.RequireAndVerifyClientCert,
 		GetConfigForClient: setTCPKeepAlive,
 	}
 	connect := fmt.Sprintf("%s:%d", address, port)

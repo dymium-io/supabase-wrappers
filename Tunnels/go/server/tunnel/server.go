@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"encoding/gob"
+	"encoding/pem"
 	"fmt"
 	"net"
 	"os"
@@ -131,6 +132,7 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 	certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte,
 	dbDomain, dbPort, dbUsername, dbPassword, dbName, usetls string) {
 	var err error
+	var pkey []byte
 
 	initDB(dbDomain, dbPort, dbUsername, dbPassword, dbName, usetls)
 	go logBandwidth(customer)
@@ -145,7 +147,23 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 		log.Debugf("db endpoint: %s", ip)
 	}
 
-	cer, err := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
+	v, _ := pem.Decode(keyPEMBlock)
+	if v != nil {
+
+		if v.Type == "RSA PRIVATE KEY" {
+			if x509.IsEncryptedPEMBlock(v) {
+				pkey, _ = x509.DecryptPEMBlock(v, []byte(passphrase))
+				pkey = pem.EncodeToMemory(&pem.Block{
+					Type:  v.Type,
+					Bytes: pkey,
+				})
+			} else {
+				pkey = pem.EncodeToMemory(v)
+			}
+		}
+	}
+
+	cer, err := tls.X509KeyPair(certPEMBlock, pkey)
 	if err != nil {
 		log.Errorf("Error decoding KeyPair", err.Error())
 		os.Exit(1)

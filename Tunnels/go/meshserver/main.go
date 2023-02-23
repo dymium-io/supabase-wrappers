@@ -68,7 +68,7 @@ func main() {
 		log.Errorf("Cert unmarshaling error: %s", err.Error())
 		os.Exit(1)
 	}
-
+	passphrase := os.Getenv("PASSPHRASE")
 	cajson := os.Getenv("CA_CERTIFICATE")
 	ca := struct {
 		Certificate string
@@ -89,5 +89,5 @@ func main() {
 	tls := os.Getenv("DATABASE_TLS")
 
 	tunnel.Server(address, port, customer, []byte(cert.Certificate),
-		[]byte(cert.Key), []byte(ca.Certificate), dbDomain, dbPort, dbUsername, dbPassword, dbName, tls)
+		[]byte(cert.Key), passphrase, []byte(ca.Certificate), dbDomain, dbPort, dbUsername, dbPassword, dbName, tls)
 }
