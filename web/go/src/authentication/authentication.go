@@ -27,6 +27,8 @@ import (
 	"errors"
 	"io"
 	"crypto/rsa"
+	"crypto/aes"
+	"crypto/cipher"
 	"github.com/Jeffail/gabs"
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/types"
@@ -143,6 +145,55 @@ func generatePassword(passwordLength int) string {
 		pword[i] = getChar()
 	}
 	return string(pword)
+}
+
+func AESencrypt(plaintext []byte, keyhex string) ([]byte, error) {
+	key, err := hex.DecodeString(keyhex)
+    if err != nil {
+        return nil, err
+    }
+
+    c, err := aes.NewCipher(key)
+    if err != nil {
+        return nil, err
+    }
+
+    gcm, err := cipher.NewGCM(c)
+    if err != nil {
+        return nil, err
+    }
+
+    nonce := make([]byte, gcm.NonceSize())
+    if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+        return nil, err
+    }
+
+    return gcm.Seal(nonce, nonce, plaintext, nil), nil
+}
+
+func AESdecrypt(ciphertext []byte, keyhex string) ([]byte, error) {
+	key, err := hex.DecodeString(keyhex)
+    if err != nil {
+        return nil, err
+    }
+
+    c, err := aes.NewCipher(key)
+    if err != nil {
+        return nil, err
+    }
+
+    gcm, err := cipher.NewGCM(c)
+    if err != nil {
+        return nil, err
+    }
+
+    nonceSize := gcm.NonceSize()
+    if len(ciphertext) < nonceSize {
+        return nil, errors.New("ciphertext too short")
+    }
+
+    nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
+    return gcm.Open(nil, nonce, ciphertext, nil)
 }
 
 func ParsePEMPrivateKey(pemBytes []byte, passphrase string) (*rsa.PrivateKey, error) {
@@ -762,9 +813,16 @@ func CreateNewConnection(schema string, con types.ConnectionRecord) (string, err
 	if err != nil {
 		return id, err
 	}
+	hexkey := os.Getenv( strings.ToUpper(schema) + "_KEY" )
+
+	enc, err := AESencrypt([]byte(*con.Password), hexkey)
+	if err != nil {
+		return id, err
+	}
+
 	sqlI = `insert into `+schema+`.passwords(id, password) values($1, $2)`;
 	
-	_, err = db.Exec(sqlI, credid, con.Password)
+	_, err = db.Exec(sqlI, credid, enc)
 	if err != nil {
 		return id, err
 	}
@@ -1147,8 +1205,15 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 			log.Errorf("UpdateConnection 2: %s", err.Error())
 			return err
 		}
+		hexkey := os.Getenv( strings.ToUpper(schema) + "_KEY" )
+
+		enc, err := AESencrypt([]byte(*con.Password), hexkey)
+		if err != nil {
+			return  err
+		}
+
 		sq = `update `+schema+`.passwords set password=$1 where id=$2;`
-		_, err  = tx.ExecContext(ctx, sq, con.Password, credid)
+		_, err  = tx.ExecContext(ctx, sq, enc, credid)
 		if err != nil {
 			tx.Rollback()
 			log.Errorf("UpdateConnection Error 3: %s", err.Error())
@@ -1179,12 +1244,20 @@ func GetConnection(schema, id string) (types.Connection, error) {
 	var use_connector bool
 	var connector_id, tunnel_id string
 
-	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &con.Password, 
+	var password []byte
+	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &password, 
 		&con.Database, &con.Tls, &use_connector, &connector_id, &tunnel_id)
 	if(err != nil) {
 		log.Errorf("GetConnection error 0: %s", err.Error())
 		return con, err
 	} else {
+		hexkey := os.Getenv( strings.ToUpper(schema) + "_KEY" )
+		plain, err := AESdecrypt(password, hexkey)
+		fmt.Printf("\npassword: %s\n", plain)
+		if err != nil {
+			fmt.Printf( "GetConnection error X: %s\n", err.Error() )
+		}
+		con.Password = string(plain)
 		if use_connector {
 			// get the connector information
 			var localport int
