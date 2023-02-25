@@ -22,6 +22,7 @@ import (
 	"dymium.com/client/content"
 	"dymium.com/client/selfupdate"
 	"dymium.com/client/types"
+	"dymium.com/client/installer"
 	"dymium.com/server/protocol"
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/cli"
@@ -255,8 +256,8 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool) (string, bo
 	if !forcenoupdate {
 		if ProtocolVersion < back.ProtocolVersion {
 			log.Infof("The tunneling utility must be updated!")
-			log.Infof("Go to %s/app/access?key=download for the download.", portalurl)
-			os.Exit(1)
+			//log.Infof("Go to %s/app/access?key=download for the download.", portalurl)
+			//os.Exit(1)
 		} else {
 			if ProtocolVersion >= back.ProtocolVersion {
 				log.Infof("A new version %s.%s is available",
@@ -517,21 +518,26 @@ func main() {
 		log.SetLevelFromString("Info")
 	}
 
-	loginURL /* needsUpdate */, _ := getTunnelInfo(customerid, portalurl, *forcenoupdate)
+	loginURL, needsUpdate := getTunnelInfo(customerid, portalurl, *forcenoupdate)
 
-	/* disable self update for now
 	if !*forcenoupdate {
 		if *forceupdate || needsUpdate {
 			// runtime.Breakpoint()
+			log.Infof("The client needs update")
+			installer.UpdateInstaller(portalurl)
+			log.Infof("Exit")
+			
+			os.Exit(1)
+			/*
 			err := doUpdate(portalurl)
 			if err != nil {
 				fmt.Printf("Error: %s", err.Error())
 				os.Exit(1)
 			}
 			restart()
+			*/
 		}
 	}
-	*/
 
 	err := browser.OpenURL(loginURL)
 	if err != nil {

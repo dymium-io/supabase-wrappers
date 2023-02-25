@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 	"fmt"
+	"time"
 )
 
 
@@ -90,11 +91,15 @@ func (g *Gui) LaunchDymium() error {
 	g.pid = cmd.Process
 	g.WriteConfig()
 
-
 	for {
 		tmp := make([]byte, 1024)
 		n, err := stdout.Read(tmp)
 		line := string(tmp[:n])
+		
+		if strings.Contains(line, "Exit") {
+			time.Sleep(100 * time.Millisecond)
+			os.Exit(0)
+		}
 		g.intro.SetText(g.intro.Text  + line)
 		if err != nil {
 			fmt.Printf("Error: %s\n", err.Error())
