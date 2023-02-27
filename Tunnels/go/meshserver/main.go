@@ -68,6 +68,7 @@ func main() {
 		log.Errorf("Cert unmarshaling error: %s", err.Error())
 		os.Exit(1)
 	}
+
 	passphrase := os.Getenv("PASSPHRASE")
 	cajson := os.Getenv("CA_CERTIFICATE")
 	ca := struct {

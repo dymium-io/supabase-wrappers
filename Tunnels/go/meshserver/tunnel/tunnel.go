@@ -4,14 +4,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
-	"dymium.com/dymium/log"
-	"dymium.com/meshserver/types"
-	"dymium.com/server/protocol"
 	"encoding/gob"
 	"encoding/pem"
 	"fmt"
-	_ "github.com/lib/pq"
-	"golang.org/x/net/context"
 	"io"
 	"net"
 	"os"
@@ -19,6 +14,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"dymium.com/dymium/log"
+	"dymium.com/meshserver/types"
+	"dymium.com/server/protocol"
+	_ "github.com/lib/pq"
+	"golang.org/x/net/context"
 )
 
 var psqlInfo string
@@ -44,6 +45,7 @@ type TunnelUpdate struct {
 	Cid string
 	Tid string
 }
+
 /*
 func displayBuff(what string, buff []byte) {
 	if len(buff) > 32 {
@@ -533,24 +535,34 @@ func Server(address string, port int, customer string,
 	pipes = make(map[string]*TunnelPipe)
 
 	v, _ := pem.Decode(keyPEMBlock)
-	if v != nil {
 
-		if v.Type == "RSA PRIVATE KEY" {
+	if v != nil {
+		log.Infof("key type: %s", v.Type)
+		//if v.Type == "RSA PRIVATE KEY" {
 			if x509.IsEncryptedPEMBlock(v) {
-				pkey, _ = x509.DecryptPEMBlock(v, []byte(passphrase))
+				log.Infof("Decrypt the  key")
+				pkey, err = x509.DecryptPEMBlock(v, []byte(passphrase))
+				if err != nil {
+					log.Errorf("%s", string(v.Bytes) )
+					log.Errorf("Error decoding PEM: %s", err.Error())
+				}
 				pkey = pem.EncodeToMemory(&pem.Block{
 					Type:  v.Type,
 					Bytes: pkey,
 				})
 			} else {
+				log.Infof("Use key unencrypted")
 				pkey = pem.EncodeToMemory(v)
 			}
-		}
+		//}
+	} else {
+		log.Infof("Use key as is")
+		pkey = keyPEMBlock
 	}
 
 	cer, err := tls.X509KeyPair(certPEMBlock, pkey)
 	if err != nil {
-		log.Errorf("Error decoding KeyPair", err.Error())
+		log.Errorf("Error decoding KeyPair: %s", err.Error())
 		os.Exit(1)
 	}
 
