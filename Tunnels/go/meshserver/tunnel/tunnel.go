@@ -44,7 +44,7 @@ type TunnelUpdate struct {
 	Cid string
 	Tid string
 }
-
+/*
 func displayBuff(what string, buff []byte) {
 	if len(buff) > 32 {
 		head := buff[:16]
@@ -55,7 +55,7 @@ func displayBuff(what string, buff []byte) {
 	}
 	log.Debugf("%s ", string(buff))
 }
-
+*/
 func initDB(host, nport, user, password, dbname, usetls string) error {
 	psqlInfo = fmt.Sprintf("host=%s port=%s user=%s "+
 		"dbname=%s sslmode=%s",
@@ -107,7 +107,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 				return
 			} else {
 				if len(tosend.Data) > 0 {
-					log.Debugf("sent %d bytes to connector", len(tosend.Data))
+					//log.Debugf("sent %d bytes to connector", len(tosend.Data))
 				}
 			}
 		}
@@ -141,7 +141,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 		switch buff.Action {
 		case protocol.Ping:
 			out := protocol.TransmissionUnit{protocol.Ping, buff.Id, []byte{}}
-			log.Debugf("Got ping, return ack %d", buff.Id)
+			//log.Debugf("Got ping, return ack %d", buff.Id)
 			messages <- out
 
 		case protocol.Open:
@@ -164,7 +164,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 			mu.RLock()
 			conn, ok := conmap[buff.Id]
 			mu.RUnlock()
-			displayBuff("To database: ", buff.Data)
+			//displayBuff("To database: ", buff.Data)
 			if ok {
 				_, err = conn.sock.Write(buff.Data)
 
@@ -172,7 +172,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 					log.ErrorTenantf(customer, "Write to local socket(%d) error: %s", buff.Id, err.Error())
 					conn.sock.Close()
 				} else {
-					log.DebugTenantf(customer, "Wrote to local socket(%d) bytes: %d", buff.Id, len(buff.Data))
+					//log.DebugTenantf(customer, "Wrote to local socket(%d) bytes: %d", buff.Id, len(buff.Data))
 				}
 			} else {
 				log.ErrorTenantf(customer, "Error finding the descriptor %d, %v", buff.Id, buff)
@@ -605,7 +605,7 @@ func Server(address string, port int, customer string,
 				connections = append(connections, name)
 			}
 		}
-		log.Debugf("go to requestConnections")
+		log.Debugf("Go to requestConnections")
 		go requestConnections(egress, customer, connections)
 	}
 }

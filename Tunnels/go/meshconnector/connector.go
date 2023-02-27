@@ -297,7 +297,7 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 		case protocol.Ping: 
 			pingLock.Lock()
 			ackCounter = buff.Id
-			log.Debugf("Ack: %d", ackCounter)
+			//log.Debugf("Ack: %d", ackCounter)
 			pingLock.Unlock()
 
 		case protocol.Open:
@@ -358,7 +358,7 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 
 		ok := caCertPool.AppendCertsFromPEM([]byte(ca.RootCApem[i]))
 		if !ok {
-			log.Errorf("add ca #%d, status %t", i, ok)
+			log.Errorf("Add certificate authority #%d, status %t", i, ok)
 		}
 	}
 
