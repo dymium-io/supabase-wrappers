@@ -197,22 +197,25 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 		mu.RLock()
 		conn, ok := conmap[id]
 		mu.RUnlock()
-		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
-			if strings.Contains(err.Error(), "use of closed network connection") {
-				// no op
-			} else {
-				if ok {
-					log.ErrorTenantf(conn.tenant,
-						"Local read failed '%s', id:%d", err.Error(), id)
+		if err != nil {
+			if err != io.EOF && err != io.ErrUnexpectedEOF {
+				if strings.Contains(err.Error(), "use of closed network connection") {
+					// no op
 				} else {
-					log.Errorf("Local read failed '%s', id:%d", err.Error(), id)
+					if ok {
+						log.ErrorTenantf(conn.tenant,
+							"Local read failed '%s', id:%d", err.Error(), id)
+					} else {
+						log.Errorf("Local read failed '%s', id:%d", err.Error(), id)
+					}
+					ingress.Close()
 				}
-				ingress.Close()
 			}
 			//egress.Close()
 			out := protocol.TransmissionUnit{protocol.Close, id, nil}
 			messages <- out
 			return
+
 		}
 		if n == 0 {
 			log.Infof("Read returned 0 bytes")
@@ -539,21 +542,21 @@ func Server(address string, port int, customer string,
 	if v != nil {
 		log.Infof("key type: %s", v.Type)
 		//if v.Type == "RSA PRIVATE KEY" {
-			if x509.IsEncryptedPEMBlock(v) {
-				log.Infof("Decrypt the  key")
-				pkey, err = x509.DecryptPEMBlock(v, []byte(passphrase))
-				if err != nil {
-					log.Errorf("%s", string(v.Bytes) )
-					log.Errorf("Error decoding PEM: %s", err.Error())
-				}
-				pkey = pem.EncodeToMemory(&pem.Block{
-					Type:  v.Type,
-					Bytes: pkey,
-				})
-			} else {
-				log.Infof("Use key unencrypted")
-				pkey = pem.EncodeToMemory(v)
+		if x509.IsEncryptedPEMBlock(v) {
+			log.Infof("Decrypt the  key")
+			pkey, err = x509.DecryptPEMBlock(v, []byte(passphrase))
+			if err != nil {
+				log.Errorf("%s", string(v.Bytes))
+				log.Errorf("Error decoding PEM: %s", err.Error())
 			}
+			pkey = pem.EncodeToMemory(&pem.Block{
+				Type:  v.Type,
+				Bytes: pkey,
+			})
+		} else {
+			log.Infof("Use key unencrypted")
+			pkey = pem.EncodeToMemory(v)
+		}
 		//}
 	} else {
 		log.Infof("Use key as is")
