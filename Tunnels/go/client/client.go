@@ -527,15 +527,12 @@ func main() {
 			installer.UpdateInstaller(portalurl)
 			log.Infof("Exit")
 			
-			os.Exit(1)
-			/*
-			err := doUpdate(portalurl)
-			if err != nil {
-				fmt.Printf("Error: %s", err.Error())
-				os.Exit(1)
-			}
-			restart()
-			*/
+			os.Exit(0)
+			//for {
+			//	time.Sleep( time.Second)
+			//}
+			log.Infof("Exit called")
+
 		}
 	}
 
