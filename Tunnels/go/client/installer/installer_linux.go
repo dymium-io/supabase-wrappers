@@ -1,20 +1,16 @@
 package installer
 
 import (
+	"dymium.com/client/selfupdate"
 	"errors"
 	"fmt"
 	"github.com/apex/log"
-	"golang.org/x/sys/windows"
-	"dymium.com/client/selfupdate"
-	"io"
 	"net/http"
 	"os"
-	_ "os/exec"
-	"path/filepath"
-	"syscall"
+	"runtime"
 )
 
-func func UpdateInstaller(portalUrl string) error {
+func UpdateInstaller(portalUrl string) error {
 	url := fmt.Sprintf("%sapi/downloadupdate?os=%s&arch=%s", portalUrl, runtime.GOOS, runtime.GOARCH)
 
 	log.Infof("Downloading new version...")
@@ -36,7 +32,7 @@ func func UpdateInstaller(portalUrl string) error {
 		}
 		// error handling
 	} else {
-		log.Infof("Utility successfully updated, restarting...")
+		log.Infof("Utility successfully updated, please restart the client.")
 	}
 	return err
 }

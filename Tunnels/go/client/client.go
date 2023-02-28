@@ -17,10 +17,11 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
+
 	"dymium.com/client/ca"
 	"dymium.com/client/content"
-	"dymium.com/client/types"
 	"dymium.com/client/installer"
+	"dymium.com/client/types"
 	"dymium.com/server/protocol"
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/cli"
@@ -494,21 +495,17 @@ func main() {
 
 	if !*forcenoupdate {
 		if *forceupdate || needsUpdate {
-			// runtime.Breakpoint()
-			log.Infof("The client needs update")
 			installer.UpdateInstaller(portalurl)
 			log.Infof("Exit")
-			
 			os.Exit(0)
-
 			log.Infof("Exit called")
-
 		}
 	}
 
 	err := browser.OpenURL(loginURL)
 	if err != nil {
-		log.Errorf("OpenURL failed: %s", err.Error())
+		log.Errorf("OpenURL failed, probably you don't have a browser on your system: %s", err.Error())
+		os.Exit(1)
 	}
 	p := mux.NewRouter()
 	loggingMiddleware := func(next http.Handler) http.Handler {

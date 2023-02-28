@@ -75,3 +75,4 @@ web/go/src/server
 Tunnels/go/meshconnector/aws.sh
 Tunnels/go/meshconnector/gcp.sh
 Tunnels/go/meshconnector/runproderr.sh
+Tunnels/go/client/linuxclient
