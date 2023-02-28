@@ -15,12 +15,10 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"encoding/pem"
-	"errors"
 	"flag"
 	"fmt"
 	"dymium.com/client/ca"
 	"dymium.com/client/content"
-	"dymium.com/client/selfupdate"
 	"dymium.com/client/types"
 	"dymium.com/client/installer"
 	"dymium.com/server/protocol"
@@ -442,33 +440,7 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 		connectionCounter++
 	}
 }
-func doUpdate(portalUrl string) error {
 
-	url := fmt.Sprintf("%sapi/downloadupdate?os=%s&arch=%s", portalUrl, runtime.GOOS, runtime.GOARCH)
-
-	log.Infof("Downloading new version...")
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("Error downloading update, status %d", resp.StatusCode))
-	}
-	ex, _ := os.Executable()
-	log.Infof("Updating the client...")
-	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, ex + ".old"})
-	if err != nil {
-		log.Errorf("Error updating: %s", err.Error())
-		if rerr := selfupdate.RollbackError(err); rerr != nil {
-			log.Errorf("Failed to rollback from bad update: %s", rerr.Error())
-		}
-		// error handling
-	} else {
-		log.Infof("Utility successfully updated, restarting...")
-	}
-	return err
-}
 func getListener(port int, back chan string) (*net.TCPListener, error) {
 	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
@@ -528,9 +500,7 @@ func main() {
 			log.Infof("Exit")
 			
 			os.Exit(0)
-			//for {
-			//	time.Sleep( time.Second)
-			//}
+
 			log.Infof("Exit called")
 
 		}
