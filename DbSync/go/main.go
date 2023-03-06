@@ -11,6 +11,10 @@ import (
 
 	"golang.org/x/exp/maps"
 
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/hex"
+
 	"DbSync/types"
 )
 
@@ -32,7 +36,7 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 			return nil, err
 		}
 	case types.A_Return:
-		if cnf, err = getConf(c.Customer, false); err != nil {
+		if cnf, err = getConf(c.Customer, true); err != nil {
 			return nil, err
 		}
 	case types.A_ConfUser:
@@ -69,7 +73,7 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 		return nil, err
 	}
 
-	credentials, err := getCredentials(db, c.Customer)
+	credentials, err := getCredentials(db, c.Customer, cnf.GuardianConf.CustomerAESKey)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +101,7 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 	return nil, fmt.Errorf("Undefined action %v", c.Action)
 }
 
-func getCredentials(db *sql.DB, infoSchema string) (*map[string]types.Credential, error) {
+func getCredentials(db *sql.DB, infoSchema, customerAESKey string) (*map[string]types.Credential, error) {
 	rows, err := db.Query(fmt.Sprintf(`SELECT c.id, a.username, p.password
                                            FROM %s.connections c, %s.admincredentials a, %s.passwords p
                                            WHERE a.id = p.id AND a.connection_id = c.id`,
@@ -107,11 +111,26 @@ func getCredentials(db *sql.DB, infoSchema string) (*map[string]types.Credential
 	}
 	creds := map[string]types.Credential{}
 	for rows.Next() {
-		var cred types.Credential
-		if err = rows.Scan(&cred.Connection_id, &cred.User_name, &cred.Password); err != nil {
+		var connectionId, userName string
+		var bPassword []byte
+		if err = rows.Scan(&connectionId, &userName, &bPassword); err != nil {
 			return nil, err
 		}
-		creds[cred.Connection_id] = cred
+		var password string
+		if customerAESKey == "" {
+			password = string(bPassword)
+		} else {
+			if p, err := AESdecrypt(bPassword, customerAESKey); err != nil {
+				return nil, err
+			} else {
+				password = string(p)
+			}
+		}
+		creds[connectionId] = types.Credential{
+			Connection_id: connectionId,
+			User_name:     userName,
+			Password:      password,
+		}
 	}
 	return &creds, nil
 }
@@ -136,7 +155,7 @@ func getConnections(db *sql.DB, infoSchema, connectorDomain string) (*map[string
 			&useConnector, &tunnelId, &connectorPort)
 		if useConnector {
 			if connectorPort == nil {
-				return &connections,fmt.Errorf("localport for connection %v with tunnel_id=%v is not defined",c.Id,tunnelId)
+				return &connections, fmt.Errorf("localport for connection %v with tunnel_id=%v is not defined", c.Id, tunnelId)
 			}
 			c.Address = infoSchema + connectorDomain
 			c.Port = *connectorPort
@@ -253,6 +272,31 @@ func openDb(cnf *conf) (err error) {
 		return err
 	}
 	return nil
+}
+
+func AESdecrypt(ciphertext []byte, keyhex string) ([]byte, error) {
+	key, err := hex.DecodeString(keyhex)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(c)
+	if err != nil {
+		return nil, err
+	}
+
+	nonceSize := gcm.NonceSize()
+	if len(ciphertext) < nonceSize {
+		return nil, fmt.Errorf("ciphertext too short")
+	}
+
+	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
+	return gcm.Open(nil, nonce, ciphertext, nil)
 }
 
 func main() {

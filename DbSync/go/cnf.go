@@ -17,6 +17,7 @@ type guardianConf struct {
 	GuardianUser          string   `json:"guardian_user"`
 	GuardianDatabase      string   `json:"guardian_database"`
 	GuardianAdminPassword string   `json:"guardian_password"`
+	CustomerAESKey        string   `json:"customer_aes_key"`
 }
 
 type conf struct {
@@ -132,6 +133,18 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 				cnf.GuardianConf.GuardianAdminPassword = p
 			} else {
 				return returnError(fmt.Errorf("Gardian admin password not defined: %v", err))
+			}
+		}
+
+		if r.CustomerAESKey != "" {
+			cnf.GuardianConf.CustomerAESKey = r.CustomerAESKey
+		}
+		if cnf.GuardianConf.CustomerAESKey != "" {
+			if p, err := aws.GetSecret(cnf.GuardianConf.CustomerAESKey); err == nil {
+				cnf.GuardianConf.CustomerAESKey = p
+			} else {
+				return returnError(fmt.Errorf("AES key for customer [%s] not defined: %v",
+					customer, err))
 			}
 		}
 
