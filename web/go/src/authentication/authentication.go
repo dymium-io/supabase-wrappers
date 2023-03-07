@@ -1253,7 +1253,7 @@ func GetConnection(schema, id string) (types.Connection, error) {
 	} else {
 		hexkey := os.Getenv( strings.ToUpper(schema) + "_KEY" )
 		plain, err := AESdecrypt(password, hexkey)
-		fmt.Printf("\npassword: %s\n", plain)
+	
 		if err != nil {
 			fmt.Printf( "GetConnection error X: %s\n", err.Error() )
 		}
