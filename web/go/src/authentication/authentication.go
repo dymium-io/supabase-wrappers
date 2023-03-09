@@ -1059,11 +1059,13 @@ func generateError(w http.ResponseWriter, r *http.Request, header string, body s
 	Failed to get userinfo: "+err.Error()
 	*/
 	log.Errorf("Error %s: %s", header, body)
-	w.Header().Set("Cache-Control", common.Nocache)
+	nonce, _ := GenerateRandomString(32)
+	common.CommonNocacheNocspHeaders(w, r)
+	w.Header().Set("Content-Security-Policy", "script-src 'nonce-"+nonce+"'")	
 	w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<html>
+	w.Write([]byte(`<html>
 		<head>
-		<script>
+		<script nonce="`+nonce+`">
 		 !function() {
 			window.location.href = "/app/error?header=`+url.QueryEscape(header)+`&body=`+url.QueryEscape(body)+`"
 		 }()
@@ -1936,11 +1938,14 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		if(err != nil){
 			log.Errorf("Redirect error: %s", err.Error() )
 		}
-		w.Header().Set("Cache-Control", common.Nocache)
+		nonce, _ := GenerateRandomString(32)
+		common.CommonNocacheNocspHeaders(w, r)
 		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Content-Security-Policy", "script-src 'self' 'nonce-"+nonce+"'")
+
 		w.Write([]byte(`<html>
 		<head>
-		<script>
+		<script nonce="`+nonce+`">
 		 !function() {
 			sessionStorage.setItem("Session", "`+token+`")
 			window.location.href = "/app/"
@@ -2066,11 +2071,14 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		if(err == nil){
 			log.InfoUserf(schema, session, email, groups,  GetRoles(schema, groups, admin_group), "Successful portal login, token: %s", token)
 		}
-		w.Header().Set("Cache-Control", common.Nocache)
+		nonce, _ := GenerateRandomString(32)
+		common.CommonNocacheNocspHeaders(w, r)
 		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'nonce-"+nonce+"'")
+
 		w.Write([]byte(`<html>
 		<head>
-		<script>
+		<script nonce="`+nonce+`">
 		 !function() {
 			sessionStorage.setItem("Session", "`+token+`")
 			window.location.href = "/app/"

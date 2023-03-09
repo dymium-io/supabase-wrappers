@@ -8,7 +8,9 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"os"
+	"dymium.com/dymium/common"
 	"dymium.com/dymium/dhandlers"
+	"fmt"
 )
 
 func CustomerHandlers(p *mux.Router) {
@@ -67,7 +69,8 @@ func CustomerHandlers(p *mux.Router) {
 	
 	// For React to work properly, ensure that the URLs going into the React router return index.html
 	nonauthenticated.PathPrefix("/app/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		dhandlers.Commonheaders(w, r)
+		common.CommonCacheHeaders(w, r)
+		fmt.Println("\nin /app\n")
 		http.ServeFile(w, r, "./customer/index.html")
 	})
 
@@ -81,8 +84,11 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/{name:.*\\.gz}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.exe}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.pkg}", dhandlers.GetImages)
+	nonauthenticated.HandleFunc("/{name:.*\\.json}", dhandlers.GetImages)
 
 	nonauthenticated.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./customer/index.html")
+		common.CommonCacheHeaders(w, r)
+		fmt.Println("\nin index\n")
+		http.ServeFile(w, r, "./customer/")
 	}).Methods("GET")
 }

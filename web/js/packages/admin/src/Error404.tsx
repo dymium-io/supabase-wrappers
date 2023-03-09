@@ -22,7 +22,7 @@ export default function Error404() {
               <h1 className="mt-5 logoheader">Error 404</h1>
               <h1 className="logoheader">Page Not Found</h1>
               <div className="pt-2 logofooter">
-                The application is still under construction. Please be patient!
+                The specified URL does not exist on this server.
               </div>
 
             </div>

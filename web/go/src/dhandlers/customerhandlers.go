@@ -53,7 +53,7 @@ func AuthMiddleware(h http.Handler) http.Handler {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			w.Header().Set("Cache-Control", common.Nocache)
+			common.CommonNocacheHeaders(w, r)
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(js)
 			return
@@ -78,7 +78,7 @@ func AuthMiddleware(h http.Handler) http.Handler {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			w.Header().Set("Cache-Control", common.Nocache)
+			common.CommonNocacheHeaders(w, r)
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(js)
 			return			
@@ -87,11 +87,7 @@ func AuthMiddleware(h http.Handler) http.Handler {
 	})
 }
 
-func Commonheaders(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Cache-Control", common.Cachedirective)
-	w.Header().Set("x-content-type-options", "nosniff")
-	w.Header().Set("strict-transport-security", "max-age=31536000")
-}
+
 func QueryConnection(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 	email := r.Context().Value(authenticatedEmailKey).(string)
@@ -146,7 +142,7 @@ func QueryConnection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -184,7 +180,7 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	
-		w.Header().Set("Cache-Control", common.Nocache)
+		common.CommonNocacheHeaders(w, r)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(js)			
 		return	
@@ -229,7 +225,7 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)		
 }
@@ -280,7 +276,7 @@ func GetUsage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.InfoUserf(schema, session, email, groups, roles, "Api GetUsage, success" )
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)	
 }
@@ -321,7 +317,7 @@ func GetSelect(w http.ResponseWriter, r *http.Request) {
 	}	
 	log.InfoUserf(schema, session, email, groups, roles, "Api GetSelect, success" )
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 
@@ -362,7 +358,7 @@ func GetDatascapeTables(w http.ResponseWriter, r *http.Request) {
 		outs = append(outs, ds[i].Table)
 	}
 	log.InfoUserArrayf(schema, session, email, groups, roles, "Api GetDatascapeTables, success", outs)
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -397,7 +393,7 @@ func GetDatascopeDetails(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}	
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -484,7 +480,7 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -521,7 +517,7 @@ func DeleteMapping(w http.ResponseWriter, r *http.Request) {
 	if(error == nil) {
 		log.InfoUserf(schema, session, email, groups, roles, "Api DeleteMapping, success")
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -555,7 +551,7 @@ func UpdateMapping(w http.ResponseWriter, r *http.Request) {
 	if(error == nil) {
 		log.InfoUserf(schema, session, email, groups, roles, "Api UpdateMapping, success")
 	}	
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -589,7 +585,7 @@ func CreateMapping(w http.ResponseWriter, r *http.Request) {
 	if(error == nil) {
 		log.InfoUserf(schema, session, email, groups, roles, "Api CreateMapping %s to %s, success", t.Directorygroup, t.Dymiumgroup)
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -654,7 +650,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -686,7 +682,7 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Cache-Control", common.Nocache)
+		common.CommonNocacheHeaders(w, r)
 		w.Header().Set("Content-Type", "application/json")		
 		w.Write(js)		
 		return		
@@ -712,7 +708,7 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Cache-Control", common.Nocache)
+		common.CommonNocacheHeaders(w, r)
 		w.Header().Set("Content-Type", "application/json")		
 		w.Write(js)		
 		return
@@ -737,7 +733,7 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)		
 }
@@ -778,7 +774,7 @@ func DeleteDatascope(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Cache-Control", common.Nocache)
+		common.CommonNocacheHeaders(w, r)
 		w.Header().Set("Content-Type", "application/json")		
 		w.Write(js)		
 		return
@@ -811,7 +807,7 @@ func DeleteDatascope(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.InfoUserf(schema, session, email, groups, roles, "Api DeleteDatascope(%s), success", t.Name)
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)		
 }
@@ -858,7 +854,7 @@ func SaveGroups(w http.ResponseWriter, r *http.Request) {
 	if(error == nil) {
 		log.InfoUserArrayf(schema, session, email, groups, roles, "Api SaveGroups for Datascope %s, success", out, t.Name)
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -899,7 +895,7 @@ func DeleteConnection(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -931,7 +927,7 @@ func SavePolicies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 		
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 
@@ -954,7 +950,7 @@ func GetPolicies(w http.ResponseWriter, r *http.Request) {
 		log.InfoUserf(schema, session, email, groups, roles, "Api GetPolicies success")
 
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -967,7 +963,7 @@ func GetDatascopes(w http.ResponseWriter, r *http.Request) {
 	session := r.Context().Value(authenticatedSessionKey).(string)
 
 	datascopes, error := authentication.GetDatascopes(schema)
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
 	if(error != nil) {
@@ -999,7 +995,7 @@ func GetMappings(w http.ResponseWriter, r *http.Request) {
 	roles := r.Context().Value(authenticatedRolesKey).([]string)
 	session := r.Context().Value(authenticatedSessionKey).(string)
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
 	mappings, error := authentication.GetMappings(schema)
@@ -1035,7 +1031,7 @@ func GetGroupsForDatascopes(w http.ResponseWriter, r *http.Request) {
 	roles := r.Context().Value(authenticatedRolesKey).([]string)
 	session := r.Context().Value(authenticatedSessionKey).(string)
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	
 	mappings, error := authentication.GetGroupAssignments(schema)
@@ -1071,7 +1067,7 @@ func FakeLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	js := authentication.GetFakeAuthentication()
 	log.Infof("FakeLogin on local host,  success")
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -1093,7 +1089,7 @@ func GetLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Infof("Api GetLogin, success")
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -1121,7 +1117,7 @@ func GetLogout(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	http.Redirect(w, r, logoutURL, 302)
 
@@ -1155,7 +1151,8 @@ func AuthByCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.InfoUserf(schema, session, email, groups, roles, "Api AuthByCode successful")
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 
 }
@@ -1172,7 +1169,8 @@ func GetDatascopesAccess(w http.ResponseWriter, r *http.Request) {
 	js, _ := json.Marshal(out)
 	log.InfoUserf(schema, session, email, groups, roles, "Api GetDatascopesAccess, success")
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
 
@@ -1192,7 +1190,8 @@ func RegenerateDatascopePassword(w http.ResponseWriter, r *http.Request) {
 	js, _ := json.Marshal(out)
 	log.InfoUserf(schema, session, email, groups, roles, "Api RegenerateDatascopePassword, success")
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
 
@@ -1266,7 +1265,7 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Info("Api QueryTunnel called")
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 
@@ -1352,7 +1351,7 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
 	}
 	log.InfoUserf(schema, session, email, groups, roles, "Api GetClientCertificate, success")
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))
 }
@@ -1438,7 +1437,7 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 	}
 	log.InfoTenantf(schema, "Api GetConnectorCertificate, success")
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))
 }
@@ -1451,7 +1450,7 @@ func GetConnections(w http.ResponseWriter, r *http.Request) {
 	roles := r.Context().Value(authenticatedRolesKey).([]string)
 	session := r.Context().Value(authenticatedSessionKey).(string)
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
 	connections, error := authentication.GetConnections(schema)
@@ -1488,10 +1487,13 @@ func DatascopeHelp(w http.ResponseWriter, r *http.Request) {
 	sport, _ := vars["port"]
 	
 	newtoken, error := authentication.CheckAndRefreshToken(token, sport)
-
-	w.Header().Set("Cache-Control", common.Nocache)
+	nonce, _ := authentication.GenerateRandomString(32)
+	common.CommonNocacheNocspHeaders(w, r)
 	w.Header().Set("Content-Type", "text/html")
-
+	w.Header().Set("x-content-type-options", "nosniff")
+	w.Header().Set("strict-transport-security", "max-age=31536000")
+	w.Header().Set("X-Frame-Options", "sameorigin")	
+	w.Header().Set("Content-Security-Policy", "script-src 'nonce-"+nonce+"'")
 	if(error != nil) {
 		http.Error(w, error.Error(), http.StatusNotFound)
 		return
@@ -1499,7 +1501,7 @@ func DatascopeHelp(w http.ResponseWriter, r *http.Request) {
 
 	js := []byte(`<html>
 	<head>
-	<script>
+	<script nonce="`+nonce+`">
 	 !function() {
 		sessionStorage.setItem("Session", "`+newtoken+`")
 		window.location.href = "/app/access?key=datascopes"
@@ -1516,7 +1518,7 @@ func GetImages(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := os.Stat(filename); errors.Is(err, os.ErrNotExist) {
 		// file does not exist
-		w.Header().Set("Cache-Control", common.Nocache)
+		common.CommonNocacheHeaders(w, r)
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusNotFound)
 
@@ -1526,11 +1528,13 @@ func GetImages(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/static") || strings.HasSuffix(r.URL.Path, ".png") || strings.HasSuffix(r.URL.Path, "*.gif") ||
 			strings.HasSuffix(r.URL.Path, ".jpg") || strings.HasSuffix(r.URL.Path, ".svg") {
 
-			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
 			w.Header().Set("x-content-type-options", "nosniff")
 			w.Header().Set("strict-transport-security", "max-age=31536000")
+			w.Header().Set("Content-Security-Policy", "frame-ancestors none")
+			w.Header().Set("X-Frame-Options", "sameorigin")
 		} else {
-			Commonheaders(w, r)
+			common.CommonNocacheHeaders(w, r)
 		}
 		http.ServeFile(w, r, filename)
 	}
@@ -1546,7 +1550,7 @@ func GetAccessKeys(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))
 }
@@ -1571,7 +1575,7 @@ func CreateNewConnector(w http.ResponseWriter, r *http.Request) {
 	}
 	status := types.AuthStatus{"OK", "Connector "+t.Name+" provisioned!", id}
 	js, err := json.Marshal(status)
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))	
 }
@@ -1595,7 +1599,7 @@ func GetConnectors(w http.ResponseWriter, r *http.Request) {
 		js = []byte("[]")
 	}
 	fmt.Printf("%s \n", string(js))
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))		
 }
@@ -1619,7 +1623,7 @@ func UpdateConnector(w http.ResponseWriter, r *http.Request) {
 	}	
 	status := types.OperationStatus{"OK", "Connector "+t.Name+" updated!"}
 	js, err := json.Marshal(status)
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))		
 }
@@ -1643,7 +1647,7 @@ func DeleteConnector(w http.ResponseWriter, r *http.Request) {
 		status = types.OperationStatus{"Error", err.Error()}
 	}
 	js, err := json.Marshal(status)
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))		
 }

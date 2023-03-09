@@ -125,7 +125,7 @@ func main() {
 	cp := CompressHandler(etag.Handler(p, false))
 	if *ssl {
 		log.Infof("Start listening on %s", *selfAddr+":443")
-		log.Panic(http.ListenAndServeTLS(*selfAddr+":443", "dymiumai.crt", "dymiumai.key", cp))
+		log.Panic(http.ListenAndServeTLS(*selfAddr+":443", "../../devcerts/dymium.crt", "../../devcerts/dymium.key", cp))
 	} else {
 		log.Infof("Start listening on %s", *selfAddr+":80")
 		log.Panic(http.ListenAndServe(*selfAddr+":80", cp))

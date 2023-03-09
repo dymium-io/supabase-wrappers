@@ -11,10 +11,15 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"os"
 )
 
 const Nocache = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"
-const Cachedirective = "max-age=3600"
+const Cachedirective = "public, max-age=3600, immutable"
+
+var customerhost = os.Getenv("CUSTOMER_HOST")
+var adminhost = os.Getenv("ADMIN_HOST")
+var csp = "default-src 'self'; frame-ancestors 'self'; form-action 'self'; script-src 'self'"
 
 func VanillaHandlers(p *mux.Router) {
 
@@ -26,7 +31,26 @@ func VanillaHandlers(p *mux.Router) {
 	//http.Handle("/", p)
 
 }
-
+func CommonCacheHeaders(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", Cachedirective)
+	w.Header().Set("x-content-type-options", "nosniff")
+	w.Header().Set("strict-transport-security", "max-age=31536000")
+	w.Header().Set("Content-Security-Policy", csp)
+	w.Header().Set("X-Frame-Options", "sameorigin")
+}
+func CommonNocacheHeaders(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", Nocache)
+	w.Header().Set("x-content-type-options", "nosniff")
+	w.Header().Set("strict-transport-security", "max-age=31536000")
+	w.Header().Set("Content-Security-Policy", csp)
+	w.Header().Set("X-Frame-Options", "sameorigin")
+}
+func CommonNocacheNocspHeaders(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", Nocache)
+	w.Header().Set("x-content-type-options", "nosniff")
+	w.Header().Set("strict-transport-security", "max-age=31536000")
+	w.Header().Set("X-Frame-Options", "sameorigin")
+}
 // this function extracts JWT from the request
 func TokenFromHTTPRequest(r *http.Request) string {
 	reqToken := r.Header.Get("Authorization")

@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"fmt"
 )
 type contextKey int
 const authenticatedSchemaKey contextKey = 0
@@ -37,7 +36,7 @@ func AuthMiddleware(h http.Handler) http.Handler {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			w.Header().Set("Cache-Control", common.Nocache)
+			common.CommonNocacheHeaders(w, r)
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(js)
 			return
@@ -47,11 +46,6 @@ func AuthMiddleware(h http.Handler) http.Handler {
 	})
 }
 
-func Commonheaders(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Cache-Control", common.Cachedirective)
-	w.Header().Set("x-content-type-options", "nosniff")
-	w.Header().Set("strict-transport-security", "max-age=31536000")
-}
 
 func CreateNewCustomer(w http.ResponseWriter, r *http.Request) {
 	status := types.OperationStatus{"OK", ""}
@@ -72,7 +66,7 @@ func CreateNewCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -90,7 +84,7 @@ func GetCustomers(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -108,7 +102,7 @@ func GetGlobalUsage(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -120,8 +114,6 @@ func DeleteCustomer(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	t := types.DeleteCustomer{}
 	err := json.Unmarshal(body, &t)
-
-	fmt.Printf("in DeleteCustomer %v\n", t)
 	
 	js, err := json.Marshal(status)
 	if err != nil {
@@ -134,7 +126,7 @@ func DeleteCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
@@ -158,7 +150,7 @@ func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Cache-Control", common.Nocache)
+	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }

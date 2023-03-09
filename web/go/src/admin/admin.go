@@ -25,11 +25,6 @@ func AdminHandlers(p *mux.Router) {
 	authenticated := nonauthenticated.Host(host).Subrouter()
 	authenticated.Use(ahandlers.AuthMiddleware)
 
-	commonheaders := func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", common.Cachedirective)
-		w.Header().Set("x-content-type-options", "nosniff")
-		w.Header().Set("strict-transport-security", "max-age=31536000")
-	}
 
 	authenticated.HandleFunc("/api/createnewcustomer", ahandlers.CreateNewCustomer).Methods("POST").Name("createnewcustomer")
 	authenticated.HandleFunc("/api/getcustomers", ahandlers.GetCustomers).Methods("GET").Name("getcustomers")
@@ -43,7 +38,7 @@ func AdminHandlers(p *mux.Router) {
 		filename := "./admin/" + r.URL.Path
 		if _, err := os.Stat(filename); errors.Is(err, os.ErrNotExist) {
 			// file does not exist
-			w.Header().Set("Cache-Control", common.Nocache)
+			common.CommonNocacheHeaders(w, r)
 			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusNotFound)
 
@@ -53,11 +48,9 @@ func AdminHandlers(p *mux.Router) {
 			if strings.HasPrefix(r.URL.Path, "/static") || strings.HasSuffix(r.URL.Path, ".png") || strings.HasSuffix(r.URL.Path, "*.gif") ||
 				strings.HasSuffix(r.URL.Path, ".jpg") || strings.HasSuffix(r.URL.Path, ".svg") {
 
-				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-				w.Header().Set("x-content-type-options", "nosniff")
-				w.Header().Set("strict-transport-security", "max-age=31536000")
+				common.CommonCacheHeaders(w, r)
 			} else {
-				commonheaders(w, r)
+				common.CommonNocacheHeaders(w, r)
 			}
 			http.ServeFile(w, r, filename)
 		}
@@ -79,7 +72,7 @@ func AdminHandlers(p *mux.Router) {
 		logoutURL := fmt.Sprintf("%sv2/logout?returnTo=%s&client_id=%s",
 			domain, url.QueryEscape(returnurl), clientid)
 
-		w.Header().Set("Cache-Control", common.Nocache)
+		common.CommonNocacheHeaders(w, r)
 		w.Header().Set("Content-Type", "text/html")	
 		http.Redirect(w, r, logoutURL, 302)
 
@@ -88,20 +81,21 @@ func AdminHandlers(p *mux.Router) {
 
 	// For React to work properly, ensure that the URLs going into the React router return index.html
 	nonauthenticated.PathPrefix("/app/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		commonheaders(w, r)
+		common.CommonCacheHeaders(w, r)
 		http.ServeFile(w, r, "./admin/index.html")
 	})
 	nonauthenticated.PathPrefix("/services/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		commonheaders(w, r)
+		common.CommonCacheHeaders(w, r)
 		http.ServeFile(w, r, "./admin/index.html")
 	})
 	nonauthenticated.PathPrefix("/resources/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		commonheaders(w, r)
+		common.CommonCacheHeaders(w, r)
 		http.ServeFile(w, r, "./admin/index.html")
 	})
 
 	nonauthenticated.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("in /!")
+		common.CommonCacheHeaders(w, r)
 		http.ServeFile(w, r, "./admin/index.html")
 	}).Methods("GET")
 }
