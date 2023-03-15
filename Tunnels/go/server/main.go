@@ -87,13 +87,10 @@ func main() {
 
 	log.Infof("proxy domain: %s, port %s", postgressDomain, postgresPort)
 
-	dbPort := os.Getenv("DATABASE_PORT")
-	dbDomain := os.Getenv("DATABASE_HOST")
-	dbUsername := os.Getenv("DATABASE_USER")
-	dbPassword := os.Getenv("DATABASE_PASSWORD")
-	dbName := os.Getenv("DATABASE_NAME")
-	tls := os.Getenv("DATABASE_TLS")
+	redisPort := os.Getenv("REDIS_PORT")
+	redisbAddress := os.Getenv("REDIS_HOST")
+	redisPassword := os.Getenv("REDIS_PASSWORD")
 	
 	tunnel.Server(address, port, customer, postgressDomain, postgresPort, []byte(t.Certificate), 
-		[]byte(t.Key), passphrase, []byte(tt.Certificate), dbDomain, dbPort, dbUsername, dbPassword, dbName, tls)
+		[]byte(t.Key), passphrase, []byte(tt.Certificate), redisbAddress, redisPort, redisPassword)
 }

@@ -23,6 +23,7 @@ import (
 	"encoding/hex"
 	"golang.org/x/net/context"
 	_"golang.org/x/exp/constraints"
+	"github.com/redis/go-redis/v9"
 	"time"
 	"errors"
 	"io"
@@ -77,6 +78,9 @@ func contains[T comparable](s []T, str T) bool {
 
 var admins = make(map[string]int)
 var users = make(map[string]int)
+var rdb *redis.Client
+var ctxrdb = context.Background()
+
 func initRBAC() {
 	adminnames :=  []string{"createnewconnection", "queryconnection","updateconnection","deleteconnection",
 	"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
@@ -315,6 +319,17 @@ func Init(host string, port, user, password, dbname, tls string) error {
 		return nil
 	}
 
+	redisAddress := os.Getenv("REDIS_ADDRESS")
+	redisPort := os.Getenv("REDIS_PORT")
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	o := &redis.Options{
+		Addr: redisAddress + ":" + redisPort,		
+	}
+	if redisPassword != "" {
+		o.Password = redisPassword
+	}
+	rdb = redis.NewClient(o)	
+
 	return nil
 }
 
@@ -323,26 +338,22 @@ func GetDB() *sql.DB {
 }
 
 func recordLogin(schema string) error {
-	sql := `update `+schema+`.counters SET logins=logins+1 where id=1`
-	_, err := db.Exec(sql)
-
+	err := rdb.Incr(ctx, schema+":logins").Err()
 	return err
 }
 
 func recordTunnel(schema string) error {
-	sql := `update `+schema+`.counters SET tunnels=tunnels+1 where id=1`
-	_, err := db.Exec(sql)
+	err := rdb.Incr(ctx, schema+":tunnels").Err()
 
 	return err
 }
 func GetBytes(schema string) (int64, int64, int, int, error)  {
-	sql := `select bytesin, bytesout,logins,tunnels from `+schema+`.counters where id=1`
+	bytesin, _ :=rdb.Get(ctx, schema + ":bytesin").Int64 ()
+	bytesout, _ :=rdb.Get(ctx, schema + ":bytesout").Int64()
+	tunnels, _ :=rdb.Get(ctx, schema + ":tunnels").Int()
+	logins, err :=rdb.Get(ctx, schema + ":logins").Int()
 
-	var bytesin, bytesout int64
-	var logins,tunnels int
-	row := db.QueryRow(sql)
-	err := row.Scan(&bytesin, &bytesout, &logins, &tunnels)
-	return  bytesin, bytesout,logins,tunnels, err
+	return  bytesin, bytesout, logins, tunnels, err
 }
 
 func GetRestrictions(schema string) (int, int, int, int, int, int, int, error)  {
@@ -2540,5 +2551,12 @@ func GetGlobalUsage() (types.GlobalUsage, error) {
 
 	err := row.Scan(&usage.Customers)
 	
+	bin, err := rdb.Get(ctx, "$:bytesin").Result ()
+	usage.Bytesin = bin
+
+	bout, err := rdb.Get(ctx, "$:bytesout").Result()
+	usage.Bytesout = bout
+	fmt.Printf("usage: %v\n", usage)
+
 	return usage, err
 }

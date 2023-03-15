@@ -62,7 +62,7 @@ func AdminHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/{name:.*\\.svg}", getImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.jpg}", getImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.ico}", getImages)
-
+	nonauthenticated.HandleFunc("/{name:.*\\.json}", getImages)
 
 	nonauthenticated.HandleFunc("/api/logout", func(w http.ResponseWriter, r *http.Request) {
 		domain := os.Getenv("AUTH0_ADMIN_DOMAIN")
