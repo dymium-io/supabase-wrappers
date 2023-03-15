@@ -15,3 +15,5 @@ DeleteCustomer:
 
 GlobalUsage:
   - customers: string 
+  - bytesin: string
+  - bytesout: string

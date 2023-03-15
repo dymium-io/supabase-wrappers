@@ -145,9 +145,13 @@ export class DeleteCustomer {
 
 export class GlobalUsage {
   private '_customers': string
+  private '_bytesin': string
+  private '_bytesout': string
 
   constructor() {
     this['_customers'] = ''
+    this['_bytesin'] = ''
+    this['_bytesout'] = ''
   }
   get customers(): string { return this['_customers'] }
   set customers(__a__: any) {
@@ -155,6 +159,22 @@ export class GlobalUsage {
     if(!_.isEqual(__v__,this['_customers'])) {
       setDirtyFlag()
       this['_customers'] = __v__
+    }
+  }
+  get bytesin(): string { return this['_bytesin'] }
+  set bytesin(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_bytesin'])) {
+      setDirtyFlag()
+      this['_bytesin'] = __v__
+    }
+  }
+  get bytesout(): string { return this['_bytesout'] }
+  set bytesout(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_bytesout'])) {
+      setDirtyFlag()
+      this['_bytesout'] = __v__
     }
   }
 
@@ -165,6 +185,8 @@ export class GlobalUsage {
     let cls = new GlobalUsage()
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.customers = __a__['customers']
+       cls.bytesin = __a__['bytesin']
+       cls.bytesout = __a__['bytesout']
     } else {
        doAlert(`GlobalUsage: an attempt to initialize from ${__a__}`)
     }

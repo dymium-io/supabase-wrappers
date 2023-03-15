@@ -26,7 +26,8 @@ function Usage() {
     const [spinner, setSpinner] = useState(false)
     const [alert, setAlert] = useState<JSX.Element>(<></>)
     const [customers, setCustomers] = useState(0)
-
+    const [bytesin, setBytesin] = useState(0)
+    const [bytesout, setBytesout] = useState(0)
 
     let sendQuery = () => {
         setSpinner(true)
@@ -36,7 +37,8 @@ function Usage() {
             resp => {
                 resp.json().then(js => {
                     setCustomers(js.customers)
-
+                    setBytesin(parseInt( js.bytesin ) )
+                    setBytesout(parseInt( js.bytesout) )
                     setTimeout( () => setSpinner(false), 500)
 
                 }).catch((error) => {
@@ -71,10 +73,17 @@ function Usage() {
             <h5 > System Usage <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
             <Row style={{marginTop: '3em'}}> 
                 <Col className="card"> 
-                    <h6 style={{fontSize: '1.1em'}}><i className="fa-solid fa-link mr-2"></i>Customers:</h6>
+                    <h6 style={{fontSize: '1.1em'}}><i className="fa-solid fa-users mr-2"></i>Customers:</h6>
                     <div style={{fontSize: '2.0em'}}>{customers}</div>
                 </Col>
-
+                <Col className="card"> 
+                    <h6 style={{fontSize: '1.1em'}}><i className="fa-solid fa-right-to-bracket mr-2"></i>Traffic in:</h6>
+                    <div style={{fontSize: '2.0em'}}>{getReadableSizeString(bytesin)}</div>
+                </Col>
+                <Col className="card"> 
+                    <h6 style={{fontSize: '1.1em'}}><i className="fa-solid fa-right-from-bracket mr-2"></i>Traffic out:</h6>
+                    <div style={{fontSize: '2.0em'}}>{getReadableSizeString(bytesout)}</div>
+                </Col>                
                         
             </Row>
            

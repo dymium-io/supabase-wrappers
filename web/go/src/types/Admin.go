@@ -23,4 +23,6 @@ type DeleteCustomer struct {
 
 type GlobalUsage struct {
    Customers string `json:"customers"`
+   Bytesin string `json:"bytesin"`
+   Bytesout string `json:"bytesout"`
 }

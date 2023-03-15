@@ -19,11 +19,9 @@ export CA_CERTIFICATE='{
 
 
 export CUSTOMER=spoofcorp
-export DATABASE_HOST=${DATABASE_HOST:-localhost}
-export DATABASE_PORT=${DATABASE_PORT:-5432}
-export DATABASE_NAME=${DATABASE_NAME:-dymium}
-export DATABASE_USER=${DATABASE_USER:-dymium}
-export DATABASE_TLS=${DATABASE_TLS:-disable}
+export REDIS_PORT="6379"
+export REDIS_HOST='localhost'
+export REDIS_PASSWORD=""
 
 
 [ -z "$DATABASE_PASSWORD" ] && {

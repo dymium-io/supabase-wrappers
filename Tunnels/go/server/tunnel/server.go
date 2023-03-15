@@ -3,7 +3,6 @@ package tunnel
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"database/sql"
 	"encoding/gob"
 	"encoding/pem"
 	"fmt"
@@ -12,14 +11,16 @@ import (
 	"strings"
 	"time"
 	"sync"
+	"context"
 	"sync/atomic"
 	"dymium.com/dymium/log"
 	"dymium.com/server/gotypes"
 	"dymium.com/server/protocol"
 	"github.com/dgrijalva/jwt-go"
-	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 )
-
+var rdb *redis.Client
+var ctx = context.Background()
 type Virtcon struct {
 	sock    net.Conn
 	tenant  string
@@ -79,11 +80,18 @@ func logBandwidth(customer string) {
 			//log.Debugf("bytesOut=%d", bytesOut)
 		case <-time.After(30 * time.Second):
 			if bytesIn != 0 || bytesOut != 0 {
-				sql := `update ` + customer + `.counters set bytesin=bytesin+$1, bytesout=bytesout+$2 where id=1;`
-				// log.Debugf("sql: %s", sql)
-				_, err := db.Exec(sql, bytesIn, bytesOut)
+				_, err := rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+					pipe.IncrBy(ctx, customer+":bytesin", int64(bytesIn))
+					pipe.IncrBy(ctx, customer+":bytesout", int64(bytesOut))
+					pipe.IncrBy(ctx, "$:bytesin", int64(bytesIn))
+					pipe.IncrBy(ctx, "$:bytesout", int64(bytesOut))
+
+					pipe.Expire(ctx, "$:bytesout", time.Hour)
+					return nil
+				})
+
 				if err != nil {
-					log.Debugf("Error saving bytes: %s", err.Error())
+					log.Debugf("Error saving bytes to redis: %s", err.Error())
 				}
 			}
 			bytesIn = 0
@@ -92,23 +100,15 @@ func logBandwidth(customer string) {
 	}
 }
 
-var psqlInfo string
-var db *sql.DB
+func initRedis(redisAddress, redisPort, redisPassword string)  {
+	o := &redis.Options{
+		Addr: redisAddress + ":" + redisPort,		
+	}
+	if redisPassword != "" {
+		o.Password = redisPassword
+	}
+	rdb = redis.NewClient(o)
 
-func initDB(host, nport, user, password, dbname, usetls string) error {
-	psqlInfo = fmt.Sprintf("host=%s port=%s user=%s "+
-		"dbname=%s sslmode=%s",
-		host, nport, user, dbname, usetls)
-	if password != "" {
-		psqlInfo += " password='" + password + "'"
-	}
-	var err error
-	log.Debugf("%s", psqlInfo)
-	db, err = sql.Open("postgres", psqlInfo)
-	if err != nil {
-		log.Errorf("Error creating database: %s", err.Error())
-	}
-	return err
 }
 func displayBuff(what string, buff []byte) {
 	if len(buff) > 14 {
@@ -130,11 +130,12 @@ func getTargetConnection(customer, postgresPort string) (net.Conn, error) {
 
 func Server(address string, port int, customer, postgressDomain, postgresPort string,
 	certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte,
-	dbDomain, dbPort, dbUsername, dbPassword, dbName, usetls string) {
+	redisAddress, redisPort, redisPassword string) {
 	var err error
 	var pkey []byte
 
-	initDB(dbDomain, dbPort, dbUsername, dbPassword, dbName, usetls)
+	initRedis(redisAddress, redisPort, redisPassword)
+
 	go logBandwidth(customer)
 	targetHost := customer + postgressDomain
 	iprecords, err = net.LookupIP(targetHost)

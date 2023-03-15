@@ -19,7 +19,7 @@ const Cachedirective = "public, max-age=3600, immutable"
 
 var customerhost = os.Getenv("CUSTOMER_HOST")
 var adminhost = os.Getenv("ADMIN_HOST")
-var csp = "default-src 'self'; frame-ancestors 'self'; form-action 'self'; script-src 'self'"
+var csp = "default-src 'self' https://cdn.jsdelivr.net https://docs.google.com/; frame-ancestors 'self'; form-action 'self'; script-src 'self'"
 
 func VanillaHandlers(p *mux.Router) {
 
