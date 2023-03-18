@@ -3,3 +3,7 @@
 export const SortableContainer = component => component;
 export const SortableElement = component => component;
 export const SortableHandle = component => component;
+export const SortableContainerProps = {}
+export const SortableElementProps = {}
+
+export  const arrayMove = () => {}

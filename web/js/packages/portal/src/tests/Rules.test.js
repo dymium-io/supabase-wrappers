@@ -13,6 +13,8 @@ import  Rules  from '../App/Rules'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@dymium/common/App.scss';
 import "@fortawesome/fontawesome-free/css/all.min.css";
+
+
 import mockFetch from "../mocks/mockFetch";
 jest.mock('react-sortable-hoc')
 

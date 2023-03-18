@@ -260,7 +260,23 @@ Array [
           <form
             className=""
             onSubmit={[Function]}
-          />
+          >
+            <div
+              className="mt-5 row"
+            >
+              <div
+                className="col-auto"
+              >
+                <button
+                  className="btn btn-dymium btn-sm"
+                  disabled={false}
+                  type="submit"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>

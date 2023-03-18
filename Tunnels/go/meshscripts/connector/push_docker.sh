@@ -17,11 +17,11 @@ case "$1" in
 	PROFILE="demo-spoofcorp"
 	shift
 	;;
-#    "dev")
-#	ARN="564835066653"
-#	PROFILE="dymium_dev"
-#	shift
-#	;;
+    "dev")
+	ARN="564835066653"
+	PROFILE="dymium-dev"
+	shift
+	;;
     *)
 	echo "option '$1' is not supported"
 	echo "Usage: $0 [dymium|staging|dev] [latest|prod]"
