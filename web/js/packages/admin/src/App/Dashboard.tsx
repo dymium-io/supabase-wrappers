@@ -31,7 +31,6 @@ function Usage() {
 
     let sendQuery = () => {
         setSpinner(true)
-        debugger
         http.sendToServer("GET", "/api/getglobalusage",
             null, "",
             resp => {

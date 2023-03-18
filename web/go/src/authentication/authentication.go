@@ -319,7 +319,7 @@ func Init(host string, port, user, password, dbname, tls string) error {
 		return nil
 	}
 
-	redisAddress := os.Getenv("REDIS_ADDRESS")
+	redisAddress := os.Getenv("REDIS_HOST")
 	redisPort := os.Getenv("REDIS_PORT")
 	redisPassword := os.Getenv("REDIS_PASSWORD")
 	o := &redis.Options{
@@ -1174,6 +1174,16 @@ func GetClientIdFromSchema(schema string) (string, error) {
 	return clientid, err
 }
 
+func DecryptPassword(schema string, password []byte) (string, error) {
+	hexkey := os.Getenv( strings.ToUpper(schema) + "_KEY" )
+	plain, err := AESdecrypt(password, hexkey)
+
+	if err != nil {
+		return "", err
+	}
+	return string(plain), nil
+} 
+
 func UpdateConnection(schema string, con types.ConnectionRecord) error {
 	// Create a new context, and begin a transaction
     ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
@@ -1246,6 +1256,16 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 
 	return nil
 }
+func GetConnectorAddress(schema, tunnel_id string) ( string, int, error) {
+	var localport int
+	sql := `select localport from ` + schema + `.connectors where id=$1;`
+
+	row := db.QueryRow(sql, tunnel_id)
+	err := row.Scan(&localport) 
+
+	host := os.Getenv("CONNECTOR_DOMAIN")
+	return schema + host, localport, err
+}
 func GetConnection(schema, id string) (types.Connection, error) {
 	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls, a.use_connector,
 	coalesce(a.connector_id, ''), coalesce(a.tunnel_id, '') from 
@@ -1260,6 +1280,7 @@ func GetConnection(schema, id string) (types.Connection, error) {
 	var password []byte
 	err := row.Scan(&con.Typ, &con.Address, &con.Port, &con.User, &password, 
 		&con.Database, &con.Tls, &use_connector, &connector_id, &tunnel_id)
+
 	if(err != nil) {
 		log.Errorf("GetConnection error 0: %s", err.Error())
 		return con, err
@@ -1271,10 +1292,12 @@ func GetConnection(schema, id string) (types.Connection, error) {
 			fmt.Printf( "GetConnection error X: %s\n", err.Error() )
 		}
 		con.Password = string(plain)
+
 		if use_connector {
 			// get the connector information
 			var localport int
 			sql = `select localport from ` + schema + `.connectors where id=$1;`
+
 			row := db.QueryRow(sql, tunnel_id)
 			err := row.Scan(&localport) 
 			if(err != nil) {
@@ -2556,7 +2579,6 @@ func GetGlobalUsage() (types.GlobalUsage, error) {
 
 	bout, err := rdb.Get(ctx, "$:bytesout").Result()
 	usage.Bytesout = bout
-	fmt.Printf("usage: %v\n", usage)
 
 	return usage, err
 }

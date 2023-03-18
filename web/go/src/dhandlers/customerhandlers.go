@@ -411,8 +411,14 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 
 	var t types.ConnectionRecord
 	err := json.Unmarshal(body, &t)
-
-
+	if(err != nil) {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, marshaling error %ss", err.Error()  )
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if t.Usesconnector {
+		t.Address, t.Port, err = authentication.GetConnectorAddress(schema,  t.Tunnelid)
+	}
 	if err == nil {		
 		conn, err := authentication.GetConnection(schema, *t.Id)
 		if(err != nil) {
@@ -430,9 +436,8 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 		if(t.Username != nil && t.Password != nil) {
 			conn.User = *t.Username 
 			conn.Password = *t.Password
-		}
+		} 
 		bconn, err := json.Marshal(conn)
-
 		invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 		if err != nil {
 			log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, DbAnalyzer error: %s", err.Error())
@@ -1598,7 +1603,7 @@ func GetConnectors(w http.ResponseWriter, r *http.Request) {
 	if len(conns) == 0 {
 		js = []byte("[]")
 	}
-	fmt.Printf("%s \n", string(js))
+
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))		
