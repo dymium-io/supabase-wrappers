@@ -32,6 +32,7 @@ CertificateRequestWithSecret:
   - csr: string
 
 CSRResponse:
+  - version: string
   - certificate: string
 
 RequestUpdate:

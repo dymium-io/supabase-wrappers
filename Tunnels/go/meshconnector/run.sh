@@ -8,4 +8,5 @@ export SECRET=Ec0HnhNm4UtwNrKBFZC69ptQMD9UwNQF7Ngh-OnUxUfJGL3L8pNXQreZDA10g2hdly
 export CUSTOMER=spoofcorp
 export TUNNELSERVER=portal.dymium.local:3009
 export LOCAL_ENVIRONMENT=true
+export HEALTHPORT=9911
 ./meshconnector

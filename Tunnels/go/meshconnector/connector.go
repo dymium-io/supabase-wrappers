@@ -21,11 +21,14 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"errors"
+	"runtime"
 	"sync"
 	"time"
-
+	"github.com/blang/semver/v4"
 	"dymium.com/dymium/log"
 	"dymium.com/meshconnector/ca"
+	"dymium.com/meshconnector/selfupdate"
 	"dymium.com/meshconnector/types"
 	"dymium.com/server/protocol"
 	"github.com/gorilla/mux"
@@ -62,8 +65,79 @@ var pingCounter = 0
 var ackCounter = 0 
 var pingLock sync.RWMutex
 
+func DoUpdate(portalUrl string) error {
+
+	url := fmt.Sprintf("%sapi/downloadconnectorupdate?os=%s&arch=%s", portalUrl, runtime.GOOS, runtime.GOARCH)
+
+	log.Infof("Downloading new version from %s...", url)
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return errors.New(fmt.Sprintf("Error downloading update, status %d", resp.StatusCode))
+	}
+	ex, _ := os.Executable()
+	log.Info("Updating the client...")
+	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, ex + ".old"})
+	if err != nil {
+		log.Infof("Error updating: %s", err.Error())
+		if rerr := selfupdate.RollbackError(err); rerr != nil {
+			log.Infof("Failed to rollback from bad update: %s", rerr.Error())
+		}
+		// error handling
+	} else {
+		log.Info("Utility successfully updated, restarting...")
+		port := os.Getenv("HEALTHPORT")
+		if port == "" {
+			port = "80"
+		}
+		_, _ = http.Get("http://localhost:"+port+"/restart")
+	}
+	return err
+}
+func restart() {
+
+	ex, _ := os.Executable()
+
+	procAttr := new(os.ProcAttr)
+	procAttr.Files = []*os.File{nil, os.Stdout, os.Stderr}
+	dir, _ := os.Getwd()
+	procAttr.Dir = dir
+	procAttr.Env = os.Environ()
+	args := []string{}
+
+	procAttr.Env = append(procAttr.Env, "WORKER=on")
+
+	for _, v := range os.Args {
+		args = append(args, v)
+	}
+	args[0] = ex
+	args = append(args, "-r")
+	time.Sleep(time.Second)
+	_, err := os.StartProcess(ex, args, procAttr)
+	if err != nil {
+		log.Errorf("StartProcess Error: %s", err.Error())
+	}
+	/*
+	_, err = proc.Wait()
+	if err != nil {
+		fmt.Printf("proc.Wait error: %s\n", err.Error())
+	}
+	*/
+	
+}
 func health() {
 	p := mux.NewRouter()
+
+	p.HandleFunc("/restart", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", Nocache)
+		w.Header().Set("Content-Type", "text/html")
+		log.Info("restart request from child")
+		restart()
+		io.WriteString(w, "<html><body>OK</body></html>")
+	}).Methods("GET")
 
 	p.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", Nocache)
@@ -84,7 +158,9 @@ func health() {
 		port = "80"
 	}
 	log.Infof("Listen for health on :%s", port)
-	http.ListenAndServe(":"+port, p)
+
+	err := http.ListenAndServe("localhost:"+port, p)
+	log.Errorf("ListenAndServe exited, %s", err.Error())
 }
 
 // convert DER to PEM format
@@ -242,6 +318,11 @@ func Pinger(enc *gob.Encoder, ingress net.Conn, wake chan int ) {
 			return
 		}
 	}
+}
+func InformParentOfUpdate( ) {
+	port := os.Getenv("HEALTHPORT")
+	http.Get(":"+port + "/upgrade")
+	log.Info("Overseer contacted")
 }
 func PassTraffic(ingress *tls.Conn, customer string) {
 //	log.Info("in PassTraffic")
@@ -459,6 +540,16 @@ func DoConnect() {
 		log.Errorf("Error unmarshaling response body: %s", err.Error())
 		return
 	}
+	version := string(back.Version)
+	vserver, _ := semver.Make(version)
+	vclient, _ := semver.Make(protocol.MeshServerVersion)
+	if true || vserver.GT(vclient) {
+		log.Infof("Server version incremented to %s, update itself!", version)
+		DoUpdate(portal)
+		os.Exit(0)
+	} else {
+		log.Infof("Server version: %s", version)
+	}
 
 	keyBytes := x509.MarshalPKCS1PrivateKey(certKey)
 
@@ -475,10 +566,15 @@ func DoConnect() {
 		os.Exit(1)
 	}
 	
-	c, e := x509.ParseCertificate([]byte(back.Certificate))
+	block, _ := pem.Decode([]byte(back.Certificate))
+	if block == nil {
+		log.Errorf("failed to parse certificate PEM")
+	}
+
+	c, e := x509.ParseCertificate(block.Bytes)
 	if e == nil{
 		log.Info("cert parsed")
-		for nm, _ := range c.DNSNames {
+		for _, nm := range c.DNSNames {
 			log.Infof("Tunnel: %s", nm)
 		}
 	} else {
@@ -495,17 +591,21 @@ func DoConnect() {
 	PassTraffic(ingress, customer)
 }
 func main() {
-	if "true" != os.Getenv("LOCAL_ENVIRONMENT") {
-		go health()
-	}
-	log.Init("connector")
+	log.Init("connector")	
+	
 
-	// TODO:
-	// UPDATE
-	for {
-		DoConnect()
-		log.Infof("Wait 20 sec before retrying...")
-		time.Sleep(20 * time.Second)
-		log.Infof("Reconnecting...")
+	if "" == os.Getenv("WORKER") {
+		log.Info("overseer started")
+		restart()
+		health()
+	} else {
+
+		for {
+			log.Info("worker started")
+			DoConnect()
+			log.Infof("Wait 20 sec before retrying...")
+			time.Sleep(20 * time.Second)
+			log.Infof("Reconnecting...")
+		}
 	}
 }
