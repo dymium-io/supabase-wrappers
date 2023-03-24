@@ -70,8 +70,8 @@ export class AnalyzerRequest {
 
 export class AnalyzerResponse {
   private '_dtype': DataType
-  private '_dbInfo': DatabaseInfo | null
-  private '_tblInfo': TableInfo | null
+  private '_dbInfo': DatabaseInfoData | null
+  private '_tblInfo': TableInfoData | null
 
   constructor() {
     this['_dtype'] = 'Test'
@@ -86,7 +86,7 @@ export class AnalyzerResponse {
       this['_dtype'] = __v__
     }
   }
-  get dbInfo(): DatabaseInfo | null { return this['_dbInfo'] }
+  get dbInfo(): DatabaseInfoData | null { return this['_dbInfo'] }
   set dbInfo(__a__: any) {
     if(__a__ == null) {
       if(this['_dbInfo'] == null) { return }
@@ -98,7 +98,7 @@ export class AnalyzerResponse {
       this['_dbInfo'] = __a__
     }
   }
-  get tblInfo(): TableInfo | null { return this['_tblInfo'] }
+  get tblInfo(): TableInfoData | null { return this['_tblInfo'] }
   set tblInfo(__a__: any) {
     if(__a__ == null) {
       if(this['_tblInfo'] == null) { return }
@@ -118,8 +118,8 @@ export class AnalyzerResponse {
     let cls = new AnalyzerResponse()
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.dtype = __a__['dtype']
-       cls.dbInfo = __a__['dbInfo'] == null ? null : DatabaseInfo.fromJson(__a__['dbInfo'])
-       cls.tblInfo = __a__['tblInfo'] == null ? null : TableInfo.fromJson(__a__['tblInfo'])
+       cls.dbInfo = __a__['dbInfo'] == null ? null : DatabaseInfoData.fromJson(__a__['dbInfo'])
+       cls.tblInfo = __a__['tblInfo'] == null ? null : TableInfoData.fromJson(__a__['tblInfo'])
     } else {
        doAlert(`AnalyzerResponse: an attempt to initialize from ${__a__}`)
     }
@@ -310,7 +310,7 @@ export class ConnectionParams {
   }
 }
 
-export class DatabaseInfo {
+export class DatabaseInfoData {
   private '_dbName': string
   private '_schemas': Array<Schema>
 
@@ -334,21 +334,21 @@ export class DatabaseInfo {
 
   toJson(): string { return JSON.stringify(this).split('"_').join('"') }
 
-  static fromJson(__a__: any): DatabaseInfo {
+  static fromJson(__a__: any): DatabaseInfoData {
     disableDF()
-    let cls = new DatabaseInfo()
+    let cls = new DatabaseInfoData()
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.dbName = __a__['dbName']
        cls.schemas = array1Reader(Schema.fromJson)(__a__['schemas'])
     } else {
-       doAlert(`DatabaseInfo: an attempt to initialize from ${__a__}`)
+       doAlert(`DatabaseInfoData: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls
   }
 }
 
-export class TableInfo {
+export class TableInfoData {
   private '_dbName': string
   private '_schema': string
   private '_tblName': string
@@ -392,16 +392,16 @@ export class TableInfo {
 
   toJson(): string { return JSON.stringify(this).split('"_').join('"') }
 
-  static fromJson(__a__: any): TableInfo {
+  static fromJson(__a__: any): TableInfoData {
     disableDF()
-    let cls = new TableInfo()
+    let cls = new TableInfoData()
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.dbName = __a__['dbName']
        cls.schema = __a__['schema']
        cls.tblName = __a__['tblName']
        cls.columns = array1Reader(Column.fromJson)(__a__['columns'])
     } else {
-       doAlert(`TableInfo: an attempt to initialize from ${__a__}`)
+       doAlert(`TableInfoData: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls

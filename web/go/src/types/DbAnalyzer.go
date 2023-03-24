@@ -20,8 +20,8 @@ type AnalyzerRequest struct {
 
 type AnalyzerResponse struct {
    Dtype DataType `json:"dtype"`
-   DbInfo *DatabaseInfo `json:"dbInfo"`
-   TblInfo *TableInfo `json:"tblInfo"`
+   DbInfo *DatabaseInfoData `json:"dbInfo"`
+   TblInfo *TableInfoData `json:"tblInfo"`
 }
 
 type ConnectionDetailRequest struct {
@@ -44,12 +44,12 @@ type ConnectionParams struct {
    Tls bool `json:"tls"`
 }
 
-type DatabaseInfo struct {
+type DatabaseInfoData struct {
    DbName string `json:"dbName"`
    Schemas []Schema `json:"schemas"`
 }
 
-type TableInfo struct {
+type TableInfoData struct {
    DbName string `json:"dbName"`
    Schema string `json:"schema"`
    TblName string `json:"tblName"`
