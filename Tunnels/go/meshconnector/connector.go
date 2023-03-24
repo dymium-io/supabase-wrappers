@@ -524,7 +524,7 @@ func DoConnect() {
 	body, err := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != 200 {
-		log.Errorf("Invalid response %d from %s: %s", resp.StatusCode, portal, string(body))
+		log.Errorf("Invalid response %d from %s: %s", resp.StatusCode, urlStr, string(body))
 		return
 	}
 
@@ -543,7 +543,7 @@ func DoConnect() {
 	version := string(back.Version)
 	vserver, _ := semver.Make(version)
 	vclient, _ := semver.Make(protocol.MeshServerVersion)
-	if true || vserver.GT(vclient) {
+	if vserver.GT(vclient) {
 		log.Infof("Server version incremented to %s, update itself!", version)
 		DoUpdate(portal)
 		os.Exit(0)
@@ -595,13 +595,13 @@ func main() {
 	
 
 	if "" == os.Getenv("WORKER") {
-		log.Info("overseer started")
+		log.Infof("overseer started, version %s", protocol.MeshServerVersion)
 		restart()
 		health()
 	} else {
 
 		for {
-			log.Info("worker started")
+			log.Infof("worker started, version %s", protocol.MeshServerVersion)
 			DoConnect()
 			log.Infof("Wait 20 sec before retrying...")
 			time.Sleep(20 * time.Second)

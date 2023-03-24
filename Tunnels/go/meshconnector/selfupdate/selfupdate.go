@@ -103,9 +103,13 @@ func CommitBinary(opts Options) error {
 
 	// this is where we'll move the executable to so that we can swap in the updated replacement
 	oldPath := opts.OldSavePath
+	oldPath1 := opts.OldSavePath + "1"
+
 	removeOld := opts.OldSavePath == ""
 	if removeOld {
 		oldPath = filepath.Join(updateDir, fmt.Sprintf(".%s.old", filename))
+		oldPath1 = filepath.Join(updateDir, fmt.Sprintf(".%s.old1", filename))
+
 	}
 
 	// delete any existing old exec file - this is necessary on Windows for two reasons:
@@ -116,14 +120,23 @@ func CommitBinary(opts Options) error {
 	// move the existing executable to a new file in the same directory
 	err = os.Rename(targetPath, oldPath)
 	if err != nil {
-		return err
+		//fmt.Printf("failed to rename to %s\n", oldPath)
+		os.Remove(oldPath1)
+		err = os.Rename(targetPath, oldPath1)
+		if err != nil {
+			//fmt.Printf("failed to one more time rename to %s, err=%s\n", oldPath1, err.Error() )
+			return err
+		}
+	} else {
+		fmt.Printf("rename succeeded")
 	}
 
 	// move the new exectuable in to become the new program
 	err = os.Rename(newPath, targetPath)
 
 	if err != nil {
-		// move unsuccessful
+		//fmt.Printf("failed to rename the new exe %s\n", newPath)
+		// move unsuccessf
 		//
 		// The filesystem is now in a bad state. We have successfully
 		// moved the existing binary to a new location, but we couldn't move the new
