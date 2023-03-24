@@ -87,21 +87,12 @@ mv /tmp/DymiumInstaller.pkg ../../../web/js/packages/portal/public
 
 echo "Moved the client binaries"
 
-cd ../meshconnector
+echo "Pull the connector"
 
-CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
-    go build -a -tags netgo -ldflags '-w -extldflags "-static"' -o meshconnector
-cp ./meshconnector ../../../web/go/assets/customer/connector/darwin/amd64/
+aws s3  --profile dymium --region us-west-2 cp s3://dymium-connector/darwin/amd64/meshconnector ../../../web/go/assets/customer/connector/darwin/amd64/meshconnector
+aws s3  --profile dymium --region us-west-2 cp s3://dymium-connector/linux/amd64/meshconnector ../../../web/go/assets/customer/connector/linux/amd64/meshconnector
+aws s3  --profile dymium --region us-west-2 cp s3://dymium-connector/windows/amd64/meshconnector.exe ../../../web/go/assets/customer/connector/windows/amd64/meshconnector
 
-
-CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-    go build -a -tags netgo -ldflags '-w -extldflags "-static"' -o meshconnector.exe
-cp ./meshconnector.exe ../../../web/go/assets/customer/connector/windows/amd64/
-
-
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -a -tags netgo -ldflags '-w -extldflags "-static"' -o meshconnector
-cp ./meshconnector ../../../web/go/assets/customer/connector/linux/amd64/
 
 cd ../../../web/go/scripts/
 
