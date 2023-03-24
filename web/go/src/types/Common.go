@@ -22,13 +22,6 @@ const (
   DH_Redact DataHandling = "redact"
 )
 
-type DataSemantics string
-const (
-  DS_FamilyName DataSemantics = "FamilyName"
-  DS_Email DataSemantics = "Email"
-  DS_SSN DataSemantics = "SSN"
-)
-
 type PIIDetectionType string
 const (
   PIIDT_Comprehend PIIDetectionType = "comprehend"

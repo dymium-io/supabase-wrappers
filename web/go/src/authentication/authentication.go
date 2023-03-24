@@ -1266,14 +1266,14 @@ func GetConnectorAddress(schema, tunnel_id string) ( string, int, error) {
 	host := os.Getenv("CONNECTOR_DOMAIN")
 	return schema + host, localport, err
 }
-func GetConnection(schema, id string) (types.Connection, error) {
+func GetConnection(schema, id string) (types.ConnectionParams, error) {
 	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls, a.use_connector,
 	coalesce(a.connector_id, ''), coalesce(a.tunnel_id, '') from 
 		`+schema+`.connections as a join `+schema+`.admincredentials as b on a.id=b.connection_id 
 			join `+schema+`.passwords as c on b.id=c.id where a.id=$1;`
 
 	row := db.QueryRow(sql, id)
-	var con types.Connection
+	var con types.ConnectionParams
 	var use_connector bool
 	var connector_id, tunnel_id string
 

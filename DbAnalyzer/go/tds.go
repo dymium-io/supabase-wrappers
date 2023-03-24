@@ -10,19 +10,7 @@ import (
 	"DbAnalyzer/types"
 )
 
-func getTdsInfo(c types.Connection) (interface{}, error) {
-	/*
-	tdsconn := fmt.Sprintf("sqlserver://%s:%s@%s:%d?%s",
-		c.User, c.Password, c.Address, c.Port,
-		func() string {
-			if c.Tls {
-				return "ssl=on&"
-			} else {
-				return ""
-			}
-		}())
-	*/
-
+func connectTds(c *types.ConnectionParams) (*sql.DB, error) {
 	query := url.Values{}
 	query.Add("database",c.Database)
 	if c.Tls {
@@ -44,14 +32,17 @@ func getTdsInfo(c types.Connection) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
-	if c.TestOnly {
-		return struct{}{}, nil
-	}
+	return db,nil
+}
 
+func getTdsInfo(dbName string, db *sql.DB) (*types.DatabaseInfo, error) {
+	return nil, fmt.Errorf("getTdsInfo not implemented")
+}
+
+func getTdsTableInfo(dbName string, db *sql.DB) (interface{}, error) {
 	rows, err := db.Query(`SELECT table_schema, table_name, ordinal_position, column_name,
                                       data_type,
                                       character_maximum_length,
@@ -64,10 +55,9 @@ func getTdsInfo(c types.Connection) (interface{}, error) {
 	}
 	defer rows.Close()
 
-	database := types.Database{
-		Name:    c.Database,
+	database := types.DatabaseInfo{
+		DbName:    dbName,
 		Schemas: []types.Schema{},
-		Refs:    []types.Arc{},
 	}
 	curSchema := -1
 	curTbl := -1
@@ -125,6 +115,7 @@ func getTdsInfo(c types.Connection) (interface{}, error) {
 			Reference:  nil,
 			Semantics:  nil,
 		}
+		_ = c
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
 			switch schema {
 			case "information_schema", "sys", "performance_schema":
@@ -139,7 +130,7 @@ func getTdsInfo(c types.Connection) (interface{}, error) {
 					{
 						Name:     tblName,
 						IsSystem: isSystem || isSysTable(tblName),
-						Columns:  []types.Column{c},
+						// Columns:  []types.Column{c},
 					},
 				},
 			})
@@ -150,22 +141,27 @@ func getTdsInfo(c types.Connection) (interface{}, error) {
 				types.Table{
 					Name:     tblName,
 					IsSystem: isSystem || isSysTable(tblName),
-					Columns:  []types.Column{c},
+					// Columns:  []types.Column{c},
 				})
 			curTbl += 1
 		} else {
+			/*
 			database.Schemas[curSchema].Tables[curTbl].Columns =
 				append(database.Schemas[curSchema].Tables[curTbl].Columns, c)
+			*/
 		}
 	}
 
+	/*
 	if err = resolveTdsRefs(db, &database); err != nil {
 		return nil, err
 	}
+	*/
 
 	return &database, nil
 }
 
+/*
 func resolveTdsRefs(db *sql.DB, database *types.Database) error {
 	rows, err := db.Query(`
 	  SELECT sch.name AS [table_schema],
@@ -236,6 +232,7 @@ func resolveTdsRefs(db *sql.DB, database *types.Database) error {
 
 	return nil
 }
+*/
 
 func isSysTable(tblName string) bool {
 	return tblName == "MSreplication_options" ||

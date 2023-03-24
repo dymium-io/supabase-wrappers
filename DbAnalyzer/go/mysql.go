@@ -7,10 +7,10 @@ import (
 	"fmt"
 
 	"DbAnalyzer/types"
+	// "DbAnalyzer/common"
 )
 
-func getMysqlInfo(c types.Connection) (interface{}, error) {
-
+func connectMysql(c *types.ConnectionParams) (*sql.DB, error) {
 	mysqlconn := fmt.Sprintf("%s:%s@tcp(%s:%d)/?tls=%s",
 		c.User, c.Password, c.Address, c.Port,
 		func() string {
@@ -25,13 +25,77 @@ func getMysqlInfo(c types.Connection) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
-	if c.TestOnly {
-		return struct{}{}, nil
+	return db, nil
+}
+
+func getMysqlInfo(dbName string, db *sql.DB) (*types.DatabaseInfo, error) {
+
+	rows, err := db.Query(`SELECT table_schema, table_name
+                               FROM information_schema.tables
+                               ORDER BY table_schema, table_name`)
+	if err != nil {
+		return nil, err
 	}
+	defer rows.Close()
+
+	database := types.DatabaseInfo{
+		DbName:    dbName,
+		Schemas: []types.Schema{},
+	}
+	curSchema := -1
+	isSystem := false
+	for rows.Next() {
+		var schema, tblName string
+		err = rows.Scan(&schema, &tblName)
+		if err != nil {
+			return nil, err
+		}
+		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
+			switch schema {
+			case "information_schema", "mysql", "sys", "performance_schema":
+				isSystem = true
+			default:
+				isSystem = false
+			}
+			database.Schemas = append(database.Schemas, types.Schema{
+				Name:     schema,
+				IsSystem: isSystem,
+				Tables: []types.Table{
+					{
+						Name:     tblName,
+						IsSystem: isSystem,
+					},
+				},
+			})
+			curSchema += 1
+		} else {
+			database.Schemas[curSchema].Tables = append(database.Schemas[curSchema].Tables,
+				types.Table{
+					Name:     tblName,
+					IsSystem: isSystem,
+				})
+		}
+	}
+
+	return &database, nil
+}
+
+
+func getMysqlTableInfo(dbName string, db *sql.DB) (interface{}, error) {
+
+	/*
+	if c.Rules == nil {
+		return struct{}{}, fmt.Errorf("Policy rules are not defined")
+	}
+
+	var detectors *common.Detectors
+	if detectors,err = common.Compile(*c.Rules); err != nil {
+		return struct{}{}, err
+	}
+	*/
 
 	rows, err := db.Query(`SELECT table_schema, table_name, ordinal_position, column_name,
                                       data_type,
@@ -45,10 +109,9 @@ func getMysqlInfo(c types.Connection) (interface{}, error) {
 	}
 	defer rows.Close()
 
-	database := types.Database{
-		Name:    c.Database,
+	database := types.DatabaseInfo{
+		DbName:    dbName,
 		Schemas: []types.Schema{},
-		Refs:    []types.Arc{},
 	}
 	curSchema := -1
 	curTbl := -1
@@ -71,6 +134,7 @@ func getMysqlInfo(c types.Connection) (interface{}, error) {
 			isNullable = true
 		}
 		var t string
+		var semantics *string
 		switch cTyp {
 		case "decimal":
 			if cPrecision != nil {
@@ -88,6 +152,13 @@ func getMysqlInfo(c types.Connection) (interface{}, error) {
 			} else {
 				t = "varchar"
 			}
+			/*
+			if s := common.MatchColumnName(detectors, cName); s != nil {
+				semantics = s
+			} else {
+				// TBD: 
+			}
+			*/
 		case "char":
 			if cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)", *cCharMaxLen)
@@ -104,8 +175,9 @@ func getMysqlInfo(c types.Connection) (interface{}, error) {
 			IsNullable: isNullable,
 			Default:    dflt,
 			Reference:  nil,
-			Semantics:  nil,
+			Semantics:  semantics,
 		}
+		_ = c
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
 			switch schema {
 			case "information_schema", "mysql", "sys", "performance_schema":
@@ -120,7 +192,7 @@ func getMysqlInfo(c types.Connection) (interface{}, error) {
 					{
 						Name:     tblName,
 						IsSystem: isSystem,
-						Columns:  []types.Column{c},
+						// Columns:  []types.Column{c},
 					},
 				},
 			})
@@ -131,22 +203,27 @@ func getMysqlInfo(c types.Connection) (interface{}, error) {
 				types.Table{
 					Name:     tblName,
 					IsSystem: isSystem,
-					Columns:  []types.Column{c},
+					// Columns:  []types.Column{c},
 				})
 			curTbl += 1
 		} else {
+			/*
 			database.Schemas[curSchema].Tables[curTbl].Columns =
 				append(database.Schemas[curSchema].Tables[curTbl].Columns, c)
+			*/
 		}
 	}
 
+	/*
 	if err = resolveMysqlRefs(db, &database); err != nil {
 		return nil, err
 	}
+	*/
 
 	return &database, nil
 }
 
+/*
 func resolveMysqlRefs(db *sql.DB, database *types.Database) error {
 	rows, err := db.Query(`
            SELECT
@@ -209,3 +286,4 @@ func resolveMysqlRefs(db *sql.DB, database *types.Database) error {
 
 	return nil
 }
+*/

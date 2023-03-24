@@ -13,9 +13,6 @@ CA_CERTIFICATE='{
 }'
 CUSTOMER=spoofcorp
 
-
-
-
 LOCAL_ENVIRONMENT=${LOCAL_ENVIRONMENT:-true}
 
 docker run \
@@ -26,5 +23,6 @@ docker run \
        -e CERTIFICATE="$CERTIFICATE" \
        -e CA_CERTIFICATE="$CA_CERTIFICATE" \
        -e CUSTOMER="$CUSTOMER" \
+       -e LOCAL_ENVIRONMENT="$LOCAL_ENVIRONMENT" \
        tunnel
 

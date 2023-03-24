@@ -42,13 +42,6 @@ export function humanReadableDataHandling(__a__ : DataHandling) : string {
   return '';
 }
 
-export type DataSemantics =
-  | 'FamilyName'
-  | 'Email'
-  | 'SSN'
-
-
-
 export type PIIDetectionType =
   | 'comprehend'
   | 'columnregexp'

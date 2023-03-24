@@ -1,7 +1,45 @@
 ---
 module: DbAnalyzer
 
-connection:
+ConnectionDetailRequest:
+  - connectionId: string
+
+ConnectionDetailResponse:
+  - status: string
+  - errormessage: string
+  - response: ?AnalyzerResponse
+
+DataType:
+  - Test
+  - DatabaseInfo
+  - TableInfo
+
+AnalyzerRequest:
+  - dtype: DataType
+  - connection: ConnectionParams
+  - tableInfo: ?TableInfoParams  # requiered when crtype == TableInfo
+
+TableInfoParams:
+  - schema: string
+  - table: string
+  - rules: <| Common.PIIDetector |>
+
+AnalyzerResponse:
+  - dtype: DataType
+  - dbInfo: ?DatabaseInfo
+  - tblInfo: ?TableInfo
+
+DatabaseInfo:
+  - dbName: string
+  - schemas: <| schema |>
+
+TableInfo:
+  - dbName: string
+  - schema: string
+  - tblName: string
+  - columns: <| column |>
+
+ConnectionParams:
   - typ: Common.ConnectionType
   - address: string
   - port: int
@@ -9,12 +47,6 @@ connection:
   - password: string
   - database: string
   - tls: bool
-  - testOnly: bool
-
-database:
-  - name: string
-  - schemas: <| schema |>
-  - refs: <| arc |>
 
 schema:
   - name: string
@@ -24,7 +56,6 @@ schema:
 table:
   - name: string
   - isSystem: bool
-  - columns: <| column |>
 
 column:
   - name: string
@@ -33,20 +64,5 @@ column:
   - isNullable: bool
   - default: ?string
   - reference: ?Common.reference
-  - semantics: ?Common.DataSemantics
-
-arc:
-  - from_schema: string
-  - from_table: string
-  - from_column: string
-  - to_schema: string
-  - to_table: string
-  - to_column: string
-
-ConnectionDetailRequest:
-  - connectionId: string
-
-ConnectionDetailResponse:
-  - status: string 
-  - errormessage: string 
-  - database: ?database
+  - semantics: ?string  # name from Common.PIIDetector
+  - possibleActions: <| Common.DataHandling |>

@@ -8,11 +8,6 @@ ConnectionType:
   - SqlServer  <*> Microsoft SQL Server
   - OracleDB   <*> Oracle Database
 
-DataSemantics:
-  - FamilyName
-  - Email
-  - SSN
-
 GroupMapping:
   - id: ?string
   - dymiumgroup: string

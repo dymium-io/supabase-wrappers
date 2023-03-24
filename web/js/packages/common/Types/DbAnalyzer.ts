@@ -8,7 +8,125 @@ import * as Common_52182865 from './Common.ts'
 export let dirtyFlag = false
 function doAlert(s) { console.log(s) }
 
+export type DataType =
+  | 'Test'
+  | 'DatabaseInfo'
+  | 'TableInfo'
 
+
+
+export class AnalyzerRequest {
+  private '_dtype': DataType
+  private '_connection': ConnectionParams
+  private '_tableInfo': TableInfoParams | null
+
+  constructor() {
+    this['_dtype'] = 'Test'
+    this['_connection'] = new ConnectionParams()
+    this['_tableInfo'] = null
+  }
+  get dtype(): DataType { return this['_dtype'] }
+  set dtype(__a__: any) {
+    let __v__ = enumReader(['Test','DatabaseInfo','TableInfo'],'Test')(__a__)
+    if(!_.isEqual(__v__,this['_dtype'])) {
+      setDirtyFlag()
+      this['_dtype'] = __v__
+    }
+  }
+  get connection(): ConnectionParams { return this['_connection'] }
+  set connection(__a__: any) {
+    setDirtyFlag()
+    this['_connection'] = __a__
+  }
+  get tableInfo(): TableInfoParams | null { return this['_tableInfo'] }
+  set tableInfo(__a__: any) {
+    if(__a__ == null) {
+      if(this['_tableInfo'] == null) { return }
+      setDirtyFlag()
+      this['_tableInfo'] = null
+      return
+    } else {
+      setDirtyFlag()
+      this['_tableInfo'] = __a__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): AnalyzerRequest {
+    disableDF()
+    let cls = new AnalyzerRequest()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.dtype = __a__['dtype']
+       cls.connection = ConnectionParams.fromJson(__a__['connection'])
+       cls.tableInfo = __a__['tableInfo'] == null ? null : TableInfoParams.fromJson(__a__['tableInfo'])
+    } else {
+       doAlert(`AnalyzerRequest: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class AnalyzerResponse {
+  private '_dtype': DataType
+  private '_dbInfo': DatabaseInfo | null
+  private '_tblInfo': TableInfo | null
+
+  constructor() {
+    this['_dtype'] = 'Test'
+    this['_dbInfo'] = null
+    this['_tblInfo'] = null
+  }
+  get dtype(): DataType { return this['_dtype'] }
+  set dtype(__a__: any) {
+    let __v__ = enumReader(['Test','DatabaseInfo','TableInfo'],'Test')(__a__)
+    if(!_.isEqual(__v__,this['_dtype'])) {
+      setDirtyFlag()
+      this['_dtype'] = __v__
+    }
+  }
+  get dbInfo(): DatabaseInfo | null { return this['_dbInfo'] }
+  set dbInfo(__a__: any) {
+    if(__a__ == null) {
+      if(this['_dbInfo'] == null) { return }
+      setDirtyFlag()
+      this['_dbInfo'] = null
+      return
+    } else {
+      setDirtyFlag()
+      this['_dbInfo'] = __a__
+    }
+  }
+  get tblInfo(): TableInfo | null { return this['_tblInfo'] }
+  set tblInfo(__a__: any) {
+    if(__a__ == null) {
+      if(this['_tblInfo'] == null) { return }
+      setDirtyFlag()
+      this['_tblInfo'] = null
+      return
+    } else {
+      setDirtyFlag()
+      this['_tblInfo'] = __a__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): AnalyzerResponse {
+    disableDF()
+    let cls = new AnalyzerResponse()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.dtype = __a__['dtype']
+       cls.dbInfo = __a__['dbInfo'] == null ? null : DatabaseInfo.fromJson(__a__['dbInfo'])
+       cls.tblInfo = __a__['tblInfo'] == null ? null : TableInfo.fromJson(__a__['tblInfo'])
+    } else {
+       doAlert(`AnalyzerResponse: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
 
 export class ConnectionDetailRequest {
   private '_connectionId': string
@@ -43,12 +161,12 @@ export class ConnectionDetailRequest {
 export class ConnectionDetailResponse {
   private '_status': string
   private '_errormessage': string
-  private '_database': Database | null
+  private '_response': AnalyzerResponse | null
 
   constructor() {
     this['_status'] = ''
     this['_errormessage'] = ''
-    this['_database'] = null
+    this['_response'] = null
   }
   get status(): string { return this['_status'] }
   set status(__a__: any) {
@@ -66,16 +184,16 @@ export class ConnectionDetailResponse {
       this['_errormessage'] = __v__
     }
   }
-  get database(): Database | null { return this['_database'] }
-  set database(__a__: any) {
+  get response(): AnalyzerResponse | null { return this['_response'] }
+  set response(__a__: any) {
     if(__a__ == null) {
-      if(this['_database'] == null) { return }
+      if(this['_response'] == null) { return }
       setDirtyFlag()
-      this['_database'] = null
+      this['_response'] = null
       return
     } else {
       setDirtyFlag()
-      this['_database'] = __a__
+      this['_response'] = __a__
     }
   }
 
@@ -87,7 +205,7 @@ export class ConnectionDetailResponse {
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.status = __a__['status']
        cls.errormessage = __a__['errormessage']
-       cls.database = __a__['database'] == null ? null : Database.fromJson(__a__['database'])
+       cls.response = __a__['response'] == null ? null : AnalyzerResponse.fromJson(__a__['response'])
     } else {
        doAlert(`ConnectionDetailResponse: an attempt to initialize from ${__a__}`)
     }
@@ -96,85 +214,243 @@ export class ConnectionDetailResponse {
   }
 }
 
-export class Arc {
-  private '_from_schema': string
-  private '_from_table': string
-  private '_from_column': string
-  private '_to_schema': string
-  private '_to_table': string
-  private '_to_column': string
+export class ConnectionParams {
+  private '_typ': Common_52182865.ConnectionType
+  private '_address': string
+  private '_port': number
+  private '_user': string
+  private '_password': string
+  private '_database': string
+  private '_tls': boolean
 
   constructor() {
-    this['_from_schema'] = ''
-    this['_from_table'] = ''
-    this['_from_column'] = ''
-    this['_to_schema'] = ''
-    this['_to_table'] = ''
-    this['_to_column'] = ''
+    this['_typ'] = 'PostgreSQL'
+    this['_address'] = ''
+    this['_port'] = 0
+    this['_user'] = ''
+    this['_password'] = ''
+    this['_database'] = ''
+    this['_tls'] = false
   }
-  get from_schema(): string { return this['_from_schema'] }
-  set from_schema(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_from_schema'])) {
+  get typ(): Common_52182865.ConnectionType { return this['_typ'] }
+  set typ(__a__: any) {
+    let __v__ = enumReader(['PostgreSQL','MySQL','MariaDB','SqlServer','OracleDB'],'PostgreSQL')(__a__)
+    if(!_.isEqual(__v__,this['_typ'])) {
       setDirtyFlag()
-      this['_from_schema'] = __v__
+      this['_typ'] = __v__
     }
   }
-  get from_table(): string { return this['_from_table'] }
-  set from_table(__a__: any) {
+  get address(): string { return this['_address'] }
+  set address(__a__: any) {
     let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_from_table'])) {
+    if(!_.isEqual(__v__,this['_address'])) {
       setDirtyFlag()
-      this['_from_table'] = __v__
+      this['_address'] = __v__
     }
   }
-  get from_column(): string { return this['_from_column'] }
-  set from_column(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_from_column'])) {
+  get port(): number { return this['_port'] }
+  set port(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_port'])) {
       setDirtyFlag()
-      this['_from_column'] = __v__
+      this['_port'] = __v__
     }
   }
-  get to_schema(): string { return this['_to_schema'] }
-  set to_schema(__a__: any) {
+  get user(): string { return this['_user'] }
+  set user(__a__: any) {
     let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_to_schema'])) {
+    if(!_.isEqual(__v__,this['_user'])) {
       setDirtyFlag()
-      this['_to_schema'] = __v__
+      this['_user'] = __v__
     }
   }
-  get to_table(): string { return this['_to_table'] }
-  set to_table(__a__: any) {
+  get password(): string { return this['_password'] }
+  set password(__a__: any) {
     let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_to_table'])) {
+    if(!_.isEqual(__v__,this['_password'])) {
       setDirtyFlag()
-      this['_to_table'] = __v__
+      this['_password'] = __v__
     }
   }
-  get to_column(): string { return this['_to_column'] }
-  set to_column(__a__: any) {
+  get database(): string { return this['_database'] }
+  set database(__a__: any) {
     let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_to_column'])) {
+    if(!_.isEqual(__v__,this['_database'])) {
       setDirtyFlag()
-      this['_to_column'] = __v__
+      this['_database'] = __v__
+    }
+  }
+  get tls(): boolean { return this['_tls'] }
+  set tls(__a__: any) {
+    let __v__ = boolReader(false)(__a__)
+    if(!_.isEqual(__v__,this['_tls'])) {
+      setDirtyFlag()
+      this['_tls'] = __v__
     }
   }
 
   toJson(): string { return JSON.stringify(this).split('"_').join('"') }
 
-  static fromJson(__a__: any): Arc {
+  static fromJson(__a__: any): ConnectionParams {
     disableDF()
-    let cls = new Arc()
+    let cls = new ConnectionParams()
     if(typeof __a__ === 'object' && __a__ != null) {
-       cls.from_schema = __a__['from_schema']
-       cls.from_table = __a__['from_table']
-       cls.from_column = __a__['from_column']
-       cls.to_schema = __a__['to_schema']
-       cls.to_table = __a__['to_table']
-       cls.to_column = __a__['to_column']
+       cls.typ = __a__['typ']
+       cls.address = __a__['address']
+       cls.port = __a__['port']
+       cls.user = __a__['user']
+       cls.password = __a__['password']
+       cls.database = __a__['database']
+       cls.tls = __a__['tls']
     } else {
-       doAlert(`Arc: an attempt to initialize from ${__a__}`)
+       doAlert(`ConnectionParams: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class DatabaseInfo {
+  private '_dbName': string
+  private '_schemas': Array<Schema>
+
+  constructor() {
+    this['_dbName'] = ''
+    this['_schemas'] = []
+  }
+  get dbName(): string { return this['_dbName'] }
+  set dbName(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_dbName'])) {
+      setDirtyFlag()
+      this['_dbName'] = __v__
+    }
+  }
+  get schemas(): Array<Schema> { return this['_schemas'] }
+  set schemas(__a__: any) {
+    setDirtyFlag()
+    this['_schemas'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): DatabaseInfo {
+    disableDF()
+    let cls = new DatabaseInfo()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.dbName = __a__['dbName']
+       cls.schemas = array1Reader(Schema.fromJson)(__a__['schemas'])
+    } else {
+       doAlert(`DatabaseInfo: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class TableInfo {
+  private '_dbName': string
+  private '_schema': string
+  private '_tblName': string
+  private '_columns': Array<Column>
+
+  constructor() {
+    this['_dbName'] = ''
+    this['_schema'] = ''
+    this['_tblName'] = ''
+    this['_columns'] = []
+  }
+  get dbName(): string { return this['_dbName'] }
+  set dbName(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_dbName'])) {
+      setDirtyFlag()
+      this['_dbName'] = __v__
+    }
+  }
+  get schema(): string { return this['_schema'] }
+  set schema(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_schema'])) {
+      setDirtyFlag()
+      this['_schema'] = __v__
+    }
+  }
+  get tblName(): string { return this['_tblName'] }
+  set tblName(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_tblName'])) {
+      setDirtyFlag()
+      this['_tblName'] = __v__
+    }
+  }
+  get columns(): Array<Column> { return this['_columns'] }
+  set columns(__a__: any) {
+    setDirtyFlag()
+    this['_columns'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): TableInfo {
+    disableDF()
+    let cls = new TableInfo()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.dbName = __a__['dbName']
+       cls.schema = __a__['schema']
+       cls.tblName = __a__['tblName']
+       cls.columns = array1Reader(Column.fromJson)(__a__['columns'])
+    } else {
+       doAlert(`TableInfo: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class TableInfoParams {
+  private '_schema': string
+  private '_table': string
+  private '_rules': Array<Common_52182865.PIIDetector>
+
+  constructor() {
+    this['_schema'] = ''
+    this['_table'] = ''
+    this['_rules'] = []
+  }
+  get schema(): string { return this['_schema'] }
+  set schema(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_schema'])) {
+      setDirtyFlag()
+      this['_schema'] = __v__
+    }
+  }
+  get table(): string { return this['_table'] }
+  set table(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_table'])) {
+      setDirtyFlag()
+      this['_table'] = __v__
+    }
+  }
+  get rules(): Array<Common_52182865.PIIDetector> { return this['_rules'] }
+  set rules(__a__: any) {
+    setDirtyFlag()
+    this['_rules'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): TableInfoParams {
+    disableDF()
+    let cls = new TableInfoParams()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.schema = __a__['schema']
+       cls.table = __a__['table']
+       cls.rules = array1Reader(Common_52182865.PIIDetector.fromJson)(__a__['rules'])
+    } else {
+       doAlert(`TableInfoParams: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls
@@ -188,7 +464,8 @@ export class Column {
   private '_isNullable': boolean
   private '_default': string | null
   private '_reference': Common_52182865.Reference | null
-  private '_semantics': Common_52182865.DataSemantics | null
+  private '_semantics': string | null
+  private '_possibleActions': Array<Common_52182865.DataHandling>
 
   constructor() {
     this['_name'] = ''
@@ -198,6 +475,7 @@ export class Column {
     this['_default'] = null
     this['_reference'] = null
     this['_semantics'] = null
+    this['_possibleActions'] = []
   }
   get name(): string { return this['_name'] }
   set name(__a__: any) {
@@ -258,7 +536,7 @@ export class Column {
       this['_reference'] = __a__
     }
   }
-  get semantics(): Common_52182865.DataSemantics | null { return this['_semantics'] }
+  get semantics(): string | null { return this['_semantics'] }
   set semantics(__a__: any) {
     if(__a__ == null) {
       if(this['_semantics'] == null) { return }
@@ -266,12 +544,17 @@ export class Column {
       this['_semantics'] = null
       return
     } else {
-      let __v__ = enumReader(['FamilyName','Email','SSN'],'FamilyName')(__a__)
+      let __v__ = stringReader('')(__a__)
       if(!_.isEqual(__v__,this['_semantics'])) {
         setDirtyFlag()
         this['_semantics'] = __v__
       }
     }
+  }
+  get possibleActions(): Array<Common_52182865.DataHandling> { return this['_possibleActions'] }
+  set possibleActions(__a__: any) {
+    setDirtyFlag()
+    this['_possibleActions'] = __a__
   }
 
   toJson(): string { return JSON.stringify(this).split('"_').join('"') }
@@ -287,161 +570,9 @@ export class Column {
        cls.default = __a__['default'] == null ? null : __a__['default']
        cls.reference = __a__['reference'] == null ? null : Common_52182865.Reference.fromJson(__a__['reference'])
        cls.semantics = __a__['semantics'] == null ? null : __a__['semantics']
+       cls.possibleActions = array1Reader(enumReader(['allow','block','obfuscate','redact'],'allow'))(__a__['possibleActions'])
     } else {
        doAlert(`Column: an attempt to initialize from ${__a__}`)
-    }
-    enableDF()
-    return cls
-  }
-}
-
-export class Connection {
-  private '_typ': Common_52182865.ConnectionType
-  private '_address': string
-  private '_port': number
-  private '_user': string
-  private '_password': string
-  private '_database': string
-  private '_tls': boolean
-  private '_testOnly': boolean
-
-  constructor() {
-    this['_typ'] = 'PostgreSQL'
-    this['_address'] = ''
-    this['_port'] = 0
-    this['_user'] = ''
-    this['_password'] = ''
-    this['_database'] = ''
-    this['_tls'] = false
-    this['_testOnly'] = false
-  }
-  get typ(): Common_52182865.ConnectionType { return this['_typ'] }
-  set typ(__a__: any) {
-    let __v__ = enumReader(['PostgreSQL','MySQL','MariaDB','SqlServer','OracleDB'],'PostgreSQL')(__a__)
-    if(!_.isEqual(__v__,this['_typ'])) {
-      setDirtyFlag()
-      this['_typ'] = __v__
-    }
-  }
-  get address(): string { return this['_address'] }
-  set address(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_address'])) {
-      setDirtyFlag()
-      this['_address'] = __v__
-    }
-  }
-  get port(): number { return this['_port'] }
-  set port(__a__: any) {
-    let __v__ = intReader(0)(__a__)
-    if(!_.isEqual(__v__,this['_port'])) {
-      setDirtyFlag()
-      this['_port'] = __v__
-    }
-  }
-  get user(): string { return this['_user'] }
-  set user(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_user'])) {
-      setDirtyFlag()
-      this['_user'] = __v__
-    }
-  }
-  get password(): string { return this['_password'] }
-  set password(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_password'])) {
-      setDirtyFlag()
-      this['_password'] = __v__
-    }
-  }
-  get database(): string { return this['_database'] }
-  set database(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_database'])) {
-      setDirtyFlag()
-      this['_database'] = __v__
-    }
-  }
-  get tls(): boolean { return this['_tls'] }
-  set tls(__a__: any) {
-    let __v__ = boolReader(false)(__a__)
-    if(!_.isEqual(__v__,this['_tls'])) {
-      setDirtyFlag()
-      this['_tls'] = __v__
-    }
-  }
-  get testOnly(): boolean { return this['_testOnly'] }
-  set testOnly(__a__: any) {
-    let __v__ = boolReader(false)(__a__)
-    if(!_.isEqual(__v__,this['_testOnly'])) {
-      setDirtyFlag()
-      this['_testOnly'] = __v__
-    }
-  }
-
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
-
-  static fromJson(__a__: any): Connection {
-    disableDF()
-    let cls = new Connection()
-    if(typeof __a__ === 'object' && __a__ != null) {
-       cls.typ = __a__['typ']
-       cls.address = __a__['address']
-       cls.port = __a__['port']
-       cls.user = __a__['user']
-       cls.password = __a__['password']
-       cls.database = __a__['database']
-       cls.tls = __a__['tls']
-       cls.testOnly = __a__['testOnly']
-    } else {
-       doAlert(`Connection: an attempt to initialize from ${__a__}`)
-    }
-    enableDF()
-    return cls
-  }
-}
-
-export class Database {
-  private '_name': string
-  private '_schemas': Array<Schema>
-  private '_refs': Array<Arc>
-
-  constructor() {
-    this['_name'] = ''
-    this['_schemas'] = []
-    this['_refs'] = []
-  }
-  get name(): string { return this['_name'] }
-  set name(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_name'])) {
-      setDirtyFlag()
-      this['_name'] = __v__
-    }
-  }
-  get schemas(): Array<Schema> { return this['_schemas'] }
-  set schemas(__a__: any) {
-    setDirtyFlag()
-    this['_schemas'] = __a__
-  }
-  get refs(): Array<Arc> { return this['_refs'] }
-  set refs(__a__: any) {
-    setDirtyFlag()
-    this['_refs'] = __a__
-  }
-
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
-
-  static fromJson(__a__: any): Database {
-    disableDF()
-    let cls = new Database()
-    if(typeof __a__ === 'object' && __a__ != null) {
-       cls.name = __a__['name']
-       cls.schemas = array1Reader(Schema.fromJson)(__a__['schemas'])
-       cls.refs = array1Reader(Arc.fromJson)(__a__['refs'])
-    } else {
-       doAlert(`Database: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls
@@ -500,12 +631,10 @@ export class Schema {
 export class Table {
   private '_name': string
   private '_isSystem': boolean
-  private '_columns': Array<Column>
 
   constructor() {
     this['_name'] = ''
     this['_isSystem'] = false
-    this['_columns'] = []
   }
   get name(): string { return this['_name'] }
   set name(__a__: any) {
@@ -523,11 +652,6 @@ export class Table {
       this['_isSystem'] = __v__
     }
   }
-  get columns(): Array<Column> { return this['_columns'] }
-  set columns(__a__: any) {
-    setDirtyFlag()
-    this['_columns'] = __a__
-  }
 
   toJson(): string { return JSON.stringify(this).split('"_').join('"') }
 
@@ -537,7 +661,6 @@ export class Table {
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.name = __a__['name']
        cls.isSystem = __a__['isSystem']
-       cls.columns = array1Reader(Column.fromJson)(__a__['columns'])
     } else {
        doAlert(`Table: an attempt to initialize from ${__a__}`)
     }

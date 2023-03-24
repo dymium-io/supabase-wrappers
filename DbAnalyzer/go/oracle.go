@@ -11,8 +11,7 @@ import (
 	"DbAnalyzer/types"
 )
 
-func getOraInfo(c types.Connection) (interface{}, error) {
-
+func connectOra(c *types.ConnectionParams) (*sql.DB, error) {
 	query := url.Values{}
 	if c.Tls {
 		query.Add("SSL", "true")
@@ -32,13 +31,17 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
-	if c.TestOnly {
-		return struct{}{}, nil
-	}
+	return db, nil
+}
+
+func getOraInfo(dbName string, db *sql.DB) (*types.DatabaseInfo, error) {
+	return nil, fmt.Errorf("getOraInfo not implemented")
+}
+
+func getOraTblInfo(dbName string, db *sql.DB) (interface{}, error) {
 
 	rows, err := db.Query(`
 			       SELECT c.OWNER,
@@ -63,10 +66,9 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 	}
 	defer rows.Close()
 
-	database := types.Database{
-		Name:    c.Database,
+	database := types.DatabaseInfo{
+		DbName:    dbName,
 		Schemas: []types.Schema{},
-		Refs:    []types.Arc{},
 	}
 	curSchema := -1
 	curTbl := -1
@@ -164,6 +166,7 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 			Reference:  nil,
 			Semantics:  nil,
 		}
+		_ = c
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
 			switch schema {
 			case "RDSADMIN":
@@ -178,7 +181,7 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 					{
 						Name:     tblName,
 						IsSystem: isSystem,
-						Columns:  []types.Column{c},
+						// Columns:  []types.Column{c},
 					},
 				},
 			})
@@ -189,22 +192,27 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 				types.Table{
 					Name:     tblName,
 					IsSystem: isSystem,
-					Columns:  []types.Column{c},
+					// Columns:  []types.Column{c},
 				})
 			curTbl += 1
 		} else {
+			/*
 			database.Schemas[curSchema].Tables[curTbl].Columns =
 				append(database.Schemas[curSchema].Tables[curTbl].Columns, c)
+			*/
 		}
 	}
 
+	/*
 	if err = resolveOraRefs(db, &database); err != nil {
 		return nil, err
 	}
+	*/
 
 	return &database, nil
 }
 
+/*
 func resolveOraRefs(db *sql.DB, database *types.Database) error {
 	rows, err := db.Query(`
 	   SELECT c.OWNER, a.CONSTRAINT_NAME, a.TABLE_NAME, a.COLUMN_NAME,
@@ -265,3 +273,4 @@ func resolveOraRefs(db *sql.DB, database *types.Database) error {
 
 	return nil
 }
+*/
