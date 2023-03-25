@@ -34,6 +34,7 @@ require (
 )
 
 require (
+	dymium.com/server/protocol v0.0.0-00010101000000-000000000000 // indirect
 	github.com/aws/aws-secretsmanager-caching-go v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
@@ -50,5 +51,7 @@ replace github.com/tj/go-kinesis => ../../../libs/go/go-kinesis
 replace dymium.com/dymium/log => ../../../libs/go/dlog
 
 replace dymium.com/dymium/gotypes => ../../../libs/go/gotypes
+
+replace dymium.com/server/protocol => ../../../Tunnels/go/protocol
 
 go 1.18

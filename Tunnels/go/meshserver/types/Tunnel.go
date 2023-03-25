@@ -38,6 +38,7 @@ type AuthorizationCodeResponse struct {
 }
 
 type CSRResponse struct {
+   Version string `json:"version"`
    Certificate string `json:"certificate"`
 }
 

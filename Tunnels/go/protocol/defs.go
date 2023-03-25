@@ -6,6 +6,7 @@ const (
 	Send
 	Ping
 	Error
+	Version
 )
 
 type TransmissionUnit struct {
@@ -13,3 +14,5 @@ type TransmissionUnit struct {
 	Id     int
 	Data   []byte
 }
+
+var MeshServerVersion="0.1.1"

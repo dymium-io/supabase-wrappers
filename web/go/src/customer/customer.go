@@ -62,6 +62,9 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/api/authenticatebycode", dhandlers.AuthByCode).Methods("POST")
 	
 	nonauthenticated.HandleFunc("/api/downloadupdate", dhandlers.DownloadUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")
+	nonauthenticated.HandleFunc("/api/downloadconnectorupdate", dhandlers.DownloadConnectorUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")
+	
+
 	nonauthenticated.HandleFunc("/api/datascopehelp", dhandlers.DatascopeHelp).Queries("token", "{token}", "port", "{port}").Methods("GET")
 	nonauthenticated.HandleFunc("/api/getconnectorcertificate",  dhandlers.GetConnectorCertificate).Methods("POST").Name("getconnectorcertificate")
 

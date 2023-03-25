@@ -90,6 +90,7 @@ echo "Moved the client binaries"
 echo "Pull the connector"
 
 aws s3  --profile dymium --region us-west-2 cp s3://dymium-connector/darwin/amd64/meshconnector ../../../web/go/assets/customer/connector/darwin/amd64/meshconnector
+
 tar cvzf ../../../web/go/assets/customer/meshconnector_darwin_amd64.tgz -C ../../../web/go/assets/customer/connector/darwin/amd64/ meshconnector
 aws s3  --profile dymium --region us-west-2 cp s3://dymium-connector/linux/amd64/meshconnector ../../../web/go/assets/customer/connector/linux/amd64/meshconnector
 tar cvzf ../../../web/go/assets/customer/meshconnector_linux_amd64.tgz -C ../../../web/go/assets/customer/connector/linux/amd64/ meshconnector

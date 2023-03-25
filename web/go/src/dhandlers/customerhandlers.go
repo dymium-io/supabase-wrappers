@@ -29,6 +29,7 @@ import (
 	"strings"
 	"path"
 	"fmt"
+	"dymium.com/server/protocol"
 )
 type contextKey int
 const authenticatedSchemaKey contextKey = 0
@@ -1211,6 +1212,16 @@ func DownloadUpdate(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, fil)
 }
 
+func DownloadConnectorUpdate(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	os, _ := vars["os"]
+	arch, _ := vars["arch"]	
+
+	fil := fmt.Sprintf("./customer/connector/%s/%s/meshconnector", os, arch)
+	log.Info("Api DownloadConnectorUpdate called")
+	http.ServeFile(w, r, fil)
+}
+
 func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := ioutil.ReadAll(r.Body)
@@ -1434,6 +1445,7 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 
 	var certout types.CSRResponse 
 	certout.Certificate = string(out)
+	certout.Version = protocol.MeshServerVersion
 	js, err := json.Marshal(certout)
 	if err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
