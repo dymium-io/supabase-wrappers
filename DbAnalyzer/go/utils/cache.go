@@ -56,5 +56,5 @@ func (c *Cache[T]) squeeze(k int) T {
 	}
 	c.nCached--
 	return ret
-	
+
 }

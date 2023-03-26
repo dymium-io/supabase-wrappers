@@ -42,7 +42,7 @@ func getPostgresInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error)
 	defer rows.Close()
 
 	database := types.DatabaseInfoData{
-		DbName:    dbName,
+		DbName:  dbName,
 		Schemas: []types.Schema{},
 	}
 	curSchema := -1
@@ -82,9 +82,8 @@ func getPostgresInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error)
 	return &database, nil
 }
 
-
 func getPostgresTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*types.TableInfoData, error) {
-	
+
 	rows, err := db.Query(`SELECT c.ordinal_position, c.column_name,
                                       c.data_type,
                                       c.character_maximum_length,
@@ -105,19 +104,19 @@ func getPostgresTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (
 	defer rows.Close()
 
 	ti := types.TableInfoData{
-		DbName:    dbName,
-		Schema:    tip.Schema,
-		TblName:   tip.Table,
+		DbName:  dbName,
+		Schema:  tip.Schema,
+		TblName: tip.Table,
 	}
 
 	type data struct {
-		cName string
-		pos int
-		isNullable bool
-		dflt *string
-		cTyp string
+		cName                           string
+		pos                             int
+		isNullable                      bool
+		dflt                            *string
+		cTyp                            string
 		cCharMaxLen, cPrecision, cScale *int
-		eTyp *string
+		eTyp                            *string
 		eCharMaxLen, ePrecision, eScale *int
 	}
 
@@ -207,13 +206,13 @@ func getPostgresTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (
 			t = d.cTyp
 		}
 		c := types.Column{
-			Name:       d.cName,
-			Position:   d.pos,
-			Typ:        t,
-			IsNullable: d.isNullable,
-			Default:    d.dflt,
-			Reference:  nil,
-			Semantics:  nil,
+			Name:            d.cName,
+			Position:        d.pos,
+			Typ:             t,
+			IsNullable:      d.isNullable,
+			Default:         d.dflt,
+			Reference:       nil,
+			Semantics:       nil,
 			PossibleActions: *possibleActions,
 		}
 		ti.Columns = append(ti.Columns, c)

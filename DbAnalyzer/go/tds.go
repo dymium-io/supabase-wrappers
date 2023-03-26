@@ -3,8 +3,8 @@ package main
 import (
 	"database/sql"
 	//_ "github.com/thda/tds"
-	_ "github.com/denisenkom/go-mssqldb"
 	"fmt"
+	_ "github.com/denisenkom/go-mssqldb"
 	"net/url"
 
 	"DbAnalyzer/types"
@@ -12,22 +12,22 @@ import (
 
 func connectTds(c *types.ConnectionParams) (*sql.DB, error) {
 	query := url.Values{}
-	query.Add("database",c.Database)
+	query.Add("database", c.Database)
 	if c.Tls {
-		query.Add("encrypt","true")
+		query.Add("encrypt", "true")
 	} else {
-		query.Add("encrypt","disable")
+		query.Add("encrypt", "disable")
 	}
 	u := &url.URL{
-		Scheme:   "sqlserver",
-		User:     url.UserPassword(c.User, c.Password),
-		Host:     fmt.Sprintf("%s:%d", c.Address, c.Port),
+		Scheme: "sqlserver",
+		User:   url.UserPassword(c.User, c.Password),
+		Host:   fmt.Sprintf("%s:%d", c.Address, c.Port),
 		// Path:  instance, // if connecting to an instance instead of a port
 		RawQuery: query.Encode(),
 	}
 	tdsconn := u.String()
 
-	fmt.Println("tdsconn:",tdsconn)
+	fmt.Println("tdsconn:", tdsconn)
 	db, err := sql.Open("sqlserver", tdsconn)
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func connectTds(c *types.ConnectionParams) (*sql.DB, error) {
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
-	return db,nil
+	return db, nil
 }
 
 func getTdsInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
@@ -49,7 +49,7 @@ func getTdsInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
 	defer rows.Close()
 
 	database := types.DatabaseInfoData{
-		DbName:    dbName,
+		DbName:  dbName,
 		Schemas: []types.Schema{},
 	}
 	curSchema := -1
@@ -91,7 +91,7 @@ func getTdsInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
 }
 
 func getTdsTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*types.TableInfoData, error) {
-	
+
 	rows, err := db.Query(`SELECT ordinal_position, column_name,
                                       data_type,
                                       character_maximum_length,
@@ -106,17 +106,17 @@ func getTdsTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*type
 	defer rows.Close()
 
 	ti := types.TableInfoData{
-		DbName:    dbName,
-		Schema:    tip.Schema,
-		TblName:   tip.Table,
+		DbName:  dbName,
+		Schema:  tip.Schema,
+		TblName: tip.Table,
 	}
 
 	type data struct {
-		cName string
-		pos int
-		isNullable bool
-		dflt *string
-		cTyp string
+		cName                           string
+		pos                             int
+		isNullable                      bool
+		dflt                            *string
+		cTyp                            string
 		cCharMaxLen, cPrecision, cScale *int
 	}
 
@@ -174,13 +174,13 @@ func getTdsTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*type
 			t = d.cTyp
 		}
 		c := types.Column{
-			Name:       d.cName,
-			Position:   d.pos,
-			Typ:        t,
-			IsNullable: d.isNullable,
-			Default:    d.dflt,
-			Reference:  nil,
-			Semantics:  nil,
+			Name:            d.cName,
+			Position:        d.pos,
+			Typ:             t,
+			IsNullable:      d.isNullable,
+			Default:         d.dflt,
+			Reference:       nil,
+			Semantics:       nil,
 			PossibleActions: *possibleActions,
 		}
 		ti.Columns = append(ti.Columns, c)
@@ -192,8 +192,6 @@ func getTdsTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*type
 
 	return &ti, nil
 }
-
-
 
 func resolveTdsRefs(db *sql.DB, tip *types.TableInfoParams, ti *types.TableInfoData) error {
 

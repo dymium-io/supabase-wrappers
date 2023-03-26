@@ -42,7 +42,7 @@ func getMysqlInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
 	defer rows.Close()
 
 	database := types.DatabaseInfoData{
-		DbName:    dbName,
+		DbName:  dbName,
 		Schemas: []types.Schema{},
 	}
 	curSchema := -1
@@ -83,18 +83,17 @@ func getMysqlInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
 	return &database, nil
 }
 
-
 func getMysqlTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*types.TableInfoData, error) {
 
 	/*
-	if c.Rules == nil {
-		return struct{}{}, fmt.Errorf("Policy rules are not defined")
-	}
+		if c.Rules == nil {
+			return struct{}{}, fmt.Errorf("Policy rules are not defined")
+		}
 
-	var detectors *common.Detectors
-	if detectors,err = common.Compile(*c.Rules); err != nil {
-		return struct{}{}, err
-	}
+		var detectors *common.Detectors
+		if detectors,err = common.Compile(*c.Rules); err != nil {
+			return struct{}{}, err
+		}
 	*/
 
 	rows, err := db.Query(`SELECT ordinal_position, column_name,
@@ -111,17 +110,17 @@ func getMysqlTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*ty
 	defer rows.Close()
 
 	ti := types.TableInfoData{
-		DbName:    dbName,
-		Schema:    tip.Schema,
-		TblName:   tip.Table,
+		DbName:  dbName,
+		Schema:  tip.Schema,
+		TblName: tip.Table,
 	}
 
 	type data struct {
-		cName string
-		pos int
-		isNullable bool
-		dflt *string
-		cTyp string
+		cName                           string
+		pos                             int
+		isNullable                      bool
+		dflt                            *string
+		cTyp                            string
 		cCharMaxLen, cPrecision, cScale *int
 	}
 
@@ -144,7 +143,6 @@ func getMysqlTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*ty
 		descr = append(descr, &d)
 	}
 
-	
 	for _, d := range descr {
 		var t string
 		var semantics *string
@@ -169,11 +167,11 @@ func getMysqlTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*ty
 				t = "varchar"
 			}
 			/*
-			if s := common.MatchColumnName(detectors, cName); s != nil {
-				semantics = s
-			} else {
-				// TBD: 
-			}
+				if s := common.MatchColumnName(detectors, cName); s != nil {
+					semantics = s
+				} else {
+					// TBD:
+				}
 			*/
 		case "char":
 			if d.cCharMaxLen != nil {
@@ -189,16 +187,16 @@ func getMysqlTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*ty
 		}
 
 		c := types.Column{
-			Name:       d.cName,
-			Position:   d.pos,
-			Typ:        t,
-			IsNullable: d.isNullable,
-			Default:    d.dflt,
-			Reference:  nil,
-			Semantics:  semantics,
+			Name:            d.cName,
+			Position:        d.pos,
+			Typ:             t,
+			IsNullable:      d.isNullable,
+			Default:         d.dflt,
+			Reference:       nil,
+			Semantics:       semantics,
 			PossibleActions: *possibleActions,
 		}
-		
+
 		ti.Columns = append(ti.Columns, c)
 	}
 

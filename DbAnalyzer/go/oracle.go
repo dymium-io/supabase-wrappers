@@ -49,7 +49,7 @@ func getOraInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
 	defer rows.Close()
 
 	database := types.DatabaseInfoData{
-		DbName:    dbName,
+		DbName:  dbName,
 		Schemas: []types.Schema{},
 	}
 	curSchema := -1
@@ -111,27 +111,27 @@ func getOraTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*type
 	defer rows.Close()
 
 	ti := types.TableInfoData{
-		DbName:    dbName,
+		DbName:  dbName,
 		Schema:  tip.Schema,
 		TblName: tip.Table,
 	}
 
-	type data struct{
-		cName string
-		cDataLen int
-		pos *int
-		isNullable bool
-		cDflt *string
-		cTyp *string
+	type data struct {
+		cName                           string
+		cDataLen                        int
+		pos                             *int
+		isNullable                      bool
+		cDflt                           *string
+		cTyp                            *string
 		cCharMaxLen, cPrecision, cScale *int
-		dLength *int
+		dLength                         *int
 	}
 
 	descr := []*data{}
-	
+
 	for rows.Next() {
 		var d data
-		var isNullable *string		
+		var isNullable *string
 		err = rows.Scan(&d.pos, &d.cName,
 			&d.cTyp, &d.cDataLen, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
 			&isNullable, &d.dLength, &d.cDflt)
@@ -165,7 +165,7 @@ func getOraTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*type
 						t = fmt.Sprintf("numeric(%d)", *d.cPrecision)
 					}
 				} else {
-					t = fmt.Sprintf("numeric(%d)",d.cDataLen)
+					t = fmt.Sprintf("numeric(%d)", d.cDataLen)
 				}
 			case "varchar2", "nvarchar2":
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
@@ -208,17 +208,17 @@ func getOraTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*type
 			dflt = &dd
 		}
 		c := types.Column{
-			Name:       d.cName,
-			Position:   *d.pos,
-			Typ:        t,
-			IsNullable: d.isNullable,
-			Default:    dflt,
-			Reference:  nil,
-			Semantics:  semantics,
+			Name:            d.cName,
+			Position:        *d.pos,
+			Typ:             t,
+			IsNullable:      d.isNullable,
+			Default:         dflt,
+			Reference:       nil,
+			Semantics:       semantics,
 			PossibleActions: *possibleActions,
 		}
 
-		ti.Columns = append(ti.Columns, c)		
+		ti.Columns = append(ti.Columns, c)
 	}
 
 	if err = resolveOraRefs(db, tip, &ti); err != nil {
@@ -227,7 +227,6 @@ func getOraTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*type
 
 	return &ti, nil
 }
-
 
 func resolveOraRefs(db *sql.DB, tip *types.TableInfoParams, ti *types.TableInfoData) error {
 	rows, err := db.Query(`

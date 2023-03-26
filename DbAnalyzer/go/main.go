@@ -26,7 +26,6 @@ func init() {
 	cache = utils.MakeCache[*conT](5)
 }
 
-
 func main() {
 	lambda.Start(LambdaHandler)
 }
