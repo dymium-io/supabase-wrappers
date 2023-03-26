@@ -38,84 +38,28 @@ func connectTds(c *types.ConnectionParams) (*sql.DB, error) {
 	return db,nil
 }
 
-func getTdsInfo(dbName string, db *sql.DB) (*types.DatabaseInfo, error) {
-	return nil, fmt.Errorf("getTdsInfo not implemented")
-}
+func getTdsInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
 
-func getTdsTableInfo(dbName string, db *sql.DB) (interface{}, error) {
-	rows, err := db.Query(`SELECT table_schema, table_name, ordinal_position, column_name,
-                                      data_type,
-                                      character_maximum_length,
-                                      numeric_precision, numeric_scale,
-                                      is_nullable, column_default
-                               FROM information_schema.columns
-                               ORDER BY table_schema, table_name, ordinal_position`)
+	rows, err := db.Query(`SELECT table_schema, table_name
+                               FROM information_schema.tables
+                               ORDER BY table_schema, table_name`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	database := types.DatabaseInfo{
+	database := types.DatabaseInfoData{
 		DbName:    dbName,
 		Schemas: []types.Schema{},
 	}
 	curSchema := -1
-	curTbl := -1
 	isSystem := false
 	for rows.Next() {
-		var schema, tblName, cName string
-		var pos int
-		var cIsNullable string
-		var dflt *string
-		var cTyp string
-		var cCharMaxLen, cPrecision, cScale *int
-		err = rows.Scan(&schema, &tblName, &pos, &cName,
-			&cTyp, &cCharMaxLen, &cPrecision, &cScale,
-			&cIsNullable, &dflt)
+		var schema, tblName string
+		err = rows.Scan(&schema, &tblName)
 		if err != nil {
 			return nil, err
 		}
-		isNullable := false
-		if cIsNullable == "YES" {
-			isNullable = true
-		}
-		var t string
-		switch cTyp {
-		case "decimal":
-			if cPrecision != nil {
-				if cScale != nil {
-					t = fmt.Sprintf("numeric(%d,%d)", *cPrecision, *cScale)
-				} else {
-					t = fmt.Sprintf("numeric(%d)", *cPrecision)
-				}
-			} else {
-				t = "numeric"
-			}
-		case "varchar":
-			if cCharMaxLen != nil {
-				t = fmt.Sprintf("varchar(%d)", *cCharMaxLen)
-			} else {
-				t = "varchar"
-			}
-		case "char":
-			if cCharMaxLen != nil {
-				t = fmt.Sprintf("character(%d)", *cCharMaxLen)
-			} else {
-				t = "bpchar"
-			}
-		default:
-			t = cTyp
-		}
-		c := types.Column{
-			Name:       cName,
-			Position:   pos,
-			Typ:        t,
-			IsNullable: isNullable,
-			Default:    dflt,
-			Reference:  nil,
-			Semantics:  nil,
-		}
-		_ = c
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
 			switch schema {
 			case "information_schema", "sys", "performance_schema":
@@ -130,43 +74,132 @@ func getTdsTableInfo(dbName string, db *sql.DB) (interface{}, error) {
 					{
 						Name:     tblName,
 						IsSystem: isSystem || isSysTable(tblName),
-						// Columns:  []types.Column{c},
 					},
 				},
 			})
 			curSchema += 1
-			curTbl = 0
-		} else if tblName != database.Schemas[curSchema].Tables[curTbl].Name {
+		} else {
 			database.Schemas[curSchema].Tables = append(database.Schemas[curSchema].Tables,
 				types.Table{
 					Name:     tblName,
 					IsSystem: isSystem || isSysTable(tblName),
-					// Columns:  []types.Column{c},
 				})
-			curTbl += 1
-		} else {
-			/*
-			database.Schemas[curSchema].Tables[curTbl].Columns =
-				append(database.Schemas[curSchema].Tables[curTbl].Columns, c)
-			*/
 		}
 	}
-
-	/*
-	if err = resolveTdsRefs(db, &database); err != nil {
-		return nil, err
-	}
-	*/
 
 	return &database, nil
 }
 
-/*
-func resolveTdsRefs(db *sql.DB, database *types.Database) error {
+func getTdsTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*types.TableInfoData, error) {
+	
+	rows, err := db.Query(`SELECT ordinal_position, column_name,
+                                      data_type,
+                                      character_maximum_length,
+                                      numeric_precision, numeric_scale,
+                                      is_nullable, column_default
+                               FROM information_schema.columns
+                               WHERE table_schema = ? and table_name = ?
+                               ORDER BY ordinal_position`, tip.Schema, tip.Table)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	ti := types.TableInfoData{
+		DbName:    dbName,
+		Schema:    tip.Schema,
+		TblName:   tip.Table,
+	}
+
+	type data struct {
+		cName string
+		pos int
+		isNullable bool
+		dflt *string
+		cTyp string
+		cCharMaxLen, cPrecision, cScale *int
+	}
+
+	descr := []*data{}
+
+	for rows.Next() {
+		var d data
+		var isNullable string
+		err = rows.Scan(&d.pos, &d.cName,
+			&d.cTyp, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
+			&isNullable, &d.dflt)
+		if err != nil {
+			return nil, err
+		}
+		if isNullable == "YES" {
+			d.isNullable = true
+		} else {
+			d.isNullable = false
+		}
+		descr = append(descr, &d)
+	}
+
+	for _, d := range descr {
+		var possibleActions *[]types.DataHandling
+		var t string
+		switch d.cTyp {
+		case "decimal":
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+			if d.cPrecision != nil {
+				if d.cScale != nil {
+					t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
+				} else {
+					t = fmt.Sprintf("numeric(%d)", *d.cPrecision)
+				}
+			} else {
+				t = "numeric"
+			}
+		case "varchar":
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+			if d.cCharMaxLen != nil {
+				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
+			} else {
+				t = "varchar"
+			}
+		case "character":
+			if d.cCharMaxLen != nil {
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
+			} else {
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+				t = "bpchar"
+			}
+		default:
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+			t = d.cTyp
+		}
+		c := types.Column{
+			Name:       d.cName,
+			Position:   d.pos,
+			Typ:        t,
+			IsNullable: d.isNullable,
+			Default:    d.dflt,
+			Reference:  nil,
+			Semantics:  nil,
+			PossibleActions: *possibleActions,
+		}
+		ti.Columns = append(ti.Columns, c)
+	}
+
+	if err = resolveTdsRefs(db, tip, &ti); err != nil {
+		return nil, err
+	}
+
+	return &ti, nil
+}
+
+
+
+func resolveTdsRefs(db *sql.DB, tip *types.TableInfoParams, ti *types.TableInfoData) error {
+
 	rows, err := db.Query(`
-	  SELECT sch.name AS [table_schema],
+	  SELECT
               obj.name AS [constraint_name],
-	      tab1.name AS [table_name],
 	      col1.name AS [column_name],
               sch2.name AS [foreign_table_schema],
 	      tab2.name AS [foreign_table_name],
@@ -185,46 +218,26 @@ func resolveTdsRefs(db *sql.DB, database *types.Database) error {
 	  INNER JOIN sys.schemas sch2
 	      ON tab2.schema_id = sch2.schema_id
 	  INNER JOIN sys.columns col2
-	      ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id`)
+	      ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id
+          WHERE sch.name = ? and tab1.name = ?`, tip.Schema, tip.Table)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var schema, constraintName, tblName, columnName, fSchema, fTblName, fColumnName string
-		err := rows.Scan(&schema, &constraintName, &tblName, &columnName, &fSchema, &fTblName, &fColumnName)
+		var constraintName, columnName, fSchema, fTblName, fColumnName string
+		err := rows.Scan(&constraintName, &columnName, &fSchema, &fTblName, &fColumnName)
 		if err != nil {
 			return err
 		}
-	Loop:
-		for kSchema := range database.Schemas {
-			s := &database.Schemas[kSchema]
-			if s.Name == schema {
-				for kTbl := range s.Tables {
-					t := &s.Tables[kTbl]
-					if t.Name == tblName {
-						for kColumn := range t.Columns {
-							c := &t.Columns[kColumn]
-							if c.Name == columnName {
-								c.Reference = &types.Reference{
-									Schema: fSchema,
-									Table:  fTblName,
-									Column: fColumnName,
-								}
-								database.Refs = append(database.Refs,
-									types.Arc{
-										From_schema: schema,
-										From_table:  tblName,
-										From_column: columnName,
-										To_schema:   fSchema,
-										To_table:    fTblName,
-										To_column:   fColumnName,
-									})
-								break Loop
-							}
-						}
-					}
+		for k := range ti.Columns {
+			c := &ti.Columns[k]
+			if c.Name == columnName {
+				c.Reference = &types.Reference{
+					Schema: fSchema,
+					Table:  fTblName,
+					Column: fColumnName,
 				}
 			}
 		}
@@ -232,7 +245,6 @@ func resolveTdsRefs(db *sql.DB, database *types.Database) error {
 
 	return nil
 }
-*/
 
 func isSysTable(tblName string) bool {
 	return tblName == "MSreplication_options" ||

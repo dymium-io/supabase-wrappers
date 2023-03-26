@@ -31,7 +31,7 @@ func connectPostgres(c *types.ConnectionParams) (*sql.DB, error) {
 	return db, nil
 }
 
-func getPostgresInfo(dbName string, db *sql.DB) (*types.DatabaseInfo, error) {
+func getPostgresInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
 
 	rows, err := db.Query(`SELECT table_schema, table_name
                                FROM information_schema.tables
@@ -41,7 +41,7 @@ func getPostgresInfo(dbName string, db *sql.DB) (*types.DatabaseInfo, error) {
 	}
 	defer rows.Close()
 
-	database := types.DatabaseInfo{
+	database := types.DatabaseInfoData{
 		DbName:    dbName,
 		Schemas: []types.Schema{},
 	}
@@ -83,7 +83,7 @@ func getPostgresInfo(dbName string, db *sql.DB) (*types.DatabaseInfo, error) {
 }
 
 
-func getPostgresTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*types.TableInfo, error) {
+func getPostgresTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*types.TableInfoData, error) {
 	
 	rows, err := db.Query(`SELECT c.ordinal_position, c.column_name,
                                       c.data_type,
@@ -104,99 +104,114 @@ func getPostgresTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (
 	}
 	defer rows.Close()
 
-	ti := types.TableInfo{
+	ti := types.TableInfoData{
 		DbName:    dbName,
 		Schema:    tip.Schema,
 		TblName:   tip.Table,
 	}
+
+	type data struct {
+		cName string
+		pos int
+		isNullable bool
+		dflt *string
+		cTyp string
+		cCharMaxLen, cPrecision, cScale *int
+		eTyp *string
+		eCharMaxLen, ePrecision, eScale *int
+	}
+
+	descr := []*data{}
+
 	for rows.Next() {
-		var cName string
-		var pos int
-		var cIsNullable string
-		var dflt *string
-		var cTyp string
-		var cCharMaxLen, cPrecision, cScale *int
-		var eTyp *string
-		var eCharMaxLen, ePrecision, eScale *int
-		err = rows.Scan(&pos, &cName,
-			&cTyp, &cCharMaxLen, &cPrecision, &cScale,
-			&eTyp, &eCharMaxLen, &ePrecision, &eScale,
-			&cIsNullable, &dflt)
+		var d data
+		var isNullable string
+		err = rows.Scan(&d.pos, &d.cName,
+			&d.cTyp, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
+			&d.eTyp, &d.eCharMaxLen, &d.ePrecision, &d.eScale,
+			&isNullable, &d.dflt)
 		if err != nil {
 			return nil, err
 		}
-		isNullable := false
-		if cIsNullable == "YES" {
-			isNullable = true
+		if isNullable == "YES" {
+			d.isNullable = true
+		} else {
+			d.isNullable = false
 		}
+		descr = append(descr, &d)
+	}
+
+	for _, d := range descr {
 		var possibleActions *[]types.DataHandling
 		var t string
-		switch cTyp {
+		switch d.cTyp {
 		case "numeric":
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
-			if cPrecision != nil {
-				if cScale != nil {
-					t = fmt.Sprintf("numeric(%d,%d)", *cPrecision, *cScale)
+			if d.cPrecision != nil {
+				if d.cScale != nil {
+					t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
 				} else {
-					t = fmt.Sprintf("numeric(%d)", *cPrecision)
+					t = fmt.Sprintf("numeric(%d)", *d.cPrecision)
 				}
 			} else {
 				t = "numeric"
 			}
 		case "character varying":
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
-			if cCharMaxLen != nil {
-				t = fmt.Sprintf("varchar(%d)", *cCharMaxLen)
+			if d.cCharMaxLen != nil {
+				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
 				t = "varchar"
 			}
 		case "character":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
-			if cCharMaxLen != nil {
-				t = fmt.Sprintf("character(%d)", *cCharMaxLen)
+			if d.cCharMaxLen != nil {
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
 			} else {
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 				t = "bpchar"
 			}
 		case "ARRAY":
-			switch *eTyp {
+			switch *d.eTyp {
 			case "numeric":
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
-				if ePrecision != nil {
-					if cScale != nil {
-						t = fmt.Sprintf("numeric(%d,%d)[]", *ePrecision, *eScale)
+				if d.ePrecision != nil {
+					if d.cScale != nil {
+						t = fmt.Sprintf("numeric(%d,%d)[]", *d.ePrecision, *d.eScale)
 					} else {
-						t = fmt.Sprintf("numeric(%d)[]", *ePrecision)
+						t = fmt.Sprintf("numeric(%d)[]", *d.ePrecision)
 					}
 				} else {
 					t = "numeric[]"
 				}
 			case "character varying":
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
-				if eCharMaxLen != nil {
-					t = fmt.Sprintf("varchar(%d)[]", *eCharMaxLen)
+				if d.eCharMaxLen != nil {
+					t = fmt.Sprintf("varchar(%d)[]", *d.eCharMaxLen)
 				} else {
 					t = "varchar[]"
 				}
 			case "character":
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
-				if eCharMaxLen != nil {
-					t = fmt.Sprintf("character(%d)[]", *eCharMaxLen)
+				if d.eCharMaxLen != nil {
+					t = fmt.Sprintf("character(%d)[]", *d.eCharMaxLen)
 				} else {
 					t = "character[]"
 				}
 			default:
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
-				t = *eTyp + "[]"
+				t = *d.eTyp + "[]"
 			}
 		default:
-			t = cTyp
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+			t = d.cTyp
 		}
 		c := types.Column{
-			Name:       cName,
-			Position:   pos,
+			Name:       d.cName,
+			Position:   d.pos,
 			Typ:        t,
-			IsNullable: isNullable,
-			Default:    dflt,
+			IsNullable: d.isNullable,
+			Default:    d.dflt,
 			Reference:  nil,
 			Semantics:  nil,
 			PossibleActions: *possibleActions,
@@ -211,7 +226,7 @@ func getPostgresTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (
 	return &ti, nil
 }
 
-func resolvePostgresRefs(db *sql.DB, tip *types.TableInfoParams, ti *types.TableInfo) error {
+func resolvePostgresRefs(db *sql.DB, tip *types.TableInfoParams, ti *types.TableInfoData) error {
 	rows, err := db.Query(`
            SELECT
 	       tc.constraint_name, 

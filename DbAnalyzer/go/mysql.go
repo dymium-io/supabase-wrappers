@@ -31,7 +31,7 @@ func connectMysql(c *types.ConnectionParams) (*sql.DB, error) {
 	return db, nil
 }
 
-func getMysqlInfo(dbName string, db *sql.DB) (*types.DatabaseInfo, error) {
+func getMysqlInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
 
 	rows, err := db.Query(`SELECT table_schema, table_name
                                FROM information_schema.tables
@@ -41,7 +41,7 @@ func getMysqlInfo(dbName string, db *sql.DB) (*types.DatabaseInfo, error) {
 	}
 	defer rows.Close()
 
-	database := types.DatabaseInfo{
+	database := types.DatabaseInfoData{
 		DbName:    dbName,
 		Schemas: []types.Schema{},
 	}
@@ -84,7 +84,7 @@ func getMysqlInfo(dbName string, db *sql.DB) (*types.DatabaseInfo, error) {
 }
 
 
-func getMysqlTableInfo(dbName string, db *sql.DB) (interface{}, error) {
+func getMysqlTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*types.TableInfoData, error) {
 
 	/*
 	if c.Rules == nil {
@@ -97,58 +97,74 @@ func getMysqlTableInfo(dbName string, db *sql.DB) (interface{}, error) {
 	}
 	*/
 
-	rows, err := db.Query(`SELECT table_schema, table_name, ordinal_position, column_name,
+	rows, err := db.Query(`SELECT ordinal_position, column_name,
                                       data_type,
                                       character_maximum_length,
                                       numeric_precision, numeric_scale,
                                       is_nullable, column_default
                                FROM information_schema.columns
-                               ORDER BY table_schema, table_name, ordinal_position`)
+                               WHERE table_schema = ? and table_name = ?
+                               ORDER BY ordinal_position`, tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	database := types.DatabaseInfo{
+	ti := types.TableInfoData{
 		DbName:    dbName,
-		Schemas: []types.Schema{},
+		Schema:    tip.Schema,
+		TblName:   tip.Table,
 	}
-	curSchema := -1
-	curTbl := -1
-	isSystem := false
+
+	type data struct {
+		cName string
+		pos int
+		isNullable bool
+		dflt *string
+		cTyp string
+		cCharMaxLen, cPrecision, cScale *int
+	}
+
+	descr := []*data{}
+
 	for rows.Next() {
-		var schema, tblName, cName string
-		var pos int
-		var cIsNullable string
-		var dflt *string
-		var cTyp string
-		var cCharMaxLen, cPrecision, cScale *int
-		err = rows.Scan(&schema, &tblName, &pos, &cName,
-			&cTyp, &cCharMaxLen, &cPrecision, &cScale,
-			&cIsNullable, &dflt)
+		var d data
+		var isNullable string
+		err = rows.Scan(&d.pos, &d.cName,
+			&d.cTyp, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
+			&isNullable, &d.dflt)
 		if err != nil {
 			return nil, err
 		}
-		isNullable := false
-		if cIsNullable == "YES" {
-			isNullable = true
+		if isNullable == "YES" {
+			d.isNullable = true
+		} else {
+			d.isNullable = false
 		}
+		descr = append(descr, &d)
+	}
+
+	
+	for _, d := range descr {
 		var t string
 		var semantics *string
-		switch cTyp {
+		var possibleActions *[]types.DataHandling
+		switch d.cTyp {
 		case "decimal":
-			if cPrecision != nil {
-				if cScale != nil {
-					t = fmt.Sprintf("numeric(%d,%d)", *cPrecision, *cScale)
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+			if d.cPrecision != nil {
+				if d.cScale != nil {
+					t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
 				} else {
-					t = fmt.Sprintf("numeric(%d)", *cPrecision)
+					t = fmt.Sprintf("numeric(%d)", *d.cPrecision)
 				}
 			} else {
 				t = "numeric"
 			}
 		case "varchar":
-			if cCharMaxLen != nil {
-				t = fmt.Sprintf("varchar(%d)", *cCharMaxLen)
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+			if d.cCharMaxLen != nil {
+				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
 				t = "varchar"
 			}
@@ -160,125 +176,75 @@ func getMysqlTableInfo(dbName string, db *sql.DB) (interface{}, error) {
 			}
 			*/
 		case "char":
-			if cCharMaxLen != nil {
-				t = fmt.Sprintf("character(%d)", *cCharMaxLen)
+			if d.cCharMaxLen != nil {
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
 			} else {
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 				t = "bpchar"
 			}
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 		default:
-			t = cTyp
+			t = d.cTyp
 		}
+
 		c := types.Column{
-			Name:       cName,
-			Position:   pos,
+			Name:       d.cName,
+			Position:   d.pos,
 			Typ:        t,
-			IsNullable: isNullable,
-			Default:    dflt,
+			IsNullable: d.isNullable,
+			Default:    d.dflt,
 			Reference:  nil,
 			Semantics:  semantics,
+			PossibleActions: *possibleActions,
 		}
-		_ = c
-		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
-			switch schema {
-			case "information_schema", "mysql", "sys", "performance_schema":
-				isSystem = true
-			default:
-				isSystem = false
-			}
-			database.Schemas = append(database.Schemas, types.Schema{
-				Name:     schema,
-				IsSystem: isSystem,
-				Tables: []types.Table{
-					{
-						Name:     tblName,
-						IsSystem: isSystem,
-						// Columns:  []types.Column{c},
-					},
-				},
-			})
-			curSchema += 1
-			curTbl = 0
-		} else if tblName != database.Schemas[curSchema].Tables[curTbl].Name {
-			database.Schemas[curSchema].Tables = append(database.Schemas[curSchema].Tables,
-				types.Table{
-					Name:     tblName,
-					IsSystem: isSystem,
-					// Columns:  []types.Column{c},
-				})
-			curTbl += 1
-		} else {
-			/*
-			database.Schemas[curSchema].Tables[curTbl].Columns =
-				append(database.Schemas[curSchema].Tables[curTbl].Columns, c)
-			*/
-		}
+		
+		ti.Columns = append(ti.Columns, c)
 	}
 
-	/*
-	if err = resolveMysqlRefs(db, &database); err != nil {
+	if err = resolveMysqlRefs(db, tip, &ti); err != nil {
 		return nil, err
 	}
-	*/
 
-	return &database, nil
+	return &ti, nil
 }
 
-/*
-func resolveMysqlRefs(db *sql.DB, database *types.Database) error {
+func resolveMysqlRefs(db *sql.DB, tip *types.TableInfoParams, ti *types.TableInfoData) error {
 	rows, err := db.Query(`
            SELECT
-	       tc.table_schema, 
 	       tc.constraint_name, 
-	       kcu.table_name, 
+	       tc.table_name, 
 	       kcu.column_name, 
-	       kcu.referenced_table_schema AS foreign_table_schema,
-	       kcu.referenced_table_name AS foreign_table_name,
-	       kcu.referenced_column_name AS foreign_column_name
+	       ccu.table_schema AS foreign_table_schema,
+	       ccu.table_name AS foreign_table_name,
+	       ccu.column_name AS foreign_column_name 
 	   FROM 
 	       information_schema.table_constraints AS tc 
 	       JOIN information_schema.key_column_usage AS kcu
 		 ON tc.constraint_name = kcu.constraint_name
 		 AND tc.table_schema = kcu.table_schema
-	   WHERE tc.constraint_type = 'FOREIGN KEY'`)
+	       JOIN information_schema.constraint_column_usage AS ccu
+		 ON ccu.constraint_name = tc.constraint_name
+		 AND ccu.table_schema = tc.table_schema
+	   WHERE tc.table_schema = ? and tc.table_name = ? and tc.constraint_type = 'FOREIGN KEY'`,
+		tip.Schema, tip.Table)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var schema, constraintName, tblName, columnName, fSchema, fTblName, fColumnName string
-		err := rows.Scan(&schema, &constraintName, &tblName, &columnName, &fSchema, &fTblName, &fColumnName)
+		var constraintName, columnName, fSchema, fTblName, fColumnName string
+		err := rows.Scan(&constraintName, &columnName, &fSchema, &fTblName, &fColumnName)
 		if err != nil {
 			return err
 		}
-	Loop:
-		for kSchema := range database.Schemas {
-			s := &database.Schemas[kSchema]
-			if s.Name == schema {
-				for kTbl := range s.Tables {
-					t := &s.Tables[kTbl]
-					if t.Name == tblName {
-						for kColumn := range t.Columns {
-							c := &t.Columns[kColumn]
-							if c.Name == columnName {
-								c.Reference = &types.Reference{
-									Schema: fSchema,
-									Table:  fTblName,
-									Column: fColumnName,
-								}
-								database.Refs = append(database.Refs,
-									types.Arc{
-										From_schema: schema,
-										From_table:  tblName,
-										From_column: columnName,
-										To_schema:   fSchema,
-										To_table:    fTblName,
-										To_column:   fColumnName,
-									})
-								break Loop
-							}
-						}
-					}
+		for k := range ti.Columns {
+			if ti.Columns[k].Name == columnName {
+				ti.Columns[k].Reference = &types.Reference{
+					Schema: fSchema,
+					Table:  fTblName,
+					Column: fColumnName,
 				}
 			}
 		}
@@ -286,4 +252,3 @@ func resolveMysqlRefs(db *sql.DB, database *types.Database) error {
 
 	return nil
 }
-*/
