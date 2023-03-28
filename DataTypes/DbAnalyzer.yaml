@@ -1,4 +1,35 @@
 ---
+# DbAnalyzer receives AnalyzerRequest and responds with AnalyzerResponse
+# Two required fields in AnalyzerRequest are dtype (type of the request)
+# and connection (of the ConnectionParams type).
+#
+# DbAnalyzer can also return error the same in the form of
+# { status: ..., erroromessage: ... } structure.
+#
+# Response for different values of dtype parameter:
+# switch dtype {
+#   Test: return {} in case of successfull connection
+#   DatabaseInfo:
+#     return  AnalyzerRssponse {
+#               dtype: DatabaseInfo
+#               dbInfo: { ... } (the important field is "schemas",
+#                                each schema contains a list of table names)
+#             }
+#   TableInfo:
+#     request information about the particular table.
+#     AnalyzerRequest should contain tableInfo field, which is
+#                     schema, table and a list of PIIDetectors defined for
+#                     this customer
+#     return AnalyzeResponse {
+#               dtype: TableInfo
+#               tblInfo: { ... } (where the important field is "columns",
+#                                 each column has, in addition to name and
+#                                 type, "semantics" field (which is the id
+#                                 of the PIIDetector, or null), and
+#                                 "possibleActions")
+#             }
+# }
+
 module: DbAnalyzer
 
 ConnectionDetailRequest:
@@ -64,5 +95,5 @@ column:
   - isNullable: bool
   - default: ?string
   - reference: ?Common.reference
-  - semantics: ?string  # name from Common.PIIDetector
+  - semantics: ?string  # id from Common.PIIDetector
   - possibleActions: <| Common.DataHandling |>
