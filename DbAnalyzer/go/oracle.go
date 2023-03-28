@@ -11,7 +11,19 @@ import (
 	"DbAnalyzer/types"
 )
 
-func connectOra(c *types.ConnectionParams) (*sql.DB, error) {
+type OracleDB struct {
+	db *sql.DB
+}
+
+func (da *OracleDB) Ping() error {
+	return da.db.Ping()
+}
+
+func (da *OracleDB) Close() {
+	da.db.Close()
+}
+
+func (da *OracleDB) Connect(c *types.ConnectionParams) error {
 	query := url.Values{}
 	if c.Tls {
 		query.Add("SSL", "true")
@@ -29,19 +41,22 @@ func connectOra(c *types.ConnectionParams) (*sql.DB, error) {
 
 	db, err := sql.Open("oracle", oracleconn)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if err := db.Ping(); err != nil {
-		return nil, err
+		return err
 	}
-	return db, nil
+
+	da.db = db
+	return nil
 }
 
-func getOraInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
-	rows, err := db.Query(`SELECT OWNER, TABLE_NAME
-                               FROM ALL_TABLES
-                               WHERE TABLESPACE_NAME NOT IN ('SYSTEM', 'SYSAUX', 'UNDOTBS1', 'TEMP')
-                               ORDER BY c.OWNER, c.TABLE_NAME`)
+func (da *OracleDB) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
+	rows, err :=
+		da.db.Query(`SELECT OWNER, TABLE_NAME
+                             FROM ALL_TABLES
+                             WHERE TABLESPACE_NAME NOT IN ('SYSTEM', 'SYSAUX', 'UNDOTBS1', 'TEMP')
+                             ORDER BY c.OWNER, c.TABLE_NAME`)
 
 	if err != nil {
 		return nil, err
@@ -90,21 +105,22 @@ func getOraInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
 	return &database, nil
 }
 
-func getOraTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*types.TableInfoData, error) {
+func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
 
-	rows, err := db.Query(`SELECT COLUMN_ID,
-                                      COLUMN_NAME,
-                                      DATA_TYPE,
-                                      DATA_LENGTH,
-                                      CHAR_LENGTH,
-                                      DATA_PRECISION,
-                                      DATA_SCALE,
-                                      NULLABLE,
-                                      DEFAULT_LENGTH,
-                                      DATA_DEFAULT
-                               FROM ALL_TAB_COLS
-                               WHERE OWNER = ? and TABLE_NAME = ?
-                               ORDER BY COLUMN_ID`, tip.Schema, tip.Table)
+	rows, err :=
+		da.db.Query(`SELECT COLUMN_ID,
+                                    COLUMN_NAME,
+                                    DATA_TYPE,
+                                    DATA_LENGTH,
+                                    CHAR_LENGTH,
+                                    DATA_PRECISION,
+                                    DATA_SCALE,
+                                    NULLABLE,
+                                    DEFAULT_LENGTH,
+                                    DATA_DEFAULT
+                             FROM ALL_TAB_COLS
+                             WHERE OWNER = ? and TABLE_NAME = ?
+                             ORDER BY COLUMN_ID`, tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
 	}
@@ -221,15 +237,15 @@ func getOraTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*type
 		ti.Columns = append(ti.Columns, c)
 	}
 
-	if err = resolveOraRefs(db, tip, &ti); err != nil {
+	if err = da.resolveRefs(tip, &ti); err != nil {
 		return nil, err
 	}
 
 	return &ti, nil
 }
 
-func resolveOraRefs(db *sql.DB, tip *types.TableInfoParams, ti *types.TableInfoData) error {
-	rows, err := db.Query(`
+func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
+	rows, err := da.db.Query(`
 	   SELECT c.OWNER, a.CONSTRAINT_NAME, a.TABLE_NAME, a.COLUMN_NAME,
 		  c.R_OWNER AS REF_OWNER, cpk.TABLE_NAME AS REF_TABLE,
                   c.R_CONSTRAINT_NAME

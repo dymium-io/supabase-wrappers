@@ -3,17 +3,30 @@ package main
 import (
 	"github.com/aws/aws-lambda-go/lambda"
 
-	"fmt"
-
 	"DbAnalyzer/types"
 	"DbAnalyzer/utils"
-
-	"database/sql"
 )
+
+func dbAnalyzer(dt types.ConnectionType) DA {
+	var da DA
+	switch dt {
+	case types.CT_PostgreSQL:
+		da = &Postgres{}
+	case types.CT_MySQL:
+		da = &MySQL{}
+	case types.CT_MariaDB:
+		da = &MySQL{}
+	case types.CT_SqlServer:
+		da = &SqlServer{}
+	case types.CT_OracleDB:
+		da = &OracleDB{}
+	}
+	return da
+}
 
 type conT struct {
 	connectionParams types.ConnectionParams
-	db               *sql.DB
+	da               DA
 }
 
 func (c *conT) IsTheSame(el any) bool {
@@ -30,9 +43,17 @@ func main() {
 	lambda.Start(LambdaHandler)
 }
 
+type DA interface {
+	Connect(*types.ConnectionParams) error
+	GetDbInfo(string) (*types.DatabaseInfoData, error)
+	GetTblInfo(string, *types.TableInfoParams) (*types.TableInfoData, error)
+	Ping() error
+	Close()
+}
+
 func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 
-	con, err := connect(&c.Connection)
+	da, err := connect(&c.Connection)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +66,7 @@ func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 			TblInfo: nil,
 		}, nil
 	case types.DT_DatabaseInfo:
-		if di, err := getDbInfo(&c.Connection, con.db); err != nil {
+		if di, err := da.GetDbInfo(c.Connection.Database); err != nil {
 			return nil, err
 		} else {
 			return &types.AnalyzerResponse{
@@ -55,7 +76,7 @@ func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 			}, nil
 		}
 	case types.DT_TableInfo:
-		if ti, err := getTblInfo(&c.Connection, c.TableInfo, con.db); err != nil {
+		if ti, err := da.GetTblInfo(c.Connection.Database, c.TableInfo); err != nil {
 			return nil, err
 		} else {
 			return &types.AnalyzerResponse{
@@ -70,70 +91,29 @@ func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 	return nil, nil
 }
 
-func connect(connectionParams *types.ConnectionParams) (*conT, error) {
+func connect(connectionParams *types.ConnectionParams) (DA, error) {
 	con := cache.Find(connectionParams)
 
 	if con != nil {
-		if err := con.db.Ping(); err != nil {
-			cache.Pop().db.Close()
+		if err := con.da.Ping(); err != nil {
+			cache.Pop().da.Close()
 			return nil, err
 		} else {
-			return con, nil
+			return con.da, nil
 		}
 	}
 
-	if db, err := doConnect(connectionParams); err != nil {
-		return nil, err
+	da := dbAnalyzer(connectionParams.Typ)
+	if err := da.Connect(connectionParams); err != nil {
+		return da, err
 	} else {
 		con = &conT{
 			connectionParams: *connectionParams,
-			db:               db,
+			da:               da,
 		}
 		if old := cache.Push(con); old != nil {
-			old.db.Close()
+			old.da.Close()
 		}
-		return con, nil
+		return con.da, nil
 	}
-}
-
-func doConnect(c *types.ConnectionParams) (*sql.DB, error) {
-	switch c.Typ {
-	case types.CT_PostgreSQL:
-		return connectPostgres(c)
-	case types.CT_MySQL, types.CT_MariaDB:
-		return connectMysql(c)
-	case types.CT_SqlServer:
-		return connectTds(c)
-	case types.CT_OracleDB:
-		return connectOra(c)
-	}
-	return nil, fmt.Errorf("Data sources of type %v are not supported yet", c.Typ)
-}
-
-func getDbInfo(c *types.ConnectionParams, db *sql.DB) (*types.DatabaseInfoData, error) {
-	switch c.Typ {
-	case types.CT_PostgreSQL:
-		return getPostgresInfo(c.Database, db)
-	case types.CT_MySQL, types.CT_MariaDB:
-		return getMysqlInfo(c.Database, db)
-	case types.CT_SqlServer:
-		return getTdsInfo(c.Database, db)
-	case types.CT_OracleDB:
-		return getOraInfo(c.Database, db)
-	}
-	return nil, fmt.Errorf("Data sources of type %v are not supported yet", c.Typ)
-}
-
-func getTblInfo(c *types.ConnectionParams, t *types.TableInfoParams, db *sql.DB) (*types.TableInfoData, error) {
-	switch c.Typ {
-	case types.CT_PostgreSQL:
-		return getPostgresTblInfo(c.Database, t, db)
-	case types.CT_MySQL, types.CT_MariaDB:
-		return getMysqlTblInfo(c.Database, t, db)
-	case types.CT_SqlServer:
-		return getTdsTblInfo(c.Database, t, db)
-	case types.CT_OracleDB:
-		return getOraTblInfo(c.Database, t, db)
-	}
-	return nil, fmt.Errorf("Data sources of type %v are not supported yet", c.Typ)
 }

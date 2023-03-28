@@ -10,7 +10,19 @@ import (
 	"DbAnalyzer/types"
 )
 
-func connectTds(c *types.ConnectionParams) (*sql.DB, error) {
+type SqlServer struct {
+	db *sql.DB
+}
+
+func (da *SqlServer) Ping() error {
+	return da.db.Ping()
+}
+
+func (da *SqlServer) Close() {
+	da.db.Close()
+}
+
+func (da *SqlServer) Connect(c *types.ConnectionParams) error {
 	query := url.Values{}
 	query.Add("database", c.Database)
 	if c.Tls {
@@ -30,19 +42,22 @@ func connectTds(c *types.ConnectionParams) (*sql.DB, error) {
 	fmt.Println("tdsconn:", tdsconn)
 	db, err := sql.Open("sqlserver", tdsconn)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if err := db.Ping(); err != nil {
-		return nil, err
+		return err
 	}
-	return db, nil
+
+	da.db = db
+	return nil
 }
 
-func getTdsInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
+func (da *SqlServer) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 
-	rows, err := db.Query(`SELECT table_schema, table_name
-                               FROM information_schema.tables
-                               ORDER BY table_schema, table_name`)
+	rows, err :=
+		da.db.Query(`SELECT table_schema, table_name
+                             FROM information_schema.tables
+                             ORDER BY table_schema, table_name`)
 	if err != nil {
 		return nil, err
 	}
@@ -90,16 +105,17 @@ func getTdsInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
 	return &database, nil
 }
 
-func getTdsTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*types.TableInfoData, error) {
+func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
 
-	rows, err := db.Query(`SELECT ordinal_position, column_name,
-                                      data_type,
-                                      character_maximum_length,
-                                      numeric_precision, numeric_scale,
-                                      is_nullable, column_default
-                               FROM information_schema.columns
-                               WHERE table_schema = ? and table_name = ?
-                               ORDER BY ordinal_position`, tip.Schema, tip.Table)
+	rows, err :=
+		da.db.Query(`SELECT ordinal_position, column_name,
+                                    data_type,
+                                    character_maximum_length,
+                                    numeric_precision, numeric_scale,
+                                    is_nullable, column_default
+                             FROM information_schema.columns
+                             WHERE table_schema = ? and table_name = ?
+                             ORDER BY ordinal_position`, tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
 	}
@@ -186,16 +202,16 @@ func getTdsTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*type
 		ti.Columns = append(ti.Columns, c)
 	}
 
-	if err = resolveTdsRefs(db, tip, &ti); err != nil {
+	if err = da.resolveRefs(tip, &ti); err != nil {
 		return nil, err
 	}
 
 	return &ti, nil
 }
 
-func resolveTdsRefs(db *sql.DB, tip *types.TableInfoParams, ti *types.TableInfoData) error {
+func (da *SqlServer) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
 
-	rows, err := db.Query(`
+	rows, err := da.db.Query(`
 	  SELECT
               obj.name AS [constraint_name],
 	      col1.name AS [column_name],
