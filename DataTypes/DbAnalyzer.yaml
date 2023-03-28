@@ -8,7 +8,8 @@
 #
 # Response for different values of dtype parameter:
 # switch dtype {
-#   Test: return {} in case of successfull connection
+#   Test:
+#     return DbAnalyzer { dtype: Test }
 #   DatabaseInfo:
 #     return  AnalyzerRssponse {
 #               dtype: DatabaseInfo
@@ -48,7 +49,7 @@ DataType:
 AnalyzerRequest:
   - dtype: DataType
   - connection: ConnectionParams
-  - tableInfo: ?TableInfoParams  # requiered when crtype == TableInfo
+  - tableInfo: ?TableInfoParams  # requiered when dtype == TableInfo
 
 TableInfoParams:
   - schema: string
