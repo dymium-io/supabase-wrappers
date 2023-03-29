@@ -100,19 +100,22 @@ func QueryTable(w http.ResponseWriter, r *http.Request) {
 	t := types.TableQuery{}
 	err := json.Unmarshal(body, &t)
 
+	log.Infof("ID: %s", t.ConnectionId)
 	// get the connection details
-	conn, err := authentication.GetConnection(schema, t.Id)
+	conn, err := authentication.GetConnection(schema, t.ConnectionId)
 	if(err != nil) {
-		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryConnection Error: %s", err.Error())
+		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryTable Error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	} else {
-		log.InfoUserf(schema, sessions, email, groups, roles, "Api QueryConnection %s, success", conn.Database)
+		log.InfoUserf(schema, sessions, email, groups, roles, "Api QueryTable %s, success", conn.Database)
 	}
 	
 	arr, err :=  authentication.GetPolicies(schema) 
 	if(err != nil) {
-		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryConnection, GetPolicy Error: %s", err.Error())
+		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryTable, GetPolicy Error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}	
 	// now get the PIIDetectors
 	var policy types.DataPolicy
@@ -128,17 +131,17 @@ func QueryTable(w http.ResponseWriter, r *http.Request) {
 
 	invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 	if err != nil {
-		log.ErrorUserf(schema, sessions, email, groups, roles, "Api DbAnalyzer Error: %s", err.Error())
+		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryTable Error: %s", err.Error())
 		status =  types.ConnectionDetailResponse{"Error", err.Error(), nil}
 		
 	} else {
 		jsonParsed, err := gabs.ParseJSON(invokebody)
 		if(err != nil) {
-			log.ErrorUserf(schema, sessions, email, groups, roles, "Api DbAnalyzer Error parsing output: %s", err.Error())
+			log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryTable Error parsing output: %s", err.Error())
 		}
 		value, ok := jsonParsed.Path("Errormessage").Data().(string)
 		if(ok) {
-			rr := fmt.Sprintf("Api Error in DbAnalyzer Invoke return: %s", value)
+			rr := fmt.Sprintf("Api Error in QueryTable Invoke return: %s", value)
 			status = types.ConnectionDetailResponse{"Error", rr, nil}
 		
 		} else {
@@ -184,8 +187,9 @@ func QueryConnection(w http.ResponseWriter, r *http.Request) {
 		log.InfoUserf(schema, sessions, email, groups, roles, "Api QueryConnection %s, success", conn.Database)
 	}
 	
-	arequest := types.AnalyzerRequest{types.DT_DatabaseInfo, conn, nil}
+	arequest := types.AnalyzerRequest{Dtype: types.DT_DatabaseInfo, Connection: conn}
 	bconn, err := json.Marshal(arequest)
+	fmt.Printf("%v\n", string(bconn))
 
 	invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 	if err != nil {
@@ -514,7 +518,7 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 			conn.User = *t.Username 
 			conn.Password = *t.Password
 		} 
-		arequest := types.AnalyzerRequest{types.DT_Test, conn, nil}
+		arequest := types.AnalyzerRequest{Dtype: types.DT_Test, Connection: conn}
 
 
 		bconn, err := json.Marshal(arequest)
@@ -703,7 +707,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			log.InfoUserf(schema, session, email, groups, roles, "Api Connection to %s created", conn.Database)
 
-			arequest := types.AnalyzerRequest{types.DT_Test, conn, nil}
+			arequest := types.AnalyzerRequest{Dtype: types.DT_Test, Connection: conn}
 			bconn, err := json.Marshal(arequest)
 
 			log.Infof("conn: %s", string(bconn))

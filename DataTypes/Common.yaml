@@ -39,7 +39,7 @@ ConnectionsQuery:
   - records: ?<|ConnectionRecord|>
 
 TableQuery:
-  - id: string
+  - connectionId: string
   - schema: string
   - table: string
 

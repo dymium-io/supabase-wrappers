@@ -1507,21 +1507,21 @@ export class RequestById {
 }
 
 export class TableQuery {
-  private '_id': string
+  private '_connectionId': string
   private '_schema': string
   private '_table': string
 
   constructor() {
-    this['_id'] = ''
+    this['_connectionId'] = ''
     this['_schema'] = ''
     this['_table'] = ''
   }
-  get id(): string { return this['_id'] }
-  set id(__a__: any) {
+  get connectionId(): string { return this['_connectionId'] }
+  set connectionId(__a__: any) {
     let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_id'])) {
+    if(!_.isEqual(__v__,this['_connectionId'])) {
       setDirtyFlag()
-      this['_id'] = __v__
+      this['_connectionId'] = __v__
     }
   }
   get schema(): string { return this['_schema'] }
@@ -1547,7 +1547,7 @@ export class TableQuery {
     disableDF()
     let cls = new TableQuery()
     if(typeof __a__ === 'object' && __a__ != null) {
-       cls.id = __a__['id']
+       cls.connectionId = __a__['connectionId']
        cls.schema = __a__['schema']
        cls.table = __a__['table']
     } else {

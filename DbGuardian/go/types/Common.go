@@ -186,7 +186,7 @@ type RequestById struct {
 }
 
 type TableQuery struct {
-   Id string `json:"id"`
+   ConnectionId string `json:"connectionId"`
    Schema string `json:"schema"`
    Table string `json:"table"`
 }
