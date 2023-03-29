@@ -117,7 +117,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
                                     numeric_precision, numeric_scale,
                                     is_nullable, column_default
                              FROM information_schema.columns
-                             WHERE table_schema = ? and table_name = ?
+                             WHERE table_schema = $1 and table_name = $2
                              ORDER BY ordinal_position`, tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
@@ -239,7 +239,7 @@ func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData
 	       JOIN information_schema.constraint_column_usage AS ccu
 		 ON ccu.constraint_name = tc.constraint_name
 		 AND ccu.table_schema = tc.table_schema
-	   WHERE tc.table_schema = ? and tc.table_name = ? and tc.constraint_type = 'FOREIGN KEY'`,
+	   WHERE tc.table_schema = $1 and tc.table_name = $2 and tc.constraint_type = 'FOREIGN KEY'`,
 		tip.Schema, tip.Table)
 	if err != nil {
 		return err

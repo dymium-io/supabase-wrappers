@@ -114,7 +114,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
                                     numeric_precision, numeric_scale,
                                     is_nullable, column_default
                              FROM information_schema.columns
-                             WHERE table_schema = ? and table_name = ?
+                             WHERE table_schema = $1 and table_name = $2
                              ORDER BY ordinal_position`, tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
@@ -233,7 +233,7 @@ func (da *SqlServer) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfo
 	      ON tab2.schema_id = sch2.schema_id
 	  INNER JOIN sys.columns col2
 	      ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id
-          WHERE sch.name = ? and tab1.name = ?`, tip.Schema, tip.Table)
+          WHERE sch.name = $1 and tab1.name = $2`, tip.Schema, tip.Table)
 	if err != nil {
 		return err
 	}

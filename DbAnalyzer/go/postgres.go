@@ -112,7 +112,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
                              LEFT JOIN information_schema.element_types e
                              ON ((c.table_catalog, c.table_schema, c.table_name, 'TABLE', c.dtd_identifier)
                                 = (e.object_catalog, e.object_schema, e.object_name, e.object_type, e.collection_type_identifier))
-                             WHERE c.table_schema = ? and c.table_name = ?
+                             WHERE c.table_schema = $1 and c.table_name = $2
                              ORDER BY c.ordinal_position`, tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
@@ -258,7 +258,7 @@ func (da *Postgres) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 	       JOIN information_schema.constraint_column_usage AS ccu
 		 ON ccu.constraint_name = tc.constraint_name
 		 AND ccu.table_schema = tc.table_schema
-	   WHERE tc.table_schema = ? and tc.table_name = ? and tc.constraint_type = 'FOREIGN KEY'`,
+	   WHERE tc.table_schema = $1 and tc.table_name = $2 and tc.constraint_type = 'FOREIGN KEY'`,
 		tip.Schema, tip.Table)
 	if err != nil {
 		return err

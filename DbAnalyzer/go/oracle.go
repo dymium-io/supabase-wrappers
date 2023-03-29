@@ -119,7 +119,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
                                     DEFAULT_LENGTH,
                                     DATA_DEFAULT
                              FROM ALL_TAB_COLS
-                             WHERE OWNER = ? and TABLE_NAME = ?
+                             WHERE OWNER = $1 and TABLE_NAME = $2
                              ORDER BY COLUMN_ID`, tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
@@ -256,7 +256,7 @@ func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 	       AND a.CONSTRAINT_NAME = c.CONSTRAINT_NAME
 	   JOIN ALL_CONSTRAINTS cpk ON c.R_OWNER = cpk.OWNER
 	       AND c.R_CONSTRAINT_NAME = cpk.CONSTRAINT_NAME
-           WHERE c.OWNER = ? AND a.TABLE_NAME = ? AND c.CONSTRAINT_TYPE = 'R'`,
+           WHERE c.OWNER = $1 AND a.TABLE_NAME = $2 AND c.CONSTRAINT_TYPE = 'R'`,
 		tip.Schema, tip.Table)
 	if err != nil {
 		return err
