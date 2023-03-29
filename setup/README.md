@@ -22,3 +22,8 @@ Normally, the usage should be:
 utility to run dockers with different databases.
 The databases descriptions (accounts, passwords, etc) are supposed
 to be defined in `~/.config/dymium/databases.yaml` file.
+
+## commit-msg ##
+this script should be put into `../.git/hooks` directory.
+It adds `[<branch name>]` tag to the beginning of each commit to track
+changes in PRs.
