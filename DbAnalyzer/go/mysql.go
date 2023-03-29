@@ -10,7 +10,19 @@ import (
 	// "DbAnalyzer/common"
 )
 
-func connectMysql(c *types.ConnectionParams) (*sql.DB, error) {
+type MySQL struct {
+	db *sql.DB
+}
+
+func (da *MySQL) Ping() error {
+	return da.db.Ping()
+}
+
+func (da *MySQL) Close() {
+	da.db.Close()
+}
+
+func (da *MySQL) Connect(c *types.ConnectionParams) error {
 	mysqlconn := fmt.Sprintf("%s:%s@tcp(%s:%d)/?tls=%s",
 		c.User, c.Password, c.Address, c.Port,
 		func() string {
@@ -23,19 +35,21 @@ func connectMysql(c *types.ConnectionParams) (*sql.DB, error) {
 
 	db, err := sql.Open("mysql", mysqlconn)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if err := db.Ping(); err != nil {
-		return nil, err
+		return err
 	}
-	return db, nil
+
+	da.db = db
+	return nil
 }
 
-func getMysqlInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
+func (da *MySQL) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 
-	rows, err := db.Query(`SELECT table_schema, table_name
-                               FROM information_schema.tables
-                               ORDER BY table_schema, table_name`)
+	rows, err := da.db.Query(`SELECT table_schema, table_name
+                                  FROM information_schema.tables
+                                  ORDER BY table_schema, table_name`)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +97,7 @@ func getMysqlInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
 	return &database, nil
 }
 
-func getMysqlTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*types.TableInfoData, error) {
+func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
 
 	/*
 		if c.Rules == nil {
@@ -96,14 +110,15 @@ func getMysqlTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*ty
 		}
 	*/
 
-	rows, err := db.Query(`SELECT ordinal_position, column_name,
-                                      data_type,
-                                      character_maximum_length,
-                                      numeric_precision, numeric_scale,
-                                      is_nullable, column_default
-                               FROM information_schema.columns
-                               WHERE table_schema = ? and table_name = ?
-                               ORDER BY ordinal_position`, tip.Schema, tip.Table)
+	rows, err :=
+		da.db.Query(`SELECT ordinal_position, column_name,
+                                    data_type,
+                                    character_maximum_length,
+                                    numeric_precision, numeric_scale,
+                                    is_nullable, column_default
+                             FROM information_schema.columns
+                             WHERE table_schema = ? and table_name = ?
+                             ORDER BY ordinal_position`, tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
 	}
@@ -200,15 +215,15 @@ func getMysqlTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*ty
 		ti.Columns = append(ti.Columns, c)
 	}
 
-	if err = resolveMysqlRefs(db, tip, &ti); err != nil {
+	if err = da.resolveRefs(tip, &ti); err != nil {
 		return nil, err
 	}
 
 	return &ti, nil
 }
 
-func resolveMysqlRefs(db *sql.DB, tip *types.TableInfoParams, ti *types.TableInfoData) error {
-	rows, err := db.Query(`
+func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
+	rows, err := da.db.Query(`
            SELECT
 	       tc.constraint_name, 
 	       tc.table_name, 

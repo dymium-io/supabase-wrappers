@@ -10,7 +10,19 @@ import (
 	"DbAnalyzer/types"
 )
 
-func connectPostgres(c *types.ConnectionParams) (*sql.DB, error) {
+type Postgres struct {
+	db *sql.DB
+}
+
+func (da *Postgres) Ping() error {
+	return da.db.Ping()
+}
+
+func (da *Postgres) Close() {
+	da.db.Close()
+}
+
+func (da *Postgres) Connect(c *types.ConnectionParams) error {
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Address, c.Port, c.User, c.Password, c.Database,
 		func() string {
@@ -23,19 +35,22 @@ func connectPostgres(c *types.ConnectionParams) (*sql.DB, error) {
 
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if err := db.Ping(); err != nil {
-		return nil, err
+		return err
 	}
-	return db, nil
+
+	da.db = db
+	return nil
 }
 
-func getPostgresInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error) {
+func (da *Postgres) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 
-	rows, err := db.Query(`SELECT table_schema, table_name
-                               FROM information_schema.tables
-                               ORDER BY table_schema, table_name`)
+	rows, err :=
+		da.db.Query(`SELECT table_schema, table_name
+                             FROM information_schema.tables
+                             ORDER BY table_schema, table_name`)
 	if err != nil {
 		return nil, err
 	}
@@ -82,22 +97,23 @@ func getPostgresInfo(dbName string, db *sql.DB) (*types.DatabaseInfoData, error)
 	return &database, nil
 }
 
-func getPostgresTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (*types.TableInfoData, error) {
+func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
 
-	rows, err := db.Query(`SELECT c.ordinal_position, c.column_name,
-                                      c.data_type,
-                                      c.character_maximum_length,
-                                      c.numeric_precision, c.numeric_scale,
-                                      e.data_type,
-                                      e.character_maximum_length,
-                                      e.numeric_precision, e.numeric_scale,
-                                      c.is_nullable, c.column_default
-                               FROM information_schema.columns c
-                               LEFT JOIN information_schema.element_types e
-                               ON ((c.table_catalog, c.table_schema, c.table_name, 'TABLE', c.dtd_identifier)
-                                  = (e.object_catalog, e.object_schema, e.object_name, e.object_type, e.collection_type_identifier))
-                               WHERE c.table_schema = ? and c.table_name = ?
-                               ORDER BY c.ordinal_position`, tip.Schema, tip.Table)
+	rows, err :=
+		da.db.Query(`SELECT c.ordinal_position, c.column_name,
+                                    c.data_type,
+                                    c.character_maximum_length,
+                                    c.numeric_precision, c.numeric_scale,
+                                    e.data_type,
+                                    e.character_maximum_length,
+                                    e.numeric_precision, e.numeric_scale,
+                                    c.is_nullable, c.column_default
+                             FROM information_schema.columns c
+                             LEFT JOIN information_schema.element_types e
+                             ON ((c.table_catalog, c.table_schema, c.table_name, 'TABLE', c.dtd_identifier)
+                                = (e.object_catalog, e.object_schema, e.object_name, e.object_type, e.collection_type_identifier))
+                             WHERE c.table_schema = ? and c.table_name = ?
+                             ORDER BY c.ordinal_position`, tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
 	}
@@ -218,15 +234,15 @@ func getPostgresTblInfo(dbName string, tip *types.TableInfoParams, db *sql.DB) (
 		ti.Columns = append(ti.Columns, c)
 	}
 
-	if err = resolvePostgresRefs(db, tip, &ti); err != nil {
+	if err = da.resolveRefs(tip, &ti); err != nil {
 		return nil, err
 	}
 
 	return &ti, nil
 }
 
-func resolvePostgresRefs(db *sql.DB, tip *types.TableInfoParams, ti *types.TableInfoData) error {
-	rows, err := db.Query(`
+func (da *Postgres) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
+	rows, err := da.db.Query(`
            SELECT
 	       tc.constraint_name, 
 	       tc.table_name, 
