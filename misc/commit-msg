@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -e
+
+[ -z "$1" ] && {
+    echo "Usage: $0 <msg file>"
+    exit 255
+}
+
+msg="$1"
+fstLine="$(head -n 1 $msg)"
+branchName="$(git rev-parse --abbrev-ref HEAD)"
+
+if [[ "$fstLine" =~ ^\[${branchName}\] ]]; then
+    exit 0
+elif [[ "$fstLine" =~ ^\[[^]]+\] ]]; then
+    echo "[Policy] Commit message must start with '[<branch-name>]'"
+else
+    sed -I '' "1s/^/[$branchName]/" $msg
+fi
