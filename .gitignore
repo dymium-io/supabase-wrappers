@@ -76,3 +76,5 @@ Tunnels/go/meshconnector/aws.sh
 Tunnels/go/meshconnector/gcp.sh
 Tunnels/go/meshconnector/runproderr.sh
 Tunnels/go/client/linuxclient
+Tunnels/go/meshconnector/dymium
+Tunnels/go/meshconnector/meshconnector

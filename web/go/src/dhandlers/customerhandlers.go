@@ -108,7 +108,9 @@ func QueryConnection(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.InfoUserf(schema, sessions, email, groups, roles, "Api QueryConnection %s, success", conn.Database)
 	}
-	bconn, err := json.Marshal(conn)
+	
+	arequest := types.AnalyzerRequest{types.DT_DatabaseInfo, conn, nil}
+	bconn, err := json.Marshal(arequest)
 
 	invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 	if err != nil {
@@ -126,7 +128,7 @@ func QueryConnection(w http.ResponseWriter, r *http.Request) {
 			status = types.ConnectionDetailResponse{"Error", rr, nil}
 		
 		} else {
-			t := types.Database{}
+			t := types.AnalyzerResponse{}
 			err := json.Unmarshal(invokebody, &t)
 			if(err != nil) {
 				status =  types.ConnectionDetailResponse{"Error", err.Error(), nil}
@@ -426,18 +428,21 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		conn.TestOnly = true
+	
 		conn.Typ = types.ConnectionType(t.Dbtype)
 		conn.Address = t.Address
 		conn.Port = t.Port
 		conn.Database = t.Dbname
 		conn.Tls = t.UseTLS 
-		conn.TestOnly = true
+	
 		if(t.Username != nil && t.Password != nil) {
 			conn.User = *t.Username 
 			conn.Password = *t.Password
 		} 
-		bconn, err := json.Marshal(conn)
+		arequest := types.AnalyzerRequest{types.DT_Test, conn, nil}
+
+
+		bconn, err := json.Marshal(arequest)
 		invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 		if err != nil {
 			log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, DbAnalyzer error: %s", err.Error())
@@ -622,8 +627,10 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 
 		if err == nil {
 			log.InfoUserf(schema, session, email, groups, roles, "Api Connection to %s created", conn.Database)
-			conn.TestOnly = true
-			bconn, err := json.Marshal(conn)
+
+			arequest := types.AnalyzerRequest{types.DT_Test, conn, nil}
+			bconn, err := json.Marshal(arequest)
+
 			log.Infof("conn: %s", string(bconn))
 			invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 			if err != nil {

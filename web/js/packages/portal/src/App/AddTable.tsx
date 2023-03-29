@@ -183,7 +183,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                             return
                         }
 
-                        setDatabase(js.database)
+                        setDatabase(js.response.dbInfo)
                         if (props.table.schema !== undefined && props.table.table !== undefined) {
                             setSchema(props.table.schema)
                             setTable(props.table.table)
@@ -229,6 +229,14 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         }
         setTable("")
     }
+    let _selectTable = (table: any) => {
+        if (table.length === 0) {
+            setTable("")
+            return
+        }
+        setTable(table[0].toString())
+    }
+
     let selectTable = (table: any) => {
         if (table.length === 0) {
             setTable("")
@@ -236,6 +244,8 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         }
         setTable(table[0].toString())
     }
+
+
     useEffect(() => {
         if (props.table.connection === undefined || props.table.connection === "") {
             initTableSchema()
