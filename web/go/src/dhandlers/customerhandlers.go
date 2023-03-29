@@ -87,6 +87,81 @@ func AuthMiddleware(h http.Handler) http.Handler {
 	})
 }
 
+func QueryTable(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	sessions := r.Context().Value(authenticatedSessionKey).(string)
+
+	status := types.ConnectionDetailResponse{"OK", "", nil}
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.TableQuery{}
+	err := json.Unmarshal(body, &t)
+
+	// get the connection details
+	conn, err := authentication.GetConnection(schema, t.Id)
+	if(err != nil) {
+		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryConnection Error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		log.InfoUserf(schema, sessions, email, groups, roles, "Api QueryConnection %s, success", conn.Database)
+	}
+	
+	arr, err :=  authentication.GetPolicies(schema) 
+	if(err != nil) {
+		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryConnection, GetPolicy Error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}	
+	// now get the PIIDetectors
+	var policy types.DataPolicy
+	err = json.Unmarshal(arr, &policy)
+	var detectors []types.PIIDetector
+	for _, p := range policy.Piisuggestions {
+		detectors = append(detectors, p.Detector)
+	}
+	params := types.TableInfoParams{t.Schema, t.Table, detectors}
+
+	arequest := types.AnalyzerRequest{types.DT_TableInfo, conn, &params}
+	bconn, err := json.Marshal(arequest)
+
+	invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
+	if err != nil {
+		log.ErrorUserf(schema, sessions, email, groups, roles, "Api DbAnalyzer Error: %s", err.Error())
+		status =  types.ConnectionDetailResponse{"Error", err.Error(), nil}
+		
+	} else {
+		jsonParsed, err := gabs.ParseJSON(invokebody)
+		if(err != nil) {
+			log.ErrorUserf(schema, sessions, email, groups, roles, "Api DbAnalyzer Error parsing output: %s", err.Error())
+		}
+		value, ok := jsonParsed.Path("Errormessage").Data().(string)
+		if(ok) {
+			rr := fmt.Sprintf("Api Error in DbAnalyzer Invoke return: %s", value)
+			status = types.ConnectionDetailResponse{"Error", rr, nil}
+		
+		} else {
+			t := types.AnalyzerResponse{}
+			err := json.Unmarshal(invokebody, &t)
+			if(err != nil) {
+				status =  types.ConnectionDetailResponse{"Error", err.Error(), nil}
+			} else {
+				status =  types.ConnectionDetailResponse{"OK", "", &t}
+			}
+		}
+	}
+	
+	js, err := json.Marshal(status)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
 
 func QueryConnection(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)

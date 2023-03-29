@@ -38,6 +38,10 @@ ConnectionsQuery:
   - errormessage: ?string
   - records: ?<|ConnectionRecord|>
 
+TableQuery:
+  - id: string
+  - schema: string
+  - table: string
 
 reference:
   - schema: string

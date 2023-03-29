@@ -185,6 +185,12 @@ type RequestById struct {
    Id string `json:"id"`
 }
 
+type TableQuery struct {
+   Id string `json:"id"`
+   Schema string `json:"schema"`
+   Table string `json:"table"`
+}
+
 type Usage struct {
    Connections int `json:"connections"`
    Datascopes int `json:"datascopes"`

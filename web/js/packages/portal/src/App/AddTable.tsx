@@ -238,11 +238,50 @@ const AddTable: React.FC<AddTableProps> = (props) => {
     }
 
     let selectTable = (table: any) => {
-        if (table.length === 0) {
-            setTable("")
-            return
-        }
-        setTable(table[0].toString())
+        let body = JSON.stringify({
+            ConnectionId: props.connectionId,
+            Schema: schema,
+            Table: table[0]
+        })
+        setSpinner(true)
+        http.sendToServer("POST", "/api/querytable",
+            null, body,
+            resp => {
+                resp.json().then(js => {
+                    if (js.status !== "OK") {
+                        props.onAlert(<Alert variant="danger" onClose={() => props.onAlert(<></>)} dismissible>
+                            {js.errormessage}
+                        </Alert>)
+                        props.onHide()
+                        setSpinner(false)
+                        return
+                    }
+/*
+                    setDatabase(js.response.dbInfo)
+                    if (props.table.schema !== undefined && props.table.table !== undefined) {
+                        setSchema(props.table.schema)
+                        setTable(props.table.table)
+                    }
+                    */
+                    setSpinner(false)
+
+                }).catch((error) => {
+                    console.log("exception: ", error.message)
+                    setSpinner(false)
+                })
+            },
+            resp => {
+                console.log("on error")
+                setSpinner(false)
+                resp != null && resp.text().then(t =>
+                    props.onAlert(<Alert variant="danger" onClose={() => props.onAlert(<></>)} dismissible>Query Connection failed: {t}</Alert>
+                    ))
+            },
+            error => {
+                console.log("on exception: ", error.message)
+                setSpinner(false)
+
+            })
     }
 
 

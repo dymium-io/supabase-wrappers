@@ -1506,6 +1506,58 @@ export class RequestById {
   }
 }
 
+export class TableQuery {
+  private '_id': string
+  private '_schema': string
+  private '_table': string
+
+  constructor() {
+    this['_id'] = ''
+    this['_schema'] = ''
+    this['_table'] = ''
+  }
+  get id(): string { return this['_id'] }
+  set id(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_id'])) {
+      setDirtyFlag()
+      this['_id'] = __v__
+    }
+  }
+  get schema(): string { return this['_schema'] }
+  set schema(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_schema'])) {
+      setDirtyFlag()
+      this['_schema'] = __v__
+    }
+  }
+  get table(): string { return this['_table'] }
+  set table(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_table'])) {
+      setDirtyFlag()
+      this['_table'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): TableQuery {
+    disableDF()
+    let cls = new TableQuery()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.id = __a__['id']
+       cls.schema = __a__['schema']
+       cls.table = __a__['table']
+    } else {
+       doAlert(`TableQuery: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class Usage {
   private '_connections': number
   private '_datascopes': number
