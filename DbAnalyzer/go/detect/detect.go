@@ -1,4 +1,4 @@
-package common
+package detect
 
 import (
 	"DbAnalyzer/types"
@@ -13,8 +13,8 @@ type Detectors struct {
 }
 
 type detector struct {
-	name string
-	re   regexp.Regexp
+	id string
+	re regexp.Regexp
 }
 
 func Compile(piis []types.PIIDetector) (*Detectors, error) {
@@ -28,23 +28,23 @@ func Compile(piis []types.PIIDetector) (*Detectors, error) {
 		case types.PIIDT_Comprehend:
 			d.invokeComprehend = true
 		case types.PIIDT_Columnregexp:
-			if r, err := regexp.Compile(p.Data); err != nil {
+			if r, err := regexp.Compile(`(?i)`+p.Data); err != nil {
 				return nil, fmt.Errorf("Erroneous regexp %s: %v", p.Data, err)
 			} else {
 				d.columnNameDetectors = append(d.columnNameDetectors,
 					detector{
-						name: p.Name,
-						re:   *r,
+						id: *p.Id,
+						re: *r,
 					})
 			}
 		case types.PIIDT_Contentregexp:
-			if r, err := regexp.Compile(p.Data); err != nil {
+			if r, err := regexp.Compile(`(?i)`+p.Data); err != nil {
 				return nil, fmt.Errorf("Erroneous regexp %s: %v", p.Data, err)
 			} else {
 				d.contentDetectors = append(d.contentDetectors,
 					detector{
-						name: p.Name,
-						re:   *r,
+						id: *p.Id,
+						re: *r,
 					})
 			}
 		}
@@ -52,17 +52,17 @@ func Compile(piis []types.PIIDetector) (*Detectors, error) {
 	return &d, nil
 }
 
-func MatchColumnName(d *Detectors, s string) *string {
+func (d *Detectors) MatchColumnName(s string) *string {
 	for k := range d.columnNameDetectors {
 		p := &d.columnNameDetectors[k]
 		if p.re.MatchString(s) {
-			return &p.name
+			return &p.id
 		}
 	}
 	return nil
 }
 
-func MatchContent(d *Detectors, s []string) *string {
+func (d *Detectors) MatchContent(s []string) *string {
 	pred := func(p *detector) func(string) bool {
 		return func(ss string) bool {
 			return p.re.MatchString(ss)
@@ -70,8 +70,8 @@ func MatchContent(d *Detectors, s []string) *string {
 	}
 	for k := range d.contentDetectors {
 		p := &d.contentDetectors[k]
-		if All(s, pred(p)) {
-			return &p.name
+		if Any(s, pred(p)) {
+			return &p.id
 		}
 	}
 	return nil

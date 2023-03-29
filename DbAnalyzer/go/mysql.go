@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"DbAnalyzer/types"
-	// "DbAnalyzer/common"
+	"DbAnalyzer/detect"
 )
 
 type MySQL struct {
@@ -158,6 +158,11 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 		descr = append(descr, &d)
 	}
 
+	detectors, err := detect.Compile(tip.Rules)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, d := range descr {
 		var t string
 		var semantics *string
@@ -175,19 +180,13 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = "numeric"
 			}
 		case "varchar":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
 				t = "varchar"
 			}
-			/*
-				if s := common.MatchColumnName(detectors, cName); s != nil {
-					semantics = s
-				} else {
-					// TBD:
-				}
-			*/
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+			semantics = detectors.MatchColumnName(d.cName)
 		case "char":
 			if d.cCharMaxLen != nil {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
@@ -196,7 +195,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 				t = "bpchar"
 			}
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+			semantics = detectors.MatchColumnName(d.cName)
 		default:
 			t = d.cTyp
 		}
