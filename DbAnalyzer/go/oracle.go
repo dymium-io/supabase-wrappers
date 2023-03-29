@@ -246,7 +246,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 
 func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
 	rows, err := da.db.Query(`
-	   SELECT c.OWNER, a.CONSTRAINT_NAME, a.TABLE_NAME, a.COLUMN_NAME,
+	   SELECT a.CONSTRAINT_NAME, a.COLUMN_NAME,
 		  c.R_OWNER AS REF_OWNER, cpk.TABLE_NAME AS REF_TABLE,
                   c.R_CONSTRAINT_NAME
            FROM ALL_TABLES t

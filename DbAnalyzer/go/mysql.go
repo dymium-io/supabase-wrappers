@@ -226,7 +226,6 @@ func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData
 	rows, err := da.db.Query(`
            SELECT
 	       tc.constraint_name, 
-	       tc.table_name, 
 	       kcu.column_name, 
 	       ccu.table_schema AS foreign_table_schema,
 	       ccu.table_name AS foreign_table_name,
