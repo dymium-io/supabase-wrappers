@@ -11,8 +11,14 @@ if [ "${OSTYPE:0:6}" = "darwin" ]; then
 		echo "  brew install zstd"
 		exit 255
 	fi
-	export DYLD_LIBRARY_PATH=/usr/local/lib/postgresql@14
-	binary="${d}/darwin/mallard"
+	if [ "$(arch)" = arm64 ]
+	then
+	    export DYLD_LIBRARY_PATH=/opt/homebrew/lib/postgresql@14
+	    binary="${d}/darwin/arm64/mallard"
+	else
+	    export DYLD_LIBRARY_PATH=/usr/local/lib/postgresql@14
+	    binary="${d}/darwin/x86_64/mallard"
+	fi
 else
 	if ! command -v zstd &>/dev/null; then
 		echo "Please install [zstd] (un)compression tool"

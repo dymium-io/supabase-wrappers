@@ -8,9 +8,17 @@ case ${1:-"--darwin"} in
 	$0 --linux
 	;;
     "--darwin")
-	PATH="/usr/local/bin:$PATH"
+	if [ "$(arch)" = "arm64" ]
+	then
+	    add_path=/opt/homebrew/bin
+	    install_path=../../bin/darwin/arm64/mallard.zst
+	else
+	    add_path=/usr/local/bin
+	    install_path=../../bin/darwin/x86_64/mallard.zst
+	fi
+	PATH="${add_path}:$PATH"
 	stack build --copy-bins --local-bin-path darwin
-        zstd -f --rm --ultra darwin/mallard -o ../../bin/darwin/mallard.zst
+        zstd -f --rm --ultra darwin/mallard -o ${install_path}
 	;;
     "--linux")
 	cat <<EOF | docker run --rm -i -v $HOME/.stack:/root/.stack -v $PWD:/z fpco/stack-build-small:lts /bin/bash -
