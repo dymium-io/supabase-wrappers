@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"DbAnalyzer/types"
+	"DbAnalyzer/detect"
 )
 
 type SqlServer struct {
@@ -155,9 +156,15 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		descr = append(descr, &d)
 	}
 
+	detectors, err := detect.Compile(tip.Rules)
+	if err != nil {
+		return nil, err
+	}	
+	
 	for _, d := range descr {
 		var possibleActions *[]types.DataHandling
 		var t string
+		var semantics *string
 		switch d.cTyp {
 		case "decimal":
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
@@ -171,12 +178,13 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				t = "numeric"
 			}
 		case "varchar":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
 				t = "varchar"
 			}
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+			semantics = detectors.MatchColumnName(d.cName)
 		case "character":
 			if d.cCharMaxLen != nil {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
@@ -185,6 +193,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 				t = "bpchar"
 			}
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
 		default:
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 			t = d.cTyp
@@ -196,7 +205,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			IsNullable:      d.isNullable,
 			Default:         d.dflt,
 			Reference:       nil,
-			Semantics:       nil,
+			Semantics:       semantics,
 			PossibleActions: *possibleActions,
 		}
 		ti.Columns = append(ti.Columns, c)

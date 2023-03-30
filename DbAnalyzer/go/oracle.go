@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"DbAnalyzer/types"
+	"DbAnalyzer/detect"
 )
 
 type OracleDB struct {
@@ -163,6 +164,11 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 		descr = append(descr, &d)
 	}
 
+	detectors, err := detect.Compile(tip.Rules)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, d := range descr {
 		var t string
 		var semantics *string
@@ -184,12 +190,13 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 					t = fmt.Sprintf("numeric(%d)", d.cDataLen)
 				}
 			case "varchar2", "nvarchar2":
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
 				if d.cCharMaxLen != nil {
 					t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 				} else {
 					t = "varchar"
 				}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+				semantics = detectors.MatchColumnName(d.cName)
 			case "char", "nchar":
 				if d.cCharMaxLen != nil {
 					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
@@ -198,8 +205,10 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 					t = "bpchar"
 				}
+				semantics = detectors.MatchColumnName(d.cName)				
 			case "clob", "nclob", "long":
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+				semantics = detectors.MatchColumnName(d.cName)
 				t = "text"
 			case "blob", "bfile", "long raw":
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}

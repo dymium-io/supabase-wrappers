@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"DbAnalyzer/types"
+	"DbAnalyzer/detect"
 )
 
 type Postgres struct {
@@ -156,8 +157,11 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		descr = append(descr, &d)
 	}
 
+	detectors, err := detect.Compile(tip.Rules)
+
 	for _, d := range descr {
 		var possibleActions *[]types.DataHandling
+		var semantics *string
 		var t string
 		switch d.cTyp {
 		case "numeric":
@@ -178,6 +182,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "varchar"
 			}
+			semantics = detectors.MatchColumnName(d.cName)
 		case "character":
 			if d.cCharMaxLen != nil {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
@@ -186,6 +191,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 				t = "bpchar"
 			}
+			semantics = detectors.MatchColumnName(d.cName)
 		case "ARRAY":
 			switch *d.eTyp {
 			case "numeric":
@@ -200,19 +206,22 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 					t = "numeric[]"
 				}
 			case "character varying":
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
 				if d.eCharMaxLen != nil {
 					t = fmt.Sprintf("varchar(%d)[]", *d.eCharMaxLen)
 				} else {
 					t = "varchar[]"
 				}
-			case "character":
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+				semantics = detectors.MatchColumnName(d.cName)
+			case "character":
 				if d.eCharMaxLen != nil {
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
 					t = fmt.Sprintf("character(%d)[]", *d.eCharMaxLen)
 				} else {
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 					t = "character[]"
 				}
+				semantics = detectors.MatchColumnName(d.cName)
 			default:
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 				t = *d.eTyp + "[]"
@@ -228,7 +237,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			IsNullable:      d.isNullable,
 			Default:         d.dflt,
 			Reference:       nil,
-			Semantics:       nil,
+			Semantics:       semantics,
 			PossibleActions: *possibleActions,
 		}
 		ti.Columns = append(ti.Columns, c)
