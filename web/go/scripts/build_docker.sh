@@ -87,6 +87,17 @@ mv /tmp/DymiumInstaller.pkg ../../../web/js/packages/portal/public
 
 echo "Moved the client binaries"
 
+echo "Pull the connector"
+
+aws s3  --profile dymium --region us-west-2 cp s3://dymium-connector/darwin/amd64/meshconnector ../../../web/go/assets/customer/connector/darwin/amd64/meshconnector
+
+tar cvzf ../../../web/go/assets/customer/meshconnector_darwin_amd64.tgz -C ../../../web/go/assets/customer/connector/darwin/amd64/ meshconnector
+aws s3  --profile dymium --region us-west-2 cp s3://dymium-connector/linux/amd64/meshconnector ../../../web/go/assets/customer/connector/linux/amd64/meshconnector
+tar cvzf ../../../web/go/assets/customer/meshconnector_linux_amd64.tgz -C ../../../web/go/assets/customer/connector/linux/amd64/ meshconnector
+aws s3  --profile dymium --region us-west-2 cp s3://dymium-connector/windows/amd64/meshconnector.exe /tmp/
+cp /tmp/meshconnector.exe ../../../web/go/assets/customer/connector/windows/amd64/meshconnector
+zip -rj ../../../web/go/assets/customer/meshconnector_windows_amd64.zip /tmp/meshconnector.exe 
+
 cd ../../../web/go/scripts/
 
 cp -r ../assets/admin $build_d/

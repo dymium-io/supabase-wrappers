@@ -203,10 +203,20 @@ export class AuthorizationCodeResponse {
 }
 
 export class CSRResponse {
+  private '_version': string
   private '_certificate': string
 
   constructor() {
+    this['_version'] = ''
     this['_certificate'] = ''
+  }
+  get version(): string { return this['_version'] }
+  set version(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_version'])) {
+      setDirtyFlag()
+      this['_version'] = __v__
+    }
   }
   get certificate(): string { return this['_certificate'] }
   set certificate(__a__: any) {
@@ -223,6 +233,7 @@ export class CSRResponse {
     disableDF()
     let cls = new CSRResponse()
     if(typeof __a__ === 'object' && __a__ != null) {
+       cls.version = __a__['version']
        cls.certificate = __a__['certificate']
     } else {
        doAlert(`CSRResponse: an attempt to initialize from ${__a__}`)
