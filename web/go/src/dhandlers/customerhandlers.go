@@ -189,7 +189,6 @@ func QueryConnection(w http.ResponseWriter, r *http.Request) {
 	
 	arequest := types.AnalyzerRequest{Dtype: types.DT_DatabaseInfo, Connection: conn}
 	bconn, err := json.Marshal(arequest)
-	fmt.Printf("%v\n", string(bconn))
 
 	invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 	if err != nil {
@@ -323,9 +322,9 @@ func GetUsage(w http.ResponseWriter, r *http.Request) {
 
 	bytesin, bytesout,logins,tunnels, err := authentication.GetBytes(schema)
 	if err != nil {
-		log.ErrorUserf(schema, session, email, groups, roles, "Api GetUsage, error: %s", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		log.ErrorUserf(schema, session, email, groups, roles, "Api GetUsage, GetBytes error: %s", err.Error())
+		//http.Error(w, err.Error(), http.StatusInternalServerError)
+		//return
 	}
 
 	var t types.Usage
@@ -337,7 +336,7 @@ func GetUsage(w http.ResponseWriter, r *http.Request) {
 
 	connections, datascopes, blocked, obfuscated, redacted, connectors, ctunnels, err := authentication.GetRestrictions(schema)
 	if err != nil {
-		log.ErrorUserf(schema, session, email, groups, roles, "Api GetUsage, error: %s", err.Error())
+		log.ErrorUserf(schema, session, email, groups, roles, "Api GetUsage, GetRestrictions error: %s", err.Error())
 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -352,7 +351,7 @@ func GetUsage(w http.ResponseWriter, r *http.Request) {
 
 	js, err := json.Marshal(t)
 	if err != nil {
-		log.ErrorUserf(schema, session, email, groups, roles, "Api GetUsage, error: %s", err.Error())
+		log.ErrorUserf(schema, session, email, groups, roles, "Api GetUsage, Marshal error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -17,6 +17,7 @@ import Spinner from '@dymium/common/Components/Spinner'
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Internal'
 import * as ctypes from '@dymium/common/Types/Common'
+import * as dba from '@dymium/common/Types/DbAnalyzer'
 import * as http from '@dymium/common/Api/Http'
 
 import { PrefillUnclassified, Confidential, Secret, TopSecret } from "./Detectors"
@@ -63,6 +64,7 @@ export interface AddTableProps {
 const AddTable: React.FC<AddTableProps> = (props) => {
     const [validated, setValidated] = useState(false)
     const [database, setDatabase] = useState({})
+    const [tables, setTables] = useState<dba.Column[]>([])
     const [schema, setSchema] = useState("")
     const [table, setTable] = useState("")
     const [dummy, setDummy] = useState(true)
@@ -256,6 +258,8 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         setSpinner(false)
                         return
                     }
+                    setTable(js.response.tblInfo.tblName)
+                    setTables(js.response.tblInfo.columns)
 /*
                     setDatabase(js.response.dbInfo)
                     if (props.table.schema !== undefined && props.table.table !== undefined) {
@@ -337,6 +341,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             dataField: 'semantics',
             text: 'PII',
             formatter: (cell, row, rowIndex, formatExtraData) => {
+                debugger
                 let pattern = "^(" + PIIs.join("|") + ")$"
                 return <Typeahead
                     id={"semantics" + rowIndex}
@@ -354,7 +359,8 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             dataField: 'action',
             text: 'Action',
             formatter: (cell, row, rowIndex, formatExtraData) => {
-                let pattern = "^(" + Actions.join("|") + ")$"
+
+                let pattern = "^(" + row.possibleActions.join("|") + ")$"
                 return <Typeahead
                     id={"action" + rowIndex}
                     inputProps={{
@@ -363,7 +369,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     }}
                     key={"action" + rowIndex + validated}
                     onChange={selectAction(rowIndex)} size="sm"
-                    options={Actions}
+                    options={row.possibleActions.map(x => )}
                     defaultSelected={row.action !== undefined && row.action !== "" ? [row.action] : []}
                     clearButton
                     placeholder="Access..."
@@ -374,28 +380,14 @@ const AddTable: React.FC<AddTableProps> = (props) => {
 
 
     let showTableSchema = () => {
-        let schemas = database["schemas"]
-        if (schemas === undefined)
-            return []
-        let tbls: any[] = []
-        schemas.map(x => {
-            if (x.name == schema) {
-                tbls = x.tables
-            }
-        })
-        let t
 
-        tbls.map(x => {
-            if (x.name === table)
-                t = x.columns
-        })
-
-        if (t === undefined)
+        if (tables == null)
             return []
 
-        let retval = t.map(x => {
+        let retval = tables.map(x => {
 
-            return { position: x.position, name: x.name, typ: x.typ, semantics: x.semantics != null ? x.semantics : "", reference: x.reference, action: "", dflt: x["default"], isnullable: x.isNullable }
+            return { position: x.position, name: x.name, typ: x.typ, semantics: x.semantics != null ? x.semantics : "", 
+            reference: x.reference, action: "", dflt: x["default"], isnullable: x.isNullable, possibleActions: x.possibleActions }
         })
 
         return retval
