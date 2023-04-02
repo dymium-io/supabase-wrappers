@@ -30,6 +30,6 @@ else
 fi
 
 rm -f "${binary}"
+trap "rm -f \"${binary}\"" 1 2 3 6 15 EXIT
 zstd -d -q -o "${binary}" "${binary}.zst"
 ${binary} "$@"
-rm -f "${binary}"
