@@ -785,7 +785,7 @@ func GetPolicies(schema string) ([]byte, error) {
 	err := row.Scan(&policy)
 	if err == sql.ErrNoRows {
 		err = nil
-		policy = []byte(`{"error":"no record"}`)
+		policy = []byte(`{"error":"no record in the policies table"}`)
 	}
 	return policy, err
 }

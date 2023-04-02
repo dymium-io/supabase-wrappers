@@ -157,7 +157,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         if (props.table.connection !== undefined && props.table.connection !== "") {
             setSchema(props.table.schema)
             setTable(props.table.table)
-            debugger
+ 
             setTableStructure(tablestructure => cloneDeep(props.table.tablescope))
         } else {
             let body = JSON.stringify({
@@ -223,6 +223,11 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                             }))
                         setPIIs(PIIs => newPIIs)
                     } else {
+                        props.onAlert(<Alert variant="danger" onClose={() => props.onAlert(<></>)} dismissible>
+                            Error: {js.error}
+                            <br/>
+                            Check if you defined any rules and access levels!
+                        </Alert>)                        
                         setPrefills(DefaultPrefills)
                     }
                
@@ -399,12 +404,11 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 }
             }
         ]
-console.log(PIIs)
+
         setTabledef(tabledef => cloneDeep(schemacolumns) )
     }, [table, tablestructure])
 
     useEffect(() => {
-        debugger
         if(PIIs.length !== 0)
            getConnections()
     }, [PIIs])
