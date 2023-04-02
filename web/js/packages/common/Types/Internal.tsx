@@ -16,6 +16,7 @@ export interface DatascopeRecord {
     semantics: string    
     dflt: string
     isnullable: boolean
+    possibleActions: string[]
 }
 export interface TableLine {
     id?: string
@@ -25,6 +26,7 @@ export interface TableLine {
     position: number
     reference: null|Reference
     semantics: string
+    possibleActions?: string[]
     typ: string
     dflt: string
     isnullable: boolean    

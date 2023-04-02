@@ -194,6 +194,7 @@ export default function EditDatascopes() {
                             line["semantics"] = r.semantics
                             line["dflt"] = r.dflt
                             line["isnullable"] = r.isnullable
+                            line["possibleActions"] = r.possibleActions
                             line["typ"] = r.typ
                             ob[r.connection][key]["tablescope"].push(line)
 
@@ -240,7 +241,8 @@ export default function EditDatascopes() {
                     let ob: internal.DatascopeRecord = {
                         connection: st.connection, schema: st.schema, table: st.table,
                         typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
-                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable
+                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable, 
+                        possibleActions: ts.possibleActions
                     }
                     retarray.push(ob)
                 })

@@ -543,7 +543,7 @@ export const PrefillUnclassified = {
         },
         {
             regexp: "(Zipcode|zip_code|zip code|postalcode|postal_code)",
-            detection: "Zipcode",
+            detection: "Zip code",
             action: "Allow"
         },
         {
@@ -760,7 +760,7 @@ export const Confidential = {
         },
         {
             regexp: "(Zipcode|zip_code|zip code|postalcode|postal_code)",
-            detection: "Zipcode",
+            detection: "Zip code",
             action: "Obfuscate"
         },
         {
@@ -980,7 +980,7 @@ export const Secret = {
         },
         {
             regexp: "(Zipcode|zip_code|zip code|postalcode|postal_code)",
-            detection: "Zipcode",
+            detection: "Zip code",
             action: "Redact"
         },
         {
@@ -1198,7 +1198,7 @@ export const TopSecret = {
         },
         {
             regexp: "(Zipcode|zip_code|zip code|postalcode|postal_code)",
-            detection: "Zipcode",
+            detection: "Zip code",
             action: "Block"
         },
         {

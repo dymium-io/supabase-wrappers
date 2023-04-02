@@ -50,3 +50,9 @@ ALTER TABLE tables
 -- requires: ["customer/tables"];     
 ALTER TABLE tables drop constraint tables_schem_tabl_col_key;
 ALTER TABLE tables add constraint tables_datascope_id_schem_tabl_col_key unique(datascope_id, schem, tabl, col);
+
+-- #!migration
+-- name: "customer/tables-add-possibles",
+-- description: "add possible actions",
+-- requires: ["customer/tables", "customer/tables-remove-ref"]; 
+ALTER TABLE tables add column possible_actions text[] default '{allow, block, redact, obfuscate}' not null;

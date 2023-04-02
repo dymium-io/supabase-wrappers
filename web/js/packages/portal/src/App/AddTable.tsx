@@ -28,7 +28,6 @@ export const DefaultPrefills = {
     topsecret: TopSecret
 }
 
-const PIIs = Object.values(com.PII_civilian)
 
 const Actions = [
     "Allow",
@@ -53,6 +52,27 @@ type RuleSet = {
     name: string,
     rules: SubRule[]
 }
+
+type Formatter = (cell: any, row: any, rowIndex: any, formatExtraData: any) => JSX.Element
+type TableColumn = {
+    dataField: string;
+    text: string;
+    hidden?: boolean;
+    classes?: string;
+    formatter?: any;
+}
+type PiiPair = {
+    id: string;
+    label: string;
+}
+let Id2Label = (x: string) => {
+    let opts: ctypes.DataHandling[] = ["allow", "block", "obfuscate", "redact"]
+    for (let i = 0; i < opts.length; i++) {
+        if (x == opts[i])
+            return ctypes.humanReadableDataHandling(opts[i])
+    }
+    return ""
+}
 export interface AddTableProps {
     table: types.TableScope,
     connectionId: string,
@@ -72,13 +92,12 @@ const AddTable: React.FC<AddTableProps> = (props) => {
     const [spinner, setSpinner] = useState(false)
     const [Prefills, setPrefills] = useState<Object>(DefaultPrefills)
     const [policy, setPolicy] = useState(new ctypes.DataPolicy())
+    const [PIIs, setPIIs] = useState<PiiPair[]>([])
+    const [tabledef, setTabledef] = useState<TableColumn[]>([])
     let emptyarray: any[] = []
     const [tablestructure, setTableStructure] = useState(emptyarray)
 
-    let tablestate = useRef(emptyarray)
-    if (tablestate.current !== undefined) {
-        tablestate.current = tablestructure
-    }
+
     let form = useRef<HTMLFormElement>(null)
 
 
@@ -97,9 +116,10 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         event.preventDefault();
         setValidated(false)
         event.stopPropagation();
-        props.onAddTable({ schema, table, tablescope: [...tablestate.current] })
+
+        props.onAddTable({ schema, table, tablescope:  tablestructure})
         setTableStructure(emptyarray)
-        tablestate.current = emptyarray
+  
         setSchema("")
         setTable("")
         return false
@@ -120,7 +140,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 let rule: SubRule = {
                     detection: policy.piisuggestions[j].detector.name,
                     regexp: policy.piisuggestions[j].detector.data,
-                    action: ctypes.humanReadableDataHandling(policy.piisuggestions[j].actions[i].handling)
+                    action: policy.piisuggestions[j].actions[i].handling
                 }
                 Prefills[role].rules.push(rule)
             }
@@ -133,40 +153,12 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         }
         setPrefills(Prefills)
     }
-
-    let getPolicies = () => {
-
-        //setSpinner(true)
-        http.sendToServer("GET", "/api/getpolicies",
-            null, "",
-            resp => {
-                resp.json().then(js => {
-                    //setSpinner(false)                    
-                    if (js.error === undefined) {
-                        let po = ctypes.DataPolicy.fromJson(js)
-                        setPolicy(po)
-                        createLevels(po)
-                    } else {
-                        setPrefills(DefaultPrefills)
-                    }
-
-                }).catch((error) => {
-
-                })
-            },
-            resp => {
-
-            },
-            error => {
-
-            })
-    }
-    useEffect(() => {
-        getPolicies()
+    let getConnections = () => {
         if (props.table.connection !== undefined && props.table.connection !== "") {
             setSchema(props.table.schema)
             setTable(props.table.table)
-            setTableStructure(cloneDeep(props.table.tablescope))
+            debugger
+            setTableStructure(tablestructure => cloneDeep(props.table.tablescope))
         } else {
             let body = JSON.stringify({
                 ConnectionId: props.connectionId
@@ -209,10 +201,58 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     setSpinner(false)
 
                 })
-        }
+        }        
+    }
+    let getPolicies = () => {
+
+        //setSpinner(true)
+        http.sendToServer("GET", "/api/getpolicies",
+            null, "",
+            resp => {
+                resp.json().then(js => {
+                    //setSpinner(false)                    
+                    if (js.error === undefined) {
+                        let po = ctypes.DataPolicy.fromJson(js)
+                        setPolicy(po)
+                        createLevels(po)
+                        let newPIIs:PiiPair[] = [{id: "", label: "N/A"}].concat(po.piisuggestions.map(x => { 
+                                let id = ""
+                                if(x.detector.id != null)   
+                                    id = x.detector.id
+                                return {id, label: x.detector.name}
+                            }))
+                        setPIIs(PIIs => newPIIs)
+                    } else {
+                        setPrefills(DefaultPrefills)
+                    }
+               
+                }).catch((error) => {
+
+                })
+            },
+            resp => {
+
+            },
+            error => {
+
+            })
+    }
+    useEffect(() => {
+        getPolicies()
+
 
     }, [])
 
+    let getSemanticsFromId = (semantics) => {
+        if(semantics === '') return "N/A"
+
+        for (let i = 0; i < policy.piisuggestions.length; i++) {
+            if (policy.piisuggestions[i].detector.id === semantics) {
+                return policy.piisuggestions[i].detector.name
+            }
+        }
+        return "N/A"
+    }
 
     let getOptions = () => {
         if (database["schemas"] === undefined) {
@@ -260,13 +300,13 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     }
                     setTable(js.response.tblInfo.tblName)
                     setTables(js.response.tblInfo.columns)
-/*
-                    setDatabase(js.response.dbInfo)
-                    if (props.table.schema !== undefined && props.table.table !== undefined) {
-                        setSchema(props.table.schema)
-                        setTable(props.table.table)
-                    }
-                    */
+                    /*
+                                        setDatabase(js.response.dbInfo)
+                                        if (props.table.schema !== undefined && props.table.table !== undefined) {
+                                            setSchema(props.table.schema)
+                                            setTable(props.table.table)
+                                        }
+                                        */
                     setSpinner(false)
 
                 }).catch((error) => {
@@ -288,11 +328,92 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             })
     }
 
+    useEffect(() => {
+        if(tablestructure.length == 0)
+            return
+        if(PIIs.length == 0)
+            return
+            
+
+        let schemacolumns: TableColumn[] = [
+            {
+                dataField: 'position',
+                text: 'position',
+                hidden: true,
+            },
+            {
+                dataField: 'name',
+                text: 'Column',
+                classes: 'overflow-hidden'
+            },
+            {
+                dataField: 'typ',
+                text: 'Type:',
+            },
+            {
+                dataField: 'semantics',
+                text: 'PII:',
+                formatter: (cell, row, rowIndex, formatExtraData) => {
+
+                    let pattern = "^(" + PIIs.map(x => x.label).join("|") + ")$"
+                    let def = row.semantics !== undefined && row.semantics !== "" ? [{ id: row.semantics, label: getSemanticsFromId(row.semantics) }] : [{id:"", label:"N/A"}]
+                    return <Typeahead
+                        id={"semantics" + rowIndex}
+                        inputProps={{ required: true, pattern, id: "semantics" + rowIndex }}
+                        key={"semantics" + rowIndex + validated}
+                        onChange={selectPII(rowIndex)} size="sm"
+                        options={PIIs}
+                        defaultSelected={def}
+                        placeholder="Data type..."
+                        clearButton
+                    />
+                }
+            },
+            {
+                dataField: 'action',
+                text: 'Action:',
+                formatter: (cell, row, rowIndex, formatExtraData) => {
+                    let possibleActions = row.possibleActions
+                    if (possibleActions == undefined)
+                        possibleActions = []
+                    let possible: string[] = cloneDeep(possibleActions)
+                    possible.push("allow")
+                    let pattern = "^(" + possible.map(x => Id2Label(x)).join("|") + ")$"
+
+                    return <Typeahead
+                        id={"action" + rowIndex}
+                        inputProps={{
+                            required: true,
+                            pattern, id: "action" + rowIndex
+                        }}
+                        key={"action" + rowIndex + validated}
+                        onChange={selectAction(rowIndex)} size="sm"
+                        options={possible.map(x => {
+                            return { id: x, label: Id2Label(x) }
+                        })
+                        }
+                        defaultSelected={row.action !== undefined && row.action !== "" ? [{ id: row.action, label: Id2Label(row.action) }] : []}
+                        clearButton
+                        placeholder="Access..."
+                    />
+                }
+            }
+        ]
+console.log(PIIs)
+        setTabledef(tabledef => cloneDeep(schemacolumns) )
+    }, [table, tablestructure])
+
+    useEffect(() => {
+        debugger
+        if(PIIs.length !== 0)
+           getConnections()
+    }, [PIIs])
 
     useEffect(() => {
         if (props.table.connection === undefined || props.table.connection === "") {
             initTableSchema()
         }
+
     }, [table])
     let getTables = () => {
         if (database["schemas"] === undefined)
@@ -310,74 +431,33 @@ const AddTable: React.FC<AddTableProps> = (props) => {
     }
     let selectPII = (rowIndex) => {
         return event => {
-            tablestate.current[rowIndex].semantics = event[0]
-            setTableStructure(tablestate.current)
+            setTableStructure(tablestructure => {
+                let t = cloneDeep(tablestructure)
+                if(event.length === 0 || event[0].id == undefined) {
+                    t[rowIndex].semantics = ""
+                } else {
+                    t[rowIndex].semantics = event[0].id
+                }
+                return t
+            })
+            setTabledef(tabledef => cloneDeep(tabledef))
         }
     }
 
     let selectAction = (rowIndex) => {
         return event => {
-            tablestate.current[rowIndex].action = event[0]
-            setTableStructure(tablestate.current)
+            setTableStructure(tablestructure => {
+                let t = cloneDeep(tablestructure)
+                if(event.length === 0 || event[0].id == undefined) {
+                    t[rowIndex].semantics = ""
+                } else {                
+                    t[rowIndex].action = event[0].id
+                }
+                return t
+            })
+            setTabledef(tabledef => cloneDeep(tabledef))
         }
     }
-
-    let schemacolumns = [
-        {
-            dataField: 'position',
-            text: 'position',
-            hidden: true,
-        },
-        {
-            dataField: 'name',
-            text: 'Column',
-            classes: 'overflow-hidden'
-        },
-        {
-            dataField: 'typ',
-            text: 'Type:',
-        },
-        {
-            dataField: 'semantics',
-            text: 'PII',
-            formatter: (cell, row, rowIndex, formatExtraData) => {
-                debugger
-                let pattern = "^(" + PIIs.join("|") + ")$"
-                return <Typeahead
-                    id={"semantics" + rowIndex}
-                    inputProps={{ required: true, pattern, id: "semantics" + rowIndex }}
-                    key={"semantics" + rowIndex + validated}
-                    onChange={selectPII(rowIndex)} size="sm"
-                    options={PIIs}
-                    defaultSelected={row.semantics !== undefined && row.semantics !== "" ? [row.semantics] : []}
-                    placeholder="Data type..."
-                    clearButton
-                />
-            }
-        },
-        {
-            dataField: 'action',
-            text: 'Action',
-            formatter: (cell, row, rowIndex, formatExtraData) => {
-
-                let pattern = "^(" + row.possibleActions.join("|") + ")$"
-                return <Typeahead
-                    id={"action" + rowIndex}
-                    inputProps={{
-                        required: true,
-                        pattern, id: "action" + rowIndex
-                    }}
-                    key={"action" + rowIndex + validated}
-                    onChange={selectAction(rowIndex)} size="sm"
-                    options={row.possibleActions.map(x => )}
-                    defaultSelected={row.action !== undefined && row.action !== "" ? [row.action] : []}
-                    clearButton
-                    placeholder="Access..."
-                />
-            }
-        }
-    ]
-
 
     let showTableSchema = () => {
 
@@ -386,8 +466,10 @@ const AddTable: React.FC<AddTableProps> = (props) => {
 
         let retval = tables.map(x => {
 
-            return { position: x.position, name: x.name, typ: x.typ, semantics: x.semantics != null ? x.semantics : "", 
-            reference: x.reference, action: "", dflt: x["default"], isnullable: x.isNullable, possibleActions: x.possibleActions }
+            return {
+                position: x.position, name: x.name, typ: x.typ, semantics: x.semantics != null ? x.semantics : "",
+                reference: x.reference, action: "", dflt: x["default"], isnullable: x.isNullable, possibleActions: x.possibleActions
+            }
         })
 
         return retval
@@ -419,24 +501,33 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         }
         return []
     }
+    let sessionGetTablestructure = () => {
+        return tablestructure
+    }
     let applyPrefill = () => {
         if (level === "")
             return
-        let newtablestructure = cloneDeep(tablestructure)
+        let newtablestructure = cloneDeep( sessionGetTablestructure() )
 
         let predo = Prefills[level]
         for (let i = 0; i < newtablestructure.length; i++) {
             let table = newtablestructure[i]
 
             let [action, semantics] = ActionByName(predo, newtablestructure[i].name)
-            newtablestructure[i].action = action
-            newtablestructure[i].semantics = semantics
+            let possible: string[] = cloneDeep(table.possibleActions)
+            possible.push("allow")
+
+            if (possible.includes(action))
+                newtablestructure[i].action = action
+            else
+                newtablestructure[i].action = table.possibleActions[0]
 
         }
 
-        setTableStructure(newtablestructure)
+        setTableStructure(tablestructure => newtablestructure)
     }
     let correctname = ["MariaDB", "MySQL"].includes(props.currentConnectionType) ? "Database" : "Schema"
+   
     return <div>
 
         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
@@ -466,7 +557,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 <Col>
                     {schema !== "" && schema != undefined && table !== "" && table != undefined && tablestructure != [] &&
                         <Form.Group className="mb-3" controlId="connection" >
-                            <Form.Label >Select Detect and Prefill Level</Form.Label>
+                            <Form.Label >Select Access Level:</Form.Label>
                             <InputGroup>
                                 <Form.Control as="select" size="sm" role="combobox" data-testid="seclevel"
                                     onChange={onPrefill}
@@ -507,7 +598,8 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     </Col>
                 </Row>
             }
-            {schema !== "" && schema != undefined && table !== "" && table != undefined && tablestructure != [] &&
+            {schema !== "" && schema != undefined && table !== "" && table != undefined && 
+            PIIs.length != 0 && tablestructure.length !== 0 && tabledef.length !== 0 &&
                 <>
                     <BootstrapTable id="schematable"
                         condensed
@@ -515,9 +607,8 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         bootstrap4
                         keyField='name'
                         data={tablestructure}
-                        columns={schemacolumns}
+                        columns={tabledef}
                     />
-
 
                     <Button data-testid="apply-structure" variant="dymium" size="sm" className="mt-4" type="submit">
                         Apply

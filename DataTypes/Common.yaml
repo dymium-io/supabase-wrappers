@@ -62,6 +62,7 @@ DatascopeRecord:
   - semantics: string
   - dflt: ?string
   - isnullable: bool
+  - possibleActions: <|string|>
 
 DatascopeIdName:
   - name: string

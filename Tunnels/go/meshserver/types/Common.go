@@ -123,6 +123,7 @@ type DatascopeRecord struct {
    Semantics string `json:"semantics"`
    Dflt *string `json:"dflt"`
    Isnullable bool `json:"isnullable"`
+   PossibleActions []string `json:"possibleActions"`
 }
 
 type DatascopeTable struct {

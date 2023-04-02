@@ -1335,7 +1335,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 	ds.Name = name
 
 	sql = `select  a.id, b.name, a.connection_id, a.schem, a.tabl, a.col,  a.position, a.typ, a.action, 
-	a.semantics, coalesce(a.ref_schem, ''), coalesce(a.ref_tabl, ''), coalesce(a.ref_col, ''), a.dflt, a.is_nullable from ` + schema + 
+	a.semantics, coalesce(a.ref_schem, ''), coalesce(a.ref_tabl, ''), coalesce(a.ref_col, ''), a.dflt, a.is_nullable, a.possible_actions from ` + schema + 
 	`.tables a join ` + schema + `.connections b on a.connection_id=b.id  where datascope_id=$1;`;
 	rows, err := tx.QueryContext(ctx, sql, id)
 
@@ -1348,7 +1348,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 			var rs, rt, rc string
 
 			err = rows.Scan(&dr.Id, &dr.Connection, &dr.ConnectionId, &dr.Schema, &dr.Table, &dr.Col, &dr.Position, &dr.Typ, 
-				&dr.Action, &dr.Semantics, &rs, &rt, &rc, &dr.Dflt, &dr.Isnullable)
+				&dr.Action, &dr.Semantics, &rs, &rt, &rc, &dr.Dflt, &dr.Isnullable, pq.Array(&dr.PossibleActions))
 			if err != nil {
 				log.Errorf("GetDatascope Error 2:  %s", err.Error())
 				return ds, err	
@@ -1462,8 +1462,8 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 	records := dscope.Records
 	for  _, r := range  records  {
 
-		sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col, dflt, is_nullable) 
-		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);`
+		sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col, dflt, is_nullable, possible_actions) 
+		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`
 	
 		var rs, rt, rc string
 		if r.Reference != nil {
@@ -1471,7 +1471,7 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 			rt = r.Reference.Table
 			rc =  r.Reference.Column
 		}
-		_, err = tx.ExecContext(ctx, sql, id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable)
+		_, err = tx.ExecContext(ctx, sql, id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable, pq.Array(r.PossibleActions))
 		if err != nil {
 			tx.Rollback()
 			log.Errorf("UpdateDatascope Error 3: %s", err.Error())

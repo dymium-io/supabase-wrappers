@@ -817,6 +817,7 @@ export class DatascopeRecord {
   private '_semantics': string
   private '_dflt': string | null
   private '_isnullable': boolean
+  private '_possibleActions': Array<string>
 
   constructor() {
     this['_id'] = null
@@ -832,6 +833,7 @@ export class DatascopeRecord {
     this['_semantics'] = ''
     this['_dflt'] = null
     this['_isnullable'] = false
+    this['_possibleActions'] = []
   }
   get id(): string | null { return this['_id'] }
   set id(__a__: any) {
@@ -962,6 +964,11 @@ export class DatascopeRecord {
       this['_isnullable'] = __v__
     }
   }
+  get possibleActions(): Array<string> { return this['_possibleActions'] }
+  set possibleActions(__a__: any) {
+    setDirtyFlag()
+    this['_possibleActions'] = __a__
+  }
 
   toJson(): string { return JSON.stringify(this).split('"_').join('"') }
 
@@ -982,6 +989,7 @@ export class DatascopeRecord {
        cls.semantics = __a__['semantics']
        cls.dflt = __a__['dflt'] == null ? null : __a__['dflt']
        cls.isnullable = __a__['isnullable']
+       cls.possibleActions = array1Reader(stringReader(''))(__a__['possibleActions'])
     } else {
        doAlert(`DatascopeRecord: an attempt to initialize from ${__a__}`)
     }
