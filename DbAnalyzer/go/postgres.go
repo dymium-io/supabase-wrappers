@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"DbAnalyzer/types"
 	"DbAnalyzer/detect"
+	"DbAnalyzer/types"
 )
 
 type Postgres struct {
@@ -158,8 +158,16 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 	}
 
 	detectors, err := detect.Compile(tip.Rules)
+	if err != nil {
+		return nil, err
+	}
 
-	for _, d := range descr {
+	sample, err := da.getSample(tip.Schema, tip.Table, len(descr))
+	if err != nil {
+		return nil, err
+	}
+
+	for k, d := range descr {
 		var possibleActions *[]types.DataHandling
 		var semantics *string
 		var t string
@@ -182,16 +190,16 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "varchar"
 			}
-			semantics = detectors.MatchColumnName(d.cName)
+			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 		case "character":
 			if d.cCharMaxLen != nil {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
+				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 			} else {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 				t = "bpchar"
 			}
-			semantics = detectors.MatchColumnName(d.cName)
 		case "ARRAY":
 			switch *d.eTyp {
 			case "numeric":
@@ -212,16 +220,16 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 					t = "varchar[]"
 				}
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
-				semantics = detectors.MatchColumnName(d.cName)
+				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 			case "character":
 				if d.eCharMaxLen != nil {
 					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
 					t = fmt.Sprintf("character(%d)[]", *d.eCharMaxLen)
+					semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 				} else {
 					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 					t = "character[]"
 				}
-				semantics = detectors.MatchColumnName(d.cName)
 			default:
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 				t = *d.eTyp + "[]"
@@ -291,4 +299,39 @@ func (da *Postgres) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 	}
 
 	return nil
+}
+
+func (da *Postgres) getSample(schema, table string, nColumns int) (*[][]string, error) {
+
+	rows := make([][]string, 0, detect.SampleSize)
+
+	i := make([]interface{}, nColumns)
+	s := make([]string, nColumns)
+	for k := 0; k != nColumns; k++ {
+		i[k] = &s[k]
+	}
+
+	sql := fmt.Sprintf(`SELECT * from "%s"."%s" ORDER BY RANDOM() LIMIT %d`, schema, table, detect.SampleSize)
+	r, err := da.db.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	for r.Next() {
+		if err := r.Scan(i...); err != nil {
+			return nil, err
+		}
+		rows = append(rows, s[:])
+	}
+
+	scanned := make([][]string, nColumns)
+	for k := 0; k != nColumns; k++ {
+		scanned[k] = make([]string, len(rows))
+		for j := 0; j != len(rows); j++ {
+			scanned[k][j] = rows[j][k]
+		}
+	}
+
+	return &scanned, nil
 }

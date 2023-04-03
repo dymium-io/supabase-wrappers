@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"strings"
 
-	"DbAnalyzer/types"
 	"DbAnalyzer/detect"
+	"DbAnalyzer/types"
 )
 
 type OracleDB struct {
@@ -57,7 +57,7 @@ func (da *OracleDB) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 		da.db.Query(`SELECT OWNER, TABLE_NAME
                              FROM ALL_TABLES
                              WHERE TABLESPACE_NAME NOT IN ('SYSTEM', 'SYSAUX', 'UNDOTBS1', 'TEMP')
-                             ORDER BY c.OWNER, c.TABLE_NAME`)
+                             ORDER BY OWNER, TABLE_NAME`)
 
 	if err != nil {
 		return nil, err
@@ -108,8 +108,8 @@ func (da *OracleDB) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 
 func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
 
-	rows, err :=
-		da.db.Query(`SELECT COLUMN_ID,
+	stmt, err :=
+		da.db.Prepare(`SELECT COLUMN_ID,
                                     COLUMN_NAME,
                                     DATA_TYPE,
                                     DATA_LENGTH,
@@ -120,8 +120,14 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
                                     DEFAULT_LENGTH,
                                     DATA_DEFAULT
                              FROM ALL_TAB_COLS
-                             WHERE OWNER = $1 and TABLE_NAME = $2
-                             ORDER BY COLUMN_ID`, tip.Schema, tip.Table)
+                             WHERE OWNER = :1 AND TABLE_NAME = :2
+                             ORDER BY COLUMN_ID`)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+	
+	rows, err := stmt.Query(tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
 	}
@@ -163,13 +169,19 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 		}
 		descr = append(descr, &d)
 	}
+	
 
 	detectors, err := detect.Compile(tip.Rules)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, d := range descr {
+	sample, err := da.getSample(tip.Schema, tip.Table, len(descr))
+	if err != nil {
+		return nil, err
+	}
+
+	for k, d := range descr {
 		var t string
 		var semantics *string
 		var possibleActions *[]types.DataHandling
@@ -196,19 +208,19 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 					t = "varchar"
 				}
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
-				semantics = detectors.MatchColumnName(d.cName)
+				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 			case "char", "nchar":
 				if d.cCharMaxLen != nil {
 					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
 					t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
+					semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 				} else {
 					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 					t = "bpchar"
 				}
-				semantics = detectors.MatchColumnName(d.cName)				
 			case "clob", "nclob", "long":
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
-				semantics = detectors.MatchColumnName(d.cName)
+				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 				t = "text"
 			case "blob", "bfile", "long raw":
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
@@ -254,7 +266,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 }
 
 func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
-	rows, err := da.db.Query(`
+	stmt, err := da.db.Prepare(`
 	   SELECT a.CONSTRAINT_NAME, a.COLUMN_NAME,
 		  c.R_OWNER AS REF_OWNER, cpk.TABLE_NAME AS REF_TABLE,
                   c.R_CONSTRAINT_NAME
@@ -265,8 +277,13 @@ func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 	       AND a.CONSTRAINT_NAME = c.CONSTRAINT_NAME
 	   JOIN ALL_CONSTRAINTS cpk ON c.R_OWNER = cpk.OWNER
 	       AND c.R_CONSTRAINT_NAME = cpk.CONSTRAINT_NAME
-           WHERE c.OWNER = $1 AND a.TABLE_NAME = $2 AND c.CONSTRAINT_TYPE = 'R'`,
-		tip.Schema, tip.Table)
+           WHERE c.OWNER = :1 AND a.TABLE_NAME = :2 AND c.CONSTRAINT_TYPE = 'R'`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(tip.Schema, tip.Table)
 	if err != nil {
 		return err
 	}
@@ -291,4 +308,54 @@ func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 	}
 
 	return nil
+}
+
+func (da *OracleDB) getSample(schema, table string, nColumns int) (*[][]string, error) {
+
+	var percent float32
+	{
+		r := da.db.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM "%s"."%s"`, schema, table))
+		var count int
+		r.Scan(&count)
+		if count == 0 {
+			ret := make([][]string, 0)
+			return &ret, nil
+		}
+		percent = float32(detect.SampleSize) / float32(count) * 100.0
+		if percent >= 100 {
+			percent = 99.9999
+		}
+	}
+
+	rows := make([][]string, 0, detect.SampleSize)
+
+	sql := fmt.Sprintf(`SELECT * from "%s"."%s" SAMPLE(%f)`, schema, table, percent)
+	r, err := da.db.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	i := make([]interface{}, nColumns)
+	s := make([]string, nColumns)
+	for k := 0; k != nColumns; k++ {
+		i[k] = &s[k]
+	}
+
+	for r.Next() {
+		if err := r.Scan(i...); err != nil {
+			return nil, err
+		}
+		rows = append(rows, s[:])
+	}
+
+	scanned := make([][]string, nColumns)
+	for k := 0; k != nColumns; k++ {
+		scanned[k] = make([]string, len(rows))
+		for j := 0; j != len(rows); j++ {
+			scanned[k][j] = rows[j][k]
+		}
+	}
+
+	return &scanned, nil
 }

@@ -6,6 +6,8 @@ import (
 	"regexp"
 )
 
+const SampleSize = 32
+
 type Detectors struct {
 	columnNameDetectors []detector
 	contentDetectors    []detector
@@ -52,7 +54,20 @@ func Compile(piis []types.PIIDetector) (*Detectors, error) {
 	return &d, nil
 }
 
-func (d *Detectors) MatchColumnName(s string) *string {
+func (d *Detectors) FindSemantics(columnName string, data []string) *string {
+	s := d.matchColumnName(columnName)
+	if s != nil {
+		return s
+	}
+	s = d.matchContent(data)
+	if s != nil {
+		return s
+	}
+	// add AWS.Comprehend call here
+	return nil
+}
+
+func (d *Detectors) matchColumnName(s string) *string {
 	for k := range d.columnNameDetectors {
 		p := &d.columnNameDetectors[k]
 		if p.re.MatchString(s) {
@@ -62,7 +77,7 @@ func (d *Detectors) MatchColumnName(s string) *string {
 	return nil
 }
 
-func (d *Detectors) MatchContent(s []string) *string {
+func (d *Detectors) matchContent(s []string) *string {
 	pred := func(p *detector) func(string) bool {
 		return func(ss string) bool {
 			return p.re.MatchString(ss)

@@ -7,8 +7,8 @@ import (
 	_ "github.com/denisenkom/go-mssqldb"
 	"net/url"
 
-	"DbAnalyzer/types"
 	"DbAnalyzer/detect"
+	"DbAnalyzer/types"
 )
 
 type SqlServer struct {
@@ -89,7 +89,7 @@ func (da *SqlServer) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 				Tables: []types.Table{
 					{
 						Name:     tblName,
-						IsSystem: isSystem || isSysTable(tblName),
+						IsSystem: isSystem || da.isSysTable(tblName),
 					},
 				},
 			})
@@ -98,7 +98,7 @@ func (da *SqlServer) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 			database.Schemas[curSchema].Tables = append(database.Schemas[curSchema].Tables,
 				types.Table{
 					Name:     tblName,
-					IsSystem: isSystem || isSysTable(tblName),
+					IsSystem: isSystem || da.isSysTable(tblName),
 				})
 		}
 	}
@@ -115,7 +115,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
                                     numeric_precision, numeric_scale,
                                     is_nullable, column_default
                              FROM information_schema.columns
-                             WHERE table_schema = $1 and table_name = $2
+                             WHERE table_schema = @p1 and table_name = @p2
                              ORDER BY ordinal_position`, tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
@@ -159,9 +159,14 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 	detectors, err := detect.Compile(tip.Rules)
 	if err != nil {
 		return nil, err
-	}	
-	
-	for _, d := range descr {
+	}
+
+	sample, err := da.getSample(tip.Schema, tip.Table, len(descr))
+	if err != nil {
+		return nil, err
+	}
+
+	for k, d := range descr {
 		var possibleActions *[]types.DataHandling
 		var t string
 		var semantics *string
@@ -184,11 +189,12 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				t = "varchar"
 			}
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
-			semantics = detectors.MatchColumnName(d.cName)
+			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 		case "character":
 			if d.cCharMaxLen != nil {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
+				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 			} else {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 				t = "bpchar"
@@ -242,7 +248,7 @@ func (da *SqlServer) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfo
 	      ON tab2.schema_id = sch2.schema_id
 	  INNER JOIN sys.columns col2
 	      ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id
-          WHERE sch.name = $1 and tab1.name = $2`, tip.Schema, tip.Table)
+          WHERE sch.name = @p1 and tab1.name = @p2`, tip.Schema, tip.Table)
 	if err != nil {
 		return err
 	}
@@ -269,11 +275,46 @@ func (da *SqlServer) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfo
 	return nil
 }
 
-func isSysTable(tblName string) bool {
+func (da *SqlServer) isSysTable(tblName string) bool {
 	return tblName == "MSreplication_options" ||
 		tblName == "spt_fallback_db" ||
 		tblName == "spt_fallback_dev" ||
 		tblName == "spt_fallback_usg" ||
 		tblName == "spt_monitor" ||
 		tblName == "spt_values"
+}
+
+func (da *SqlServer) getSample(schema, table string, nColumns int) (*[][]string, error) {
+
+	rows := make([][]string, 0, detect.SampleSize)
+
+	i := make([]interface{}, nColumns)
+	s := make([]string, nColumns)
+	for k := 0; k != nColumns; k++ {
+		i[k] = &s[k]
+	}
+
+	sql := fmt.Sprintf(`SELECT * from [%s].[%s] TABLESAMPLE(%d ROWS)`, schema, table, detect.SampleSize)
+	r, err := da.db.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	for r.Next() {
+		if err := r.Scan(i...); err != nil {
+			return nil, err
+		}
+		rows = append(rows, s[:])
+	}
+
+	scanned := make([][]string, nColumns)
+	for k := 0; k != nColumns; k++ {
+		scanned[k] = make([]string, len(rows))
+		for j := 0; j != len(rows); j++ {
+			scanned[k][j] = rows[j][k]
+		}
+	}
+
+	return &scanned, nil
 }

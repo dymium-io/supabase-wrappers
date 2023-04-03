@@ -6,8 +6,8 @@ import (
 
 	"fmt"
 
-	"DbAnalyzer/types"
 	"DbAnalyzer/detect"
+	"DbAnalyzer/types"
 )
 
 type MySQL struct {
@@ -99,26 +99,21 @@ func (da *MySQL) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 
 func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
 
-	/*
-		if c.Rules == nil {
-			return struct{}{}, fmt.Errorf("Policy rules are not defined")
-		}
-
-		var detectors *common.Detectors
-		if detectors,err = common.Compile(*c.Rules); err != nil {
-			return struct{}{}, err
-		}
-	*/
-
-	rows, err :=
-		da.db.Query(`SELECT ordinal_position, column_name,
+	stmt, err :=
+		da.db.Prepare(`SELECT ordinal_position, column_name,
                                     data_type,
                                     character_maximum_length,
                                     numeric_precision, numeric_scale,
                                     is_nullable, column_default
                              FROM information_schema.columns
-                             WHERE table_schema = $1 and table_name = $2
-                             ORDER BY ordinal_position`, tip.Schema, tip.Table)
+                             WHERE table_schema = ? and table_name = ?
+                             ORDER BY ordinal_position`)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +158,12 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 		return nil, err
 	}
 
-	for _, d := range descr {
+	sample, err := da.getSample(tip.Schema, tip.Table, len(descr))
+	if err != nil {
+		return nil, err
+	}
+
+	for k, d := range descr {
 		var t string
 		var semantics *string
 		var possibleActions *[]types.DataHandling
@@ -186,16 +186,16 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = "varchar"
 			}
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
-			semantics = detectors.MatchColumnName(d.cName)
+			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 		case "char":
 			if d.cCharMaxLen != nil {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
+				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 			} else {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
 				t = "bpchar"
 			}
-			semantics = detectors.MatchColumnName(d.cName)
 		default:
 			t = d.cTyp
 		}
@@ -222,7 +222,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 }
 
 func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
-	rows, err := da.db.Query(`
+	stmt, err := da.db.Prepare(`
            SELECT
 	       tc.constraint_name, 
 	       kcu.column_name, 
@@ -237,8 +237,13 @@ func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData
 	       JOIN information_schema.constraint_column_usage AS ccu
 		 ON ccu.constraint_name = tc.constraint_name
 		 AND ccu.table_schema = tc.table_schema
-	   WHERE tc.table_schema = $1 and tc.table_name = $2 and tc.constraint_type = 'FOREIGN KEY'`,
-		tip.Schema, tip.Table)
+	   WHERE tc.table_schema = ? and tc.table_name = ? and tc.constraint_type = 'FOREIGN KEY'`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(tip.Schema, tip.Table)
 	if err != nil {
 		return err
 	}
@@ -262,4 +267,39 @@ func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData
 	}
 
 	return nil
+}
+
+func (da *MySQL) getSample(schema, table string, nColumns int) (*[][]string, error) {
+
+	rows := make([][]string, 0, detect.SampleSize)
+
+	i := make([]interface{}, nColumns)
+	s := make([]string, nColumns)
+	for k := 0; k != nColumns; k++ {
+		i[k] = &s[k]
+	}
+
+	sql := fmt.Sprintf(`SELECT * from "%s"."%s" ORDER BY RAND() LIMIT %d`, schema, table, detect.SampleSize)
+	r, err := da.db.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	for r.Next() {
+		if err := r.Scan(i...); err != nil {
+			return nil, err
+		}
+		rows = append(rows, s[:])
+	}
+
+	scanned := make([][]string, nColumns)
+	for k := 0; k != nColumns; k++ {
+		scanned[k] = make([]string, len(rows))
+		for j := 0; j != len(rows); j++ {
+			scanned[k][j] = rows[j][k]
+		}
+	}
+
+	return &scanned, nil
 }
