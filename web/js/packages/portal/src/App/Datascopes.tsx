@@ -81,7 +81,8 @@ export function AddDatascope(props) {
                     if (js.status === "OK") {
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
-                                Ghost Database {dbname} created successfully!
+                                Ghost Database {dbname} created successfully!<br/>
+                                <Link to="?key=groups">Click here </Link>to assign groups make it accessible to users.
                             </Alert>
                         )
                     } else {

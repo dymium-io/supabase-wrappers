@@ -23,7 +23,7 @@ import { legacy_createStore } from '@reduxjs/toolkit';
 import { getDisplayName } from 'react-bootstrap-typeahead/types/utils';
 
 export default function AssignGroups() {
-    const [spinner, setSpinner] = useState(false)
+    const [spinner, _setSpinner] = useState(false)
     const [datascopes, setDatascopes] = useState<types.DataScopeInfo[]>([])
     const [validated, setValidated] = useState(false)
     const [id, setId] = useState("")
@@ -39,7 +39,12 @@ export default function AssignGroups() {
     let normalstyle = { chips: { background: "rgb(0, 151,206)" } }
     const [multistyle, setMultistyle] = useState(normalstyle)
 
-
+    let refspinner = useRef(spinner)
+    refspinner.current = spinner
+let setSpinner = sp => {
+    debugger
+    _setSpinner(sp)
+}
     let getGroups = (datascopes) => {
         http.sendToServer("GET", "/api/getmappings",
             null, "",
@@ -136,6 +141,10 @@ export default function AssignGroups() {
             })
 
     }
+    let getSpinner = () => {
+        return refspinner.current
+    }
+
     let sendGroups = () => {
         setSpinner(true)
         let b: types.Group[] = []
@@ -200,13 +209,17 @@ export default function AssignGroups() {
     }
 
     useEffect(() => {
-        com.getDatascopes(setSpinner, setAlert, setDatascopes, (js) => {
+        setSpinner(true)
+        com.getDatascopes((x:boolean) => {}, setAlert, setDatascopes, (js) => {
             getGroups(js)
         })
     }, [])
 
     let onEdit = (id, name, groups) => {
         return e => {
+            if(getSpinner()) {
+                return false
+            }
             if (groups === undefined)
                 groups = []
             setSelectedgroups(groups)
@@ -236,7 +249,7 @@ export default function AssignGroups() {
             formatter: (cell, row, rowIndex, formatExtraData) => {
                 let g = row["groups"]
                 if (g === undefined) {
-                    return <div></div>
+                    return <div className="darkred cursor-pointer" onClick={onEdit(row["id"], row["name"], row["groups"])} >Please edit to assign groups and enable user access</div>
                 }
 
                 return <div>{g.map(x => x.name).join(", ")}</div>
@@ -358,9 +371,10 @@ export default function AssignGroups() {
                     </Modal.Footer>
                 </Form>
             </Modal>
-
+                                
             <BootstrapTable id="scaledtable"
                 condensed
+                
                 striped bootstrap4 bordered={false}
                 pagination={paginationFactory()}
                 keyField='id'

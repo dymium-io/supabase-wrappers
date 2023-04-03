@@ -382,7 +382,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     if (possibleActions == undefined)
                         possibleActions = []
                     let possible: string[] = cloneDeep(possibleActions)
-                    possible.push("allow")
+                    // possible.push("allow")
                     let pattern = "^(" + possible.map(x => Id2Label(x)).join("|") + ")$"
 
                     return <Typeahead
@@ -500,7 +500,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             let re = new RegExp(predo.rules[i].regexp, "i")
             if (name.match(re) != null) {
 
-                return [predo.rules[i].action, predo.rules[i].detection]
+                return [predo.rules[i].action.toLowerCase(), predo.rules[i].detection]
             }
         }
         return []
@@ -514,12 +514,13 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         let newtablestructure = cloneDeep( sessionGetTablestructure() )
 
         let predo = Prefills[level]
+        
         for (let i = 0; i < newtablestructure.length; i++) {
             let table = newtablestructure[i]
 
             let [action, semantics] = ActionByName(predo, newtablestructure[i].name)
             let possible: string[] = cloneDeep(table.possibleActions)
-            possible.push("allow")
+            //possible.push("allow")
 
             if (possible.includes(action))
                 newtablestructure[i].action = action
