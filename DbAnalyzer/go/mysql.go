@@ -8,6 +8,7 @@ import (
 
 	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
+	"DbAnalyzer/utils"
 )
 
 type MySQL struct {
@@ -169,7 +170,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 		var possibleActions *[]types.DataHandling
 		switch d.cTyp {
 		case "decimal":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 			if d.cPrecision != nil {
 				if d.cScale != nil {
 					t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
@@ -185,15 +186,15 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 			} else {
 				t = "varchar"
 			}
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 		case "char":
 			if d.cCharMaxLen != nil {
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
 				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 			} else {
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				t = "bpchar"
 			}
 		default:
@@ -271,10 +272,10 @@ func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData
 
 func (da *MySQL) getSample(schema, table string, nColumns int) (*[][]string, error) {
 
-	rows := make([][]string, 0, detect.SampleSize)
+	rows := make([][]*string, 0, detect.SampleSize)
 
 	i := make([]interface{}, nColumns)
-	s := make([]string, nColumns)
+	s := make([]*string, nColumns)
 	for k := 0; k != nColumns; k++ {
 		i[k] = &s[k]
 	}
@@ -290,14 +291,16 @@ func (da *MySQL) getSample(schema, table string, nColumns int) (*[][]string, err
 		if err := r.Scan(i...); err != nil {
 			return nil, err
 		}
-		rows = append(rows, s[:])
+		rows = append(rows, utils.CopyPointers(s))
 	}
 
 	scanned := make([][]string, nColumns)
 	for k := 0; k != nColumns; k++ {
-		scanned[k] = make([]string, len(rows))
+		scanned[k] = make([]string, 0, len(rows))
 		for j := 0; j != len(rows); j++ {
-			scanned[k][j] = rows[j][k]
+			if rows[j][k] != nil {
+				scanned[k] = append(scanned[k], *rows[j][k])
+			}
 		}
 	}
 

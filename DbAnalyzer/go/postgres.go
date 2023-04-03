@@ -9,6 +9,7 @@ import (
 
 	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
+	"DbAnalyzer/utils"
 )
 
 type Postgres struct {
@@ -173,7 +174,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		var t string
 		switch d.cTyp {
 		case "numeric":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 			if d.cPrecision != nil {
 				if d.cScale != nil {
 					t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
@@ -184,7 +185,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				t = "numeric"
 			}
 		case "character varying":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
@@ -193,17 +194,17 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 		case "character":
 			if d.cCharMaxLen != nil {
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
 				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 			} else {
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				t = "bpchar"
 			}
 		case "ARRAY":
 			switch *d.eTyp {
 			case "numeric":
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				if d.ePrecision != nil {
 					if d.cScale != nil {
 						t = fmt.Sprintf("numeric(%d,%d)[]", *d.ePrecision, *d.eScale)
@@ -219,23 +220,23 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				} else {
 					t = "varchar[]"
 				}
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 			case "character":
 				if d.eCharMaxLen != nil {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 					t = fmt.Sprintf("character(%d)[]", *d.eCharMaxLen)
 					semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 				} else {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 					t = "character[]"
 				}
 			default:
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				t = *d.eTyp + "[]"
 			}
 		default:
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 			t = d.cTyp
 		}
 		c := types.Column{
@@ -303,10 +304,10 @@ func (da *Postgres) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 
 func (da *Postgres) getSample(schema, table string, nColumns int) (*[][]string, error) {
 
-	rows := make([][]string, 0, detect.SampleSize)
+	rows := make([][]*string, 0, detect.SampleSize)
 
 	i := make([]interface{}, nColumns)
-	s := make([]string, nColumns)
+	s := make([]*string, nColumns)
 	for k := 0; k != nColumns; k++ {
 		i[k] = &s[k]
 	}
@@ -322,14 +323,16 @@ func (da *Postgres) getSample(schema, table string, nColumns int) (*[][]string, 
 		if err := r.Scan(i...); err != nil {
 			return nil, err
 		}
-		rows = append(rows, s[:])
+		rows = append(rows, utils.CopyPointers(s))
 	}
 
 	scanned := make([][]string, nColumns)
 	for k := 0; k != nColumns; k++ {
-		scanned[k] = make([]string, len(rows))
+		scanned[k] = make([]string, 0, len(rows))
 		for j := 0; j != len(rows); j++ {
-			scanned[k][j] = rows[j][k]
+			if rows[j][k] != nil {
+				scanned[k] = append(scanned[k], *rows[j][k])
+			}
 		}
 	}
 

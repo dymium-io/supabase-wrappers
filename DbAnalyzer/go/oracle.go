@@ -10,6 +10,7 @@ import (
 
 	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
+	"DbAnalyzer/utils"
 )
 
 type OracleDB struct {
@@ -186,12 +187,12 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 		var semantics *string
 		var possibleActions *[]types.DataHandling
 		if d.cTyp == nil {
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 			t = "undefined"
 		} else {
 			switch strings.ToLower(*d.cTyp) {
 			case "number":
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				if d.cPrecision != nil {
 					if d.cScale != nil {
 						t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
@@ -207,26 +208,26 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 				} else {
 					t = "varchar"
 				}
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 			case "char", "nchar":
 				if d.cCharMaxLen != nil {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 					t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
 					semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 				} else {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 					t = "bpchar"
 				}
 			case "clob", "nclob", "long":
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 				t = "text"
 			case "blob", "bfile", "long raw":
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				t = "bytea"
 			case "date":
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				t = "date"
 			default:
 				// ignore other datatypes (e.g. GEOM)
@@ -327,7 +328,7 @@ func (da *OracleDB) getSample(schema, table string, nColumns int) (*[][]string, 
 		}
 	}
 
-	rows := make([][]string, 0, detect.SampleSize)
+	rows := make([][]*string, 0, detect.SampleSize)
 
 	sql := fmt.Sprintf(`SELECT * from "%s"."%s" SAMPLE(%f)`, schema, table, percent)
 	r, err := da.db.Query(sql)
@@ -337,7 +338,7 @@ func (da *OracleDB) getSample(schema, table string, nColumns int) (*[][]string, 
 	defer r.Close()
 
 	i := make([]interface{}, nColumns)
-	s := make([]string, nColumns)
+	s := make([]*string, nColumns)
 	for k := 0; k != nColumns; k++ {
 		i[k] = &s[k]
 	}
@@ -346,14 +347,16 @@ func (da *OracleDB) getSample(schema, table string, nColumns int) (*[][]string, 
 		if err := r.Scan(i...); err != nil {
 			return nil, err
 		}
-		rows = append(rows, s[:])
+		rows = append(rows, utils.CopyPointers(s))
 	}
 
 	scanned := make([][]string, nColumns)
 	for k := 0; k != nColumns; k++ {
-		scanned[k] = make([]string, len(rows))
+		scanned[k] = make([]string, 0, len(rows))
 		for j := 0; j != len(rows); j++ {
-			scanned[k][j] = rows[j][k]
+			if rows[j][k] != nil {
+				scanned[k] = append(scanned[k], *rows[j][k])
+			}
 		}
 	}
 
