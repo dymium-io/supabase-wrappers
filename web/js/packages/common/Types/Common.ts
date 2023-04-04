@@ -560,11 +560,13 @@ export class DataPolicy {
 export class Datascope {
   private '_name': string
   private '_id': string | null
+  private '_groupsconfigured': boolean
   private '_records': Array<DatascopeRecord>
 
   constructor() {
     this['_name'] = ''
     this['_id'] = null
+    this['_groupsconfigured'] = false
     this['_records'] = []
   }
   get name(): string { return this['_name'] }
@@ -590,6 +592,14 @@ export class Datascope {
       }
     }
   }
+  get groupsconfigured(): boolean { return this['_groupsconfigured'] }
+  set groupsconfigured(__a__: any) {
+    let __v__ = boolReader(false)(__a__)
+    if(!_.isEqual(__v__,this['_groupsconfigured'])) {
+      setDirtyFlag()
+      this['_groupsconfigured'] = __v__
+    }
+  }
   get records(): Array<DatascopeRecord> { return this['_records'] }
   set records(__a__: any) {
     setDirtyFlag()
@@ -604,6 +614,7 @@ export class Datascope {
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.name = __a__['name']
        cls.id = __a__['id'] == null ? null : __a__['id']
+       cls.groupsconfigured = __a__['groupsconfigured']
        cls.records = array1Reader(DatascopeRecord.fromJson)(__a__['records'])
     } else {
        doAlert(`Datascope: an attempt to initialize from ${__a__}`)

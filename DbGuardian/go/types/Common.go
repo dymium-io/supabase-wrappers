@@ -84,6 +84,7 @@ type DataPolicy struct {
 type Datascope struct {
    Name string `json:"name"`
    Id *string `json:"id"`
+   Groupsconfigured bool `json:"groupsconfigured"`
    Records []DatascopeRecord `json:"records"`
 }
 

@@ -85,6 +85,13 @@ export function AddDatascope(props) {
                                 <Link to="?key=groups">Click here </Link>to assign groups make it accessible to users.
                             </Alert>
                         )
+
+                        setTable({ schema: "", table: "" })
+                        setDbname("")
+                        setDatascope({})
+                        setCurrentConnectionId("")
+                        setCurrentConnectionType("")
+
                     } else {
                         setAlert(
                             <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>

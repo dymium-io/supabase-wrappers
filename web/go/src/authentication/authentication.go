@@ -1372,11 +1372,24 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 			ds.Records = append(ds.Records, dr)
 		}
 
-		return ds, nil
 	} else {
 		log.Errorf("GetDatascope Error 3:  %s", err.Error())
-		return ds, err		
+		if err != nil {
+			tx.Rollback()
+			return ds, err
+		}	
 	}
+	// see if any groups are
+	var counter int
+	sql = `select count(*) from ` + schema + `.groupsfordatascopes where datascope_id=$1;`
+	row = db.QueryRow(sql, id)
+	log.Infof("\n\nsql: %s, id: %s\n\n", sql, id)
+	err = row.Scan(&counter)
+	ds.Groupsconfigured = counter > 0
+	if err != nil {
+		tx.Rollback()
+		return ds, err
+	}	
 
 	err = tx.Commit()
 	if err != nil {

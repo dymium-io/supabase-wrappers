@@ -23,7 +23,7 @@ import { legacy_createStore } from '@reduxjs/toolkit';
 import { getDisplayName } from 'react-bootstrap-typeahead/types/utils';
 
 export default function AssignGroups() {
-    const [spinner, _setSpinner] = useState(false)
+    const [spinner, setSpinner] = useState(false)
     const [datascopes, setDatascopes] = useState<types.DataScopeInfo[]>([])
     const [validated, setValidated] = useState(false)
     const [id, setId] = useState("")
@@ -41,10 +41,7 @@ export default function AssignGroups() {
 
     let refspinner = useRef(spinner)
     refspinner.current = spinner
-let setSpinner = sp => {
-    debugger
-    _setSpinner(sp)
-}
+
     let getGroups = (datascopes) => {
         http.sendToServer("GET", "/api/getmappings",
             null, "",

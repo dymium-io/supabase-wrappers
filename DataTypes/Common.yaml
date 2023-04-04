@@ -88,6 +88,7 @@ RequestById:
 Datascope:
   - name: string
   - id:  ?string		
+  - groupsconfigured: bool
   - records: <|DatascopeRecord|>
 
 OperationStatus:
