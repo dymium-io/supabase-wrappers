@@ -1687,7 +1687,7 @@ Object {
                           class="form-label"
                           for="connection"
                         >
-                          Select Detect and Prefill Level
+                          Select Access Level:
                         </label>
                         <div
                           class="input-group"
@@ -1704,28 +1704,16 @@ Object {
                               ...
                             </option>
                             <option
-                              data-testid="unclassified"
-                              value="unclassified"
+                              data-testid="Admin"
+                              value="Admin"
                             >
-                              Unclassified
+                              Admin
                             </option>
                             <option
-                              data-testid="confidential"
-                              value="confidential"
+                              data-testid="Data Scientist"
+                              value="Data Scientist"
                             >
-                              Confidential
-                            </option>
-                            <option
-                              data-testid="secret"
-                              value="secret"
-                            >
-                              Secret
-                            </option>
-                            <option
-                              data-testid="topsecret"
-                              value="topsecret"
-                            >
-                              Top Secret
+                              Data Scientist
                             </option>
                           </select>
                           <button
@@ -1776,7 +1764,7 @@ Object {
                               placeholder="Choose table..."
                               role="combobox"
                               type="text"
-                              value="employee"
+                              value="department"
                             />
                             <input
                               aria-hidden="true"
@@ -1847,12 +1835,12 @@ Object {
                           <th
                             tabindex="0"
                           >
-                            PII
+                            PII:
                           </th>
                           <th
                             tabindex="0"
                           >
-                            Action
+                            Action:
                           </th>
                         </tr>
                       </thead>
@@ -1861,7 +1849,7 @@ Object {
                           <td
                             class="overflow-hidden"
                           >
-                            businessentityid
+                            departmentid
                           </td>
                           <td>
                             integer
@@ -1882,18 +1870,18 @@ Object {
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
                                   id="semantics0"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
+                                  pattern="^(N/A|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
                                   placeholder="Data type..."
                                   required=""
                                   role="combobox"
                                   type="text"
-                                  value="Business entity Id"
+                                  value="N/A"
                                 />
                                 <input
                                   aria-hidden="true"
                                   class="rbt-input-hint"
                                   readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
                                   tabindex="-1"
                                   value=""
                                 />
@@ -1937,12 +1925,12 @@ Object {
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
                                   id="action0"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
+                                  pattern="^(Block|Redact|Allow)$"
                                   placeholder="Access..."
                                   required=""
                                   role="combobox"
                                   type="text"
-                                  value="Obfuscate"
+                                  value="Allow"
                                 />
                                 <input
                                   aria-hidden="true"
@@ -1981,10 +1969,10 @@ Object {
                           <td
                             class="overflow-hidden"
                           >
-                            nationalidnumber
+                            name
                           </td>
                           <td>
-                            varchar(15)
+                            varchar(50)
                           </td>
                           <td>
                             <div
@@ -2002,18 +1990,18 @@ Object {
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
                                   id="semantics1"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
+                                  pattern="^(N/A|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
                                   placeholder="Data type..."
                                   required=""
                                   role="combobox"
                                   type="text"
-                                  value="Social Security Number"
+                                  value="N/A"
                                 />
                                 <input
                                   aria-hidden="true"
                                   class="rbt-input-hint"
                                   readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
                                   tabindex="-1"
                                   value=""
                                 />
@@ -2057,12 +2045,12 @@ Object {
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
                                   id="action1"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
+                                  pattern="^(Block|Redact|Obfuscate|Allow)$"
                                   placeholder="Access..."
                                   required=""
                                   role="combobox"
                                   type="text"
-                                  value="Obfuscate"
+                                  value="Allow"
                                 />
                                 <input
                                   aria-hidden="true"
@@ -2101,10 +2089,10 @@ Object {
                           <td
                             class="overflow-hidden"
                           >
-                            loginid
+                            groupname
                           </td>
                           <td>
-                            varchar(256)
+                            varchar(50)
                           </td>
                           <td>
                             <div
@@ -2122,18 +2110,18 @@ Object {
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
                                   id="semantics2"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
+                                  pattern="^(N/A|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
                                   placeholder="Data type..."
                                   required=""
                                   role="combobox"
                                   type="text"
-                                  value="Login details"
+                                  value="N/A"
                                 />
                                 <input
                                   aria-hidden="true"
                                   class="rbt-input-hint"
                                   readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
                                   tabindex="-1"
                                   value=""
                                 />
@@ -2177,1207 +2165,7 @@ Object {
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
                                   id="action2"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                  placeholder="Access..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Block"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="overflow-hidden"
-                          >
-                            jobtitle
-                          </td>
-                          <td>
-                            varchar(50)
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="semantics3"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                  placeholder="Data type..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Job position"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="action3"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                  placeholder="Access..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Obfuscate"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="overflow-hidden"
-                          >
-                            birthdate
-                          </td>
-                          <td>
-                            date
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="semantics4"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                  placeholder="Data type..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="N/A"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="action4"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                  placeholder="Access..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Allow"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="overflow-hidden"
-                          >
-                            maritalstatus
-                          </td>
-                          <td>
-                            character(1)
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="semantics5"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                  placeholder="Data type..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="N/A"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="action5"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                  placeholder="Access..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Allow"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="overflow-hidden"
-                          >
-                            gender
-                          </td>
-                          <td>
-                            character(1)
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="semantics6"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                  placeholder="Data type..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Gender"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="action6"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                  placeholder="Access..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Obfuscate"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="overflow-hidden"
-                          >
-                            hiredate
-                          </td>
-                          <td>
-                            date
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="semantics7"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                  placeholder="Data type..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="N/A"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="action7"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                  placeholder="Access..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Allow"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="overflow-hidden"
-                          >
-                            salariedflag
-                          </td>
-                          <td>
-                            boolean
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="semantics8"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                  placeholder="Data type..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="N/A"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="action8"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                  placeholder="Access..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Allow"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="overflow-hidden"
-                          >
-                            vacationhours
-                          </td>
-                          <td>
-                            smallint
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="semantics9"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                  placeholder="Data type..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="N/A"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="action9"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                  placeholder="Access..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Allow"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="overflow-hidden"
-                          >
-                            sickleavehours
-                          </td>
-                          <td>
-                            smallint
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="semantics10"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                  placeholder="Data type..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="N/A"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="action10"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                  placeholder="Access..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Allow"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="overflow-hidden"
-                          >
-                            currentflag
-                          </td>
-                          <td>
-                            boolean
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="semantics11"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                  placeholder="Data type..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="N/A"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="action11"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                  placeholder="Access..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Allow"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="overflow-hidden"
-                          >
-                            rowguid
-                          </td>
-                          <td>
-                            uuid
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="semantics12"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                  placeholder="Data type..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="N/A"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="action12"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
+                                  pattern="^(Block|Redact|Obfuscate|Allow)$"
                                   placeholder="Access..."
                                   required=""
                                   role="combobox"
@@ -3441,8 +2229,8 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="semantics13"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
+                                  id="semantics3"
+                                  pattern="^(N/A|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
                                   placeholder="Data type..."
                                   required=""
                                   role="combobox"
@@ -3453,7 +2241,7 @@ Object {
                                   aria-hidden="true"
                                   class="rbt-input-hint"
                                   readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
                                   tabindex="-1"
                                   value=""
                                 />
@@ -3496,128 +2284,8 @@ Object {
                                   aria-haspopup="listbox"
                                   autocomplete="off"
                                   class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="action13"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                  placeholder="Access..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="Allow"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td
-                            class="overflow-hidden"
-                          >
-                            organizationnode
-                          </td>
-                          <td>
-                            varchar
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="semantics14"
-                                  pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                  placeholder="Data type..."
-                                  required=""
-                                  role="combobox"
-                                  type="text"
-                                  value="N/A"
-                                />
-                                <input
-                                  aria-hidden="true"
-                                  class="rbt-input-hint"
-                                  readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                  tabindex="-1"
-                                  value=""
-                                />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <div
-                              class="rbt has-aux"
-                              style="outline: none; position: relative;"
-                              tabindex="-1"
-                            >
-                              <div
-                                style="display: flex; flex: 1; height: 100%; position: relative;"
-                              >
-                                <input
-                                  aria-autocomplete="both"
-                                  aria-expanded="false"
-                                  aria-haspopup="listbox"
-                                  autocomplete="off"
-                                  class="rbt-input-main form-control rbt-input form-control-sm"
-                                  id="action14"
-                                  pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
+                                  id="action3"
+                                  pattern="^(Block|Redact|Allow)$"
                                   placeholder="Access..."
                                   required=""
                                   role="combobox"
@@ -4061,7 +2729,7 @@ Object {
                         class="form-label"
                         for="connection"
                       >
-                        Select Detect and Prefill Level
+                        Select Access Level:
                       </label>
                       <div
                         class="input-group"
@@ -4078,28 +2746,16 @@ Object {
                             ...
                           </option>
                           <option
-                            data-testid="unclassified"
-                            value="unclassified"
+                            data-testid="Admin"
+                            value="Admin"
                           >
-                            Unclassified
+                            Admin
                           </option>
                           <option
-                            data-testid="confidential"
-                            value="confidential"
+                            data-testid="Data Scientist"
+                            value="Data Scientist"
                           >
-                            Confidential
-                          </option>
-                          <option
-                            data-testid="secret"
-                            value="secret"
-                          >
-                            Secret
-                          </option>
-                          <option
-                            data-testid="topsecret"
-                            value="topsecret"
-                          >
-                            Top Secret
+                            Data Scientist
                           </option>
                         </select>
                         <button
@@ -4150,7 +2806,7 @@ Object {
                             placeholder="Choose table..."
                             role="combobox"
                             type="text"
-                            value="employee"
+                            value="department"
                           />
                           <input
                             aria-hidden="true"
@@ -4221,12 +2877,12 @@ Object {
                         <th
                           tabindex="0"
                         >
-                          PII
+                          PII:
                         </th>
                         <th
                           tabindex="0"
                         >
-                          Action
+                          Action:
                         </th>
                       </tr>
                     </thead>
@@ -4235,7 +2891,7 @@ Object {
                         <td
                           class="overflow-hidden"
                         >
-                          businessentityid
+                          departmentid
                         </td>
                         <td>
                           integer
@@ -4256,18 +2912,18 @@ Object {
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
                                 id="semantics0"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
+                                pattern="^(N/A|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
                                 placeholder="Data type..."
                                 required=""
                                 role="combobox"
                                 type="text"
-                                value="Business entity Id"
+                                value="N/A"
                               />
                               <input
                                 aria-hidden="true"
                                 class="rbt-input-hint"
                                 readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
                                 tabindex="-1"
                                 value=""
                               />
@@ -4311,12 +2967,12 @@ Object {
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
                                 id="action0"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
+                                pattern="^(Block|Redact|Allow)$"
                                 placeholder="Access..."
                                 required=""
                                 role="combobox"
                                 type="text"
-                                value="Obfuscate"
+                                value="Allow"
                               />
                               <input
                                 aria-hidden="true"
@@ -4355,10 +3011,10 @@ Object {
                         <td
                           class="overflow-hidden"
                         >
-                          nationalidnumber
+                          name
                         </td>
                         <td>
-                          varchar(15)
+                          varchar(50)
                         </td>
                         <td>
                           <div
@@ -4376,18 +3032,18 @@ Object {
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
                                 id="semantics1"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
+                                pattern="^(N/A|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
                                 placeholder="Data type..."
                                 required=""
                                 role="combobox"
                                 type="text"
-                                value="Social Security Number"
+                                value="N/A"
                               />
                               <input
                                 aria-hidden="true"
                                 class="rbt-input-hint"
                                 readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
                                 tabindex="-1"
                                 value=""
                               />
@@ -4431,12 +3087,12 @@ Object {
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
                                 id="action1"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
+                                pattern="^(Block|Redact|Obfuscate|Allow)$"
                                 placeholder="Access..."
                                 required=""
                                 role="combobox"
                                 type="text"
-                                value="Obfuscate"
+                                value="Allow"
                               />
                               <input
                                 aria-hidden="true"
@@ -4475,10 +3131,10 @@ Object {
                         <td
                           class="overflow-hidden"
                         >
-                          loginid
+                          groupname
                         </td>
                         <td>
-                          varchar(256)
+                          varchar(50)
                         </td>
                         <td>
                           <div
@@ -4496,18 +3152,18 @@ Object {
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
                                 id="semantics2"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
+                                pattern="^(N/A|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
                                 placeholder="Data type..."
                                 required=""
                                 role="combobox"
                                 type="text"
-                                value="Login details"
+                                value="N/A"
                               />
                               <input
                                 aria-hidden="true"
                                 class="rbt-input-hint"
                                 readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
                                 tabindex="-1"
                                 value=""
                               />
@@ -4551,1207 +3207,7 @@ Object {
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
                                 id="action2"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                placeholder="Access..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Block"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          class="overflow-hidden"
-                        >
-                          jobtitle
-                        </td>
-                        <td>
-                          varchar(50)
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="semantics3"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                placeholder="Data type..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Job position"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="action3"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                placeholder="Access..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Obfuscate"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          class="overflow-hidden"
-                        >
-                          birthdate
-                        </td>
-                        <td>
-                          date
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="semantics4"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                placeholder="Data type..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="N/A"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="action4"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                placeholder="Access..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Allow"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          class="overflow-hidden"
-                        >
-                          maritalstatus
-                        </td>
-                        <td>
-                          character(1)
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="semantics5"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                placeholder="Data type..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="N/A"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="action5"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                placeholder="Access..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Allow"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          class="overflow-hidden"
-                        >
-                          gender
-                        </td>
-                        <td>
-                          character(1)
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="semantics6"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                placeholder="Data type..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Gender"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="action6"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                placeholder="Access..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Obfuscate"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          class="overflow-hidden"
-                        >
-                          hiredate
-                        </td>
-                        <td>
-                          date
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="semantics7"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                placeholder="Data type..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="N/A"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="action7"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                placeholder="Access..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Allow"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          class="overflow-hidden"
-                        >
-                          salariedflag
-                        </td>
-                        <td>
-                          boolean
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="semantics8"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                placeholder="Data type..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="N/A"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="action8"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                placeholder="Access..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Allow"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          class="overflow-hidden"
-                        >
-                          vacationhours
-                        </td>
-                        <td>
-                          smallint
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="semantics9"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                placeholder="Data type..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="N/A"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="action9"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                placeholder="Access..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Allow"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          class="overflow-hidden"
-                        >
-                          sickleavehours
-                        </td>
-                        <td>
-                          smallint
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="semantics10"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                placeholder="Data type..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="N/A"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="action10"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                placeholder="Access..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Allow"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          class="overflow-hidden"
-                        >
-                          currentflag
-                        </td>
-                        <td>
-                          boolean
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="semantics11"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                placeholder="Data type..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="N/A"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="action11"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                placeholder="Access..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Allow"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          class="overflow-hidden"
-                        >
-                          rowguid
-                        </td>
-                        <td>
-                          uuid
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="semantics12"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                placeholder="Data type..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="N/A"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="action12"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
+                                pattern="^(Block|Redact|Obfuscate|Allow)$"
                                 placeholder="Access..."
                                 required=""
                                 role="combobox"
@@ -5815,8 +3271,8 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="semantics13"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
+                                id="semantics3"
+                                pattern="^(N/A|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
                                 placeholder="Data type..."
                                 required=""
                                 role="combobox"
@@ -5827,7 +3283,7 @@ Object {
                                 aria-hidden="true"
                                 class="rbt-input-hint"
                                 readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
                                 tabindex="-1"
                                 value=""
                               />
@@ -5870,128 +3326,8 @@ Object {
                                 aria-haspopup="listbox"
                                 autocomplete="off"
                                 class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="action13"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
-                                placeholder="Access..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="Allow"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          class="overflow-hidden"
-                        >
-                          organizationnode
-                        </td>
-                        <td>
-                          varchar
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="semantics14"
-                                pattern="^(N/A|Full Name|Home address|Email address|Social Security Number|Passport number|Driver license|Credit card|Date of birth|Telephone number|Owned property|Vehicle Identification Number|Login details|Processor or device serial number|MAC address|IP address|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|First name|Last name|Middle name|Country|State|City|Zipcode|Gender|Race|Age|Non-specific age range|Job position|Company|Workplace|Work Address|Business entity Id|Contact Info|Address)$"
-                                placeholder="Data type..."
-                                required=""
-                                role="combobox"
-                                type="text"
-                                value="N/A"
-                              />
-                              <input
-                                aria-hidden="true"
-                                class="rbt-input-hint"
-                                readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
-                                tabindex="-1"
-                                value=""
-                              />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            class="rbt has-aux"
-                            style="outline: none; position: relative;"
-                            tabindex="-1"
-                          >
-                            <div
-                              style="display: flex; flex: 1; height: 100%; position: relative;"
-                            >
-                              <input
-                                aria-autocomplete="both"
-                                aria-expanded="false"
-                                aria-haspopup="listbox"
-                                autocomplete="off"
-                                class="rbt-input-main form-control rbt-input form-control-sm"
-                                id="action14"
-                                pattern="^(Allow|Block|Redact|Obfuscate|Smart Redact)$"
+                                id="action3"
+                                pattern="^(Block|Redact|Allow)$"
                                 placeholder="Access..."
                                 required=""
                                 role="combobox"
@@ -6629,10 +3965,10 @@ Object {
                           humanresources
                         </td>
                         <td>
-                          employee
+                          department
                         </td>
                         <td>
-                          15
+                          4
                         </td>
                         <td>
                           Contains PII
@@ -7028,10 +4364,10 @@ Object {
                         humanresources
                       </td>
                       <td>
-                        employee
+                        department
                       </td>
                       <td>
-                        15
+                        4
                       </td>
                       <td>
                         Contains PII
@@ -7134,29 +4470,6 @@ Object {
       <div
         class=" text-left"
       >
-        <div
-          class="fade alert alert-success alert-dismissible show"
-          role="alert"
-        >
-          <button
-            class="close"
-            type="button"
-          >
-            <span
-              aria-hidden="true"
-            >
-              ×
-            </span>
-            <span
-              class="sr-only"
-            >
-              Close alert
-            </span>
-          </button>
-          Ghost Database 
-          testdb
-           created successfully!
-        </div>
         <div
           class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
           style="width: 0px; right: -300px;"
@@ -7507,10 +4820,10 @@ Object {
                           humanresources
                         </td>
                         <td>
-                          employee
+                          department
                         </td>
                         <td>
-                          15
+                          4
                         </td>
                         <td>
                           Contains PII
@@ -7556,29 +4869,6 @@ Object {
     <div
       class=" text-left"
     >
-      <div
-        class="fade alert alert-success alert-dismissible show"
-        role="alert"
-      >
-        <button
-          class="close"
-          type="button"
-        >
-          <span
-            aria-hidden="true"
-          >
-            ×
-          </span>
-          <span
-            class="sr-only"
-          >
-            Close alert
-          </span>
-        </button>
-        Ghost Database 
-        testdb
-         created successfully!
-      </div>
       <div
         class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
         style="width: 0px; right: -300px;"
@@ -7929,10 +5219,10 @@ Object {
                         humanresources
                       </td>
                       <td>
-                        employee
+                        department
                       </td>
                       <td>
-                        15
+                        4
                       </td>
                       <td>
                         Contains PII

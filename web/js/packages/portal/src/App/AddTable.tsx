@@ -546,6 +546,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                             defaultSelected={props.table.schema != undefined ? [props.table.schema] : []}
                             options={getOptions()}
                             clearButton
+                            data-testid="schemaname"
                             placeholder={`Choose ${correctname}...`}
                             disabled={props.table.connection !== undefined && props.table.connection !== ""}
                         />

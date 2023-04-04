@@ -60,7 +60,7 @@ test('add-datascope', async () => {
     await act(async () => {    
         fireEvent.click(addconnection)
     })
-    await new Promise((r) => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 500));
     // take snapshot and run expect
     expect(component).toMatchSnapshot()
 
@@ -73,7 +73,7 @@ test('add-datascope', async () => {
     await act(async () => {    
         fireEvent.click(addtable)
     })
-    await new Promise((r) => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 500));
     // the add table sidebar should open, snapshot and expect it
     expect(component).toMatchSnapshot()
 
@@ -85,6 +85,7 @@ test('add-datascope', async () => {
     await act(async () => {    
         fireEvent.change(schema, { target: { value: "humanresources" } })
     }) 
+
     // click on the dropdown
     let schemaselection =  
     await act( async () => 
@@ -110,9 +111,10 @@ test('add-datascope', async () => {
     await act(async () => {    
         fireEvent.click(tableselection)
     })    
+    await new Promise((r) => setTimeout(r, 1000));
     // select confidential
-    let seclevel = screen.getByTestId('seclevel')
-    let confidential = screen.getByTestId( 'confidential' )
+    let seclevel =  await act( async () => screen.getByTestId('seclevel'))
+    let confidential = screen.getByTestId( 'Admin' )
 
     await act(async () => {    
         userEvent.selectOptions(seclevel, confidential )

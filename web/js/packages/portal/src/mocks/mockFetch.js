@@ -1,4 +1,4 @@
-import {queryconnection} from './queryconnection'
+import {queryconnection, querypolicy, querytable} from './queryconnection'
 
 export default async function mockFetch(url, js) {
     console.log("in mock fetch: ", url)
@@ -113,6 +113,36 @@ export default async function mockFetch(url, js) {
             )    
             
         }        
+        case "/api/querytable" : {
+            console.log(js)
+            expect(js).toEqual(
+                {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer mockJWT', Cache: 'no-cache' },
+                    body: '{"ConnectionId":"a2a4fce3-1db5-47ea-a084-4601f880b9ba","Schema":"humanresources","Table":"employee"}'
+                  }
+            );
+            return  new Promise( (resolve, reject) => resolve(
+                {
+                    ok: true,
+                    status: 200,
+                    json:  () => new Promise( (resolve, reject) => resolve(JSON.parse(querytable) ))
+                }
+              )
+            )   
+        }
+        case "/api/getpolicies" : {
+        
+            return  new Promise( (resolve, reject) => resolve(
+                {
+                    ok: true,
+                    status: 200,
+                    json:  () => new Promise( (resolve, reject) => resolve(JSON.parse(querypolicy) ))
+                }
+              )
+            )   
+        }
+
         default: {
             throw new Error(`Unhandled request: ${url}`);
         }

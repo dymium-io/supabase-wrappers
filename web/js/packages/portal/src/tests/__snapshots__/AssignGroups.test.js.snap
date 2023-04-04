@@ -175,7 +175,12 @@ exports[`assign-groups 1`] = `
             test2
           </td>
           <td>
-            <div />
+            <div
+              className="darkred cursor-pointer"
+              onClick={[Function]}
+            >
+              Please edit to assign groups and enable user access
+            </div>
           </td>
           <td
             style={
