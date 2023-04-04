@@ -86,7 +86,7 @@ func initRBAC() {
 	"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
 	"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
 	"getgroupsfordatascopes", "getselect", "getusage", "getaccesskey", "createnewconnector", 
-	"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies"}
+	"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable"}
 
 	usernames :=  []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getdatascopetables"}	
 
@@ -785,7 +785,7 @@ func GetPolicies(schema string) ([]byte, error) {
 	err := row.Scan(&policy)
 	if err == sql.ErrNoRows {
 		err = nil
-		policy = []byte(`{"error":"no record"}`)
+		policy = []byte(`{"error":"no record in the policies table"}`)
 	}
 	return policy, err
 }
@@ -1266,14 +1266,14 @@ func GetConnectorAddress(schema, tunnel_id string) ( string, int, error) {
 	host := os.Getenv("CONNECTOR_DOMAIN")
 	return schema + host, localport, err
 }
-func GetConnection(schema, id string) (types.Connection, error) {
+func GetConnection(schema, id string) (types.ConnectionParams, error) {
 	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls, a.use_connector,
 	coalesce(a.connector_id, ''), coalesce(a.tunnel_id, '') from 
 		`+schema+`.connections as a join `+schema+`.admincredentials as b on a.id=b.connection_id 
 			join `+schema+`.passwords as c on b.id=c.id where a.id=$1;`
 
 	row := db.QueryRow(sql, id)
-	var con types.Connection
+	var con types.ConnectionParams
 	var use_connector bool
 	var connector_id, tunnel_id string
 
@@ -1335,7 +1335,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 	ds.Name = name
 
 	sql = `select  a.id, b.name, a.connection_id, a.schem, a.tabl, a.col,  a.position, a.typ, a.action, 
-	a.semantics, coalesce(a.ref_schem, ''), coalesce(a.ref_tabl, ''), coalesce(a.ref_col, ''), a.dflt, a.is_nullable from ` + schema + 
+	a.semantics, coalesce(a.ref_schem, ''), coalesce(a.ref_tabl, ''), coalesce(a.ref_col, ''), a.dflt, a.is_nullable, a.possible_actions from ` + schema + 
 	`.tables a join ` + schema + `.connections b on a.connection_id=b.id  where datascope_id=$1;`;
 	rows, err := tx.QueryContext(ctx, sql, id)
 
@@ -1348,7 +1348,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 			var rs, rt, rc string
 
 			err = rows.Scan(&dr.Id, &dr.Connection, &dr.ConnectionId, &dr.Schema, &dr.Table, &dr.Col, &dr.Position, &dr.Typ, 
-				&dr.Action, &dr.Semantics, &rs, &rt, &rc, &dr.Dflt, &dr.Isnullable)
+				&dr.Action, &dr.Semantics, &rs, &rt, &rc, &dr.Dflt, &dr.Isnullable, pq.Array(&dr.PossibleActions))
 			if err != nil {
 				log.Errorf("GetDatascope Error 2:  %s", err.Error())
 				return ds, err	
@@ -1372,11 +1372,24 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 			ds.Records = append(ds.Records, dr)
 		}
 
-		return ds, nil
 	} else {
 		log.Errorf("GetDatascope Error 3:  %s", err.Error())
-		return ds, err		
+		if err != nil {
+			tx.Rollback()
+			return ds, err
+		}	
 	}
+	// see if any groups are
+	var counter int
+	sql = `select count(*) from ` + schema + `.groupsfordatascopes where datascope_id=$1;`
+	row = db.QueryRow(sql, id)
+	log.Infof("\n\nsql: %s, id: %s\n\n", sql, id)
+	err = row.Scan(&counter)
+	ds.Groupsconfigured = counter > 0
+	if err != nil {
+		tx.Rollback()
+		return ds, err
+	}	
 
 	err = tx.Commit()
 	if err != nil {
@@ -1462,8 +1475,8 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 	records := dscope.Records
 	for  _, r := range  records  {
 
-		sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col, dflt, is_nullable) 
-		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);`
+		sql=`insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col, dflt, is_nullable, possible_actions) 
+		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`
 	
 		var rs, rt, rc string
 		if r.Reference != nil {
@@ -1471,7 +1484,7 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 			rt = r.Reference.Table
 			rc =  r.Reference.Column
 		}
-		_, err = tx.ExecContext(ctx, sql, id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable)
+		_, err = tx.ExecContext(ctx, sql, id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable, pq.Array(r.PossibleActions))
 		if err != nil {
 			tx.Rollback()
 			log.Errorf("UpdateDatascope Error 3: %s", err.Error())

@@ -5,7 +5,24 @@ package types
 
 
 
+type DataType string
+const (
+  DT_Test DataType = "Test"
+  DT_DatabaseInfo DataType = "DatabaseInfo"
+  DT_TableInfo DataType = "TableInfo"
+)
 
+type AnalyzerRequest struct {
+   Dtype DataType `json:"dtype"`
+   Connection ConnectionParams `json:"connection"`
+   TableInfo *TableInfoParams `json:"tableInfo"`
+}
+
+type AnalyzerResponse struct {
+   Dtype DataType `json:"dtype"`
+   DbInfo *DatabaseInfoData `json:"dbInfo"`
+   TblInfo *TableInfoData `json:"tblInfo"`
+}
 
 type ConnectionDetailRequest struct {
    ConnectionId string `json:"connectionId"`
@@ -14,16 +31,35 @@ type ConnectionDetailRequest struct {
 type ConnectionDetailResponse struct {
    Status string `json:"status"`
    Errormessage string `json:"errormessage"`
-   Database *Database `json:"database"`
+   Response *AnalyzerResponse `json:"response"`
 }
 
-type Arc struct {
-   From_schema string `json:"from_schema"`
-   From_table string `json:"from_table"`
-   From_column string `json:"from_column"`
-   To_schema string `json:"to_schema"`
-   To_table string `json:"to_table"`
-   To_column string `json:"to_column"`
+type ConnectionParams struct {
+   Typ ConnectionType `json:"typ"`
+   Address string `json:"address"`
+   Port int `json:"port"`
+   User string `json:"user"`
+   Password string `json:"password"`
+   Database string `json:"database"`
+   Tls bool `json:"tls"`
+}
+
+type DatabaseInfoData struct {
+   DbName string `json:"dbName"`
+   Schemas []Schema `json:"schemas"`
+}
+
+type TableInfoData struct {
+   DbName string `json:"dbName"`
+   Schema string `json:"schema"`
+   TblName string `json:"tblName"`
+   Columns []Column `json:"columns"`
+}
+
+type TableInfoParams struct {
+   Schema string `json:"schema"`
+   Table string `json:"table"`
+   Rules []PIIDetector `json:"rules"`
 }
 
 type Column struct {
@@ -33,24 +69,8 @@ type Column struct {
    IsNullable bool `json:"isNullable"`
    Default *string `json:"default"`
    Reference *Reference `json:"reference"`
-   Semantics *DataSemantics `json:"semantics"`
-}
-
-type Connection struct {
-   Typ ConnectionType `json:"typ"`
-   Address string `json:"address"`
-   Port int `json:"port"`
-   User string `json:"user"`
-   Password string `json:"password"`
-   Database string `json:"database"`
-   Tls bool `json:"tls"`
-   TestOnly bool `json:"testOnly"`
-}
-
-type Database struct {
-   Name string `json:"name"`
-   Schemas []Schema `json:"schemas"`
-   Refs []Arc `json:"refs"`
+   Semantics *string `json:"semantics"`
+   PossibleActions []DataHandling `json:"possibleActions"`
 }
 
 type Schema struct {
@@ -62,5 +82,4 @@ type Schema struct {
 type Table struct {
    Name string `json:"name"`
    IsSystem bool `json:"isSystem"`
-   Columns []Column `json:"columns"`
 }

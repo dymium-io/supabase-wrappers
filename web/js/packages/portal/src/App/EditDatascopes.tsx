@@ -6,6 +6,7 @@ import Col from 'react-bootstrap/Col'
 import Offcanvas from '@dymium/common/Components/Offcanvas'
 import Alert from 'react-bootstrap/Alert'
 import Spinner from '@dymium/common/Components/Spinner'
+import { Link } from 'react-router-dom'
 import Modal from 'react-bootstrap/Modal'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
@@ -119,7 +120,7 @@ export default function EditDatascopes() {
         style: { backgroundColor: 'rgba(0, 151, 206, 0.3)' },
         selected: [t],
         onSelect: (row, isSelect, rowIndex, e) => {
-            console.log("in onselect", row["id"])
+            setAlert(<></>)
             setSDRef.current(row["id"])
             appDispatch(setSelectedDatascopeDefault(row["id"]))
         },
@@ -168,6 +169,13 @@ export default function EditDatascopes() {
                     }
 
                     setSelectedDatascopeDetails(js)
+                    if(js != null && !js.groupsconfigured )
+                        setAlert(
+                        <Alert variant="warning" onClose={() => setAlert(<></>)} dismissible>
+                        No groups are configured for the Ghost Database {js?.name}! <Link to="?key=groups">Click here</Link> to configure.
+                            </Alert>
+                        )
+                       
                     if (js != null)
                         setDbname(js.name)
                     let ob = {}
@@ -194,6 +202,7 @@ export default function EditDatascopes() {
                             line["semantics"] = r.semantics
                             line["dflt"] = r.dflt
                             line["isnullable"] = r.isnullable
+                            line["possibleActions"] = r.possibleActions
                             line["typ"] = r.typ
                             ob[r.connection][key]["tablescope"].push(line)
 
@@ -240,7 +249,8 @@ export default function EditDatascopes() {
                     let ob: internal.DatascopeRecord = {
                         connection: st.connection, schema: st.schema, table: st.table,
                         typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
-                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable
+                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable, 
+                        possibleActions: ts.possibleActions
                     }
                     retarray.push(ob)
                 })
@@ -469,10 +479,10 @@ export default function EditDatascopes() {
                             {
                                 props => (
                                     <div className="text-left">
-                                   
+
                                         <div className="d-flex">
                                             <h5 >Edit Ghost Databases  <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
-
+                                          
 
                                             <div style={{ marginLeft: "auto" }}>
                                                 <SearchBar size="sm" {...props.searchProps} />

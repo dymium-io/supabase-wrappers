@@ -22,13 +22,6 @@ const (
   DH_Redact DataHandling = "redact"
 )
 
-type DataSemantics string
-const (
-  DS_FamilyName DataSemantics = "FamilyName"
-  DS_Email DataSemantics = "Email"
-  DS_SSN DataSemantics = "SSN"
-)
-
 type PIIDetectionType string
 const (
   PIIDT_Comprehend PIIDetectionType = "comprehend"
@@ -91,6 +84,7 @@ type DataPolicy struct {
 type Datascope struct {
    Name string `json:"name"`
    Id *string `json:"id"`
+   Groupsconfigured bool `json:"groupsconfigured"`
    Records []DatascopeRecord `json:"records"`
 }
 
@@ -130,6 +124,7 @@ type DatascopeRecord struct {
    Semantics string `json:"semantics"`
    Dflt *string `json:"dflt"`
    Isnullable bool `json:"isnullable"`
+   PossibleActions []string `json:"possibleActions"`
 }
 
 type DatascopeTable struct {
@@ -190,6 +185,12 @@ type PIISuggestor struct {
 
 type RequestById struct {
    Id string `json:"id"`
+}
+
+type TableQuery struct {
+   ConnectionId string `json:"connectionId"`
+   Schema string `json:"schema"`
+   Table string `json:"table"`
 }
 
 type Usage struct {

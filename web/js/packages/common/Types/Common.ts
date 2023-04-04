@@ -42,13 +42,6 @@ export function humanReadableDataHandling(__a__ : DataHandling) : string {
   return '';
 }
 
-export type DataSemantics =
-  | 'FamilyName'
-  | 'Email'
-  | 'SSN'
-
-
-
 export type PIIDetectionType =
   | 'comprehend'
   | 'columnregexp'
@@ -567,11 +560,13 @@ export class DataPolicy {
 export class Datascope {
   private '_name': string
   private '_id': string | null
+  private '_groupsconfigured': boolean
   private '_records': Array<DatascopeRecord>
 
   constructor() {
     this['_name'] = ''
     this['_id'] = null
+    this['_groupsconfigured'] = false
     this['_records'] = []
   }
   get name(): string { return this['_name'] }
@@ -597,6 +592,14 @@ export class Datascope {
       }
     }
   }
+  get groupsconfigured(): boolean { return this['_groupsconfigured'] }
+  set groupsconfigured(__a__: any) {
+    let __v__ = boolReader(false)(__a__)
+    if(!_.isEqual(__v__,this['_groupsconfigured'])) {
+      setDirtyFlag()
+      this['_groupsconfigured'] = __v__
+    }
+  }
   get records(): Array<DatascopeRecord> { return this['_records'] }
   set records(__a__: any) {
     setDirtyFlag()
@@ -611,6 +614,7 @@ export class Datascope {
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.name = __a__['name']
        cls.id = __a__['id'] == null ? null : __a__['id']
+       cls.groupsconfigured = __a__['groupsconfigured']
        cls.records = array1Reader(DatascopeRecord.fromJson)(__a__['records'])
     } else {
        doAlert(`Datascope: an attempt to initialize from ${__a__}`)
@@ -824,6 +828,7 @@ export class DatascopeRecord {
   private '_semantics': string
   private '_dflt': string | null
   private '_isnullable': boolean
+  private '_possibleActions': Array<string>
 
   constructor() {
     this['_id'] = null
@@ -839,6 +844,7 @@ export class DatascopeRecord {
     this['_semantics'] = ''
     this['_dflt'] = null
     this['_isnullable'] = false
+    this['_possibleActions'] = []
   }
   get id(): string | null { return this['_id'] }
   set id(__a__: any) {
@@ -969,6 +975,11 @@ export class DatascopeRecord {
       this['_isnullable'] = __v__
     }
   }
+  get possibleActions(): Array<string> { return this['_possibleActions'] }
+  set possibleActions(__a__: any) {
+    setDirtyFlag()
+    this['_possibleActions'] = __a__
+  }
 
   toJson(): string { return JSON.stringify(this).split('"_').join('"') }
 
@@ -989,6 +1000,7 @@ export class DatascopeRecord {
        cls.semantics = __a__['semantics']
        cls.dflt = __a__['dflt'] == null ? null : __a__['dflt']
        cls.isnullable = __a__['isnullable']
+       cls.possibleActions = array1Reader(stringReader(''))(__a__['possibleActions'])
     } else {
        doAlert(`DatascopeRecord: an attempt to initialize from ${__a__}`)
     }
@@ -1507,6 +1519,58 @@ export class RequestById {
        cls.id = __a__['id']
     } else {
        doAlert(`RequestById: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class TableQuery {
+  private '_connectionId': string
+  private '_schema': string
+  private '_table': string
+
+  constructor() {
+    this['_connectionId'] = ''
+    this['_schema'] = ''
+    this['_table'] = ''
+  }
+  get connectionId(): string { return this['_connectionId'] }
+  set connectionId(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_connectionId'])) {
+      setDirtyFlag()
+      this['_connectionId'] = __v__
+    }
+  }
+  get schema(): string { return this['_schema'] }
+  set schema(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_schema'])) {
+      setDirtyFlag()
+      this['_schema'] = __v__
+    }
+  }
+  get table(): string { return this['_table'] }
+  set table(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_table'])) {
+      setDirtyFlag()
+      this['_table'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): TableQuery {
+    disableDF()
+    let cls = new TableQuery()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.connectionId = __a__['connectionId']
+       cls.schema = __a__['schema']
+       cls.table = __a__['table']
+    } else {
+       doAlert(`TableQuery: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls

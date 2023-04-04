@@ -8,11 +8,24 @@ import (
 	"net/url"
 	"strings"
 
+	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
+	"DbAnalyzer/utils"
 )
 
-func getOraInfo(c types.Connection) (interface{}, error) {
+type OracleDB struct {
+	db *sql.DB
+}
 
+func (da *OracleDB) Ping() error {
+	return da.db.Ping()
+}
+
+func (da *OracleDB) Close() {
+	da.db.Close()
+}
+
+func (da *OracleDB) Connect(c *types.ConnectionParams) error {
 	query := url.Values{}
 	if c.Tls {
 		query.Add("SSL", "true")
@@ -30,139 +43,39 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 
 	db, err := sql.Open("oracle", oracleconn)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	defer db.Close()
 	if err := db.Ping(); err != nil {
-		return nil, err
-	}
-	if c.TestOnly {
-		return struct{}{}, nil
+		return err
 	}
 
-	rows, err := db.Query(`
-			       SELECT c.OWNER,
-                                      c.TABLE_NAME,
-                                      c.COLUMN_ID,
-                                      c.COLUMN_NAME,
-                                      c.DATA_TYPE,
-                                      c.DATA_LENGTH,
-                                      c.CHAR_LENGTH,
-                                      c.DATA_PRECISION,
-                                      c.DATA_SCALE,
-                                      c.NULLABLE,
-                                      c.DEFAULT_LENGTH,
-                                      c.DATA_DEFAULT
-                               FROM ALL_TABLES t
-                               INNER JOIN ALL_TAB_COLS c ON
-                                 t.OWNER = c.OWNER AND t.TABLE_NAME = c.TABLE_NAME
-                               WHERE t.TABLESPACE_NAME NOT IN ('SYSTEM', 'SYSAUX', 'UNDOTBS1', 'TEMP')
-                               ORDER BY c.OWNER, c.TABLE_NAME, c.COLUMN_ID`)
+	da.db = db
+	return nil
+}
+
+func (da *OracleDB) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
+	rows, err :=
+		da.db.Query(`SELECT OWNER, TABLE_NAME
+                             FROM ALL_TABLES
+                             WHERE TABLESPACE_NAME NOT IN ('SYSTEM', 'SYSAUX', 'UNDOTBS1', 'TEMP')
+                             ORDER BY OWNER, TABLE_NAME`)
+
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	database := types.Database{
-		Name:    c.Database,
+	database := types.DatabaseInfoData{
+		DbName:  dbName,
 		Schemas: []types.Schema{},
-		Refs:    []types.Arc{},
 	}
 	curSchema := -1
-	curTbl := -1
 	isSystem := false
 	for rows.Next() {
-		var schema, tblName, cName string
-		var cDataLen int
-		var pos *int
-		var cIsNullable *string
-		var cDflt *string
-		var cTyp *string
-		var cCharMaxLen, cPrecision, cScale *int
-		var dLength *int
-		err = rows.Scan(&schema, &tblName, &pos, &cName,
-			&cTyp, &cDataLen, &cCharMaxLen, &cPrecision, &cScale,
-			&cIsNullable, &dLength, &cDflt)
+		var schema, tblName string
+		err = rows.Scan(&schema, &tblName)
 		if err != nil {
 			return nil, err
-		}
-
-		/*
-		{
-			var pos_, cPrecision_, cCharMaxLen_, cScale_, dLength_ int
-			var cTyp_, cIsNullable_, cDflt_ string
-			if pos == nil { pos_ = -1 } else { pos_ = *pos }
-			if cCharMaxLen == nil { cCharMaxLen_ = -1 } else { cCharMaxLen_ = *cCharMaxLen }
-			if cPrecision == nil { cPrecision_ = -1 } else { cPrecision_ = *cPrecision }
-			if cScale == nil { cScale_ = -1 } else { cScale_ = *cScale }
-			if dLength == nil { dLength_ = -1 } else { dLength_ = *dLength }
-			if cTyp == nil { cTyp_ = "<empty>" } else { cTyp_ = *cTyp }
-			if cIsNullable == nil { cIsNullable_ = "<empty>" } else { cIsNullable_ = *cIsNullable }
-			if cDflt == nil { cDflt_ = "<empty>" } else { cDflt_ = *cDflt }
-			fmt.Println(schema, tblName, pos_, cName, cTyp_, cDataLen, cCharMaxLen_, cPrecision_, cScale_, cIsNullable_, dLength_, cDflt_)
-		}
-		*/
-		isNullable := true
-		if cIsNullable != nil && *cIsNullable == "N" {
-			isNullable = false
-		}
-		var t string
-		if cTyp == nil {
-			t = "undefined"
-		} else {
-			switch strings.ToLower(*cTyp) {
-			case "number":
-				if cPrecision != nil {
-					if cScale != nil {
-						t = fmt.Sprintf("numeric(%d,%d)", *cPrecision, *cScale)
-					} else {
-						t = fmt.Sprintf("numeric(%d)", *cPrecision)
-					}
-				} else {
-					t = fmt.Sprintf("numeric(%d)",cDataLen)
-				}
-			case "varchar2", "nvarchar2":
-				if cCharMaxLen != nil {
-					t = fmt.Sprintf("varchar(%d)", *cCharMaxLen)
-				} else {
-					t = "varchar"
-				}
-			case "char", "nchar":
-				if cCharMaxLen != nil {
-					t = fmt.Sprintf("character(%d)", *cCharMaxLen)
-				} else {
-					t = "bpchar"
-				}
-			case "clob", "nclob", "long":
-				t = "text"
-			case "blob", "bfile", "long raw":
-				t = "bytea"
-			case "date":
-				t = "date"
-			default:
-				// ignore other datatypes (e.g. GEOM)
-				continue
-			}
-		}
-		if pos == nil {
-			p := 0
-			pos = &p
-		}
-		var dflt *string
-		if dLength == nil || *dLength == 0 || cDflt == nil {
-			dflt = nil
-		} else {
-			d := (*cDflt)[:*dLength]
-			dflt = &d
-		}
-		c := types.Column{
-			Name:       cName,
-			Position:   *pos,
-			Typ:        t,
-			IsNullable: isNullable,
-			Default:    dflt,
-			Reference:  nil,
-			Semantics:  nil,
 		}
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
 			switch schema {
@@ -178,36 +91,184 @@ func getOraInfo(c types.Connection) (interface{}, error) {
 					{
 						Name:     tblName,
 						IsSystem: isSystem,
-						Columns:  []types.Column{c},
 					},
 				},
 			})
 			curSchema += 1
-			curTbl = 0
-		} else if tblName != database.Schemas[curSchema].Tables[curTbl].Name {
+		} else {
 			database.Schemas[curSchema].Tables = append(database.Schemas[curSchema].Tables,
 				types.Table{
 					Name:     tblName,
 					IsSystem: isSystem,
-					Columns:  []types.Column{c},
 				})
-			curTbl += 1
-		} else {
-			database.Schemas[curSchema].Tables[curTbl].Columns =
-				append(database.Schemas[curSchema].Tables[curTbl].Columns, c)
 		}
-	}
-
-	if err = resolveOraRefs(db, &database); err != nil {
-		return nil, err
 	}
 
 	return &database, nil
 }
 
-func resolveOraRefs(db *sql.DB, database *types.Database) error {
-	rows, err := db.Query(`
-	   SELECT c.OWNER, a.CONSTRAINT_NAME, a.TABLE_NAME, a.COLUMN_NAME,
+func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
+
+	stmt, err :=
+		da.db.Prepare(`SELECT COLUMN_ID,
+                                    COLUMN_NAME,
+                                    DATA_TYPE,
+                                    DATA_LENGTH,
+                                    CHAR_LENGTH,
+                                    DATA_PRECISION,
+                                    DATA_SCALE,
+                                    NULLABLE,
+                                    DEFAULT_LENGTH,
+                                    DATA_DEFAULT
+                             FROM ALL_TAB_COLS
+                             WHERE OWNER = :1 AND TABLE_NAME = :2
+                             ORDER BY COLUMN_ID`)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+	
+	rows, err := stmt.Query(tip.Schema, tip.Table)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	ti := types.TableInfoData{
+		DbName:  dbName,
+		Schema:  tip.Schema,
+		TblName: tip.Table,
+	}
+
+	type data struct {
+		cName                           string
+		cDataLen                        int
+		pos                             *int
+		isNullable                      bool
+		cDflt                           *string
+		cTyp                            *string
+		cCharMaxLen, cPrecision, cScale *int
+		dLength                         *int
+	}
+
+	descr := []*data{}
+
+	for rows.Next() {
+		var d data
+		var isNullable *string
+		err = rows.Scan(&d.pos, &d.cName,
+			&d.cTyp, &d.cDataLen, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
+			&isNullable, &d.dLength, &d.cDflt)
+		if err != nil {
+			return nil, err
+		}
+
+		if isNullable != nil && *isNullable == "N" {
+			d.isNullable = false
+		} else {
+			d.isNullable = false
+		}
+		descr = append(descr, &d)
+	}
+	
+
+	detectors, err := detect.Compile(tip.Rules)
+	if err != nil {
+		return nil, err
+	}
+
+	sample, err := da.getSample(tip.Schema, tip.Table, len(descr))
+	if err != nil {
+		return nil, err
+	}
+
+	for k, d := range descr {
+		var t string
+		var semantics *string
+		var possibleActions *[]types.DataHandling
+		if d.cTyp == nil {
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			t = "undefined"
+		} else {
+			switch strings.ToLower(*d.cTyp) {
+			case "number":
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				if d.cPrecision != nil {
+					if d.cScale != nil {
+						t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
+					} else {
+						t = fmt.Sprintf("numeric(%d)", *d.cPrecision)
+					}
+				} else {
+					t = fmt.Sprintf("numeric(%d)", d.cDataLen)
+				}
+			case "varchar2", "nvarchar2":
+				if d.cCharMaxLen != nil {
+					t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
+				} else {
+					t = "varchar"
+				}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+			case "char", "nchar":
+				if d.cCharMaxLen != nil {
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+					t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
+					semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+				} else {
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+					t = "bpchar"
+				}
+			case "clob", "nclob", "long":
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+				t = "text"
+			case "blob", "bfile", "long raw":
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				t = "bytea"
+			case "date":
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				t = "date"
+			default:
+				// ignore other datatypes (e.g. GEOM)
+				continue
+			}
+		}
+		if d.pos == nil {
+			p := 0
+			d.pos = &p
+		}
+		var dflt *string
+		if d.dLength == nil || *d.dLength == 0 || d.cDflt == nil {
+			dflt = nil
+		} else {
+			dd := (*d.cDflt)[:*d.dLength]
+			dflt = &dd
+		}
+		c := types.Column{
+			Name:            d.cName,
+			Position:        *d.pos,
+			Typ:             t,
+			IsNullable:      d.isNullable,
+			Default:         dflt,
+			Reference:       nil,
+			Semantics:       semantics,
+			PossibleActions: *possibleActions,
+		}
+
+		ti.Columns = append(ti.Columns, c)
+	}
+
+	if err = da.resolveRefs(tip, &ti); err != nil {
+		return nil, err
+	}
+
+	return &ti, nil
+}
+
+func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
+	stmt, err := da.db.Prepare(`
+	   SELECT a.CONSTRAINT_NAME, a.COLUMN_NAME,
 		  c.R_OWNER AS REF_OWNER, cpk.TABLE_NAME AS REF_TABLE,
                   c.R_CONSTRAINT_NAME
            FROM ALL_TABLES t
@@ -217,51 +278,87 @@ func resolveOraRefs(db *sql.DB, database *types.Database) error {
 	       AND a.CONSTRAINT_NAME = c.CONSTRAINT_NAME
 	   JOIN ALL_CONSTRAINTS cpk ON c.R_OWNER = cpk.OWNER
 	       AND c.R_CONSTRAINT_NAME = cpk.CONSTRAINT_NAME
-           WHERE t.TABLESPACE_NAME NOT IN ('SYSTEM', 'SYSAUX', 'UNDOTBS1', 'TEMP')
-               AND c.CONSTRAINT_TYPE = 'R'`)
+           WHERE c.OWNER = :1 AND a.TABLE_NAME = :2 AND c.CONSTRAINT_TYPE = 'R'`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(tip.Schema, tip.Table)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var schema, constraintName, tblName, columnName, fSchema, fTblName, fColumnName string
-		err := rows.Scan(&schema, &constraintName, &tblName, &columnName, &fSchema, &fTblName, &fColumnName)
+		var constraintName, columnName, fSchema, fTblName, fColumnName string
+		err := rows.Scan(&constraintName, &columnName, &fSchema, &fTblName, &fColumnName)
 		if err != nil {
 			return err
 		}
-	Loop:
-		for kSchema := range database.Schemas {
-			s := &database.Schemas[kSchema]
-			if s.Name == schema {
-				for kTbl := range s.Tables {
-					t := &s.Tables[kTbl]
-					if t.Name == tblName {
-						for kColumn := range t.Columns {
-							c := &t.Columns[kColumn]
-							if c.Name == columnName {
-								c.Reference = &types.Reference{
-									Schema: fSchema,
-									Table:  fTblName,
-									Column: fColumnName,
-								}
-								database.Refs = append(database.Refs,
-									types.Arc{
-										From_schema: schema,
-										From_table:  tblName,
-										From_column: columnName,
-										To_schema:   fSchema,
-										To_table:    fTblName,
-										To_column:   fColumnName,
-									})
-								break Loop
-							}
-						}
-					}
+		for k := range ti.Columns {
+			c := &ti.Columns[k]
+			if c.Name == columnName {
+				c.Reference = &types.Reference{
+					Schema: fSchema,
+					Table:  fTblName,
+					Column: fColumnName,
 				}
 			}
 		}
 	}
 
 	return nil
+}
+
+func (da *OracleDB) getSample(schema, table string, nColumns int) (*[][]string, error) {
+
+	var percent float32
+	{
+		r := da.db.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM "%s"."%s"`, schema, table))
+		var count int
+		r.Scan(&count)
+		if count == 0 {
+			ret := make([][]string, 0)
+			return &ret, nil
+		}
+		percent = float32(detect.SampleSize) / float32(count) * 100.0
+		if percent >= 100 {
+			percent = 99.9999
+		}
+	}
+
+	rows := make([][]*string, 0, detect.SampleSize)
+
+	sql := fmt.Sprintf(`SELECT * from "%s"."%s" SAMPLE(%f)`, schema, table, percent)
+	r, err := da.db.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	i := make([]interface{}, nColumns)
+	s := make([]*string, nColumns)
+	for k := 0; k != nColumns; k++ {
+		i[k] = &s[k]
+	}
+
+	for r.Next() {
+		if err := r.Scan(i...); err != nil {
+			return nil, err
+		}
+		rows = append(rows, utils.CopyPointers(s))
+	}
+
+	scanned := make([][]string, nColumns)
+	for k := 0; k != nColumns; k++ {
+		scanned[k] = make([]string, 0, len(rows))
+		for j := 0; j != len(rows); j++ {
+			if rows[j][k] != nil {
+				scanned[k] = append(scanned[k], *rows[j][k])
+			}
+		}
+	}
+
+	return &scanned, nil
 }
