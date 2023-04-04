@@ -10,14 +10,13 @@ import Offcanvas from '@dymium/common/Components/Offcanvas'
 import { Typeahead } from 'react-bootstrap-typeahead';
 import Modal from 'react-bootstrap/Modal'
 import Alert from 'react-bootstrap/Alert'
-import BootstrapTable from 'react-bootstrap-table-next';
+import { useLocation, useNavigate } from "react-router-dom";
 import Spinner from '@dymium/common/Components/Spinner'
 import cloneDeep from 'lodash/cloneDeep';
 import AddTable from './AddTable'
 import EditDatascopes from './EditDatascopes'
 import DatascopeForm from './DatascopeForm'
 import AssignGroups from './AssignGroups'
-import { useLocation, useNavigate } from "react-router-dom";
 import Groups from './Groups'
 import { useAppDispatch, useAppSelector } from './hooks'
 import { setActiveDatascopeTab } from '../Slices/menuSlice'
@@ -38,14 +37,14 @@ export function AddDatascope(props) {
     const [spinner, setSpinner] = useState(false)
     const [alert, setAlert] = useState<JSX.Element>(<></>)
     const [showOffcanvas, setShowOffcanvas] = useState(false)
-
+    const [hide, setHide] = useState(false)
     const [table, setTable] = useState<internal.TableScope>({ schema: "", table: "" })
     const [dbname, setDbname] = useState<string>("")
     const [datascope, setDatascope] = useState<internal.TablesMap>({})
     const [currentConnectionId, setCurrentConnectionId] = useState<string>("")
     const [currentConnectionType, setCurrentConnectionType] = useState<string>("")
     const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
-
+    const navigate = useNavigate();
     useEffect(() => {
         capi.getConnections(setSpinner, setConns, setAlert, remap, () => { })
     }, [])
@@ -81,11 +80,12 @@ export function AddDatascope(props) {
                     if (js.status === "OK") {
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
-                                Ghost Database {dbname} created successfully!<br/>
-                                <Link to="?key=groups">Click here </Link>to assign groups make it accessible to users.
+                                Ghost Database {dbname} created successfully!<br />
+                                <Link to="?key=groups">We are navigating you now </Link>to assign groups make it accessible to users.
                             </Alert>
                         )
-
+                        setTimeout(() => navigate("?key=groups"), 3000)
+                        setHide(true)
                         setTable({ schema: "", table: "" })
                         setDbname("")
                         setDatascope({})
@@ -110,7 +110,7 @@ export function AddDatascope(props) {
                         <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
                             Error creating {dbname}:  {t}!
                         </Alert>
-                    )                    
+                    )
                 )
             },
             error => {
@@ -201,20 +201,25 @@ export function AddDatascope(props) {
                     <AddTable onHide={() => { setShowOffcanvas(false) }} onAlert={setAlert} onAddTable={onAddTable} table={table} currentConnectionType={currentConnectionType} connectionId={currentConnectionId} />
                 }
             </Offcanvas>
-            <h5 > Create New Ghost Database <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
-            <div className=" text-left">
-                <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
-                    <DatascopeForm edit={false} dbname={dbname} onDbname={setDbname} onTablesMapUpdate={onTablesMapUpdate}
-                        onEditTable={onEditTable} AddNewTable={addNewTable}
-                        onDeleteConnection={onDeleteConnection}
-                        onAddTableRef={onAddTableRef} connections={conns} setAlert={setAlert}
-                        nameToConnection={remap} />
+            {!hide &&
+                <>
+                    <h5 > Create New Ghost Database <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+                    <div className=" text-left">
 
-                    <Button data-testid="apply-datascope" variant="dymium" size="sm" className="mt-4" type="submit">
-                        Apply
-                    </Button>
-                </Form>
-            </div>
+                        <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
+                            <DatascopeForm edit={false} dbname={dbname} onDbname={setDbname} onTablesMapUpdate={onTablesMapUpdate}
+                                onEditTable={onEditTable} AddNewTable={addNewTable}
+                                onDeleteConnection={onDeleteConnection}
+                                onAddTableRef={onAddTableRef} connections={conns} setAlert={setAlert}
+                                nameToConnection={remap} />
+
+                            <Button data-testid="apply-datascope" variant="dymium" size="sm" className="mt-4" type="submit">
+                                Apply
+                            </Button>
+                        </Form>
+
+                    </div></>
+            }
         </div>
     )
 }
@@ -238,10 +243,10 @@ export default function Datascopes() {
     if (tt !== null) {
         t = tt
     }
-    
+
     if (t == null) {
         t = "add"
-    } 
+    }
     useEffect(() => {
         if (query.get("key") != null) {
             appDispatch(setActiveDatascopeTab(query.get("key")))
