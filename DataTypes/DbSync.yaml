@@ -39,4 +39,4 @@ column:
   - typ: string
   - isNullable: bool
   - semantics: string
-  - action: string
+  - action: Common.DataHandling

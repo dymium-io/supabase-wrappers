@@ -176,15 +176,11 @@ func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]typ
 	rows, err := db.Query(fmt.Sprintf(`SELECT d.name, c.id,
                                       t.schem, t.tabl, t.col,
                                       t.typ, t.is_nullable,
-                                      t.semantics, t.action
+                                      t.semantics, LOWER(t.action)
                                FROM %s.tables t, %s.datascopes d, %s.connections c
                                WHERE %s t.datascope_id = d.id AND t.connection_id = c.id
                                ORDER BY d.name, t.schem, t.tabl, t.connection_id, t."position"`,
 		infoSchema, infoSchema, infoSchema, infoDatascope_))
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}

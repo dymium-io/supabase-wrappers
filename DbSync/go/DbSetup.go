@@ -275,7 +275,7 @@ func configureDatabase(db *sql.DB,
 			defs := []string{}
 			for k := range t.Columns {
 				c := &t.Columns[k]
-				if c.Action != "Block" {
+				if c.Action != types.DH_Block {
 					ract := allow
 					rtyp := undef
 					rnul := 0
@@ -285,12 +285,12 @@ func configureDatabase(db *sql.DB,
 						rnul = 1
 					}
 					switch c.Action {
-					case "Redact":
+					case types.DH_Redact:
 						ract = redact
-					case "Obfuscate":
+					case types.DH_Obfuscate:
 						ract = obfuscate
-					case "Smart Redact":
-						ract = smartRedact
+						//case types.DH_SmartRedact":
+						//ract = smartRedact
 					}
 					switch {
 					case

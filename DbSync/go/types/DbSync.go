@@ -12,7 +12,7 @@ type Column struct {
    Typ string `json:"typ"`
    IsNullable bool `json:"isNullable"`
    Semantics string `json:"semantics"`
-   Action string `json:"action"`
+   Action DataHandling `json:"action"`
 }
 
 type Connection struct {

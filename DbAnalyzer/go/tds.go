@@ -183,7 +183,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "numeric"
 			}
-		case "varchar":
+		case "varchar", "nvarchar":
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
@@ -191,7 +191,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			}
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
-		case "character":
+		case "char","nchar":
 			if d.cCharMaxLen != nil {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
@@ -201,6 +201,10 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				t = "bpchar"
 			}
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+		case "text","ntext":
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+			t = fmt.Sprintf("text", *d.cCharMaxLen)
+			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 		default:
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 			t = d.cTyp

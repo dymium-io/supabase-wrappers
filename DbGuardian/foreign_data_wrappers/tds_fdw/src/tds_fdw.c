@@ -1774,6 +1774,9 @@ TupleTableSlot* tdsIterateForeignScan(ForeignScanState *node)
 
 					int isNullable, rAct, rTyp;
 					
+					column = &festate->columns[ncol];
+					attr_oid = column->attr_oid;
+
 					if (column->local_index == -1)
 					{
 						ereport(DEBUG3,
@@ -1782,10 +1785,7 @@ TupleTableSlot* tdsIterateForeignScan(ForeignScanState *node)
 
 						continue;
 					}
-
-					column = &festate->columns[ncol];
-					attr_oid = column->attr_oid;
-
+					
 					srclen = dbdatlen(festate->dbproc, ncol + 1);
 					
 					ereport(DEBUG3,
@@ -1950,30 +1950,30 @@ TupleTableSlot* tdsIterateForeignScan(ForeignScanState *node)
 						  break;
 						case 0x1:
 						  if(rAct == 1)
-							redact_text((char*)src, -1);
+							redact_text((char*)cstring, -1);
 						  else
-							obfuscate((char*)src, -1);
+							obfuscate((char*)cstring, -1);
 						  break;
 						case 0x2:
 						  if(rAct == 1)
-							redact_number((char*)src, -1);
+							redact_number((char*)cstring, -1);
 						  else
-							obfuscate((char*)src, -1);
+							obfuscate((char*)cstring, -1);
 						  break;
 						case 0x3:
-						  redact_bool((char*)src, -1);
+						  redact_bool((char*)cstring, -1);
 						  break;
 						case 0x4:
-						  redact_xml((char*)src, -1);
+						  redact_xml((char*)cstring, -1);
 						  break;
 						case 0x5:
-						  redact_bytea((char*)src, -1);
+						  redact_bytea((char*)cstring, -1);
 						  break;
 						case 0x6:
-						  redact_json((char*)src, -1);
+						  redact_json((char*)cstring, -1);
 						  break;
 						case 0x7:
-						  obfuscate((char*)src, -1);
+						  obfuscate((char*)cstring, -1);
 						  break;
 						}
 					  }
