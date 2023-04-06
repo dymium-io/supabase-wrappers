@@ -192,14 +192,37 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				t = "varchar"
 			}
 			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+		case "text":
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+			t = "text"
+			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 		case "character":
 			if d.cCharMaxLen != nil {
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
-				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+				if *d.cCharMaxLen > 1 {
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+					semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+				} else {
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				}
 			} else {
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				t = "bpchar"
+				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+			}
+		case "bpchar":
+			if d.cCharMaxLen != nil {
+				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
+				if *d.cCharMaxLen > 1 {
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+					semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+				} else {
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				}
+			} else {
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				t = "bpchar"
+				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 			}
 		case "ARRAY":
 			switch *d.eTyp {
@@ -228,9 +251,14 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 					t = fmt.Sprintf("character(%d)[]", *d.eCharMaxLen)
 					semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 				} else {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-					t = "character[]"
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+					t = "bpchar[]"
+					semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 				}
+			case "text":
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				t = fmt.Sprintf("text[]", *d.eCharMaxLen)
+				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 			default:
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				t = *d.eTyp + "[]"

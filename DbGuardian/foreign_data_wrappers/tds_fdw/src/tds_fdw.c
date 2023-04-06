@@ -1975,6 +1975,24 @@ TupleTableSlot* tdsIterateForeignScan(ForeignScanState *node)
 						case 0x7:
 						  obfuscate((char*)cstring, -1);
 						  break;
+						case 0x8:
+						  cstring = "1970-01-01 00:00:00";
+						  break;
+						case 0x9:
+						  cstring = "1970-01-01 00:00:00+00";
+						  break;
+						case 0xa:
+						  cstring = "1970-01-01";
+						  break;
+						case 0xb:
+						  cstring = "00:00:00";
+						  break;
+						case 0xc:
+						  cstring = "00:00:00+00";
+						  break;
+						case 0xd:
+						  cstring = "00:00:00";
+						  break;
 						}
 					  }
 					  festate->datums[column->local_index] = InputFunctionCall(&festate->attinmeta->attinfuncs[column->local_index],

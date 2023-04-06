@@ -6634,7 +6634,32 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 				value_len = redact_json(value, value_len);
 				break;
 			  case 0x7:
-				value_len = obfuscate(value, value_len); break;
+				value_len = obfuscate(value, value_len);
+				break;
+			  case 0x8:
+				value = "1970-01-01 00:00:00";
+				value_len = strlen(value);
+				break;
+			  case 0x9:
+				value = "1970-01-01 00:00:00+00";
+				value_len = strlen(value);
+				break;
+			  case 0xa:
+				value = "1970-01-01";
+				value_len = strlen(value);
+				break;
+			  case 0xb:
+				value = "00:00:00";
+				value_len = strlen(value);
+				break;
+			  case 0xc:
+				value = "00:00:00+00";
+				value_len = strlen(value);
+				break;
+			  case 0xd:
+				value = "00:00:00";
+				value_len = strlen(value);
+				break;
 			  }
 			}
 		}

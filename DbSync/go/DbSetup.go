@@ -257,14 +257,20 @@ func configureDatabase(db *sql.DB,
 
 	type typ int
 	const (
-		undef   typ = 0x0
-		txt         = 0x1
-		number      = 0x2
-		boolean     = 0x3
-		xml         = 0x4
-		binary      = 0x5
-		json        = 0x6
-		uuid        = 0x7
+		UNDEF   typ = 0x0
+		TXT         = 0x1
+		NUMBER      = 0x2
+		BOOLEAN     = 0x3
+		XML         = 0x4
+		BINARY      = 0x5
+		JSON        = 0x6
+		UUID        = 0x7
+		TIMESTAMP   = 0x8
+		TIMESTAMPZ  = 0x9
+		DATE        = 0xa
+		TIME        = 0xb
+		TIMEZ       = 0xc
+		INTERVAL    = 0xd
 	)
 
 	for k := range datascope.Schemas {
@@ -277,7 +283,7 @@ func configureDatabase(db *sql.DB,
 				c := &t.Columns[k]
 				if c.Action != types.DH_Block {
 					ract := allow
-					rtyp := undef
+					rtyp := UNDEF
 					rnul := 0
 					notNull := " NOT NULL"
 					if c.IsNullable {
@@ -298,7 +304,7 @@ func configureDatabase(db *sql.DB,
 						strings.HasPrefix(c.Typ, "var"),
 						c.Typ == "text",
 						c.Typ == "bpchar":
-						rtyp = txt
+						rtyp = TXT
 					case
 						c.Typ == "bigint",
 						strings.HasPrefix(c.Typ, "double"),
@@ -308,37 +314,57 @@ func configureDatabase(db *sql.DB,
 						c.Typ == "smallint",
 						strings.HasPrefix(c.Typ, "float"),
 						strings.HasPrefix(c.Typ, "decimal"):
-						rtyp = number
+						rtyp = NUMBER
 						if ract != 0 {
 							ract = 0x1
 						}
 					case
 						strings.HasPrefix(c.Typ, "bool"):
-						rtyp = boolean
+						rtyp = BOOLEAN
 						if ract != 0 {
 							ract = 0x1
 						}
 					case
 						c.Typ == "xml":
-						rtyp = xml
+						rtyp = XML
 						if ract != 0 {
 							ract = 0x1
 						}
 					case
 						c.Typ == "bytea":
-						rtyp = binary
+						rtyp = BINARY
 						if ract != 0 {
 							ract = 0x1
 						}
 					case
 						c.Typ == "json", c.Typ == "jsonb":
-						rtyp = json
+						rtyp = JSON
 						if ract != 0 {
 							ract = 0x1
 						}
 					case
 						c.Typ == "uuid":
-						rtyp = uuid
+						rtyp = UUID
+					case
+						strings.HasPrefix(c.Typ,"timestamp"):
+						if strings.HasSuffix(c.Typ,"with timezone") {
+							rtyp = TIMESTAMPZ
+						} else {
+							rtyp = TIMESTAMP
+						}
+					case
+						strings.HasPrefix(c.Typ,"time"):
+						if strings.HasSuffix(c.Typ,"with timezone") {
+							rtyp = TIMEZ
+						} else {
+							rtyp = TIME
+						}
+					case
+						c.Typ == "date":
+						rtyp = DATE
+					case
+						strings.HasPrefix(c.Typ, "interval"):
+						rtyp = INTERVAL
 					}
 					defs = append(defs, fmt.Sprintf("  %q %s OPTIONS( redact '%d' )%s",
 						strings.ToLower(c.Name), c.Typ, int(ract)|(rnul<<2)|(int(rtyp)<<3), notNull))

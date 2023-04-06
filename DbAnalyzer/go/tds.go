@@ -203,7 +203,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 		case "text","ntext":
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-			t = fmt.Sprintf("text", *d.cCharMaxLen)
+			t = fmt.Sprintf("text")
 			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 		default:
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
@@ -299,7 +299,8 @@ func (da *SqlServer) getSample(schema, table string, nColumns int) (*[][]string,
 		i[k] = &s[k]
 	}
 
-	sql := fmt.Sprintf(`SELECT * from [%s].[%s] TABLESAMPLE(%d ROWS)`, schema, table, detect.SampleSize)
+	// sql := fmt.Sprintf(`SELECT * from [%s].[%s] TABLESAMPLE(%d ROWS)`, schema, table, detect.SampleSize)
+	sql := fmt.Sprintf(`SELECT TOP %d * from [%s].[%s] ORDER BY NEWID()`, detect.SampleSize, schema, table)
 	r, err := da.db.Query(sql)
 	if err != nil {
 		return nil, err
