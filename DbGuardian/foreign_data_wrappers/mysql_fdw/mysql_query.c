@@ -93,12 +93,12 @@ mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column,
 	  case 0x5: redact_bytea(valstr,-1); break;							\
 	  case 0x6: redact_json(valstr,-1); break;							\
 	  case 0x7: obfuscate(valstr,-1); break;							\
-	  case 0x8: valstr = "1970-01-01 00:00:00"; break;                  \
-	  case 0x9: valstr = "1970-01-01 00:00:00+00"; break;               \
-	  case 0xa: valstr = "1970-01-01"; break;			                \
-	  case 0xb: valstr = "00:00:00"; break;                             \
-	  case 0xc: valstr = "00:00:00+00"; break;                          \
-	  case 0xd: valstr = "00:00:00"; break;                             \
+	  case 0x8: strcpy(valstr, "1970-01-01 00:00:00"); break;			\
+	  case 0x9: strcpy(valstr, "1970-01-01 00:00:00+00"); break;		\
+	  case 0xa: strcpy(valstr, "1970-01-01"); break;					\
+	  case 0xb: strcpy(valstr, "00:00:00"); break;						\
+	  case 0xc: strcpy(valstr, "00:00:00+00"); break;					\
+	  case 0xd: strcpy(valstr, "00:00:00"); break;						\
 	  }																	\
 	}																	\
 } while(0)
