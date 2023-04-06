@@ -453,7 +453,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             setTableStructure(tablestructure => {
                 let t = cloneDeep(tablestructure)
                 if(event.length === 0 || event[0].id == undefined) {
-                    t[rowIndex].semantics = ""
+                    t[rowIndex].action = ""
                 } else {                
                     t[rowIndex].action = event[0].id
                 }
