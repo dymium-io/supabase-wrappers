@@ -257,7 +257,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				}
 			case "text":
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-				t = fmt.Sprintf("text[]", *d.eCharMaxLen)
+				t = "text[]"
 				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 			default:
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
