@@ -77,4 +77,5 @@ export interface Mapping {
     dymiumgroup: string;
     directorygroup: string;
     comments: string;
+    adminaccess: boolean;
 }

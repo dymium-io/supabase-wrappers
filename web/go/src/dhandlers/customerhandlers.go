@@ -623,13 +623,13 @@ func UpdateMapping(w http.ResponseWriter, r *http.Request) {
 	var t types.GroupMapping
 	err := json.Unmarshal(body, &t)
 
-	error := authentication.UpdateMapping(schema, *t.Id, t.Dymiumgroup, t.Directorygroup, t.Comments, t.Adminaccess)
-	var status types.OperationStatus
+	error, admincount := authentication.UpdateMapping(schema, *t.Id, t.Dymiumgroup, t.Directorygroup, t.Comments, t.Adminaccess)
+	var status types.GroupStatus
 	if(error == nil) {
-		status = types.OperationStatus{"OK", "Mapping updated"}
+		status = types.GroupStatus{"OK", "Mapping updated", admincount}
 	} else {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateMapping, error: %s", error.Error())
-		status = types.OperationStatus{"Error", error.Error()}
+		status = types.GroupStatus{"Error", error.Error(), 0}
 	}
 	js, err := json.Marshal(status)
 	if err != nil {

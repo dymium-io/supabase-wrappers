@@ -1371,6 +1371,58 @@ export class GroupMappingStatus {
   }
 }
 
+export class GroupStatus {
+  private '_status': string
+  private '_errormessage': string
+  private '_admincount': number
+
+  constructor() {
+    this['_status'] = ''
+    this['_errormessage'] = ''
+    this['_admincount'] = 0
+  }
+  get status(): string { return this['_status'] }
+  set status(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_status'])) {
+      setDirtyFlag()
+      this['_status'] = __v__
+    }
+  }
+  get errormessage(): string { return this['_errormessage'] }
+  set errormessage(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_errormessage'])) {
+      setDirtyFlag()
+      this['_errormessage'] = __v__
+    }
+  }
+  get admincount(): number { return this['_admincount'] }
+  set admincount(__a__: any) {
+    let __v__ = intReader(0)(__a__)
+    if(!_.isEqual(__v__,this['_admincount'])) {
+      setDirtyFlag()
+      this['_admincount'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): GroupStatus {
+    disableDF()
+    let cls = new GroupStatus()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.status = __a__['status']
+       cls.errormessage = __a__['errormessage']
+       cls.admincount = __a__['admincount']
+    } else {
+       doAlert(`GroupStatus: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class OperationStatus {
   private '_status': string
   private '_errormessage': string
