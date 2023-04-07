@@ -102,6 +102,8 @@ type DatascopeId struct {
 type DatascopeIdName struct {
    Name string `json:"name"`
    Id string `json:"id"`
+   Created string `json:"created"`
+   Modified string `json:"modified"`
 }
 
 type DatascopeInfoStatus struct {

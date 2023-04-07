@@ -716,7 +716,7 @@ fmt.Println(token)
 		var ga types.GroupAssignment
 		ga.Id = datascopes.Records[0].Id
 		ga.Name = datascopes.Records[0].Name
-		ga.Groups = append(ga.Groups, types.DatascopeIdName { mapping.Records[0].Dymiumgroup, *mapping.Records[0].Id})
+		ga.Groups = append(ga.Groups, types.DatascopeIdName { mapping.Records[0].Dymiumgroup, *mapping.Records[0].Id, "2023-04-07T05:22:10.17621-07:00","2023-04-07T05:22:10.17621-07:00"})
 
 		js, _ := json.Marshal(ga)
 

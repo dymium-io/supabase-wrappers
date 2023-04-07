@@ -720,10 +720,14 @@ export class DatascopeId {
 export class DatascopeIdName {
   private '_name': string
   private '_id': string
+  private '_created': string
+  private '_modified': string
 
   constructor() {
     this['_name'] = ''
     this['_id'] = ''
+    this['_created'] = ''
+    this['_modified'] = ''
   }
   get name(): string { return this['_name'] }
   set name(__a__: any) {
@@ -741,6 +745,22 @@ export class DatascopeIdName {
       this['_id'] = __v__
     }
   }
+  get created(): string { return this['_created'] }
+  set created(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_created'])) {
+      setDirtyFlag()
+      this['_created'] = __v__
+    }
+  }
+  get modified(): string { return this['_modified'] }
+  set modified(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_modified'])) {
+      setDirtyFlag()
+      this['_modified'] = __v__
+    }
+  }
 
   toJson(): string { return JSON.stringify(this).split('"_').join('"') }
 
@@ -750,6 +770,8 @@ export class DatascopeIdName {
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.name = __a__['name']
        cls.id = __a__['id']
+       cls.created = __a__['created']
+       cls.modified = __a__['modified']
     } else {
        doAlert(`DatascopeIdName: an attempt to initialize from ${__a__}`)
     }

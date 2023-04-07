@@ -56,8 +56,8 @@ export default function EditDatascopes() {
     )
     const appDispatch = useAppDispatch()
     let nameById = id => {
-        for(let i = 0; i < datascopes.length; i++) {
-            if(id === datascopes[i].id)
+        for (let i = 0; i < datascopes.length; i++) {
+            if (id === datascopes[i].id)
                 return datascopes[i].name
         }
         return ""
@@ -66,7 +66,7 @@ export default function EditDatascopes() {
         return e => {
             console.log(id)
             setSDRef.current(id)
-      
+
             appDispatch(setSelectedDatascopeDefault(id))
         }
     }
@@ -88,6 +88,34 @@ export default function EditDatascopes() {
             text: 'Name:',
             sort: true,
         },
+        {
+            dataField: 'created',
+            text: 'Created:',
+            sort: true,
+            headerStyle: { width: 'auto' },
+            formatter: (cell, row, rowIndex, formatExtraData) => {
+                const date = new Date(row["created"]);
+                const options: Intl.DateTimeFormatOptions = {
+                    timeZoneName: "short" 
+                }
+                const dateString = date.toLocaleString("en-US", options)
+                return <div>{dateString}</div>
+            }
+        },
+        {
+            dataField: 'modified',
+            text: 'Modified:',
+            sort: true,
+            headerStyle: { width: 'auto' },
+            formatter: (cell, row, rowIndex, formatExtraData) => {
+                const date = new Date(row["modified"]);
+                const options: Intl.DateTimeFormatOptions = {
+                    timeZoneName: "short" 
+                }
+                const dateString = date.toLocaleString("en-US", options)
+                return <div>{dateString}</div>
+            }
+        },        
         {
             text: 'Edit',
             dataField: 'edit',
@@ -125,7 +153,7 @@ export default function EditDatascopes() {
             appDispatch(setSelectedDatascopeDefault(row["id"]))
         },
     };
-    let reload = () => { 
+    let reload = () => {
         capi.getConnections(setSpinner, setConns, setAlert, remap, () => {
 
             com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
@@ -137,7 +165,7 @@ export default function EditDatascopes() {
         reload()
     }, [])
     useEffect(() => {
-        if (selectedDatascope === "" )
+        if (selectedDatascope === "")
             return
         let body = types.DatascopeId.fromJson({ id: selectedDatascope }).toJson()
         setSpinner(true)
@@ -148,7 +176,7 @@ export default function EditDatascopes() {
                     let ojs = types.DatascopeInfoStatus.fromJson(fjs)
                     if (ojs.status !== "OK") {
                         setSpinner(false)
-                        if(ojs.status !== "sql: no rows in result set")
+                        if (ojs.status !== "sql: no rows in result set")
                             setAlert(
                                 <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
                                     {ojs.errormessage}
@@ -169,13 +197,13 @@ export default function EditDatascopes() {
                     }
 
                     setSelectedDatascopeDetails(js)
-                    if(js != null && !js.groupsconfigured )
+                    if (js != null && !js.groupsconfigured)
                         setAlert(
-                        <Alert variant="warning" onClose={() => setAlert(<></>)} dismissible>
-                        No groups are configured for the Ghost Database {js?.name}! <Link to="?key=groups">Click here</Link> to configure.
+                            <Alert variant="warning" onClose={() => setAlert(<></>)} dismissible>
+                                No groups are configured for the Ghost Database {js?.name}! <Link to="?key=groups">Click here</Link> to configure.
                             </Alert>
                         )
-                       
+
                     if (js != null)
                         setDbname(js.name)
                     let ob = {}
@@ -226,7 +254,7 @@ export default function EditDatascopes() {
                         <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
                             {t}
                         </Alert>
-                    )                    
+                    )
                 )
             },
             error => {
@@ -249,7 +277,7 @@ export default function EditDatascopes() {
                     let ob: internal.DatascopeRecord = {
                         connection: st.connection, schema: st.schema, table: st.table,
                         typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
-                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable, 
+                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable,
                         possibleActions: ts.possibleActions
                     }
                     retarray.push(ob)
@@ -342,7 +370,7 @@ export default function EditDatascopes() {
         setShowOffcanvas(true)
     }
 
-    let addNewTable = (id: string, dbtype:string, schema?: string, table?: string) => {
+    let addNewTable = (id: string, dbtype: string, schema?: string, table?: string) => {
         setCurrentConnectionId(id)
         setCurrentConnectionType(dbtype)
         if (schema === undefined || table === undefined)
@@ -403,17 +431,17 @@ export default function EditDatascopes() {
             })
 
     }
-    let onDeleteConnection = (c:string) => {
+    let onDeleteConnection = (c: string) => {
         delete datascope[c]
         setDatascope(datascope)
     }
     return (
         <div className=" text-left">
-            {alert}            
+            {alert}
             <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
                 title={table["connection"] === undefined ? "Register table" : "Edit table"}>
                 {showOffcanvas &&
-                    <AddTable onHide={() => { setShowOffcanvas(false) }} onAlert={setAlert} onAddTable={onAddTable} table={table} currentConnectionType={currentConnectionType}  connectionId={currentConnectionId} />
+                    <AddTable onHide={() => { setShowOffcanvas(false) }} onAlert={setAlert} onAddTable={onAddTable} table={table} currentConnectionType={currentConnectionType} connectionId={currentConnectionId} />
                 }
             </Offcanvas>
             <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
@@ -424,21 +452,21 @@ export default function EditDatascopes() {
                 <div className="mb-3">
                     The same interface as for adding a Ghost Database is used. You select Data Sources and tables that you want to expose
                 </div>
-            </Offcanvas>            
+            </Offcanvas>
             <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
                 <Modal.Header closeButton>
                     <Modal.Title>Delete Datascope {nameById(slatedToDelete)}?</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>Are you sure you want to remove the Datascope? This operation is irreversible.</Modal.Body>
                 <Modal.Footer>
-                    <Button variant="danger"  role="button" id="Delete" data-testid="Delete"
-                         aria-label={"Delete"}
+                    <Button variant="danger" role="button" id="Delete" data-testid="Delete"
+                        aria-label={"Delete"}
                         onClick={() => {
                             deleteDatascope()
-                    }
-                    }>Delete</Button> <Button variant="dymium" onClick={() => {
-                        setShowdelete(false)
-                    }}>Cancel</Button>
+                        }
+                        }>Delete</Button> <Button variant="dymium" onClick={() => {
+                            setShowdelete(false)
+                        }}>Cancel</Button>
                 </Modal.Footer>
             </Modal>
             <div className=" text-left">
@@ -471,7 +499,7 @@ export default function EditDatascopes() {
                     <Col>
                         <ToolkitProvider
                             bootstrap4
-                       
+
                             keyField='id'
                             data={datascopes}
                             columns={columns}
@@ -482,12 +510,12 @@ export default function EditDatascopes() {
 
                                         <div className="d-flex">
                                             <h5 >Edit Ghost Databases  <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
-                                          
+
 
                                             <div style={{ marginLeft: "auto" }}>
                                                 <SearchBar size="sm" {...props.searchProps} />
                                                 <ClearSearchButton {...props.searchProps} />
-                                                <i onClick={e=>reload()} className="fa fa-refresh ablue cursor-pointer" style={{position: 'relative', top: '2px'}} aria-hidden="true"></i>
+                                                <i onClick={e => reload()} className="fa fa-refresh ablue cursor-pointer" style={{ position: 'relative', top: '2px' }} aria-hidden="true"></i>
 
                                             </div>
                                         </div>
@@ -496,10 +524,13 @@ export default function EditDatascopes() {
                                                 condensed
                                                 keyField='id'
                                                 selectRow={selectRow}
+                                                defaultSorted={[{
+                                                    dataField: 'modified',
+                                                    order: 'desc'}]}
                                                 striped bootstrap4 bordered={false}
                                                 pagination={paginationFactory({
-                                                    sizePerPage: 4,
-                                                    sizePerPageList: [4, 8, 12, 16]
+                                                    sizePerPage: 5,
+                                                    sizePerPageList: [5, 10, 15, 20]
                                                 })}
                                                 {...props.baseProps}
                                             />

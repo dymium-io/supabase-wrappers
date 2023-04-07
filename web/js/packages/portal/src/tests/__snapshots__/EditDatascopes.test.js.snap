@@ -229,6 +229,40 @@ exports[`add-datascope 1`] = `
                       />
                     </th>
                     <th
+                      aria-label="Created: sortable"
+                      className="sortable"
+                      onClick={[Function]}
+                      onKeyUp={[Function]}
+                      style={
+                        Object {
+                          "width": "auto",
+                        }
+                      }
+                      tabIndex={0}
+                    >
+                      Created:
+                      <span
+                        className="order-4"
+                      />
+                    </th>
+                    <th
+                      aria-label="Modified: sort desc"
+                      className="sortable"
+                      onClick={[Function]}
+                      onKeyUp={[Function]}
+                      style={
+                        Object {
+                          "width": "auto",
+                        }
+                      }
+                      tabIndex={0}
+                    >
+                      Modified:
+                      <span
+                        className="caret-4-desc"
+                      />
+                    </th>
+                    <th
                       style={
                         Object {
                           "width": "50px",
@@ -268,6 +302,16 @@ exports[`add-datascope 1`] = `
                     </td>
                     <td>
                       test1
+                    </td>
+                    <td>
+                      <div>
+                        Invalid Date
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        Invalid Date
+                      </div>
                     </td>
                     <td
                       style={
@@ -315,6 +359,16 @@ exports[`add-datascope 1`] = `
                     </td>
                     <td>
                       test2
+                    </td>
+                    <td>
+                      <div>
+                        Invalid Date
+                      </div>
+                    </td>
+                    <td>
+                      <div>
+                        Invalid Date
+                      </div>
                     </td>
                     <td
                       style={
@@ -371,7 +425,7 @@ exports[`add-datascope 1`] = `
                     onClick={[Function]}
                     type="button"
                   >
-                    4
+                    5
                      
                   </button>
                   <ul
@@ -381,43 +435,43 @@ exports[`add-datascope 1`] = `
                   >
                     <a
                       className="dropdown-item"
-                      data-page={4}
+                      data-page={5}
                       href="#"
                       onMouseDown={[Function]}
                       role="menuitem"
                       tabIndex="-1"
                     >
-                      4
+                      5
                     </a>
                     <a
                       className="dropdown-item"
-                      data-page={8}
+                      data-page={10}
                       href="#"
                       onMouseDown={[Function]}
                       role="menuitem"
                       tabIndex="-1"
                     >
-                      8
+                      10
                     </a>
                     <a
                       className="dropdown-item"
-                      data-page={12}
+                      data-page={15}
                       href="#"
                       onMouseDown={[Function]}
                       role="menuitem"
                       tabIndex="-1"
                     >
-                      12
+                      15
                     </a>
                     <a
                       className="dropdown-item"
-                      data-page={16}
+                      data-page={20}
                       href="#"
                       onMouseDown={[Function]}
                       role="menuitem"
                       tabIndex="-1"
                     >
-                      16
+                      20
                     </a>
                   </ul>
                 </span>
