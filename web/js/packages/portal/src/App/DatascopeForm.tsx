@@ -356,9 +356,9 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="dbname">
                             <Form.Label>Database Name</Form.Label>
-                            <Form.Control size="sm" type="text" placeholder="alphanumeric"
+                            <Form.Control size="sm" type="text" placeholder="alphanumeric_"
                                 required
-                                pattern=".+"
+                                pattern="[\w_]+"
                                 value={props.dbname}
                                 onChange={e => {
        
