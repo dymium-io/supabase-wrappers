@@ -270,7 +270,7 @@ function Test() {
           setTimeout(() => setSpinner(false), 500)
 
         }).catch((error) => {
-          setSpinner(true)
+          setSpinner(false)
           setAlert(
             <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
               Error executing query: {error.message}
