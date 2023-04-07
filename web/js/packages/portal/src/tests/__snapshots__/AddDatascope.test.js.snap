@@ -3974,7 +3974,7 @@ Object {
                           Contains PII
                         </td>
                         <td>
-                          Managed
+                          Transparent
                         </td>
                         <td
                           style="height: 30px; text-align: center;"
@@ -4373,7 +4373,7 @@ Object {
                         Contains PII
                       </td>
                       <td>
-                        Managed
+                        Transparent
                       </td>
                       <td
                         style="height: 30px; text-align: center;"
@@ -4829,7 +4829,7 @@ Object {
                           Contains PII
                         </td>
                         <td>
-                          Managed
+                          Transparent
                         </td>
                         <td
                           style="height: 30px; text-align: center;"
@@ -5228,7 +5228,7 @@ Object {
                         Contains PII
                       </td>
                       <td>
-                        Managed
+                        Transparent
                       </td>
                       <td
                         style="height: 30px; text-align: center;"
