@@ -1400,7 +1400,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 }
 
 func GetDatascopes(schema string) ([]types.DatascopeIdName, error) {
-	sql := `select id, name from `+schema+`.datascopes where exists (select schema_name from global.customers where schema_name = $1);`
+	sql := `select id, name, created, modified from `+schema+`.datascopes where exists (select schema_name from global.customers where schema_name = $1);`
 
 	rows, err := db.Query(sql, schema)
 	if err != nil {
@@ -1414,7 +1414,7 @@ func GetDatascopes(schema string) ([]types.DatascopeIdName, error) {
 
 		for rows.Next() {
 			var din types.DatascopeIdName
-			err = rows.Scan(&din.Id, &din.Name)
+			err = rows.Scan(&din.Id, &din.Name, &din.Created, &din.Modified)
 			if err != nil {
 				log.Errorf("GetDatascopes Error 1:  %s", err.Error())
 				return nil, err	
@@ -1447,6 +1447,13 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 	if err != nil {
 		tx.Rollback()
 		log.Errorf("UpdateDatascope error 1: %s", err.Error())
+		return err
+	}	
+	sql = "update "+schema+".datascopes set modified=now() where id=$1"
+	_, err = tx.ExecContext(ctx, sql, id)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("UpdateDatascope error 11: %s", err.Error())
 		return err
 	}	
 	// delete everything 

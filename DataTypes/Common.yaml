@@ -67,6 +67,8 @@ DatascopeRecord:
 DatascopeIdName:
   - name: string
   - id: string	
+  - created: string
+  - modified: string
 
 DatascopeId:
   - id: string
