@@ -179,10 +179,12 @@ const AddTable: React.FC<AddTableProps> = (props) => {
 
                         setDatabase(js.response.dbInfo)
                         if (props.table.schema !== undefined && props.table.table !== undefined) {
-                            setSchema(props.table.schema)
-                            setTable(props.table.table)
+                            setSchema(schema => {
+                                setTable(props.table.table)
+                                return props.table.schema})
                         }
                         setSpinner(false)
+
 
                     }).catch((error) => {
                         console.log("exception: ", error.message)
@@ -247,9 +249,14 @@ const AddTable: React.FC<AddTableProps> = (props) => {
 
 
     }, [])
+    useEffect(() => {
+        if(tablestructure.length !== 0)
+            setTableStructure(tables)
 
+    }, [tables])
+    
     let getSemanticsFromId = (semantics) => {
-        if(semantics === '') return "N/A"
+        if(semantics === '' || semantics == null) return "N/A"
 
         for (let i = 0; i < policy.piisuggestions.length; i++) {
             if (policy.piisuggestions[i].detector.id === semantics) {
@@ -285,11 +292,15 @@ const AddTable: React.FC<AddTableProps> = (props) => {
     }
 
     let selectTable = (table: any) => {
-        let body = JSON.stringify({
+       let b = {
             ConnectionId: props.connectionId,
             Schema: schema,
             Table: table[0]
-        })
+        }
+        if(schema === "" && props.table.schema !== "") {
+            b.Schema =  props.table.schema
+        }
+        let body = JSON.stringify(b)
         setSpinner(true)
         http.sendToServer("POST", "/api/querytable",
             null, body,
@@ -303,8 +314,15 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         setSpinner(false)
                         return
                     }
-                    setTable(js.response.tblInfo.tblName)
-                    setTables(js.response.tblInfo.columns)
+                    setTables(tables => { 
+                        setTable(table => {
+                            setTableStructure(js.response.tblInfo.columns)
+                            return js.response.tblInfo.tblName
+                        }) ; 
+                        return js.response.tblInfo.columns })
+                    
+
+                    
                     /*
                                         setDatabase(js.response.dbInfo)
                                         if (props.table.schema !== undefined && props.table.table !== undefined) {
@@ -417,8 +435,17 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         if (props.table.connection === undefined || props.table.connection === "") {
             initTableSchema()
         }
-
+        if(table !== "" && tables.length === 0) {
+            selectTable([table])
+        }
     }, [table])
+    useEffect(() => {
+
+       if ( schema !== "" && table === "" ) {
+        //    setTable(props.table.table)
+       }
+    }, [schema])
+    console.log(">>>", schema, PIIs.length, tablestructure.length, tabledef.length)
     let getTables = () => {
         if (database["schemas"] === undefined)
             return []
@@ -548,7 +575,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                             clearButton
                             data-testid="schemaname"
                             placeholder={`Choose ${correctname}...`}
-                            disabled={props.table.connection !== undefined && props.table.connection !== ""}
+                            disabled={props.table.connection !== undefined && props.table.connection !== ""|| (props.table.table !== "")}
                         />
 
                         <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
@@ -590,7 +617,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                                 labelKey="Table"
                                 placeholder="Choose table..."
                                 selected={table != undefined ? [table] : []}
-                                disabled={props.table.connection !== undefined && props.table.connection !== ""}
+                                disabled={ (props.table.connection !== undefined && props.table.connection !== "") || (props.table.table !== "")}
                             />
 
                             <Form.Control.Feedback >Looks good!</Form.Control.Feedback>

@@ -136,7 +136,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
             formatter: (cell, row, rowIndex, formatExtraData) => {
                 let sense = false
                 row.tablescope.forEach(x => {
-                    if (x.semantics !== "N/A")
+                    if (x.semantics !== "N/A" && x.semantics != null)
                         sense = true
                 })
                 if (sense) return <>Contains PII</>
@@ -151,7 +151,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
             formatter: (cell, row, rowIndex, formatExtraData) => {
                 let managed = false
                 row.tablescope.forEach(x => {
-                    if (x.action !== "Allow")
+                    if (x.action !== "allow")
                         managed = true
                 })
                 if (managed) return <>Managed</>
