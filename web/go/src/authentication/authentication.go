@@ -1679,14 +1679,19 @@ func CreateNewMapping(schema, dymiumgroup, directorygroup, comments string) erro
 	return nil
 }
 
-func UpdateMapping(schema, id, dymiumgroup, directorygroup, comments string, adminaccess bool) error {
+func UpdateMapping(schema, id, dymiumgroup, directorygroup, comments string, adminaccess bool) (error, int) {
 	sql := "update "+schema+".groupmapping set outergroup=$1, innergroup=$2, comment=$3, adminaccess=$4  where id=$5;"
 
 	_, err := db.Exec(sql, directorygroup, dymiumgroup, comments, adminaccess, id)
 	if(err != nil) {
 		log.Errorf("UpdateMapping error %s", err.Error())
+		return err, 0
 	}
-	return err
+	sql = "select count(*) "+schema+".groupmapping where adminaccess=true;"
+	row := db.QueryRow(sql)
+	var count int
+	row.Scan(&count)
+	return err, count
 }
 func DeleteMapping(schema, id string) error {
 

@@ -107,6 +107,11 @@ AuthStatus:
   - errormessage: string
   - token: string
 
+GroupStatus:
+  - status: string
+  - errormessage: string
+  - admincount: int
+
 DatascopesStatus:
   - status: string
   - errormessage: string
