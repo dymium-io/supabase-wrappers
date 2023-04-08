@@ -350,7 +350,17 @@ const { SearchBar, ClearSearchButton } = Search;
       this.setState({ validatedPII: false })
       e.preventDefault();
       e.stopPropagation();
-  
+
+      for (let i = 0; i < this.state.rules.length; i++) {
+        let rule = this.state.rules[i]
+        if(rule.name === this.state.name) {
+          window.alert("Duplicate rule " + rule.name)
+          e.preventDefault();
+          e.stopPropagation();
+          return false          
+        }
+      }
+
       let rule = {
         id: uuidv4(),
         name: this.state.name,
@@ -371,8 +381,16 @@ const { SearchBar, ClearSearchButton } = Search;
         this.setState({ validated: true })
         return false
       }
+      let names = {}
       for (let i = 0; i < this.state.rules.length; i++) {
         let rule = this.state.rules[i]
+        if(names[rule.name] !== undefined) {
+          window.alert("Duplicate rule " + rule.name)
+          e.preventDefault();
+          e.stopPropagation();
+          return false          
+        }
+        names[rule.name] = 1
         if (rule.data === "") {
           window.alert("One or more of Rule regexps are empty")
           e.preventDefault();
