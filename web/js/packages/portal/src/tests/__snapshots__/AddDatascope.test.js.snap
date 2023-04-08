@@ -156,7 +156,7 @@ Object {
                   <input
                     class="form-control form-control-sm"
                     id="dbname"
-                    pattern="[\\\\w_]+"
+                    pattern="[a-z][a-z0-9_]*"
                     placeholder="alphanumeric_"
                     required=""
                     type="text"
@@ -444,7 +444,7 @@ Object {
                 <input
                   class="form-control form-control-sm"
                   id="dbname"
-                  pattern="[\\\\w_]+"
+                  pattern="[a-z][a-z0-9_]*"
                   placeholder="alphanumeric_"
                   required=""
                   type="text"
@@ -889,7 +889,7 @@ Object {
                   <input
                     class="form-control form-control-sm"
                     id="dbname"
-                    pattern="[\\\\w_]+"
+                    pattern="[a-z][a-z0-9_]*"
                     placeholder="alphanumeric_"
                     required=""
                     type="text"
@@ -1277,7 +1277,7 @@ Object {
                 <input
                   class="form-control form-control-sm"
                   id="dbname"
-                  pattern="[\\\\w_]+"
+                  pattern="[a-z][a-z0-9_]*"
                   placeholder="alphanumeric_"
                   required=""
                   type="text"
@@ -2376,7 +2376,7 @@ Object {
                   <input
                     class="form-control form-control-sm"
                     id="dbname"
-                    pattern="[\\\\w_]+"
+                    pattern="[a-z][a-z0-9_]*"
                     placeholder="alphanumeric_"
                     required=""
                     type="text"
@@ -3418,7 +3418,7 @@ Object {
                 <input
                   class="form-control form-control-sm"
                   id="dbname"
-                  pattern="[\\\\w_]+"
+                  pattern="[a-z][a-z0-9_]*"
                   placeholder="alphanumeric_"
                   required=""
                   type="text"
@@ -3763,7 +3763,7 @@ Object {
                   <input
                     class="form-control form-control-sm"
                     id="dbname"
-                    pattern="[\\\\w_]+"
+                    pattern="[a-z][a-z0-9_]*"
                     placeholder="alphanumeric_"
                     required=""
                     type="text"
@@ -4162,7 +4162,7 @@ Object {
                 <input
                   class="form-control form-control-sm"
                   id="dbname"
-                  pattern="[\\\\w_]+"
+                  pattern="[a-z][a-z0-9_]*"
                   placeholder="alphanumeric_"
                   required=""
                   type="text"
@@ -4618,7 +4618,7 @@ Object {
                   <input
                     class="form-control form-control-sm"
                     id="dbname"
-                    pattern="[\\\\w_]+"
+                    pattern="[a-z][a-z0-9_]*"
                     placeholder="alphanumeric_"
                     required=""
                     type="text"
@@ -5017,7 +5017,7 @@ Object {
                 <input
                   class="form-control form-control-sm"
                   id="dbname"
-                  pattern="[\\\\w_]+"
+                  pattern="[a-z][a-z0-9_]*"
                   placeholder="alphanumeric_"
                   required=""
                   type="text"
