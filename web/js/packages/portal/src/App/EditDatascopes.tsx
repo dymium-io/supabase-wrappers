@@ -64,6 +64,7 @@ export default function EditDatascopes() {
     }
     let onEdit = (id) => {
         return e => {
+            debugger
             console.log(id)
             setSDRef.current(id)
 
@@ -401,8 +402,12 @@ export default function EditDatascopes() {
                         capi.getConnections(setSpinner, setConns, setAlert, remap, () => {
 
                             com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
-                                if(slatedToDelete !== t)
+                                if(slatedToDelete !== t) {
                                     setSelectedDatascope(t)
+                                    appDispatch(setSelectedDatascopeDefault(""))
+                                } else {
+                                   
+                                }
                             })
                         })
                     } else {
