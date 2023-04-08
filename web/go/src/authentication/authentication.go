@@ -1806,6 +1806,9 @@ func DeleteConnection(schema, id string) error {
 	if err != nil {
 		tx.Rollback()
 		log.Errorf("DeleteConnection error 5: %s", err.Error())
+		if(strings.Contains(err.Error(), "foreign key ")) {
+			err = errors.New( fmt.Sprintf("%s. Most likely the connection is used in a Ghost Database. It has to be cleaned up first.", err.Error()) )
+		}
 		return err
 	}
 
@@ -2443,6 +2446,9 @@ func DeleteConnector(schema, Id string) error {
 	if err != nil {
 		tx.Rollback()
 		log.Errorf("DeleteConnector error 0: %s", err.Error())
+		if(strings.Contains(err.Error(), "foreign key ")) {
+			err = errors.New( fmt.Sprintf("%s. Most likely the connection is used in a Data Source. It has to be cleaned up first.", err.Error()) )
+		}
 		return err
 	}		
 
