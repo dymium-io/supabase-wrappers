@@ -435,7 +435,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         if (props.table.connection === undefined || props.table.connection === "") {
             initTableSchema()
         }
-        if(table !== "" && tables.length === 0) {
+        if(table !== "" && tables.length === 0 && (props.table.tablescope === undefined)) {
             selectTable([table])
         }
     }, [table])
