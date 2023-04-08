@@ -56,3 +56,12 @@ ALTER TABLE tables add constraint tables_datascope_id_schem_tabl_col_key unique(
 -- description: "add possible actions",
 -- requires: ["customer/tables", "customer/tables-remove-ref"]; 
 ALTER TABLE tables add column possible_actions text[] default '{allow, block, redact, obfuscate}' not null;
+
+-- #!migration
+-- name: "customer/tables-remove-size",
+-- description: "remove size spec",
+-- requires: ["customer/tables", "customer/tables-add-possibles"]; 
+
+ALTER TABLE tables ALTER COLUMN schem TYPE varchar;
+ALTER TABLE tables ALTER COLUMN tabl TYPE varchar;
+ALTER TABLE tables ALTER COLUMN col TYPE varchar;
