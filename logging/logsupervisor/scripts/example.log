@@ -1,0 +1,991 @@
+
+PostgreSQL Database directory appears to contain a database; Skipping initialization
+
+2023-04-04 03:20:24.193 UTC [1] LOG:  redirecting log output to logging collector process
+2023-04-04 03:20:24.193 UTC [1] HINT:  Future log output will appear in directory "/var/log/postgres".
+2023-04-04 03:20:24.193 UTC [1] LOG:  ending log output to stderr
+2023-04-04 03:20:24.193 UTC [1] HINT:  Future log output will go to log destination "csvlog".
+2023-04-04 03:20:24.193 UTC,,,1,,642b9778.1,1,,2023-04-04 03:20:24 UTC,,0,LOG,00000,"ending log output to stderr",,"Future log output will go to log destination ""csvlog"".",,,,,,,"","postmaster",,0
+2023-04-04 03:20:24.193 UTC,,,1,,642b9778.1,2,,2023-04-04 03:20:24 UTC,,0,LOG,00000,"starting PostgreSQL 14.7 (Debian 14.7-1.pgdg110+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 10.2.1-6) 10.2.1 20210110, 64-bit",,,,,,,,,"","postmaster",,0
+2023-04-04 03:20:24.193 UTC,,,1,,642b9778.1,3,,2023-04-04 03:20:24 UTC,,0,LOG,00000,"listening on IPv4 address ""0.0.0.0"", port 5432",,,,,,,,,"","postmaster",,0
+2023-04-04 03:20:24.193 UTC,,,1,,642b9778.1,4,,2023-04-04 03:20:24 UTC,,0,LOG,00000,"listening on IPv6 address ""::"", port 5432",,,,,,,,,"","postmaster",,0
+2023-04-04 03:20:24.196 UTC,,,1,,642b9778.1,5,,2023-04-04 03:20:24 UTC,,0,LOG,00000,"listening on Unix socket ""/var/run/postgresql/.s.PGSQL.5432""",,,,,,,,,"","postmaster",,0
+2023-04-04 03:20:24.251 UTC,,,15,,642b9778.f,1,,2023-04-04 03:20:24 UTC,,0,LOG,00000,"database system was shut down at 2023-04-04 03:20:21 UTC",,,,,,,,,"","startup",,0
+2023-04-04 03:20:24.273 UTC,,,1,,642b9778.1,6,,2023-04-04 03:20:24 UTC,,0,LOG,00000,"database system is ready to accept connections",,,,,,,,,"","postmaster",,0
+2023-04-04 03:23:21.534 UTC,"postgres","postgres",24,"172.18.0.1:45052",642b9829.18,1,"idle",2023-04-04 03:23:21 UTC,3/6,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:21.588 UTC,"postgres","postgres",24,"172.18.0.1:45052",642b9829.18,2,"idle",2023-04-04 03:23:21 UTC,3/7,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:21.590 UTC,"postgres","postgres",24,"172.18.0.1:45052",642b9829.18,3,"idle",2023-04-04 03:23:21 UTC,3/8,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:21.613 UTC,"postgres","postgres",24,"172.18.0.1:45052",642b9829.18,4,"idle",2023-04-04 03:23:21 UTC,3/9,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:21.615 UTC,"postgres","postgres",24,"172.18.0.1:45052",642b9829.18,5,"idle",2023-04-04 03:23:21 UTC,3/10,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:21.637 UTC,"postgres","postgres",24,"172.18.0.1:45052",642b9829.18,6,"idle",2023-04-04 03:23:21 UTC,3/11,0,LOG,00000,"statement: 
+SELECT
+    has_table_privilege(
+      'pgagent.pga_job', 'INSERT, SELECT, UPDATE'
+    ) has_priviledge
+WHERE EXISTS(
+    SELECT has_schema_privilege('pgagent', 'USAGE')
+    WHERE EXISTS(
+        SELECT cl.oid FROM pg_catalog.pg_class cl
+        LEFT JOIN pg_catalog.pg_namespace ns ON ns.oid=relnamespace
+        WHERE relname='pga_job' AND nspname='pgagent'
+    )
+)
+",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:24.329 UTC,"postgres","postgres",25,"172.18.0.1:45054",642b982c.19,1,"idle",2023-04-04 03:23:24 UTC,4/2,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:24.332 UTC,"postgres","postgres",25,"172.18.0.1:45054",642b982c.19,2,"idle",2023-04-04 03:23:24 UTC,4/3,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:24.333 UTC,"postgres","postgres",25,"172.18.0.1:45054",642b982c.19,3,"idle",2023-04-04 03:23:24 UTC,4/4,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:24.338 UTC,"postgres","postgres",25,"172.18.0.1:45054",642b982c.19,4,"idle",2023-04-04 03:23:24 UTC,4/5,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:24.340 UTC,"postgres","postgres",25,"172.18.0.1:45054",642b982c.19,5,"idle",2023-04-04 03:23:24 UTC,4/6,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:24.365 UTC,"postgres","postgres",25,"172.18.0.1:45054",642b982c.19,6,"idle",2023-04-04 03:23:24 UTC,4/7,0,LOG,00000,"statement: SELECT
+    db.oid as did, db.datname as name, ta.spcname as spcname, db.datallowconn,
+    db.datistemplate AS is_template,
+    pg_catalog.has_database_privilege(db.oid, 'CREATE') as cancreate, datdba as owner
+FROM
+    pg_catalog.pg_database db
+    LEFT OUTER JOIN pg_catalog.pg_tablespace ta ON db.dattablespace = ta.oid
+WHERE         db.oid > 16383::OID OR db.datname IN ('postgres', 'edb')
+
+ORDER BY datname;",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:24.508 UTC,"postgres","postgres",25,"172.18.0.1:45054",642b982c.19,7,"idle",2023-04-04 03:23:24 UTC,4/8,0,LOG,00000,"statement: SELECT
+    nsp.oid,
+    nsp.nspname as name,
+    pg_catalog.has_schema_privilege(nsp.oid, 'CREATE') as can_create,
+    pg_catalog.has_schema_privilege(nsp.oid, 'USAGE') as has_usage
+FROM
+    pg_catalog.pg_namespace nsp
+WHERE
+            nspname NOT LIKE 'pg!_%' escape '!' AND
+            NOT (
+(nsp.nspname = 'pg_catalog' AND EXISTS
+        (SELECT 1 FROM pg_catalog.pg_class WHERE relname = 'pg_class' AND
+            relnamespace = nsp.oid LIMIT 1)) OR
+    (nsp.nspname = 'pgagent' AND EXISTS
+        (SELECT 1 FROM pg_catalog.pg_class WHERE relname = 'pga_job' AND
+            relnamespace = nsp.oid LIMIT 1)) OR
+    (nsp.nspname = 'information_schema' AND EXISTS
+        (SELECT 1 FROM pg_catalog.pg_class WHERE relname = 'tables' AND
+            relnamespace = nsp.oid LIMIT 1))
+    )
+
+    
+ORDER BY nspname;",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:24.537 UTC,"postgres","postgres",25,"172.18.0.1:45054",642b982c.19,8,"idle",2023-04-04 03:23:24 UTC,4/9,0,LOG,00000,"statement: SELECT
+    nsp.nspname as schema_name,
+    (nsp.nspname = 'pg_catalog' AND EXISTS
+        (SELECT 1 FROM pg_catalog.pg_class WHERE relname = 'pg_class' AND
+            relnamespace = nsp.oid LIMIT 1)) OR
+    (nsp.nspname = 'pgagent' AND EXISTS
+        (SELECT 1 FROM pg_catalog.pg_class WHERE relname = 'pga_job' AND
+            relnamespace = nsp.oid LIMIT 1)) OR
+    (nsp.nspname = 'information_schema' AND EXISTS
+        (SELECT 1 FROM pg_catalog.pg_class WHERE relname = 'tables' AND
+            relnamespace = nsp.oid LIMIT 1)) AS is_catalog,
+    CASE
+    WHEN nsp.nspname = ANY('{information_schema}')
+        THEN false
+    ELSE true END AS db_support
+FROM
+    pg_catalog.pg_namespace nsp
+WHERE
+    nsp.oid = 2200::OID;",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:24.570 UTC,"postgres","postgres",25,"172.18.0.1:45054",642b982c.19,9,"idle",2023-04-04 03:23:24 UTC,4/10,0,LOG,00000,"statement: SELECT rel.oid, rel.relname AS name,
+    (SELECT count(*) FROM pg_catalog.pg_trigger WHERE tgrelid=rel.oid AND tgisinternal = FALSE) AS triggercount,
+    (SELECT count(*) FROM pg_catalog.pg_trigger WHERE tgrelid=rel.oid AND tgisinternal = FALSE AND tgenabled = 'O') AS has_enable_triggers,
+    (CASE WHEN rel.relkind = 'p' THEN true ELSE false END) AS is_partitioned,
+    (SELECT count(1) FROM pg_catalog.pg_inherits WHERE inhrelid=rel.oid LIMIT 1) as is_inherits,
+    (SELECT count(1) FROM pg_catalog.pg_inherits WHERE inhparent=rel.oid LIMIT 1) as is_inherited
+FROM pg_catalog.pg_class rel
+    WHERE rel.relkind IN ('r','s','t','p') AND rel.relnamespace = 2200::oid
+    AND NOT rel.relispartition
+        ORDER BY rel.relname;",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:23:24.609 UTC,"postgres","postgres",25,"172.18.0.1:45054",642b982c.19,10,"idle",2023-04-04 03:23:24 UTC,4/11,0,LOG,00000,"statement: SELECT
+    CASE WHEN c.relkind = 'p' THEN True ELSE False END As ptable
+FROM
+    pg_catalog.pg_class c
+WHERE
+    c.oid = 16385::oid
+",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:27:48.546 UTC,"postgres","postgres",39,"172.18.0.1:37664",642b9934.27,1,"idle",2023-04-04 03:27:48 UTC,3/23,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - CONN:9342839","client backend",,0
+2023-04-04 03:27:48.552 UTC,"postgres","postgres",39,"172.18.0.1:37664",642b9934.27,2,"idle",2023-04-04 03:27:48 UTC,3/24,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - CONN:9342839","client backend",,0
+2023-04-04 03:27:48.553 UTC,"postgres","postgres",39,"172.18.0.1:37664",642b9934.27,3,"idle",2023-04-04 03:27:48 UTC,3/25,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - CONN:9342839","client backend",,0
+2023-04-04 03:27:48.557 UTC,"postgres","postgres",39,"172.18.0.1:37664",642b9934.27,4,"idle",2023-04-04 03:27:48 UTC,3/26,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - CONN:9342839","client backend",,0
+2023-04-04 03:27:48.558 UTC,"postgres","postgres",39,"172.18.0.1:37664",642b9934.27,5,"idle",2023-04-04 03:27:48 UTC,3/27,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - CONN:9342839","client backend",,0
+2023-04-04 03:27:48.567 UTC,"postgres","postgres",39,"172.18.0.1:37664",642b9934.27,6,"idle",2023-04-04 03:27:48 UTC,3/28,0,LOG,00000,"statement: CREATE TABLE ""test accounts"" (
+	user_id serial PRIMARY KEY,
+	username VARCHAR ( 50 ) UNIQUE NOT NULL,
+	password VARCHAR ( 50 ) NOT NULL,
+	email VARCHAR ( 255 ) UNIQUE NOT NULL,
+	created_on TIMESTAMP NOT NULL,
+        last_login TIMESTAMP 
+);",,,,,,,,,"pgAdmin 4 - CONN:9342839","client backend",,0
+2023-04-04 03:27:48.619 UTC,"postgres","postgres",39,"172.18.0.1:37664",642b9934.27,7,"CREATE TABLE",2023-04-04 03:27:48 UTC,3/28,735,ERROR,42P07,"relation ""test accounts"" already exists",,,,,,"CREATE TABLE ""test accounts"" (
+	user_id serial PRIMARY KEY,
+	username VARCHAR ( 50 ) UNIQUE NOT NULL,
+	password VARCHAR ( 50 ) NOT NULL,
+	email VARCHAR ( 255 ) UNIQUE NOT NULL,
+	created_on TIMESTAMP NOT NULL,
+        last_login TIMESTAMP 
+);",,,"pgAdmin 4 - CONN:9342839","client backend",,0
+2023-04-04 03:58:03.534 UTC,"postgres","postgres",60,"172.18.0.1:55116",642ba04b.3c,1,"idle",2023-04-04 03:58:03 UTC,3/32,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:58:03.548 UTC,"postgres","postgres",60,"172.18.0.1:55116",642ba04b.3c,2,"idle",2023-04-04 03:58:03 UTC,3/33,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:58:03.551 UTC,"postgres","postgres",60,"172.18.0.1:55116",642ba04b.3c,3,"idle",2023-04-04 03:58:03 UTC,3/34,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:58:03.557 UTC,"postgres","postgres",60,"172.18.0.1:55116",642ba04b.3c,4,"idle",2023-04-04 03:58:03 UTC,3/35,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 03:58:03.559 UTC,"postgres","postgres",60,"172.18.0.1:55116",642ba04b.3c,5,"idle",2023-04-04 03:58:03 UTC,3/36,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 06:07:26.789 UTC,"postgres","postgres",72,"172.18.0.1:58078",642bbe9e.48,1,"idle",2023-04-04 06:07:26 UTC,3/40,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 06:07:26.797 UTC,"postgres","postgres",72,"172.18.0.1:58078",642bbe9e.48,2,"idle",2023-04-04 06:07:26 UTC,3/41,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 06:07:26.800 UTC,"postgres","postgres",72,"172.18.0.1:58078",642bbe9e.48,3,"idle",2023-04-04 06:07:26 UTC,3/42,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 06:07:26.807 UTC,"postgres","postgres",72,"172.18.0.1:58078",642bbe9e.48,4,"idle",2023-04-04 06:07:26 UTC,3/43,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 06:07:26.810 UTC,"postgres","postgres",72,"172.18.0.1:58078",642bbe9e.48,5,"idle",2023-04-04 06:07:26 UTC,3/44,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 08:19:38.316 UTC,"postgres","postgres",74,"172.18.0.1:50126",642bdd9a.4a,1,"idle",2023-04-04 08:19:38 UTC,3/48,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 08:19:38.322 UTC,"postgres","postgres",74,"172.18.0.1:50126",642bdd9a.4a,2,"idle",2023-04-04 08:19:38 UTC,3/49,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 08:19:38.324 UTC,"postgres","postgres",74,"172.18.0.1:50126",642bdd9a.4a,3,"idle",2023-04-04 08:19:38 UTC,3/50,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 08:19:38.330 UTC,"postgres","postgres",74,"172.18.0.1:50126",642bdd9a.4a,4,"idle",2023-04-04 08:19:38 UTC,3/51,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 08:19:38.335 UTC,"postgres","postgres",74,"172.18.0.1:50126",642bdd9a.4a,5,"idle",2023-04-04 08:19:38 UTC,3/52,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 10:48:23.110 UTC,"postgres","postgres",76,"172.18.0.1:43774",642c0077.4c,1,"idle",2023-04-04 10:48:23 UTC,3/56,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 10:48:23.114 UTC,"postgres","postgres",76,"172.18.0.1:43774",642c0077.4c,2,"idle",2023-04-04 10:48:23 UTC,3/57,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 10:48:23.116 UTC,"postgres","postgres",76,"172.18.0.1:43774",642c0077.4c,3,"idle",2023-04-04 10:48:23 UTC,3/58,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 10:48:23.124 UTC,"postgres","postgres",76,"172.18.0.1:43774",642c0077.4c,4,"idle",2023-04-04 10:48:23 UTC,3/59,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 10:48:23.127 UTC,"postgres","postgres",76,"172.18.0.1:43774",642c0077.4c,5,"idle",2023-04-04 10:48:23 UTC,3/60,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 13:00:23.293 UTC,"postgres","postgres",78,"172.18.0.1:34604",642c1f67.4e,1,"idle",2023-04-04 13:00:23 UTC,3/64,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 13:00:23.298 UTC,"postgres","postgres",78,"172.18.0.1:34604",642c1f67.4e,2,"idle",2023-04-04 13:00:23 UTC,3/65,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 13:00:23.299 UTC,"postgres","postgres",78,"172.18.0.1:34604",642c1f67.4e,3,"idle",2023-04-04 13:00:23 UTC,3/66,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 13:00:23.305 UTC,"postgres","postgres",78,"172.18.0.1:34604",642c1f67.4e,4,"idle",2023-04-04 13:00:23 UTC,3/67,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 13:00:23.307 UTC,"postgres","postgres",78,"172.18.0.1:34604",642c1f67.4e,5,"idle",2023-04-04 13:00:23 UTC,3/68,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 15:27:45.560 UTC,"postgres","postgres",80,"172.18.0.1:40280",642c41f1.50,1,"idle",2023-04-04 15:27:45 UTC,3/72,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 15:27:45.565 UTC,"postgres","postgres",80,"172.18.0.1:40280",642c41f1.50,2,"idle",2023-04-04 15:27:45 UTC,3/73,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 15:27:45.567 UTC,"postgres","postgres",80,"172.18.0.1:40280",642c41f1.50,3,"idle",2023-04-04 15:27:45 UTC,3/74,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 15:27:45.574 UTC,"postgres","postgres",80,"172.18.0.1:40280",642c41f1.50,4,"idle",2023-04-04 15:27:45 UTC,3/75,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 15:27:45.576 UTC,"postgres","postgres",80,"172.18.0.1:40280",642c41f1.50,5,"idle",2023-04-04 15:27:45 UTC,3/76,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 17:38:23.360 UTC,"postgres","postgres",82,"172.18.0.1:42316",642c608f.52,1,"idle",2023-04-04 17:38:23 UTC,3/80,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 17:38:23.365 UTC,"postgres","postgres",82,"172.18.0.1:42316",642c608f.52,2,"idle",2023-04-04 17:38:23 UTC,3/81,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 17:38:23.366 UTC,"postgres","postgres",82,"172.18.0.1:42316",642c608f.52,3,"idle",2023-04-04 17:38:23 UTC,3/82,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 17:38:23.372 UTC,"postgres","postgres",82,"172.18.0.1:42316",642c608f.52,4,"idle",2023-04-04 17:38:23 UTC,3/83,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 17:38:23.374 UTC,"postgres","postgres",82,"172.18.0.1:42316",642c608f.52,5,"idle",2023-04-04 17:38:23 UTC,3/84,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 19:50:31.778 UTC,"postgres","postgres",84,"172.18.0.1:44182",642c7f87.54,1,"idle",2023-04-04 19:50:31 UTC,3/88,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 19:50:31.782 UTC,"postgres","postgres",84,"172.18.0.1:44182",642c7f87.54,2,"idle",2023-04-04 19:50:31 UTC,3/89,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 19:50:31.785 UTC,"postgres","postgres",84,"172.18.0.1:44182",642c7f87.54,3,"idle",2023-04-04 19:50:31 UTC,3/90,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 19:50:31.791 UTC,"postgres","postgres",84,"172.18.0.1:44182",642c7f87.54,4,"idle",2023-04-04 19:50:31 UTC,3/91,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 19:50:31.792 UTC,"postgres","postgres",84,"172.18.0.1:44182",642c7f87.54,5,"idle",2023-04-04 19:50:31 UTC,3/92,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 22:11:48.584 UTC,"postgres","postgres",86,"172.18.0.1:59058",642ca0a4.56,1,"idle",2023-04-04 22:11:48 UTC,3/96,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 22:11:48.594 UTC,"postgres","postgres",86,"172.18.0.1:59058",642ca0a4.56,2,"idle",2023-04-04 22:11:48 UTC,3/97,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 22:11:48.597 UTC,"postgres","postgres",86,"172.18.0.1:59058",642ca0a4.56,3,"idle",2023-04-04 22:11:48 UTC,3/98,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 22:11:48.611 UTC,"postgres","postgres",86,"172.18.0.1:59058",642ca0a4.56,4,"idle",2023-04-04 22:11:48 UTC,3/99,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 22:11:48.619 UTC,"postgres","postgres",86,"172.18.0.1:59058",642ca0a4.56,5,"idle",2023-04-04 22:11:48 UTC,3/100,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 22:23:03.628 UTC,"postgres","postgres",91,"172.18.0.1:44554",642ca347.5b,1,"idle",2023-04-04 22:23:03 UTC,3/102,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 22:23:03.635 UTC,"postgres","postgres",91,"172.18.0.1:44554",642ca347.5b,2,"idle",2023-04-04 22:23:03 UTC,3/103,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 22:23:03.639 UTC,"postgres","postgres",91,"172.18.0.1:44554",642ca347.5b,3,"idle",2023-04-04 22:23:03 UTC,3/104,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 22:23:03.646 UTC,"postgres","postgres",91,"172.18.0.1:44554",642ca347.5b,4,"idle",2023-04-04 22:23:03 UTC,3/105,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 22:23:03.649 UTC,"postgres","postgres",91,"172.18.0.1:44554",642ca347.5b,5,"idle",2023-04-04 22:23:03 UTC,3/106,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-04 22:53:30.579 UTC,,,122,,642caa6a.7a,1,,2023-04-04 22:53:30 UTC,5/0,0,WARNING,42501,"could not open statistics file ""pg_stat_tmp/global.stat"": Operation not permitted",,,,,,,,,"","autovacuum worker",,0
+2023-04-05 00:37:34.826 UTC,,,19,,642b9778.13,1,,2023-04-04 03:20:24 UTC,1/0,0,WARNING,42501,"could not open statistics file ""pg_stat_tmp/global.stat"": Operation not permitted",,,,,,,,,"","autovacuum launcher",,0
+2023-04-05 01:09:03.990 UTC,"postgres","postgres",256,"172.18.0.1:50810",642cca2f.100,1,"idle",2023-04-05 01:09:03 UTC,3/110,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 01:09:03.999 UTC,"postgres","postgres",256,"172.18.0.1:50810",642cca2f.100,2,"idle",2023-04-05 01:09:03 UTC,3/111,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 01:09:04.001 UTC,"postgres","postgres",256,"172.18.0.1:50810",642cca2f.100,3,"idle",2023-04-05 01:09:03 UTC,3/112,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 01:09:04.011 UTC,"postgres","postgres",256,"172.18.0.1:50810",642cca2f.100,4,"idle",2023-04-05 01:09:03 UTC,3/113,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 01:09:04.014 UTC,"postgres","postgres",256,"172.18.0.1:50810",642cca2f.100,5,"idle",2023-04-05 01:09:03 UTC,3/114,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 01:09:36.067 UTC,,,19,,642b9778.13,2,,2023-04-04 03:20:24 UTC,1/0,0,WARNING,42501,"could not open statistics file ""pg_stat_tmp/global.stat"": Operation not permitted",,,,,,,,,"","autovacuum launcher",,0
+2023-04-05 02:28:39.275 UTC,,,19,,642b9778.13,3,,2023-04-04 03:20:24 UTC,1/0,0,WARNING,42501,"could not open statistics file ""pg_stat_tmp/global.stat"": Operation not permitted",,,,,,,,,"","autovacuum launcher",,0
+2023-04-05 03:34:29.470 UTC,"postgres","postgres",371,"172.18.0.1:43284",642cec45.173,1,"idle",2023-04-05 03:34:29 UTC,3/116,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 03:34:29.490 UTC,"postgres","postgres",371,"172.18.0.1:43284",642cec45.173,2,"idle",2023-04-05 03:34:29 UTC,3/117,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 03:34:29.492 UTC,"postgres","postgres",371,"172.18.0.1:43284",642cec45.173,3,"idle",2023-04-05 03:34:29 UTC,3/118,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 03:34:29.500 UTC,"postgres","postgres",371,"172.18.0.1:43284",642cec45.173,4,"idle",2023-04-05 03:34:29 UTC,3/119,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 03:34:29.503 UTC,"postgres","postgres",371,"172.18.0.1:43284",642cec45.173,5,"idle",2023-04-05 03:34:29 UTC,3/120,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 05:36:13.023 UTC,"postgres","postgres",373,"172.18.0.1:33040",642d08cc.175,1,"idle",2023-04-05 05:36:12 UTC,3/124,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 05:36:13.034 UTC,"postgres","postgres",373,"172.18.0.1:33040",642d08cc.175,2,"idle",2023-04-05 05:36:12 UTC,3/125,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 05:36:13.037 UTC,"postgres","postgres",373,"172.18.0.1:33040",642d08cc.175,3,"idle",2023-04-05 05:36:12 UTC,3/126,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 05:36:13.050 UTC,"postgres","postgres",373,"172.18.0.1:33040",642d08cc.175,4,"idle",2023-04-05 05:36:12 UTC,3/127,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 05:36:13.056 UTC,"postgres","postgres",373,"172.18.0.1:33040",642d08cc.175,5,"idle",2023-04-05 05:36:12 UTC,3/128,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 07:49:57.952 UTC,"postgres","postgres",375,"172.18.0.1:54204",642d2825.177,1,"idle",2023-04-05 07:49:57 UTC,3/132,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 07:49:57.958 UTC,"postgres","postgres",375,"172.18.0.1:54204",642d2825.177,2,"idle",2023-04-05 07:49:57 UTC,3/133,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 07:49:57.959 UTC,"postgres","postgres",375,"172.18.0.1:54204",642d2825.177,3,"idle",2023-04-05 07:49:57 UTC,3/134,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 07:49:57.962 UTC,"postgres","postgres",375,"172.18.0.1:54204",642d2825.177,4,"idle",2023-04-05 07:49:57 UTC,3/135,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 07:49:57.964 UTC,"postgres","postgres",375,"172.18.0.1:54204",642d2825.177,5,"idle",2023-04-05 07:49:57 UTC,3/136,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 10:18:04.552 UTC,"postgres","postgres",377,"172.18.0.1:40170",642d4adc.179,1,"idle",2023-04-05 10:18:04 UTC,3/140,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 10:18:04.557 UTC,"postgres","postgres",377,"172.18.0.1:40170",642d4adc.179,2,"idle",2023-04-05 10:18:04 UTC,3/141,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 10:18:04.558 UTC,"postgres","postgres",377,"172.18.0.1:40170",642d4adc.179,3,"idle",2023-04-05 10:18:04 UTC,3/142,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 10:18:04.563 UTC,"postgres","postgres",377,"172.18.0.1:40170",642d4adc.179,4,"idle",2023-04-05 10:18:04 UTC,3/143,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 10:18:04.565 UTC,"postgres","postgres",377,"172.18.0.1:40170",642d4adc.179,5,"idle",2023-04-05 10:18:04 UTC,3/144,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 12:19:43.868 UTC,"postgres","postgres",379,"172.18.0.1:35086",642d675f.17b,1,"idle",2023-04-05 12:19:43 UTC,3/148,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 12:19:43.871 UTC,"postgres","postgres",379,"172.18.0.1:35086",642d675f.17b,2,"idle",2023-04-05 12:19:43 UTC,3/149,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 12:19:43.872 UTC,"postgres","postgres",379,"172.18.0.1:35086",642d675f.17b,3,"idle",2023-04-05 12:19:43 UTC,3/150,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 12:19:43.875 UTC,"postgres","postgres",379,"172.18.0.1:35086",642d675f.17b,4,"idle",2023-04-05 12:19:43 UTC,3/151,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 12:19:43.877 UTC,"postgres","postgres",379,"172.18.0.1:35086",642d675f.17b,5,"idle",2023-04-05 12:19:43 UTC,3/152,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 14:32:57.075 UTC,"postgres","postgres",381,"172.18.0.1:40848",642d8699.17d,1,"idle",2023-04-05 14:32:57 UTC,3/156,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 14:32:57.084 UTC,"postgres","postgres",381,"172.18.0.1:40848",642d8699.17d,2,"idle",2023-04-05 14:32:57 UTC,3/157,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 14:32:57.086 UTC,"postgres","postgres",381,"172.18.0.1:40848",642d8699.17d,3,"idle",2023-04-05 14:32:57 UTC,3/158,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 14:32:57.093 UTC,"postgres","postgres",381,"172.18.0.1:40848",642d8699.17d,4,"idle",2023-04-05 14:32:57 UTC,3/159,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 14:32:57.095 UTC,"postgres","postgres",381,"172.18.0.1:40848",642d8699.17d,5,"idle",2023-04-05 14:32:57 UTC,3/160,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 16:59:21.561 UTC,"postgres","postgres",383,"172.18.0.1:38640",642da8e9.17f,1,"idle",2023-04-05 16:59:21 UTC,3/164,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 16:59:21.565 UTC,"postgres","postgres",383,"172.18.0.1:38640",642da8e9.17f,2,"idle",2023-04-05 16:59:21 UTC,3/165,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 16:59:21.566 UTC,"postgres","postgres",383,"172.18.0.1:38640",642da8e9.17f,3,"idle",2023-04-05 16:59:21 UTC,3/166,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 16:59:21.571 UTC,"postgres","postgres",383,"172.18.0.1:38640",642da8e9.17f,4,"idle",2023-04-05 16:59:21 UTC,3/167,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 16:59:21.573 UTC,"postgres","postgres",383,"172.18.0.1:38640",642da8e9.17f,5,"idle",2023-04-05 16:59:21 UTC,3/168,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 19:12:08.514 UTC,"postgres","postgres",385,"172.18.0.1:59990",642dc808.181,1,"idle",2023-04-05 19:12:08 UTC,3/172,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 19:12:08.516 UTC,"postgres","postgres",385,"172.18.0.1:59990",642dc808.181,2,"idle",2023-04-05 19:12:08 UTC,3/173,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 19:12:08.517 UTC,"postgres","postgres",385,"172.18.0.1:59990",642dc808.181,3,"idle",2023-04-05 19:12:08 UTC,3/174,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 19:12:08.519 UTC,"postgres","postgres",385,"172.18.0.1:59990",642dc808.181,4,"idle",2023-04-05 19:12:08 UTC,3/175,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 19:12:08.519 UTC,"postgres","postgres",385,"172.18.0.1:59990",642dc808.181,5,"idle",2023-04-05 19:12:08 UTC,3/176,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 20:12:39.765 UTC,"postgres","postgres",388,"172.18.0.1:34112",642dd637.184,1,"idle",2023-04-05 20:12:39 UTC,3/180,0,LOG,00000,"statement: SET DateStyle=ISO; SET client_min_messages=notice; SELECT set_config('bytea_output','hex',false) FROM pg_settings WHERE name = 'bytea_output'; SET client_encoding='UNICODE';",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 20:12:39.782 UTC,"postgres","postgres",388,"172.18.0.1:34112",642dd637.184,2,"idle",2023-04-05 20:12:39 UTC,3/181,0,LOG,00000,"statement: SELECT version()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 20:12:39.784 UTC,"postgres","postgres",388,"172.18.0.1:34112",642dd637.184,3,"idle",2023-04-05 20:12:39 UTC,3/182,0,LOG,00000,"statement: 
+SELECT
+    db.oid as did, db.datname, db.datallowconn,
+    pg_encoding_to_char(db.encoding) AS serverencoding,
+    has_database_privilege(db.oid, 'CREATE') as cancreate,
+    datistemplate
+FROM
+    pg_catalog.pg_database db
+WHERE db.datname = current_database()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 20:12:39.790 UTC,"postgres","postgres",388,"172.18.0.1:34112",642dd637.184,4,"idle",2023-04-05 20:12:39 UTC,3/183,0,LOG,00000,"statement: 
+        SELECT
+             gss_authenticated, encrypted
+        FROM
+            pg_catalog.pg_stat_gssapi
+        WHERE pid = pg_backend_pid()",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
+2023-04-05 20:12:39.792 UTC,"postgres","postgres",388,"172.18.0.1:34112",642dd637.184,5,"idle",2023-04-05 20:12:39 UTC,3/184,0,LOG,00000,"statement: 
+        SELECT
+            roles.oid as id, roles.rolname as name,
+            roles.rolsuper as is_superuser,
+            CASE WHEN roles.rolsuper THEN true ELSE roles.rolcreaterole END as
+            can_create_role,
+            CASE WHEN roles.rolsuper THEN true
+            ELSE roles.rolcreatedb END as can_create_db,
+            CASE WHEN 'pg_signal_backend'=ANY(ARRAY(WITH RECURSIVE cte AS (
+            SELECT pg_roles.oid,pg_roles.rolname FROM pg_roles
+                WHERE pg_roles.oid = roles.oid
+            UNION ALL
+            SELECT m.roleid,pgr.rolname FROM cte cte_1
+                JOIN pg_auth_members m ON m.member = cte_1.oid
+                JOIN pg_roles pgr ON pgr.oid = m.roleid)
+            SELECT rolname  FROM cte)) THEN True
+            ELSE False END as can_signal_backend
+        FROM
+            pg_catalog.pg_roles as roles
+        WHERE
+            rolname = current_user",,,,,,,,,"pgAdmin 4 - DB:postgres","client backend",,0
