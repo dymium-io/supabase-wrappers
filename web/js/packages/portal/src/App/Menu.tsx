@@ -12,10 +12,8 @@ import * as hex from '../Utils/Hex'
 function Menu() {
 
     let [avatar, setAvatar] = useState('/avatar.png') // eslint-disable-line no-unused-vars
-    let [show, setShow] = useState(false) 
+    let [show, setShow] = useState(false)
 
-    let p = hex.HexStringToByteArray(com.getTokenProperty("picture"))
-    let picture = hex.StringFromUTF8Array(p)
     let onAva = e => {
         setShow(true)
     }
@@ -24,16 +22,21 @@ function Menu() {
     }
     let getGroups = () => {
         let gr = com.getTokenProperty("groups")
-        if(gr === null || gr === undefined)
+        if (gr === null || gr === undefined)
             return ""
         return gr.join(", ")
     }
-    if(undefined !== picture && avatar != picture) {
+    let pic = com.getTokenProperty("picture")
+
+    let p = pic && hex.HexStringToByteArray(pic)
+    let picture = p && hex.StringFromUTF8Array(p)
+
+    if (undefined !== picture && avatar != picture) {
         setAvatar(picture)
     }
-        return (
-            <div id="home" className="w-100 text-center deepestblue">
-            <Modal show={show} onHide={handleClose}  centered >
+    return (
+        <div id="home" className="w-100 text-center deepestblue">
+            <Modal show={show} onHide={handleClose} centered >
                 <Modal.Header closeButton>
                     <Modal.Title>Current user:</Modal.Title>
                 </Modal.Header>
@@ -50,37 +53,37 @@ function Menu() {
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleClose}>Close</Button>
                 </Modal.Footer>
-            </Modal>                
-                <Navbar id="navb"
-                    className="p-0 m-0 navbar-expand-sm"
-                    collapseOnSelect expand="lg" variant="light">
-                    <Navbar.Brand className="text-left p-0 m-0 mr-2" >
+            </Modal>
+            <Navbar id="navb"
+                className="p-0 m-0 navbar-expand-sm"
+                collapseOnSelect expand="lg" variant="light">
+                <Navbar.Brand className="text-left p-0 m-0 mr-2" >
 
-                        <Nav.Link className="p-1 m-0" style={{width: '48px'}} href="/">
-                            <img src="/logo.svg" style={{width: '100%'}} alt="logo" />
-                        </Nav.Link >
-                        </Navbar.Brand>
-                        <Navbar.Brand className="text-left p-0 m-0 mr-2" >
-                        <Nav.Link className="p-0 m-0 ml-1" style={{width: '140px'}} href="/">
-                            <img src="/brand.svg" style={{width: '100%'}} alt="logo" />
-                        </Nav.Link >
-                    </Navbar.Brand>
+                    <Nav.Link className="p-1 m-0" style={{ width: '48px' }} href="/">
+                        <img src="/logo.svg" style={{ width: '100%' }} alt="logo" />
+                    </Nav.Link >
+                </Navbar.Brand>
+                <Navbar.Brand className="text-left p-0 m-0 mr-2" >
+                    <Nav.Link className="p-0 m-0 ml-1" style={{ width: '140px' }} href="/">
+                        <img src="/brand.svg" style={{ width: '100%' }} alt="logo" />
+                    </Nav.Link >
+                </Navbar.Brand>
 
-                    <Navbar.Toggle aria-controls="responsive-navbar-nav" />
+                <Navbar.Toggle aria-controls="responsive-navbar-nav" />
 
-                    <Navbar.Collapse id="responsive-navbar-nav">
-                        <Nav className="mx-auto " >
-                           
-                        </Nav>
-                        <img alt="avatar" onClick={onAva} style={{cursor: 'pointer'}}className="avatar mr-2" src={avatar} />
-                        <Nav className="pr-3">
-                            <Nav.Link id="logout" href="/api/logout">Logout</Nav.Link>
-                        </Nav>
-                    </Navbar.Collapse>
-                </Navbar>
+                <Navbar.Collapse id="responsive-navbar-nav">
+                    <Nav className="mx-auto " >
 
-            </div>
-        )
+                    </Nav>
+                    <img alt="avatar" onClick={onAva} style={{ cursor: 'pointer' }} className="avatar mr-2" src={avatar} />
+                    <Nav className="pr-3">
+                        <Nav.Link id="logout" href="/api/logout">Logout</Nav.Link>
+                    </Nav>
+                </Navbar.Collapse>
+            </Navbar>
+
+        </div>
+    )
 };
 
 export default Menu

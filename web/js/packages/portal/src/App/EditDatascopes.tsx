@@ -395,19 +395,20 @@ export default function EditDatascopes() {
                     if (js.status === "OK") {
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
-                                Ghost Database {dbname} updated successfully!
+                                Ghost Database {dbname} deleted successfully!
                             </Alert>
                         )
                         capi.getConnections(setSpinner, setConns, setAlert, remap, () => {
 
                             com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
-                                setSelectedDatascope(t)
+                                if(slatedToDelete !== t)
+                                    setSelectedDatascope(t)
                             })
                         })
                     } else {
                         setAlert(
                             <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                                Error updating {dbname}:  {js.errormessage}
+                                Error deleting {dbname}:  {js.errormessage}
                             </Alert>
                         )
                     }
@@ -420,7 +421,7 @@ export default function EditDatascopes() {
                 resp != null && resp.text().then(t =>
                     setAlert(
                         <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                            Error updating {dbname}:  {t}
+                            Error deleting {dbname}:  {t}
                         </Alert>
                     )
                 )
@@ -541,7 +542,7 @@ export default function EditDatascopes() {
                         </ToolkitProvider>
                     </Col>
                 </Row>
-                {(selectedDatascope !== "" && selectedDatascope !== "xxx") &&
+                {(selectedDatascope !== "") &&
                     <div className=" text-left p-4 mt-4" style={{ backgroundColor: "rgba(255, 255, 255, 0.7)" }}>
                         <h5>{selectedDatascopeDetails?.name}</h5>
                         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>

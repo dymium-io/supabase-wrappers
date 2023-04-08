@@ -17,8 +17,7 @@ export default function Auth() {
         return "/app/logout"
     }
     let revalidate = () => {
-        if(!active.current)
-            return
+
         let token = window.sessionStorage.getItem("Session");
         lastSessionUpdate.current = Date.now()/1000                       
         if (token === null) {
@@ -26,6 +25,8 @@ export default function Auth() {
             window.location.href = redirectPublicWebsite();
             return;
         }
+        if(!active.current)
+            return
         fetch(window.location.origin + "/auth/refresh", {
             cache: 'no-cache',
             method: 'POST',

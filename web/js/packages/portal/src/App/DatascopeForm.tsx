@@ -358,7 +358,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                             <Form.Label>Database Name</Form.Label>
                             <Form.Control size="sm" type="text" placeholder="alphanumeric_"
                                 required
-                                pattern="[\w_]+"
+                                pattern="[a-z][a-z0-9_]*"
                                 value={props.dbname}
                                 onChange={e => {
        
