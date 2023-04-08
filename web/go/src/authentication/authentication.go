@@ -1651,7 +1651,7 @@ func UpdateGroupAssignment(schema string, groups types.GroupAssignment) error {
 	return nil
 }
 
-func CreateNewMapping(schema, dymiumgroup, directorygroup, comments string) error {
+func CreateNewMapping(schema, dymiumgroup, directorygroup, comments string, admin bool) error {
 	// Create a new context, and begin a transaction
     ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancelfunc()
@@ -1661,8 +1661,8 @@ func CreateNewMapping(schema, dymiumgroup, directorygroup, comments string) erro
 		return err
 	}
 
-	sql := "insert into "+schema+".groupmapping(outergroup, innergroup, comment) values($1, $2, $3) ;"
-	_, err = tx.ExecContext(ctx, sql, directorygroup, dymiumgroup, comments)
+	sql := "insert into "+schema+".groupmapping(outergroup, innergroup, comment, adminaccess) values($1, $2, $3, $4) ;"
+	_, err = tx.ExecContext(ctx, sql, directorygroup, dymiumgroup, comments, admin)
 
 	if err != nil {
 		tx.Rollback()

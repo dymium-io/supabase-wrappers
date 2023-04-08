@@ -657,7 +657,7 @@ func CreateMapping(w http.ResponseWriter, r *http.Request) {
 	var t types.GroupMapping
 	err := json.Unmarshal(body, &t)
 
-	error := authentication.CreateNewMapping(schema, t.Dymiumgroup, t.Directorygroup, t.Comments)
+	error := authentication.CreateNewMapping(schema, t.Dymiumgroup, t.Directorygroup, t.Comments, t.Adminaccess)
 	var status types.OperationStatus
 	if(error == nil) {
 		status = types.OperationStatus{"OK", "Mapping created"}
