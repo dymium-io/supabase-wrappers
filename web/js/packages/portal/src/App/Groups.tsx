@@ -5,6 +5,8 @@ import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
+import { useNavigate } from 'react-router-dom';
+
 import Card from 'react-bootstrap/Card'
 import Offcanvas from '@dymium/common/Components/Offcanvas'
 import { Typeahead } from 'react-bootstrap-typeahead';
@@ -44,6 +46,8 @@ function GroupMapping() {
   const [mappings, setMappings] = useState<types.Mapping[]>([])
   const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
 
+  let mappingsref = useRef(mappings)
+  mappingsref.current = mappings
   let AddMapping = () => {
     setShow(false)
   }
@@ -53,8 +57,23 @@ function GroupMapping() {
       null, "",
       resp => {
         resp.json().then(js => {
-
-          setMappings(js.records)
+          let admin = false
+          if (js.records.length > 0) {
+            for (let i = 0; i < js.records.length; i++) {
+              if (js.records[i].adminaccess === true) {
+                admin = true
+                break
+              }
+            }
+            if (!admin) {
+              setAlert(
+                <Alert variant="warning" onClose={() => setAlert(<></>)} dismissible>
+                  Your group set does not have a group marked as admin role. You might get locked out of the console.
+                </Alert>
+              )
+            }
+          }
+          setMappings(mappings => js.records)
           setSpinner(false)
           setShow(false)
         }).catch((error) => {
@@ -74,10 +93,10 @@ function GroupMapping() {
       error => {
         console.log("on exception")
         setSpinner(false)
-          setAlert(
-            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+        setAlert(
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
             Error retrieving mapping: {error.message}
-            </Alert>
+          </Alert>
         )
         setShow(false)
       })
@@ -233,9 +252,24 @@ function GroupMapping() {
         )
       })
   }
-
+  const navigate = useNavigate();
   useEffect(() => {
     getMappings()
+
+    return () => {
+      let m = mappingsref.current
+      let admin = false
+      for(let i = 0; i < m.length; i++) {
+        if( m[i].adminaccess) {
+          admin = true
+          break
+        }
+      }
+      if(!admin) {
+        window.alert("Please mark at least one group as admin!")
+        navigate("/app/groups")
+      }
+    }
   }, [])
 
   let handleSubmit = event => {
@@ -526,6 +560,10 @@ function GroupMapping() {
                   <BootstrapTable id="scaledtable"
                     size="sm"
                     condensed
+                    defaultSorted={[{
+                      dataField: 'directorygroup',
+                      order: 'asc'
+                    }]}
                     striped bootstrap4 bordered={false}
                     pagination={paginationFactory()}
                     {...props.baseProps}

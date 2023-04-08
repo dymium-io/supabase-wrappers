@@ -168,6 +168,12 @@ type GroupMappingStatus struct {
    Records []GroupMapping `json:"records"`
 }
 
+type GroupStatus struct {
+   Status string `json:"status"`
+   Errormessage string `json:"errormessage"`
+   Admincount int `json:"admincount"`
+}
+
 type OperationStatus struct {
    Status string `json:"status"`
    Errormessage string `json:"errormessage"`
