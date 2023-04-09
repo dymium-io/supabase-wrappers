@@ -47,7 +47,14 @@ export function AddDatascope(props) {
     const navigate = useNavigate();
     useEffect(() => {
         capi.getConnections(setSpinner, setConns, setAlert, remap, () => { })
+        return () => {
+            if(timeoutid.current !== null) {
+                window.clearTimeout(timeoutid.current)
+                timeoutid.current = null
+            }
+        }
     }, [])
+    let timeoutid = useRef<number | null>(null)
 
     let sendConnection = () => {
         let retarray: types.DatascopeRecord[] = []
@@ -84,7 +91,10 @@ export function AddDatascope(props) {
                                 <Link to="?key=groups">We are navigating you now </Link>to assign groups make it accessible to users.
                             </Alert>
                         )
-                        setTimeout(() => navigate("?key=groups"), 3000)
+                        timeoutid.current = window.setTimeout(() => { 
+                            timeoutid.current = null
+                            navigate("?key=groups")
+                        }, 3000)
                         setHide(true)
                         setTable({ schema: "", table: "" })
                         setDbname("")
