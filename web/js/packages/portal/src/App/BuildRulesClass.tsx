@@ -258,7 +258,10 @@ const { SearchBar, ClearSearchButton } = Search;
                     e => {
                       if (window.confirm("Are you sure you want to delete \n" + row["name"] + "\npolicy suggestion?")) {
                         let rules = this.state.rules.filter(rule => {
-                          if (rule.index === row.index) return false
+                          if (rule.id === row.id) {
+                            debugger
+                            return false
+                          }
                           return true
                         })
                         this.setState({ rules })
@@ -471,7 +474,7 @@ const { SearchBar, ClearSearchButton } = Search;
                     required
                     pattern="[\w '&%]+"
                     value={this.state.name}
-                    onChange={e => this.setState({ name: e.target.value })}
+                    onChange={e => this.setState({ name: e.target.value.trim() })}
                   />
                   <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                   <Form.Control.Feedback type="invalid" >
