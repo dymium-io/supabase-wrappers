@@ -1046,6 +1046,40 @@ func GetPolicies(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
+func GetDatascopesForTestSQL(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	session := r.Context().Value(authenticatedSessionKey).(string)
+
+	datascopes, error := authentication.GetDatascopesForTestSQL(schema, roles, groups)
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+
+	if(error != nil) {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api Error in GetDatascopes: %s", error.Error())
+
+		status := types.DatascopesStatus{"Error", error.Error(), []types.DatascopeIdName{}}
+		js, _ := json.Marshal(status)
+		w.Write(js)
+		return
+	}
+	status := types.DatascopesStatus{"OK", "", datascopes}
+	js, err := json.Marshal(status)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api Error in GetDatascopes: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	} 
+	var out []string 
+	for i := 0; i < len(datascopes); i++ {
+		out = append(out, datascopes[i].Name)
+	}
+	log.InfoUserArrayf(schema, session, email, groups, roles, "Api GetDatascopes, success", out)
+	w.Write(js)
+}
+
 func GetDatascopes(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 	email := r.Context().Value(authenticatedEmailKey).(string)

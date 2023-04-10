@@ -176,16 +176,6 @@ Array [
                     >
                       ...
                     </option>
-                    <option
-                      value="50fe96d1-b1a4-48df-87bd-6aced2ab1f5a"
-                    >
-                      test1
-                    </option>
-                    <option
-                      value="b3fddf89-5822-4227-9948-3ecb3c8c2e33"
-                    >
-                      test2
-                    </option>
                   </select>
                 </div>
               </div>
