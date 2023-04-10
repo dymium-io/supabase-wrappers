@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/go-cmd/cmd"
+	"logsupervisor/logsparser"
 	"os"
 	"time"
 )
@@ -15,7 +16,8 @@ func main() {
 	var args []string
 
 	if 2 <= nArgs {
-		fmt.Printf(
+		fmt.Fprintf(
+			os.Stdout,
 			"%s Log-Supervisor: Starting %s with args:%s\n",
 			startTime,
 			argsWithProg[1],
@@ -24,7 +26,8 @@ func main() {
 		cmd = argsWithProg[1]
 		args = argsWithProg[2:]
 	} else {
-		fmt.Printf(
+		fmt.Fprintf(
+			os.Stdout,
 			"%s Log-Supervisor: Starting %s\n",
 			startTime,
 			argsWithProg,
@@ -38,14 +41,15 @@ func main() {
 // TODO add log parser and dlog ...
 // This is temporary code
 var lc uint64 = 0
+var LogParser *logsparser.PgLogProcessor
 
 func processLine(line string) {
-	fmt.Printf("read:%d:%s\n", lc, line)
-	lc++
-
+	LogParser.ProcessMessage(line)
 }
 
 func runner(lineproc func(line string), command string, args ...string) {
+	LogParser = logsparser.NewPgLogProcessor()
+
 	// Disable output buffering, enable streaming
 	cmdOptions := cmd.Options{
 		Buffered:  false,
@@ -76,6 +80,7 @@ func runner(lineproc func(line string), command string, args ...string) {
 					envCmd.Stderr = nil
 					continue
 				}
+				// TODO - should this message be sent to a log collector too?
 				fmt.Fprintln(os.Stderr, line)
 			}
 		}
