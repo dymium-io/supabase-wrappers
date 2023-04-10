@@ -2294,7 +2294,6 @@ func GetConnectors(schema string) ( []types.Connector, error) {
 
 			err = rows.Scan(&id, &name, &accesskey, &accesssecret, &age, &nstatus)
 			if err != nil {
-				tx.Rollback()
 				log.Errorf("GetConnectors error 0: %s", err.Error())
 				return out, err			
 			}
@@ -2324,7 +2323,6 @@ func GetConnectors(schema string) ( []types.Connector, error) {
 
 			trows, err  := tx.QueryContext(ctx, sql, out[i].Id)
 			if err != nil {
-				tx.Rollback()
 				log.Errorf("GetConnectors error 1: %s", err.Error())
 				return out, err			
 			}
@@ -2336,7 +2334,6 @@ func GetConnectors(schema string) ( []types.Connector, error) {
 
 				err = trows.Scan(&id, &targetaddress, &targetport, &localport, &connectorname, &status)
 				if err != nil {
-					tx.Rollback()
 					log.Errorf("GetConnectors error 2: %s", err.Error())
 					return out, err			
 				}
@@ -2345,17 +2342,9 @@ func GetConnectors(schema string) ( []types.Connector, error) {
 			}			
 		}
 	} else {
-		tx.Rollback()
 		log.Errorf("GetConnectors error 0: %s", err.Error())
 		return out, err
 	}
-
-	err = tx.Commit()
-	if err != nil {
-		tx.Rollback()
-		log.Errorf("CreateNewConnector error 4: %s", err.Error())
-		return out, err
-	}	
 
 	return out, nil
 }
