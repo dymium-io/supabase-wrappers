@@ -1315,7 +1315,7 @@ func GetConnection(schema, id string) (types.ConnectionParams, error) {
 
 func GetDatascope(schema, id string) (types.Datascope, error) {
 	var ds = types.Datascope{}	
-    ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+    ctx, cancelfunc := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancelfunc()
 	tx, err := db.BeginTx(ctx, nil)
 
@@ -1325,11 +1325,9 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 	var name string
 	err = row.Scan(&name)
 	if err != nil {
-		tx.Rollback()
 		log.Errorf("GetDatascope Error 1: %s", err.Error())
 		return ds, err
 	}
-
 
 	ds.Id = &id
 	ds.Name = name
@@ -1338,7 +1336,6 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 	a.semantics, coalesce(a.ref_schem, ''), coalesce(a.ref_tabl, ''), coalesce(a.ref_col, ''), a.dflt, a.is_nullable, a.possible_actions from ` + schema + 
 	`.tables a join ` + schema + `.connections b on a.connection_id=b.id  where datascope_id=$1;`;
 	rows, err := tx.QueryContext(ctx, sql, id)
-
 
 	if nil == err {
 		defer rows.Close()
@@ -1355,13 +1352,11 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 			}
 			var ref *types.Reference
 			
-
 			type Reference struct {
 				Schema string `json:"schema"`
 				Table string `json:"table"`
 				Column string `json:"column"`
 			 }
-
 
 			if rs == "" && rt == "" && rc == "" {
 				ref = nil
@@ -1374,10 +1369,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 
 	} else {
 		log.Errorf("GetDatascope Error 3:  %s", err.Error())
-		if err != nil {
-			tx.Rollback()
-			return ds, err
-		}	
+		return ds, err
 	}
 	// see if any groups are
 	var counter int
@@ -1387,15 +1379,10 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 	err = row.Scan(&counter)
 	ds.Groupsconfigured = counter > 0
 	if err != nil {
-		tx.Rollback()
+		log.Errorf("GetDatascope Error 4:  %s", err.Error())
 		return ds, err
 	}	
 
-	err = tx.Commit()
-	if err != nil {
-		tx.Rollback()
-		return ds, err
-	}	
 	return ds, nil
 }
 
