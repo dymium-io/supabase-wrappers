@@ -1471,7 +1471,7 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 		err = tx.Commit()
 		if err != nil {
 			tx.Rollback()
-			log.Errorf("UpdateDatascope error 3: %s", err.Error())
+			log.Errorf("UpdateDatascope Error 3: %s", err.Error())
 			return err
 		}	
 		return nil		
@@ -1494,7 +1494,7 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 		_, err = tx.ExecContext(ctx, sql, id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable, pq.Array(r.PossibleActions))
 		if err != nil {
 			tx.Rollback()
-			log.Errorf("UpdateDatascope Error 3: %s", err.Error())
+			log.Errorf("UpdateDatascope Error 5: %s", err.Error())
 			return err
 		}
 	}

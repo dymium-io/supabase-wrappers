@@ -65,3 +65,20 @@ ALTER TABLE tables add column possible_actions text[] default '{allow, block, re
 ALTER TABLE tables ALTER COLUMN schem TYPE varchar;
 ALTER TABLE tables ALTER COLUMN tabl TYPE varchar;
 ALTER TABLE tables ALTER COLUMN col TYPE varchar;
+
+-- #!migration
+-- name: "customer/tables-remove-size1",
+-- description: "remove size spec again",
+-- requires: ["customer/tables", "customer/tables-remove-size"]; 
+ALTER TABLE tables ALTER COLUMN ref_schem TYPE varchar;
+ALTER TABLE tables ALTER COLUMN ref_tabl TYPE varchar;
+ALTER TABLE tables ALTER COLUMN ref_col TYPE varchar;
+ALTER TABLE tables ALTER COLUMN semantics TYPE varchar;
+
+
+-- #!migration
+-- name: "customer/tables-remove-size2",
+-- description: "remove size spec again again",
+-- requires: ["customer/tables", "customer/tables-remove-size1"]; 
+ALTER TABLE tables ALTER COLUMN action TYPE varchar;
+ALTER TABLE tables ALTER COLUMN typ TYPE varchar;
