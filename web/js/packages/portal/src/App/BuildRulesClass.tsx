@@ -353,10 +353,10 @@ const { SearchBar, ClearSearchButton } = Search;
       this.setState({ validatedPII: false })
       e.preventDefault();
       e.stopPropagation();
-
+      let newname = this.state.name.trim()
       for (let i = 0; i < this.state.rules.length; i++) {
         let rule = this.state.rules[i]
-        if(rule.name === this.state.name) {
+        if(rule.name === newname) {
           window.alert("Duplicate rule " + rule.name)
           e.preventDefault();
           e.stopPropagation();
@@ -366,7 +366,7 @@ const { SearchBar, ClearSearchButton } = Search;
 
       let rule = {
         id: uuidv4(),
-        name: this.state.name,
+        name: newname,
         method: this.state.method,
         data: this.state.data,
         actions: this.state.policy != null ? [...this.state.policy.actions] : []
@@ -474,7 +474,7 @@ const { SearchBar, ClearSearchButton } = Search;
                     required
                     pattern="[\w '&%]+"
                     value={this.state.name}
-                    onChange={e => this.setState({ name: e.target.value.trim() })}
+                    onChange={e => this.setState({ name: e.target.value })}
                   />
                   <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                   <Form.Control.Feedback type="invalid" >
