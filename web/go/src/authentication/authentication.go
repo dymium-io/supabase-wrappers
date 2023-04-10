@@ -88,7 +88,7 @@ func initRBAC() {
 	"getgroupsfordatascopes", "getselect", "getusage", "getaccesskey", "createnewconnector", 
 	"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable"}
 
-	usernames :=  []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getdatascopetables"}	
+	usernames :=  []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getdatascopetables", "getdatascopesfortestsql"}	
 
 	for _, v := range adminnames {
 		admins["/api/" + v] = 1
@@ -1399,6 +1399,50 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 	return ds, nil
 }
 
+func GetDatascopesForTestSQL(schema string, roles []string, groups []string) ([]types.DatascopeIdName, error) {
+	isadmin := false
+	for _, role := range roles {
+		if role == "admin" {
+			isadmin = true
+		}
+	}
+	var sqls string
+	var err error
+	var rows *sql.Rows
+	if isadmin {
+		sqls := `select id, name, created, modified from `+schema+`.datascopes where exists (select schema_name from global.customers where schema_name = $1);`
+		rows, err = db.Query(sqls, schema)
+	} else {
+		sqls = `select distinct a.id, a.name, a.created, a.modified from `+schema+`.datascopes as a  join `+schema+`.groupsfordatascopes as b on a.id=b.datascope_id join `+schema+`.groupmapping as c on c.id=b.group_id where c.outergroup = any ($1)`
+		rows, err = db.Query(sqls, pq.Array(groups))
+	}
+
+
+	if err != nil {
+		log.Errorf("GetDatascopes Error 0:  %s", err.Error())
+		return nil, err	
+	}	
+
+	var ds = []types.DatascopeIdName{}
+	if nil == err {
+		defer rows.Close()
+
+		for rows.Next() {
+			var din types.DatascopeIdName
+			err = rows.Scan(&din.Id, &din.Name, &din.Created, &din.Modified)
+			if err != nil {
+				log.Errorf("GetDatascopes Error 1:  %s", err.Error())
+				return nil, err	
+			}
+			ds = append(ds, din)
+		}
+		return ds, nil
+	} else {
+		log.Errorf("GetDatascopes Error 2:  %s", err.Error())
+		return nil, err		
+	}
+
+}
 func GetDatascopes(schema string) ([]types.DatascopeIdName, error) {
 	sql := `select id, name, created, modified from `+schema+`.datascopes where exists (select schema_name from global.customers where schema_name = $1);`
 

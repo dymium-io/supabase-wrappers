@@ -32,7 +32,9 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated.HandleFunc("/api/deletedatascope", dhandlers.DeleteDatascope).Methods("POST").Name("deletedatascope")
 	authenticated.HandleFunc("/api/getdatascopedetails", dhandlers.GetDatascopeDetails).Methods("POST").Name("getdatascopedetails")
 	authenticated.HandleFunc("/api/getdatascopes", dhandlers.GetDatascopes).Methods("GET").Name("getdatascopes")
+	authenticated.HandleFunc("/api/getdatascopesfortestsql", dhandlers.GetDatascopesForTestSQL).Methods("GET").Name("getdatascopesfortestsql")
 
+	
 	authenticated.HandleFunc("/api/createmapping", dhandlers.CreateMapping).Methods("POST").Name("createmapping")
 	authenticated.HandleFunc("/api/updatemapping", dhandlers.UpdateMapping).Methods("POST").Name("updatemapping")
 	authenticated.HandleFunc("/api/deletemapping", dhandlers.DeleteMapping).Methods("POST").Name("deletemapping")

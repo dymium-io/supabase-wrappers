@@ -22,6 +22,55 @@ import * as b64 from '../Utils/Base64'
 import * as hex from '../Utils/Hex'
 
 
+
+function getDatascopesForSQL(setSpinner, setAlert, setDatascopes, onSuccess)  {
+  setSpinner(true)
+  http.sendToServer("GET", "/api/getdatascopesfortestsql",
+    null, "",
+    resp => {
+
+      resp.json().then(js => {
+         if(js.status !== "OK") {
+          setAlert(
+              <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                  Error retrieving datascopes: {js.errormessage} { }
+              </Alert>
+          )
+         } else {
+            setDatascopes(js.records)
+            onSuccess(js.records)
+         }
+         setTimeout( () => setSpinner(false), 500)
+      }).catch((error) => {
+          setSpinner(false)
+          setAlert(
+              <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                  Error retrieving datascopes {error.message}
+              </Alert>
+          )            
+      })
+    },
+    resp => {
+      console.log("on error")
+      setSpinner(false)
+      resp != null && resp.text().then(t=>
+      setAlert(
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+              Error retrieving datascopes: {t}
+          </Alert>)
+      )        
+    },
+    error => {
+      console.log("on exception: " + error)
+      setSpinner(false)
+      setAlert(
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+              Error retrieving datascopes {error.message}
+          </Alert>
+      )           
+    })
+}
+
 //const { ToggleList } = ColumnToggle;
 //const ToggleList = ColumnToggle.ToggleList
 type HeaderCell = {
@@ -102,7 +151,8 @@ function Test() {
   const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
 
   useEffect(() => {
-    com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
+    
+    getDatascopesForSQL(setSpinner, setAlert, setDatascopes, () => {
 
     })
 
