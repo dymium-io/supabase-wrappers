@@ -143,7 +143,7 @@ export default function AccessLevels() {
 
           } else {
             let prep = types.DataPolicy.fromJson(js)
-            if (true || js.piisuggestions.length === 0) {
+            if ( js.piisuggestions.length === 0) {
               initializePolicy()
             } else {
               policy.current = prep
