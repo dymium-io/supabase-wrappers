@@ -170,7 +170,6 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 		var possibleActions *[]types.DataHandling
 		switch d.cTyp {
 		case "decimal":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 			if d.cPrecision != nil {
 				if d.cScale != nil {
 					t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
@@ -180,6 +179,8 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 			} else {
 				t = "numeric"
 			}
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			semantics = detectors.FindSemantics(d.cName, nil)
 		case "varchar":
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
@@ -187,18 +188,21 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = "varchar"
 			}
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
 		case "char":
 			if d.cCharMaxLen != nil {
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
-				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
 			} else {
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				t = "bpchar"
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				semantics = detectors.FindSemantics(d.cName, nil)
 			}
 		default:
 			t = d.cTyp
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			semantics = detectors.FindSemantics(d.cName, nil)
 		}
 
 		c := types.Column{

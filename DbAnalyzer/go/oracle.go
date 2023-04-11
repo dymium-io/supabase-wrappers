@@ -127,7 +127,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 		return nil, err
 	}
 	defer stmt.Close()
-	
+
 	rows, err := stmt.Query(tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
@@ -170,7 +170,6 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 		}
 		descr = append(descr, &d)
 	}
-	
 
 	detectors, err := detect.Compile(tip.Rules)
 	if err != nil {
@@ -187,12 +186,12 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 		var semantics *string
 		var possibleActions *[]types.DataHandling
 		if d.cTyp == nil {
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 			t = "undefined"
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			semantics = detectors.FindSemantics(d.cName, nil)
 		} else {
 			switch strings.ToLower(*d.cTyp) {
 			case "number":
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				if d.cPrecision != nil {
 					if d.cScale != nil {
 						t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
@@ -202,33 +201,38 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 				} else {
 					t = fmt.Sprintf("numeric(%d)", d.cDataLen)
 				}
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				semantics = detectors.FindSemantics(d.cName, nil)
 			case "varchar2", "nvarchar2":
-				if d.cCharMaxLen != nil {
+				if d.cCharMaxLen != nil && *d.cCharMaxLen > 0 {
 					t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 				} else {
 					t = "varchar"
 				}
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+				semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
 			case "char", "nchar":
 				if d.cCharMaxLen != nil {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 					t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
-					semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+					semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
 				} else {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 					t = "bpchar"
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+					semantics = detectors.FindSemantics(d.cName, nil)
 				}
 			case "clob", "nclob", "long":
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 				t = "text"
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
 			case "blob", "bfile", "long raw":
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				t = "bytea"
-			case "date":
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				semantics = detectors.FindSemantics(d.cName, nil)
+			case "date":
 				t = "date"
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				semantics = detectors.FindSemantics(d.cName, nil)
 			default:
 				// ignore other datatypes (e.g. GEOM)
 				continue
