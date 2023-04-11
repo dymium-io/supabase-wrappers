@@ -259,7 +259,7 @@ const { SearchBar, ClearSearchButton } = Search;
                       if (window.confirm("Are you sure you want to delete \n" + row["name"] + "\npolicy suggestion?")) {
                         let rules = this.state.rules.filter(rule => {
                           if (rule.id === row.id) {
-                            debugger
+                            
                             return false
                           }
                           return true

@@ -64,7 +64,6 @@ export default function EditDatascopes() {
     }
     let onEdit = (id) => {
         return e => {
-            debugger
             console.log(id)
             setSDRef.current(id)
 
