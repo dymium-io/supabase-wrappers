@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"github.com/looplab/fsm"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -33,7 +35,9 @@ type EventType int
 const (
 	newEvent = iota
 	continueEvent
+	flushEvent
 	unknownEvent
+	flush
 )
 
 func (e EventType) eventName() string {
@@ -43,6 +47,8 @@ func (e EventType) eventName() string {
 		return "newEvent"
 	case continueEvent:
 		return "continueEvent"
+	case flushEvent:
+		return "flushEvent"
 	case unknownEvent:
 		return "unknownEvent"
 	}
@@ -64,11 +70,33 @@ var timeLayouts = []string{
 	"2006-01-02T15:04:05.999999999Z07:00", // RFC3339Nano
 }
 
-func (parser *ParserFSM) strStartsWithTimestamp(str string) bool {
+func SplitNonPGLogStr(str string) []string {
+	// Some Log messages in PG doesn't follow csv format
+	// Ex.: 2023-04-04 03:20:24.193 UTC [1] LOG:  redirecting log output to logging collector process
+	// Lets try to search for timestamp with regex
+	//  (.+) \[.*\] ([[:upper:]]+)\:(.*)
+	reLogNonPg := regexp.MustCompile(`^(.+)\s+\[.*\] (.+)\:(.*)`)
+	groups := reLogNonPg.FindStringSubmatch(str)
+	return groups
+}
+
+func (parser *ParserFSM) StrStartsWithTimestamp(str string) bool {
 	before, _, ok := strings.Cut(str, ",")
 	if ok {
 		for _, layout := range timeLayouts {
 			_, err := time.Parse(layout, before)
+			if err == nil {
+				return true
+			}
+		}
+	}
+
+	// Let's try non CSV PG log format
+	groups := SplitNonPGLogStr(str)
+	if len(groups) > 3 {
+		// String might has datastamp at pos=1
+		for _, layout := range timeLayouts {
+			_, err := time.Parse(layout, groups[1])
 			if err == nil {
 				return true
 			}
@@ -79,7 +107,7 @@ func (parser *ParserFSM) strStartsWithTimestamp(str string) bool {
 
 func (parser *ParserFSM) getLogEventType(msg string) string {
 	var et EventType
-	if parser.strStartsWithTimestamp(msg) {
+	if parser.StrStartsWithTimestamp(msg) {
 		et = newEvent
 	} else {
 		et = continueEvent
@@ -89,10 +117,22 @@ func (parser *ParserFSM) getLogEventType(msg string) string {
 
 type pgMsgCallback func(msg string, wellformed bool)
 
+type fsmFlags struct {
+	flushBuffer bool
+}
+type Option func(flags *fsmFlags)
+
+// FlushBufferFlag Optional parameter. Used to flush accumulator buffer at the end of process
+func FlushBufferFlag(f bool) Option {
+	return func(flags *fsmFlags) {
+		flags.flushBuffer = f
+	}
+}
+
 // ProcessPgLogMessage called on log message events.
 // It detects event type, collect all event to assemble complete message
 // and sens it to an appropriate logger
-func (parser *ParserFSM) ProcessPgLogMessage(line string) (*PostgresLogMessage, error) {
+func (parser *ParserFSM) ProcessPgLogMessage(line string, opts ...Option) (*PostgresLogMessage, error) {
 	var pgMsg *PostgresLogMessage = nil
 	event := parser.getLogEventType(line)
 
@@ -107,8 +147,17 @@ func (parser *ParserFSM) ProcessPgLogMessage(line string) (*PostgresLogMessage, 
 		fullMsg = msg
 	})
 
+	flags := fsmFlags{flushBuffer: false}
+	for _, opt := range opts {
+		opt(&flags)
+	}
+
 	ctx := context.WithValue(context.Background(), string("engProcessingCallback"), endMessage)
 	ctx = context.WithValue(ctx, string("msgLine"), line)
+	if flags.flushBuffer {
+		// replace event to flush accumulator buffer
+		event = EventType(flushEvent).eventName()
+	}
 	err := parser.FSM.Event(ctx, event)
 
 	if err == nil {
@@ -140,34 +189,57 @@ func InitPgParserStdout(logAccumulator *LogAccumulator) *fsm.FSM {
 	var parser = fsm.NewFSM(
 		"ready",
 		fsm.Events{
-			{Name: "newEvent", Src: []string{"ready", "nonPgMsg"}, Dst: "processing"},
+			{Name: "newEvent", Src: []string{"ready", "nonPgMsg", "messageEnded"}, Dst: "processing"},
 			{Name: "continueEvent", Src: []string{"ready"}, Dst: "nonPgMsg"},
 			{Name: "continueEvent", Src: []string{"nonPgMsg"}, Dst: "ready"},
+
 			{Name: "continueEvent", Src: []string{"processing"}, Dst: "collectMsg"},
 			{Name: "continueEvent", Src: []string{"collectMsg"}, Dst: "processing"},
-			{Name: "newEvent", Src: []string{"processing", "collectMsg"}, Dst: "ready"},
+
+			{Name: "newEvent", Src: []string{"collectMsg"}, Dst: "messageEnded"},
+			{Name: "newEvent", Src: []string{"processing"}, Dst: "messageEnded"},
+
+			{Name: "newEvent", Src: []string{"messageEnded"}, Dst: "processing"},
+			{Name: "continueEvent", Src: []string{"messageEnded"}, Dst: "processing"},
+
+			{Name: "flushEvent", Src: []string{"processing", "collectMsg", "nonPgMsg"}, Dst: "ready"},
 		},
 		fsm.Callbacks{
+			"flushEvent": func(ctx context.Context, event *fsm.Event) {
+				line := ctx.Value("msgLine").(string)
+				logAccumulator.sbuffer.WriteByte(' ')
+				logAccumulator.sbuffer.WriteString(line)
 
-			"newEvent": func(ctx context.Context, event *fsm.Event) {
-				src := event.Src
-				dst := event.Dst
-				if src == "processing" || src == "collectMsg" {
-					line := ctx.Value("msgLine").(string)
-					logAccumulator.sbuffer.WriteRune(' ')
-					logAccumulator.sbuffer.WriteString(line) // TODO Should we check the len and capacity and grow is needed?
-					if dst == "ready" {
-						// Finished processing
+				endProcCallback := ctx.Value("engProcessingCallback").(pgMsgCallback)
+				endProcCallback(logAccumulator.sbuffer.String(), true)
+				logAccumulator.sbuffer.Reset()
+			},
+			"messageEnded": func(ctx context.Context, event *fsm.Event) {
+				if logAccumulator.sbuffer.Len() > 0 {
+					// end of collected message, start collecting new one
+					// Finished processing. Return accumulated message
+					endProcCallback := ctx.Value("engProcessingCallback").(pgMsgCallback)
+					endProcCallback(logAccumulator.sbuffer.String(), true)
+					logAccumulator.sbuffer.Reset()
+				}
+				line := ctx.Value("msgLine").(string)
+				logAccumulator.sbuffer.WriteByte(' ')
+				logAccumulator.sbuffer.WriteString(line)
+			},
+			"processing": func(ctx context.Context, event *fsm.Event) {
+				if event.Src == "messageEnded" && event.Event == "newEvent" {
+					// Single line message
+					if logAccumulator.sbuffer.Len() > 0 {
+						// end of collected message, start collecting new one
+						// Finished processing. Return accumulated message
 						endProcCallback := ctx.Value("engProcessingCallback").(pgMsgCallback)
 						endProcCallback(logAccumulator.sbuffer.String(), true)
 						logAccumulator.sbuffer.Reset()
 					}
 				}
-			},
-			"processing": func(ctx context.Context, event *fsm.Event) {
 				line := ctx.Value("msgLine").(string)
 				logAccumulator.sbuffer.WriteByte(' ')
-				logAccumulator.sbuffer.WriteString(line) // TODO Should we check the len and capacity and grow is needed?
+				logAccumulator.sbuffer.WriteString(line)
 			},
 			"nonPgMsg": func(ctx context.Context, event *fsm.Event) {
 				// This is not wellformed postgres message. Pass it to log collector.
@@ -178,12 +250,12 @@ func InitPgParserStdout(logAccumulator *LogAccumulator) *fsm.FSM {
 			"collectMsg": func(ctx context.Context, event *fsm.Event) {
 				line := ctx.Value("msgLine").(string)
 				logAccumulator.sbuffer.WriteByte(' ')
-				logAccumulator.sbuffer.WriteString(line) // TODO Should we check the len and capacity and grow is needed?
+				logAccumulator.sbuffer.WriteString(line)
 			},
 			"ready": func(ctx context.Context, event *fsm.Event) {
 				line := ctx.Value("msgLine").(string)
 				if event.Event == "newEvent" {
-					logAccumulator.sbuffer.WriteString(line) // TODO Should we check the len and capacity and grow is needed?
+					logAccumulator.sbuffer.WriteString(line)
 				}
 
 			},
@@ -228,6 +300,9 @@ func (parser *ParserFSM) ParseStdoutMsg(logMessage string) (*PostgresLogMessage,
 	// check string content and generate event for FSM
 	r := csv.NewReader(strings.NewReader(logMessage))
 	record, err := r.Read()
+	if len(record) != reflect.TypeOf(PostgresLogMessage{}).NumField() {
+		return nil, errors.New("Message doesn't match PG csv log message structure.")
+	}
 
 	// create struct - PG log messages have only string, int and bigint(uint64) data
 	if err == nil {

@@ -175,7 +175,7 @@ func TestParserFSM_ProcessPgLogMessage(t *testing.T) {
 		"	created_on TIMESTAMP NOT NULL,",
 		"	last_login TIMESTAMP",
 		");\",,,,,,,,,\"pgAdmin 4 - CONN:9342839\",\"client backend\",,0",
-		"2023-04-04 03:27:48.567 UTC, Done",
+		//"2023-04-04 03:27:48.567 UTC, Done",
 	}
 
 	resultJsonStr := "{\"Log_time\":\" 2023-04-04 03:27:48.567 UTC\",\"" +
@@ -222,13 +222,14 @@ func TestParserFSM_ProcessPgLogMessage(t *testing.T) {
 			for _, line := range tt.args.lines {
 				got, err = parser.ProcessPgLogMessage(line)
 			}
+			// Finish processing
+			got, err = parser.ProcessPgLogMessage("", FlushBufferFlag(true))
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ProcessPgLogMessage() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			result, err := got.JsonString()
-			//log.Printf("Result Json: %s\n", result)
 			if result != tt.want {
 				t.Errorf("ProcessPgLogMessage() got = %v, want %v", got, tt.want)
 			}

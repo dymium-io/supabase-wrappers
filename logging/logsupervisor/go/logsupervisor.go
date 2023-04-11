@@ -15,6 +15,7 @@ func main() {
 	var cmd string
 	var args []string
 
+	// TODO replace Fprintf with proper log?
 	if 2 <= nArgs {
 		fmt.Fprintf(
 			os.Stdout,
@@ -44,7 +45,11 @@ var lc uint64 = 0
 var LogParser *logsparser.PgLogProcessor
 
 func processLine(line string) {
-	LogParser.ProcessMessage(line)
+	LogParser.ProcessMessage(line, false)
+}
+
+func flushMsgBuffer() {
+	LogParser.ProcessMessage("", true)
 }
 
 func runner(lineproc func(line string), command string, args ...string) {
@@ -91,4 +96,5 @@ func runner(lineproc func(line string), command string, args ...string) {
 
 	// Wait for goroutine to print everything
 	<-doneChan
+	flushMsgBuffer()
 }
