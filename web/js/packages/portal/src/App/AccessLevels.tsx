@@ -43,7 +43,6 @@ export default function AccessLevels() {
   </Alert>
   let savePolicies = () => {
 
-
     for (let i = 0; i < actions.length; i++) {
       actions[i].index = i
     }
@@ -57,7 +56,7 @@ export default function AccessLevels() {
       let out: types.DataAction[] = []
       let getAction = l => {
         for (let i = 0; i < sactions.length; i++) {
-          if (sactions[i].name === l.name)
+          if (sactions[i].role === l.role)
             return sactions[i]
         }
         return l
@@ -99,9 +98,9 @@ export default function AccessLevels() {
       resp => {
         setSpinner(false)
         resp != null && resp.text().then(t =>
-        setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>Error retrieving policy: {t}</Alert>
-        ))
+          setAlert(
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>Error retrieving policy: {t}</Alert>
+          ))
         setSpinner(false)
       },
       error => {
@@ -143,7 +142,7 @@ export default function AccessLevels() {
 
           } else {
             let prep = types.DataPolicy.fromJson(js)
-            if ( js.piisuggestions.length === 0) {
+            if (js.piisuggestions.length === 0) {
               initializePolicy()
             } else {
               policy.current = prep
@@ -161,10 +160,10 @@ export default function AccessLevels() {
       resp => {
         setSpinner(false)
         resp != null && resp.text().then(t =>
-        setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>getpolicies failed: {t}</Alert>
+          setAlert(
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>getpolicies failed: {t}</Alert>
 
-        ))
+          ))
         setSpinner(false)
       },
       error => {
@@ -335,17 +334,17 @@ export default function AccessLevels() {
         </Row>
       </Form>
       <Form onSubmit={handleSubmit}>
-       
-          <>
-          { actions.length > 0 && 
+
+        <>
+          {actions.length > 0 &&
             <SortableList distance={1} items={actions} onSortEnd={onSortEnd} />
           }
-            <Row className="mt-5">
-              <Col xs="auto">
-                <Button size="sm" variant="dymium" type="submit">Apply</Button>
-              </Col>
-            </Row>
-          </>
+          <Row className="mt-5">
+            <Col xs="auto">
+              <Button size="sm" variant="dymium" type="submit">Apply</Button>
+            </Col>
+          </Row>
+        </>
 
 
       </Form>
