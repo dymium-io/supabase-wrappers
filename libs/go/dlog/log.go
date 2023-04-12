@@ -23,6 +23,7 @@ var Warn func(string)
 var Error func(string)
 var Fatal func(string)
 var Panic func(error)
+
 /*
 var Debugf func(string, ...interface{})
 var Infof func(string, ...interface{})
@@ -38,11 +39,10 @@ var Fatal func(string)
 var Panic func(error)
 */
 
-
 func DebugTenantf(tenant, format string, data ...interface{}) {
 	extra := log.Fields{
 		"component": gComponent,
-		"tenant" : tenant,
+		"tenant":    tenant,
 	}
 	Log := log.WithFields(extra)
 	if len(data) == 0 {
@@ -54,56 +54,56 @@ func DebugTenantf(tenant, format string, data ...interface{}) {
 func InfoTenantf(tenant, format string, data ...interface{}) {
 	extra := log.Fields{
 		"component": gComponent,
-		"tenant" : tenant,
+		"tenant":    tenant,
 	}
 	Log := log.WithFields(extra)
 	if len(data) == 0 {
 		Log.Infof(format)
 	} else {
 		Log.Infof(format, data...)
-	}	
+	}
 }
 func WarnTenantf(tenant, format string, data ...interface{}) {
 	extra := log.Fields{
 		"component": gComponent,
-		"tenant" : tenant,
+		"tenant":    tenant,
 	}
 	Log := log.WithFields(extra)
 	if len(data) == 0 {
 		Log.Warnf(format)
 	} else {
 		Log.Warnf(format, data...)
-	}		
+	}
 }
 func ErrorTenantf(tenant, format string, data ...interface{}) {
 	extra := log.Fields{
 		"component": gComponent,
-		"tenant" : tenant,
+		"tenant":    tenant,
 	}
 	Log := log.WithFields(extra)
 	if len(data) == 0 {
 		Log.Errorf(format)
 	} else {
 		Log.Errorf(format, data...)
-	}		
+	}
 }
 func FatalTenantf(tenant, format string, data ...interface{}) {
 	extra := log.Fields{
 		"component": gComponent,
-		"tenant" : tenant,
+		"tenant":    tenant,
 	}
-	Log := log.WithFields(extra)	
+	Log := log.WithFields(extra)
 	if len(data) == 0 {
 		Log.Fatalf(format)
 	} else {
 		Log.Fatalf(format, data...)
-	}			
+	}
 }
 
 func DebugTenantArrayf(tenant, format string, arr []string, data ...interface{}) {
 	extra := log.Fields{
-		"component": gComponent,
-		"tenant" : tenant,
+		"component":     gComponent,
+		"tenant":        tenant,
 		"messageattach": arr,
 	}
 	Log := log.WithFields(extra)
@@ -111,12 +111,12 @@ func DebugTenantArrayf(tenant, format string, arr []string, data ...interface{})
 		Log.Fatalf(format)
 	} else {
 		Log.Fatalf(format, data...)
-	}	
+	}
 }
 func InfoTenantArrayf(tenant, format string, arr []string, data ...interface{}) {
 	extra := log.Fields{
-		"component": gComponent,
-		"tenant" : tenant,
+		"component":     gComponent,
+		"tenant":        tenant,
 		"messageattach": arr,
 	}
 	Log := log.WithFields(extra)
@@ -124,12 +124,12 @@ func InfoTenantArrayf(tenant, format string, arr []string, data ...interface{}) 
 		Log.Infof(format)
 	} else {
 		Log.Infof(format, data...)
-	}	
+	}
 }
 func ErrorTenantArrayf(tenant, format string, arr []string, data ...interface{}) {
 	extra := log.Fields{
-		"component": gComponent,
-		"tenant" : tenant,
+		"component":     gComponent,
+		"tenant":        tenant,
 		"messageattach": arr,
 	}
 	Log := log.WithFields(extra)
@@ -137,17 +137,17 @@ func ErrorTenantArrayf(tenant, format string, arr []string, data ...interface{})
 		Log.Errorf(format)
 	} else {
 		Log.Errorf(format, data...)
-	}		
+	}
 }
 
 func DebugUserf(tenant, session, user string, groups, roles []string, format string, data ...interface{}) {
 	extra := log.Fields{
 		"component": gComponent,
-		"tenant" : tenant,
-		"useremail": user, 
-		"groups": groups, 
-		"roles": roles,
-		"session": session,
+		"tenant":    tenant,
+		"useremail": user,
+		"groups":    groups,
+		"roles":     roles,
+		"session":   session,
 	}
 
 	Log := log.WithFields(extra)
@@ -160,11 +160,11 @@ func DebugUserf(tenant, session, user string, groups, roles []string, format str
 func InfoUserf(tenant, session, user string, groups, roles []string, format string, data ...interface{}) {
 	extra := log.Fields{
 		"component": gComponent,
-		"tenant" : tenant,
-		"useremail": user, 
-		"groups": groups, 
-		"roles": roles,
-		"session": session,
+		"tenant":    tenant,
+		"useremail": user,
+		"groups":    groups,
+		"roles":     roles,
+		"session":   session,
 	}
 
 	Log := log.WithFields(extra)
@@ -172,16 +172,16 @@ func InfoUserf(tenant, session, user string, groups, roles []string, format stri
 		Log.Infof(format)
 	} else {
 		Log.Infof(format, data...)
-	}	
+	}
 }
 func WarnUserf(tenant, session, user string, groups, roles []string, format string, data ...interface{}) {
 	extra := log.Fields{
 		"component": gComponent,
-		"tenant" : tenant,
-		"useremail": user, 
-		"groups": groups, 
-		"roles": roles,
-		"session": session,
+		"tenant":    tenant,
+		"useremail": user,
+		"groups":    groups,
+		"roles":     roles,
+		"session":   session,
 	}
 
 	Log := log.WithFields(extra)
@@ -189,16 +189,16 @@ func WarnUserf(tenant, session, user string, groups, roles []string, format stri
 		Log.Warnf(format)
 	} else {
 		Log.Warnf(format, data...)
-	}	
+	}
 }
 func ErrorUserf(tenant, session, user string, groups, roles []string, format string, data ...interface{}) {
 	extra := log.Fields{
 		"component": gComponent,
-		"tenant" : tenant,
-		"useremail": user, 
-		"groups": groups, 
-		"roles": roles,
-		"session": session,
+		"tenant":    tenant,
+		"useremail": user,
+		"groups":    groups,
+		"roles":     roles,
+		"session":   session,
 	}
 
 	Log := log.WithFields(extra)
@@ -206,16 +206,16 @@ func ErrorUserf(tenant, session, user string, groups, roles []string, format str
 		Log.Errorf(format)
 	} else {
 		Log.Errorf(format, data...)
-	}	
+	}
 }
 func FatalUserf(tenant, session, user string, groups, roles []string, format string, data ...interface{}) {
 	extra := log.Fields{
 		"component": gComponent,
-		"tenant" : tenant,
-		"useremail": user, 
-		"groups": groups, 
-		"roles": roles,
-		"session": session,
+		"tenant":    tenant,
+		"useremail": user,
+		"groups":    groups,
+		"roles":     roles,
+		"session":   session,
 	}
 
 	Log := log.WithFields(extra)
@@ -223,17 +223,17 @@ func FatalUserf(tenant, session, user string, groups, roles []string, format str
 		Log.Fatalf(format)
 	} else {
 		Log.Fatalf(format, data...)
-	}		
+	}
 }
 
 func DebugUserArrayf(tenant, session, user string, groups, roles []string, format string, arr []string, data ...interface{}) {
 	extra := log.Fields{
-		"component": gComponent,
-		"tenant" : tenant,
-		"useremail": user, 
-		"groups": groups, 
-		"roles": roles,
-		"session": session,
+		"component":     gComponent,
+		"tenant":        tenant,
+		"useremail":     user,
+		"groups":        groups,
+		"roles":         roles,
+		"session":       session,
 		"messageattach": arr,
 	}
 
@@ -242,16 +242,16 @@ func DebugUserArrayf(tenant, session, user string, groups, roles []string, forma
 		Log.Debugf(format)
 	} else {
 		Log.Debugf(format, data...)
-	}		
+	}
 }
 func InfoUserArrayf(tenant, session, user string, groups, roles []string, format string, arr []string, data ...interface{}) {
 	extra := log.Fields{
-		"component": gComponent,
-		"tenant" : tenant,
-		"useremail": user, 
-		"groups": groups, 
-		"roles": roles,
-		"session": session,
+		"component":     gComponent,
+		"tenant":        tenant,
+		"useremail":     user,
+		"groups":        groups,
+		"roles":         roles,
+		"session":       session,
 		"messageattach": arr,
 	}
 
@@ -260,16 +260,16 @@ func InfoUserArrayf(tenant, session, user string, groups, roles []string, format
 		Log.Infof(format)
 	} else {
 		Log.Infof(format, data...)
-	}		
+	}
 }
 func WarnUserArrayf(tenant, session, user string, groups, roles []string, format string, arr []string, data ...interface{}) {
 	extra := log.Fields{
-		"component": gComponent,
-		"tenant" : tenant,
-		"useremail": user, 
-		"groups": groups, 
-		"roles": roles,
-		"session": session,
+		"component":     gComponent,
+		"tenant":        tenant,
+		"useremail":     user,
+		"groups":        groups,
+		"roles":         roles,
+		"session":       session,
 		"messageattach": arr,
 	}
 
@@ -282,12 +282,12 @@ func WarnUserArrayf(tenant, session, user string, groups, roles []string, format
 }
 func ErrorUserArrayf(tenant, session, user string, groups, roles []string, format string, arr []string, data ...interface{}) {
 	extra := log.Fields{
-		"component": gComponent,
-		"tenant" : tenant,
-		"useremail": user, 
-		"groups": groups, 
-		"roles": roles,
-		"session": session,
+		"component":     gComponent,
+		"tenant":        tenant,
+		"useremail":     user,
+		"groups":        groups,
+		"roles":         roles,
+		"session":       session,
 		"messageattach": arr,
 	}
 
@@ -300,12 +300,12 @@ func ErrorUserArrayf(tenant, session, user string, groups, roles []string, forma
 }
 func FatalUserArrayf(tenant, session, user string, groups, roles []string, format string, arr []string, data ...interface{}) {
 	extra := log.Fields{
-		"component": gComponent,
-		"tenant" : tenant,
-		"useremail": user, 
-		"groups": groups, 
-		"roles": roles,
-		"session": session,
+		"component":     gComponent,
+		"tenant":        tenant,
+		"useremail":     user,
+		"groups":        groups,
+		"roles":         roles,
+		"session":       session,
 		"messageattach": arr,
 	}
 
@@ -319,7 +319,7 @@ func FatalUserArrayf(tenant, session, user string, groups, roles []string, forma
 
 func InfoArrayf(format string, arr []string, data ...interface{}) {
 	extra := log.Fields{
-		"component": gComponent,
+		"component":     gComponent,
 		"messageattach": arr,
 	}
 
@@ -329,6 +329,32 @@ func InfoArrayf(format string, arr []string, data ...interface{}) {
 	} else {
 		Log.Infof(format, data...)
 	}
+}
+
+// For logsupervisor added few pass-through
+func InfofCollector(extra log.Fields, data string) {
+	Log := log.WithFields(extra)
+	Log.Infof(data)
+}
+func DebugfCollector(extra log.Fields, data string) {
+	Log := log.WithFields(extra)
+	Log.Debugf(data)
+}
+func WarnfCollector(extra log.Fields, data string) {
+	Log := log.WithFields(extra)
+	Log.Warnf(data)
+}
+func ErrorfCollector(extra log.Fields, data string) {
+	Log := log.WithFields(extra)
+	Log.Errorf(data)
+}
+func FatalfCollector(extra log.Fields, data string) {
+	Log := log.WithFields(extra)
+	Log.Fatalf(data)
+}
+func PanicCollector(extra log.Fields, data string) {
+	Log := log.WithFields(extra)
+	Log.Fatalf(data)
 }
 
 func Init(component string) {

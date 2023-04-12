@@ -1,6 +1,7 @@
 package main
 
 import (
+	"dymium.com/dymium/log"
 	"fmt"
 	"github.com/go-cmd/cmd"
 	"logsupervisor/logsparser"
@@ -11,37 +12,37 @@ import (
 func main() {
 
 	argsWithProg := os.Args
-	nArgs, startTime := len(argsWithProg), time.Now().Format(time.RFC3339Nano)
+	nArgs, startTime := len(argsWithProg), time.Now().Format("2023-04-04 03:20:24.193 UTC")
 	var cmd string
 	var args []string
+	componentName := "logsupervisor"
+	log.Init(componentName)
+	commandLine := ""
 
-	// TODO replace Fprintf with proper log?
 	if 2 <= nArgs {
-		fmt.Fprintf(
-			os.Stdout,
-			"%s Log-Supervisor: Starting %s with args:%s\n",
-			startTime,
+		commandLine = fmt.Sprintf(
+			"LogSupervisor: Starting %s with args:%s",
 			argsWithProg[1],
 			argsWithProg[2:],
+			startTime,
 		)
 		cmd = argsWithProg[1]
 		args = argsWithProg[2:]
 	} else {
-		fmt.Fprintf(
-			os.Stdout,
-			"%s Log-Supervisor: Starting %s\n",
-			startTime,
+		commandLine = fmt.Sprintf(
+			"Log-Supervisor: Starting %s",
 			argsWithProg,
+			startTime,
 		)
 		cmd = argsWithProg[1]
 	}
 
+	logsparser.StrLogCollector("INFO", commandLine)
+
 	runner(processLine, cmd, args...)
+	logsparser.StrLogCollector("INFO", fmt.Sprintf("%s exiting.", componentName))
 }
 
-// TODO add log parser and dlog ...
-// This is temporary code
-var lc uint64 = 0
 var LogParser *logsparser.PgLogProcessor
 
 func processLine(line string) {
@@ -61,10 +62,9 @@ func runner(lineproc func(line string), command string, args ...string) {
 		Streaming: true,
 	}
 
-	// Create Cmd with options
 	envCmd := cmd.NewCmdOptions(cmdOptions, command, args...)
 
-	// Print STDOUT and STDERR lines streaming from Cmd
+	// Collect STDOUT lines streaming from Cmd
 	doneChan := make(chan struct{})
 	go func() {
 		defer close(doneChan)
@@ -85,8 +85,7 @@ func runner(lineproc func(line string), command string, args ...string) {
 					envCmd.Stderr = nil
 					continue
 				}
-				// TODO - should this message be sent to a log collector too?
-				fmt.Fprintln(os.Stderr, line)
+				log.Errorf(line)
 			}
 		}
 	}()
