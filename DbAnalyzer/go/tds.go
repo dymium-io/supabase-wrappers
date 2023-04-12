@@ -173,7 +173,6 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		var semantics *string
 		switch d.cTyp {
 		case "decimal":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 			if d.cPrecision != nil {
 				if d.cScale != nil {
 					t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
@@ -183,30 +182,33 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "numeric"
 			}
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			semantics = detectors.FindSemantics(d.cName, nil)
 		case "varchar", "nvarchar":
-			if d.cCharMaxLen != nil {
+			if d.cCharMaxLen != nil && *d.cCharMaxLen > 0 {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
 				t = "varchar"
 			}
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
-		case "char","nchar":
-			if d.cCharMaxLen != nil {
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+		case "char", "nchar":
+			if d.cCharMaxLen != nil && *d.cCharMaxLen > 0 {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
-				semantics = detectors.FindSemantics(d.cName, (*sample)[k])
+				semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
 			} else {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				semantics = detectors.FindSemantics(d.cName, nil)
 				t = "bpchar"
 			}
+		case "text", "ntext":
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-		case "text","ntext":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
 			t = fmt.Sprintf("text")
-			semantics = detectors.FindSemantics(d.cName, (*sample)[k])
 		default:
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			semantics = detectors.FindSemantics(d.cName, nil)
 			t = d.cTyp
 		}
 		c := types.Column{

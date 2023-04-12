@@ -54,16 +54,18 @@ func Compile(piis []types.PIIDetector) (*Detectors, error) {
 	return &d, nil
 }
 
-func (d *Detectors) FindSemantics(columnName string, data []string) *string {
+func (d *Detectors) FindSemantics(columnName string, data *[]string) *string {
 	s := d.matchColumnName(columnName)
 	if s != nil {
 		return s
 	}
-	s = d.matchContent(data)
-	if s != nil {
-		return s
+	if data != nil {
+		s = d.matchContent(*data)
+		if s != nil {
+			return s
+		}
+		// add AWS.Comprehend call here
 	}
-	// add AWS.Comprehend call here
 	return nil
 }
 
