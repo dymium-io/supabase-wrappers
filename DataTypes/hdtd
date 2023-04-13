@@ -8,6 +8,14 @@ DbAnalyzer:
     - source: DbAnalyzer.yaml
     - source: Common.yaml
 
+DbAnalyzeri-rust:
+  language: Rust
+  path: ../DbAnalyzer/rust/types
+  modules:
+    - source: DbAnalyzer.yaml
+    - source: Common.yaml
+      destination: c/common
+
 DbSync:
   language: GoLang
   path: ../DbSync/go/types
