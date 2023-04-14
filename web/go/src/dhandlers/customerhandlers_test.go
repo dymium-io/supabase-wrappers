@@ -214,21 +214,13 @@ fmt.Println(token)
 		h := http.HandlerFunc(CreateNewConnection)
 		hh := AuthMiddleware(h)
 		hh.ServeHTTP(rr, req)
-		body, _ := ioutil.ReadAll(rr.Body)
-		if s := rr.Code; s != http.StatusOK {
+		
+		if s := rr.Code; s != http.StatusForbidden {
 			t.Errorf("handler returned wrong status code: got %v want %v",
-				s, http.StatusOK)
+				s, http.StatusForbidden)
 			return
 		}
-		err = json.Unmarshal(body, &status)
-		if err != nil {
-			t.Errorf("Unmarshaling error: %s\n", err.Error() )
-			return
-		}
-		if(status.Status == "OK") {
-			t.Errorf("Authentication should not have passed\n" )
-			return		
-		}
+
 		fmt.Println("Authentication without JWT failed correctly")
 	}()
 	authentication.InitInvoke( func(a string, b *string, data []byte)([]byte, error) {
