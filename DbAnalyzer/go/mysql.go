@@ -284,7 +284,7 @@ func (da *MySQL) getSample(schema, table string, nColumns int) (*[][]string, err
 		i[k] = &s[k]
 	}
 
-	sql := fmt.Sprintf(`SELECT * from "%s"."%s" ORDER BY RAND() LIMIT %d`, schema, table, detect.SampleSize)
+	sql := fmt.Sprintf("SELECT * from `%s`.`%s` ORDER BY RAND() LIMIT %d", schema, table, detect.SampleSize)
 	r, err := da.db.Query(sql)
 	if err != nil {
 		return nil, err
