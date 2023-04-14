@@ -47,16 +47,7 @@ func AuthMiddleware(h http.Handler) http.Handler {
 
 		if error != nil {
 			log.Errorf("Auth Error: %s", error.Error())
-			status := types.OperationStatus{"AuthError", error.Error()}
-			js, err := json.Marshal(status)
-		
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			common.CommonNocacheHeaders(w, r)
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(js)
+			http.Error(w, error.Error(), http.StatusForbidden)
 			return
 		}
 		//create a new request context containing the authenticated user

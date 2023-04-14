@@ -1,11 +1,11 @@
 
-export function sendToServer(method: string, 
+export function sendToServer(method: string,
     url: string,
-    headers: string[] | null, 
-    body: string, 
-    onsuccess: (a: Response) => void, 
-    onfailure: (a: Response | null) => void, 
-    onexception: (a: Error) => void ) {
+    headers: string[] | null,
+    body: string,
+    onsuccess: (a: Response) => void,
+    onfailure: (a: Response | null) => void,
+    onexception: (a: Error) => void) {
     let token = window.sessionStorage.getItem("Session");
 
     if (token === null) {
@@ -29,14 +29,19 @@ export function sendToServer(method: string,
     if (body != "") {
         params = { ...params, body: body }
     }
-  
+
     fetch(url, params
     ).then(response => {
 
         if (!response.ok) {
+            window.document.dispatchEvent(new Event('reauthenticate'));
             onfailure(response)
         } else {
             onsuccess(response)
         }
-    }).catch(onexception)
+    }).catch(err => {
+        window.document.dispatchEvent(new Event('reauthenticate'));
+        onexception(err)
+    }
+    )
 }

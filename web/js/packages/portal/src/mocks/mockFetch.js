@@ -119,7 +119,7 @@ export default async function mockFetch(url, js) {
                 {
                     method: 'POST',
                     headers: { Authorization: 'Bearer mockJWT', Cache: 'no-cache' },
-                    body: '{"ConnectionId":"a2a4fce3-1db5-47ea-a084-4601f880b9ba","Schema":"humanresources","Table":"employee"}'
+                    body: '{"ConnectionId":"a2a4fce3-1db5-47ea-a084-4601f880b9ba","Schema":"humanresources","Table":"shift"}'
                   }
             );
             return  new Promise( (resolve, reject) => resolve(
