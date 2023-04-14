@@ -1764,7 +1764,7 @@ Object {
                               placeholder="Choose table..."
                               role="combobox"
                               type="text"
-                              value="department"
+                              value="shift"
                             />
                             <input
                               aria-hidden="true"
@@ -2806,7 +2806,7 @@ Object {
                             placeholder="Choose table..."
                             role="combobox"
                             type="text"
-                            value="department"
+                            value="shift"
                           />
                           <input
                             aria-hidden="true"
