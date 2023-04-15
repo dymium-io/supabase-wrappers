@@ -147,8 +147,8 @@ mdsKeys mdsKeys127,128
 
 ./src/Run.hs,81
 module RunRun0,1
-run run29,30
-normalizeHdtdPaths normalizeHdtdPaths100,101
+run run30,31
+normalizeHdtdPaths normalizeHdtdPaths102,103
 
 ./src/Import.hs,25
 module ImportImport0,1
@@ -212,17 +212,17 @@ data NameMappersNameMappers43,44
   , structNameMapper structNameMapper49,50
   , structFldMapper structFldMapper50,51
 genModule genModule53,54
-enumDef enumDef123,124
-structDef structDef138,139
-genMappers genMappers182,183
-goString goString360,361
-goShow goShow363,364
-goEmptyString goEmptyString366,367
-goNull goNull369,370
-goDate goDate372,373
-sanitizeEnumFld sanitizeEnumFld375,376
-sanitizer sanitizer379,380
-transformPath transformPath386,387
+enumDef enumDef119,120
+structDef structDef133,134
+genMappers genMappers176,177
+goString goString354,355
+goShow goShow357,358
+goEmptyString goEmptyString360,361
+goNull goNull363,364
+goDate goDate366,367
+sanitizeEnumFld sanitizeEnumFld369,370
+sanitizer sanitizer373,374
+transformPath transformPath380,381
 
 ./src/LangGenerators/Python.hs,717
 module LangGenerators.Python LangGenerators.Python3,4
@@ -260,29 +260,65 @@ data NameMappers NameMappers28,29
   , nm_structNameMapper nm_structNameMapper34,35
   , nm_structFldMapper nm_structFldMapper35,36
 genModule genModule38,39
-enumDef enumDef131,132
-structDef structDef161,162
-data ReprSelector ReprSelector201,202
-data ReprSelector = RDef RDef201,202
-data ReprSelector = RDef | RGetSet RGetSet201,202
-data ReprSelector = RDef | RGetSet | RJsonRJson201,202
-fldDclr fldDclr203,204
-fldRepr fldRepr234,235
-simpleSetter simpleSetter446,447
-optSetter optSetter452,453
-checkAndSet checkAndSet464,465
-checkAndSetEnum checkAndSetEnum473,474
-readerDef readerDef482,483
-enumReaderDef enumReaderDef667,668
-arrReaderDef arrReaderDef684,685
-jsString jsString711,712
-jsShow jsShow714,715
-jsEmptyString jsEmptyString717,718
-jsNull jsNull720,721
-jsDate jsDate723,724
-genMappers genMappers726,727
-sanitizeEnumFld sanitizeEnumFld793,794
-transformPath transformPath802,803
+enumDef enumDef126,127
+structDef structDef154,155
+data ReprSelector ReprSelector193,194
+data ReprSelector = RDef RDef193,194
+data ReprSelector = RDef | RGetSet RGetSet193,194
+data ReprSelector = RDef | RGetSet | RJsonRJson193,194
+fldDclr fldDclr195,196
+fldRepr fldRepr226,227
+simpleSetter simpleSetter436,437
+optSetter optSetter440,441
+checkAndSet checkAndSet450,451
+checkAndSetEnum checkAndSetEnum457,458
+readerDef readerDef464,465
+enumReaderDef enumReaderDef627,628
+arrReaderDef arrReaderDef642,643
+jsString jsString666,667
+jsShow jsShow669,670
+jsEmptyString jsEmptyString672,673
+jsNull jsNull675,676
+jsDate jsDate678,679
+genMappers genMappers681,682
+sanitizeEnumFld sanitizeEnumFld748,749
+transformPath transformPath757,758
+
+./src/LangGenerators/Rust.hs,1080
+module LangGenerators.Rust LangGenerators.Rust3,4
+run run24,25
+data NameMappers NameMappers32,33
+  NameMappersNameMappers33,34
+  { modulesPaths modulesPaths34,35
+  , mNameMapper mNameMapper35,36
+  , enumNameMapper enumNameMapper36,37
+  , enumFldMapper enumFldMapper37,38
+  , structNameMapper structNameMapper38,39
+  , structFldMapper structFldMapper39,40
+genModule genModule42,43
+enumDef enumDef92,93
+structDef structDef106,107
+genMappers genMappers145,146
+defineMods defineMods181,182
+capitalize capitalize215,216
+rustKeywords rustKeywords221,222
+rustString rustString232,233
+rustShow rustShow235,236
+rustEmptyString rustEmptyString238,239
+goNull goNull241,242
+goDate goDate244,245
+sanitize sanitize247,248
+transformPath transformPath255,256
+transformPathT transformPathT258,259
+data State State261,262
+  InitInit262,263
+  | C1C1263,264
+  | CWordCWord264,265
+  | WordWord265,266
+snakeCase snakeCase267,268
+snakeCaseT snakeCaseT287,288
+upperCamelCase upperCamelCase290,291
+upperCamelCaseT upperCamelCaseT308,309
 
 ./src/LangGenerators/Haskell.hs,703
 module LangGenerators.Haskell LangGenerators.Haskell3,4
@@ -318,25 +354,25 @@ data NameMappers NameMappers28,29
   , nm_structNameMapper nm_structNameMapper34,35
   , nm_structFldMapper nm_structFldMapper35,36
 genModule genModule38,39
-enumDef enumDef131,132
-structDef structDef164,165
-data ReprSelector ReprSelector196,197
-data ReprSelector = RDef RDef196,197
-data ReprSelector = RDef | RGetSet RGetSet196,197
-data ReprSelector = RDef | RGetSet | RJsonRJson196,197
-fldRepr fldRepr198,199
-simpleSetter simpleSetter408,409
-optSetter optSetter414,415
-checkAndSet checkAndSet426,427
-checkAndSetEnum checkAndSetEnum435,436
-readerDef readerDef444,445
-enumReaderDef enumReaderDef629,630
-arrReaderDef arrReaderDef646,647
-genMappers genMappers673,674
-jsString jsString722,723
-jsShow jsShow725,726
-jsEmptyString jsEmptyString728,729
-jsNull jsNull731,732
-jsDate jsDate734,735
-sanitizeEnumFld sanitizeEnumFld737,738
-transformPath transformPath746,747
+enumDef enumDef128,129
+structDef structDef158,159
+data ReprSelector ReprSelector189,190
+data ReprSelector = RDef RDef189,190
+data ReprSelector = RDef | RGetSet RGetSet189,190
+data ReprSelector = RDef | RGetSet | RJsonRJson189,190
+fldRepr fldRepr191,192
+simpleSetter simpleSetter399,400
+optSetter optSetter403,404
+checkAndSet checkAndSet413,414
+checkAndSetEnum checkAndSetEnum420,421
+readerDef readerDef427,428
+enumReaderDef enumReaderDef590,591
+arrReaderDef arrReaderDef605,606
+genMappers genMappers629,630
+jsString jsString678,679
+jsShow jsShow681,682
+jsEmptyString jsEmptyString684,685
+jsNull jsNull687,688
+jsDate jsDate690,691
+sanitizeEnumFld sanitizeEnumFld693,694
+transformPath transformPath702,703

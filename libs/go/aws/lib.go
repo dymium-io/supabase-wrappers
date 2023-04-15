@@ -85,7 +85,7 @@ func Invoke(fname string, qualifier *string, payload []byte) (r []byte, err erro
 		if !ok {
 			return nil, errors.New("function `" + fname + "` is not defined")
 		}
-		url := fmt.Sprintf("http://%s/2015-03-31/functions/function/invocations", hostname)
+		url := fmt.Sprintf("http://%s/2015-03-31/functions/%s/invocations", hostname, fname)
 		reader := bytes.NewReader(payload)
 
 		resp, err := http.Post(url, "application/json", reader)

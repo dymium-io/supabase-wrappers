@@ -4,24 +4,29 @@
 module LangGenerators.Rust where
 
 import           RIO
+import           RIO.Char          (isLower, isNumber, isUpper, toLower,
+                                    toUpper)
 import           RIO.FilePath
+import           RIO.Lens          (each)
 import           RIO.List          (intercalate, sort, sortOn)
 import qualified RIO.Map           as M
+import qualified RIO.Set           as Set
 import qualified RIO.Text          as T
 
 import qualified Data.Time         as DT
 import           NeatInterpolation
 
+import           Data.Tree
+
 import           Types
 
 import qualified Common            as C
-import           RIO.Char          (isAlpha, isUpper, toUpper)
-import qualified RIO.Set           as Set
 
 run :: [ModuleDef] -> InstallPath -> RootModule -> Camelizer -> RIO App ()
 run mDefs installPath@(InstallPath installPath') _rootModule camelizer = do
   logInfo $ "Installing Rust modules to " <> displayShow installPath' <> "..."
   C.createInstallPaths installPath mDefs transformPath
+  defineMods installPath mDefs
   nameMappers <- genMappers mDefs camelizer
   mapM_ (genModule installPath nameMappers) mDefs
 
@@ -61,20 +66,20 @@ genModule
   where
     inst =
       let (fName', fPath) = mPath mDef
-          fName = T.unpack fName' <.> "rs"
+          fName = snakeCase (T.unpack fName') <.> "rs"
       in
-      joinPath (installPath : fPath) </> fName
+      joinPath (installPath : (fPath <&> snakeCase)) </> fName
 
     imports = mconcat $ importString <$> externalModules mDef
       where
-        importString em = T.concat ["use ",rPath,"::",em," as ",lName,";\n"]
+        importString em = T.concat ["use ",rPath,"::",transformPathT em," as ",lName,";\n"]
           where
             lName = mNameMapper nameMappers  em
             rPath = T.pack $ "super::" <> intercalate "::"
                     (transform <$> C.calcRelativePath (snd $ mPath mDef) (snd $ modulesPaths nameMappers em))
             transform = \case
               ".." -> "super"
-              p    -> p
+              p    -> transformPath p
 
 
     enums' = sortOn eName $ enums mDef
@@ -110,7 +115,8 @@ structDef nameMappers _mName' sDef = [untrimming|
     csn = structNameMapper nameMappers sn
     fldDefs = mconcat $ f <$> sFields sDef
       where
-        f (fn,Field { moduleName, typ, container }) = [untrimming|pub ${sfn}: ${styp},|]
+        f (fn,Field { moduleName, typ, container }) = [untrimming|#[serde(rename="${fn}")]
+                                                       pub ${sfn}: ${styp},|]
           where
             sfn = structFldMapper nameMappers fn
             styp = case container of
@@ -138,15 +144,15 @@ structDef nameMappers _mName' sDef = [untrimming|
                 Just mn -> mNameMapper nameMappers  mn<>"::"<>structNameMapper nameMappers stn
 
 genMappers :: [ModuleDef] -> Camelizer -> RIO App NameMappers
-genMappers mDefs camelizer = do
+genMappers mDefs _camelizer = do
   checkStructFldNames
   pure $ NameMappers
     { modulesPaths
     , mNameMapper = C.hashMapper mDefs
-    , enumNameMapper
-    , enumFldMapper
-    , structNameMapper = camelizer
-    , structFldMapper = sanitize
+    , enumNameMapper = upperCamelCaseT
+    , enumFldMapper = upperCamelCaseT . snd
+    , structNameMapper = upperCamelCaseT
+    , structFldMapper = sanitize . snakeCaseT
     }
   where
 
@@ -173,23 +179,39 @@ genMappers mDefs camelizer = do
       \mn -> fromMaybe (error $ "can not find path to module `"<>T.unpack mn<>"`")
              (mn `M.lookup` m)
 
-    enumNameMapper :: Text -> Text
-    enumNameMapper = camelizer
+defineMods :: InstallPath -> [ModuleDef] -> RIO App ()
+defineMods (InstallPath installPath) mDefs =
+  forM_ mods (\(p, m) -> writeFileUtf8 p (T.concat ((\m' -> "pub mod "<>m'<>";\n") <$> m)))
+  where
+    mods :: [(FilePath,[Text])]
+    mods = walkOver installPath pathsTree
 
-    enumFldMapper :: (Text,Text) -> Text
-    enumFldMapper (eName', fName') = capitalize . efm $ (sanitize . camelizer $ fName')
+    walkOver :: FilePath -> Tree FilePath -> [(FilePath,[Text])]
+    walkOver fPath (Node rootLabel subForest) = case () of
+      _ | null subForest -> []
+        | rootLabel == "" ->
+        (fPath</>"mod.rs", (\(Node r _) -> T.pack r) <$> subForest) : concat (walkOver fPath <$> subForest)
+        | otherwise ->
+        let fPath' = fPath </> rootLabel in
+        (fPath'</>"mod.rs", (\(Node r _) -> T.pack r) <$> subForest) : concat (walkOver fPath' <$> subForest)
+
+    pathsTree :: Tree FilePath
+    pathsTree = foldl' insertIntoTree (Node "" []) paths
       where
-        efm cfn
-          | cfn `Set.member` rustKeywords = prefixize cfn
-          | Just (c,_) <- T.uncons cfn, isAlpha c = cfn
-          | otherwise = prefixize cfn
-        prefixize cfn =
-          let en = enumNameMapper eName'
-              prefixCandidate = T.filter isUpper en
-              prefix = case () of
-                _ | T.null prefixCandidate -> T.toUpper $ T.take 1 en
-                  | otherwise              -> prefixCandidate
-          in prefix<>"_"<>cfn
+        paths :: [[FilePath]]
+        paths = (\(m,p) -> (transformPath <$> p)<>[transformPath . T.unpack $ m]) <$> mDefs ^..each .to mPath
+
+    insertIntoTree :: Tree FilePath -> [FilePath] -> Tree FilePath
+    insertIntoTree tree []             = tree
+    insertIntoTree (Node n sub) (p:pp) = Node n $ insertIntoForest [] sub p pp
+
+    insertIntoForest checked [] p pp = checked <> [toTree p pp]
+    insertIntoForest checked (tree@(Node n _) : rest) p pp = case () of
+      _ | n == p -> checked <> (insertIntoTree tree pp : rest)
+        | otherwise -> insertIntoForest (checked <> [tree]) rest p pp
+
+    toTree p []       = Node p []
+    toTree p (p':pp') = Node p [toTree p' pp']
 
 capitalize :: T.Text -> T.Text
 capitalize cfn
@@ -232,4 +254,57 @@ sanitize =
             c   -> c)
 
 transformPath :: FilePath -> FilePath
-transformPath = id
+transformPath = snakeCase
+
+transformPathT :: Text -> Text
+transformPathT = T.pack . transformPath . T.unpack
+
+data State =
+  Init
+  | C1
+  | CWord
+  | Word
+
+snakeCase :: String -> String
+snakeCase = doIt Init
+  where
+    doIt _ [] = []
+    doIt st (c:rest) = case () of
+      _ | isUpper c -> case st of
+          Init  -> toLower c : doIt C1 rest
+          C1    -> toLower c : doIt CWord rest
+          CWord -> toLower c : doIt CWord rest
+          Word  -> '_' : toLower c : doIt Init rest
+        | isLower c -> case st of
+          Init  -> c : doIt Word rest
+          C1    -> c : doIt Word rest
+          CWord -> '_' : c : doIt Word rest
+          Word  -> c : doIt Word rest
+        | isNumber c -> case st of
+          Init   -> c : doIt Word rest
+          _Other -> c : doIt st rest
+        | otherwise -> '_' : doIt Init rest
+
+snakeCaseT :: Text -> Text
+snakeCaseT = T.pack . snakeCase . T.unpack
+
+upperCamelCase :: String -> String
+upperCamelCase = doIt Init
+  where
+    doIt _ [] = []
+    doIt st (c:rest) = case () of
+      _ | isUpper c -> case st of
+          Init   -> c : doIt CWord rest
+          _Other -> c : doIt st rest
+        | isLower c -> case st of
+          Init  -> toUpper c : doIt C1 rest
+          C1    -> c : doIt CWord rest
+          CWord -> c : doIt CWord rest
+          Word  -> c : doIt Word rest
+        | isNumber c -> case st of
+          Init   -> c : doIt Word rest
+          _Other -> c : doIt st rest
+        | otherwise -> doIt Init rest
+
+upperCamelCaseT :: Text -> Text
+upperCamelCaseT = T.pack . upperCamelCase . T.unpack

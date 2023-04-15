@@ -67,11 +67,8 @@ genModule
   package ${package'}
 
   ${imports}
-
   ${enumDefs}
-
-  ${structDefs}
-  |]
+  ${structDefs}|]
   where
     inst =
       let (fName', fPath) = mPath mDef
@@ -114,8 +111,10 @@ genModule
 
     mName' = mName mDef
 
-    enumDefs = T.intercalate "\n" $ enumDef nameMappers mName' <$> enums'
-    structDefs = T.intercalate "\n" $ structDef nameMappers mName' <$> structs'
+    enumDefs = T.concat $
+      enumDef nameMappers mName' <$> enums'
+    structDefs = T.concat $
+      structDef nameMappers mName' <$> structs'
 
 
 enumDef :: NameMappers -> T.Text -> EnumDef -> T.Text
