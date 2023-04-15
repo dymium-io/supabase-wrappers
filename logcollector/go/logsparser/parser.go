@@ -208,11 +208,13 @@ func InitPgParserStdout(logAccumulator *LogAccumulator) *fsm.FSM {
 			"flushEvent": func(ctx context.Context, event *fsm.Event) {
 				line := ctx.Value("msgLine").(string)
 				logAccumulator.sbuffer.WriteByte(' ')
-				logAccumulator.sbuffer.WriteString(line)
 
-				endProcCallback := ctx.Value("engProcessingCallback").(pgMsgCallback)
-				endProcCallback(logAccumulator.sbuffer.String(), true)
-				logAccumulator.sbuffer.Reset()
+				if logAccumulator.sbuffer.Len() > 0 {
+					logAccumulator.sbuffer.WriteString(line)
+					endProcCallback := ctx.Value("engProcessingCallback").(pgMsgCallback)
+					endProcCallback(logAccumulator.sbuffer.String(), true)
+					logAccumulator.sbuffer.Reset()
+				}
 			},
 			"messageEnded": func(ctx context.Context, event *fsm.Event) {
 				if logAccumulator.sbuffer.Len() > 0 {
@@ -365,6 +367,7 @@ func (parser *ParserFSM) ParseStdoutMsg(logMessage string) (*PostgresLogMessage,
 }
 
 func (message *PostgresLogMessage) JsonString() (string, error) {
+	// TODO - should return payload as json not as string
 	jsonData, err := json.Marshal(message)
 	if err != nil {
 		return "", err

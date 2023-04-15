@@ -65,12 +65,18 @@ func (processor *PgLogProcessor) ProcessMessage(line string, flushBuffer bool) {
 			} else {
 				// Not a CSV/JSON message format
 				// TODO set default/error metadata for dlog - not PG message
-				StrLogCollector("INFO", line)
+				if len(line) > 0 {
+					// we don't need to collect empty log messages - ex. happens on timeout events
+					StrLogCollector("INFO", line)
+				}
 			}
 		}
 	} else {
 		if len(getPreviousProcessingState().msgLine) > 0 {
-			StrLogCollector("INFO", fmt.Sprintf("%s", getPreviousProcessingState().msgLine))
+			if len(line) > 0 {
+				// we don't need to collect empty log messages - ex. happens on timeout events
+				StrLogCollector("INFO", fmt.Sprintf("%s", getPreviousProcessingState().msgLine))
+			}
 		}
 	}
 

@@ -2,11 +2,12 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"dymium.com/dymium/log"
+	"errors"
 	"fmt"
 	"logsupervisor/logsparser"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -26,11 +27,12 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Open named pipe file error: %s", err)
 		panic("Open named pipe file error")
 	}
+	defer pipe.Close()
 
 	tenant, ok := os.LookupEnv("CUSTOMER")
 	if !ok || !(len(tenant) > 0) {
 		fmt.Fprintf(os.Stderr, "Tenant name is not defined.")
-		// TODO should we do anything when the tenant is not present?
+		panic("Tenant name is not defined.")
 	}
 
 	// TODO add tenant to the log
@@ -59,37 +61,42 @@ func flushMsgBuffer() {
 	LogParser.ProcessMessage("", true)
 }
 
-func LogFileEnded(msg string) bool {
-	// TODO - add last message in PG log file. Should we simple compare or use regexp?
-	// Without this we can loose the last meessage. But if we use it and encounter the template somewhere in the log
-	// we can end the process prematurely.
-	// For now set it to nil.
-	var lastLogMsgTemplate *string = nil
-	if lastLogMsgTemplate != nil && strings.Contains(msg, *lastLogMsgTemplate) {
-		return true
-	}
-	return false
-}
-
 func runner(pipe *os.File, lineprocessor func(line string)) error {
 	LogParser = logsparser.NewPgLogProcessor()
 	reader := bufio.NewReader(pipe)
+	timeOut := time.Duration(time.Second * 1) // hardcoded timout for reading log messages - 1 sec, TODO should it be a parameter?
+	//creating  channels
+	dataStream := make(chan string, 1)
+	errStream := make(chan error)
 
 	var err error = nil
 	for {
-		line, err := reader.ReadBytes('\n')
-		if err == nil {
-			if len(line) > 0 {
-				msg := string(line[:len(line)-1])
-				lineprocessor(msg)
-				if LogFileEnded(msg) {
-					break
-				}
-			}
+		ctx, _ := context.WithTimeout(context.Background(), timeOut)
+		go readLineWithTimeout(ctx, reader, dataStream, errStream)
+
+		select {
+		case <-ctx.Done():
+			flushMsgBuffer()
+		case msg := <-dataStream:
+			lineprocessor(msg)
+		case err = <-errStream:
+			break
 		}
 	}
 
 	// Done with the processing. Flush messages in the FSM buffer if any.
 	flushMsgBuffer()
 	return err
+}
+
+func readLineWithTimeout(ctx context.Context, reader *bufio.Reader, data chan string, er chan error) {
+	line, err := reader.ReadBytes('\n')
+	if err == nil {
+		if len(line) > 0 {
+			msg := string(line[:len(line)-1])
+			data <- msg
+		} else {
+			er <- errors.New("error reading pipe")
+		}
+	}
 }

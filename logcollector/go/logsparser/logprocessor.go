@@ -76,7 +76,10 @@ func (processor *PgLogProcessor) ProcessMessage(line string, flushBuffer bool) {
 
 	if len(getPreviousProcessingState().msgLine) == 0 {
 		// This is the first message in the log
-		StrLogCollector("INFO", line)
+		if len(line) > 0 {
+			// We don't need to collect empty log events
+			StrLogCollector("INFO", line)
+		}
 	}
 
 	// Message processing machine returns non PG messages and related error (ex. CSV parsing) one
