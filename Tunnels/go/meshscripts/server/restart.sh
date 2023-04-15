@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source "../../../libs/shell/aws-include.sh"
+source "../../../../libs/shell/aws-include.sh"
 
 if [ "$1" = "-c" ]
 then
