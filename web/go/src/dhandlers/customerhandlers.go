@@ -39,6 +39,8 @@ const authenticatedOrgKey contextKey = 3
 const authenticatedRolesKey contextKey = 4
 const authenticatedSessionKey contextKey = 5
 
+const GRACE = 300  // +- seconds for the cert to be valid. 5 min is a little bit generous
+
 func AuthMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// do stuff
@@ -1449,8 +1451,8 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
         SerialNumber: big.NewInt(2),
         Issuer:       authentication.CaCert.Subject,
         Subject:      clientCSR.Subject,
-        NotBefore:    time.Now().Add(-600 * time.Second), // grace time
-        NotAfter:     time.Now().Add(600 * time.Second), // REMOVE ME extra 0
+        NotBefore:    time.Now().Add(-GRACE * time.Second), // grace time
+        NotAfter:     time.Now().Add(GRACE * time.Second), // REMOVE ME extra 0
         KeyUsage:     x509.KeyUsageDigitalSignature,
         ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		DNSNames: clientCSR.DNSNames,
@@ -1534,8 +1536,8 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
         SerialNumber: big.NewInt(2),
         Issuer:       authentication.CaCert.Subject,
         Subject:      clientCSR.Subject,
-        NotBefore:    time.Now().Add(-600 * time.Second), // grace time
-        NotAfter:     time.Now().Add(600 * time.Second), // DELETE ME
+        NotBefore:    time.Now().Add(-GRACE * time.Second), // grace time
+        NotAfter:     time.Now().Add(GRACE * time.Second), // DELETE ME
         KeyUsage:     x509.KeyUsageDigitalSignature,
         ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		DNSNames: 		targets,
