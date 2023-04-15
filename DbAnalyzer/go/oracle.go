@@ -323,7 +323,7 @@ func (da *OracleDB) getSample(schema, table string, nColumns int) (*[][]string, 
 		var count int
 		r.Scan(&count)
 		if count == 0 {
-			ret := make([][]string, 0)
+			ret := make([][]string, nColumns)
 			return &ret, nil
 		}
 		percent = float32(detect.SampleSize) / float32(count) * 100.0
