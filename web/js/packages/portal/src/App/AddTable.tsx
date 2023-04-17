@@ -237,7 +237,9 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     }
                
                 }).catch((error) => {
-
+                    props.onAlert(<Alert variant="danger" onClose={() => props.onAlert(<></>)} dismissible>
+                    Exception: {error.message}
+                </Alert>)     
                 })
             },
             resp => {
