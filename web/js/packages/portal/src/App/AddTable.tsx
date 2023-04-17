@@ -560,7 +560,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             if (possible.includes(action))
                 newtablestructure[i].action = action
             else
-                newtablestructure[i].action = table.possibleActions[0]
+                newtablestructure[i].action = possible[possible.length - 1]
 
         }
 
