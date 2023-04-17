@@ -92,7 +92,7 @@ genModule
 
 enumDef :: NameMappers -> T.Text -> EnumDef -> T.Text
 enumDef nameMappers _mName' eDef = [untrimming|
-  #[derive(Serialize, Deserialize, Debug)]
+  #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
   pub enum ${eName'} {
     ${eFlds}
   }|]
@@ -106,7 +106,7 @@ enumDef nameMappers _mName' eDef = [untrimming|
 
 structDef :: NameMappers -> T.Text -> StructDef -> T.Text
 structDef nameMappers _mName' sDef = [untrimming|
-  #[derive(Serialize, Deserialize, Debug)]
+  #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
   pub struct ${csn} {
     ${fldDefs}
   }|]

@@ -9,7 +9,6 @@ export let dirtyFlag = false
 function doAlert(s) { console.log(s) }
 
 
-
 export class Customer {
   private '_id': string | null
   private '_name': string
