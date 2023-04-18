@@ -240,7 +240,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     props.onAlert(<Alert variant="danger" onClose={() => props.onAlert(<></>)} dismissible>
                     Exception: {error.message}
                 </Alert>)     
-                    console.log(error.stack)
+                console.log(error.stack)
                 })
             },
             resp => {
