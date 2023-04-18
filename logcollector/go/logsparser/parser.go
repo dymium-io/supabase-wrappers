@@ -270,32 +270,32 @@ func InitPgParserStdout(logAccumulator *LogAccumulator) *fsm.FSM {
 // See: https://www.postgresql.org/docs/14/runtime-config-logging.html#RUNTIME-CONFIG-LOGGING-CSVLOG
 // PRIMARY KEY (session_id, session_line_num)
 type PostgresLogMessage struct {
-	Log_time               string //timestamp(3) with time zone
-	User_name              string // text
-	Database_name          string // text
-	Process_id             int    // integer
-	Connection_from        string // text
-	Session_id             string // text
-	Session_line_num       uint64 // bigint
-	Command_tag            string // text
-	Session_start_time     string // timestamp with time zone
-	Virtual_transaction_id string // text
-	Transaction_id         uint64 // bigint
-	Error_severity         string // text
-	Sql_state_code         string // text,
-	Message                string // text,
-	Detail                 string // text,
-	Hint                   string // text,
-	Internal_query         string // text,
-	Internal_query_pos     int    // integer,
-	Context                string // text,
-	Query                  string // text,
-	Query_pos              int    // integer,
-	Location               string // text,
-	Application_name       string // text,
-	Backend_type           string // text,
-	Leader_pid             int    // integer,
-	Query_id               uint64 // bigint,
+	Log_time               string `json:"Log_Time"`               //timestamp(3) with time zone
+	User_name              string `json:"User_Name"`              // text
+	Database_name          string `json:"Database_Name"`          // text
+	Process_id             int    `json:"Process_Id"`             // integer
+	Connection_from        string `json:"Connection_From"`        // text
+	Session_id             string `json:"Session_Id"`             // text
+	Session_line_num       uint64 `json:"Session_Line_Num"`       // bigint
+	Command_tag            string `json:"Command_Tag"`            // text
+	Session_start_time     string `json:"Session_Start_Time"`     // timestamp with time zone
+	Virtual_transaction_id string `json:"Virtual_Transaction_Id"` // text
+	Transaction_id         uint64 `json:"Transaction_Id"`         // bigint
+	Error_severity         string `json:"Error_Severity"`         // text
+	Sql_state_code         string `json:"Sql_State_Code"`         // text,
+	Message                string `json:"Message"`                // text,
+	Detail                 string `json:"Detail"`                 // text,
+	Hint                   string `json:"Hint"`                   // text,
+	Internal_query         string `json:"Internal_Query"`         // text,
+	Internal_query_pos     int    `json:"Internal_Query_Pos"`     // integer,
+	Context                string `json:"Context"`                // text,
+	Query                  string `json:"Query"`                  // text,
+	Query_pos              int    `json:"Query_Pos"`              // integer,
+	Location               string `json:"Location"`               // text,
+	Application_name       string `json:"Application_Name"`       // text,
+	Backend_type           string `json:"Backend_Type"`           // text,
+	Leader_pid             int    `json:"Leader_Pid"`             // integer,
+	Query_id               uint64 `json:"Query_Id"`               // bigint,
 }
 
 func (parser *ParserFSM) ParseStdoutMsg(logMessage string) (*PostgresLogMessage, error) {
@@ -352,7 +352,9 @@ func (parser *ParserFSM) ParseStdoutMsg(logMessage string) (*PostgresLogMessage,
 				v := record[i]
 				rf = reflect.NewAt(rf.Type(), unsafe.Pointer(rf.UnsafeAddr())).Elem()
 				ri := reflect.ValueOf(&v).Elem()
-				rf.Set(ri)
+				// Trimming leading/trailing spaces in strings - make it easier to parse the log downstream
+				rs := strings.Trim(ri.Interface().(string), " ")
+				rf.Set(reflect.ValueOf(&rs).Elem())
 
 			default:
 				// Nothing to do?

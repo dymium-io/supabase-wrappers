@@ -48,5 +48,5 @@ RUN chmod a+x /usr/local/bin/logsupervisor
 # FOR LOCAL TESTS ONLY
 ENV LOCAL_ENVIRONMENT=true
 #####
-
+ENTRY....
 EOF

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	aplog "github.com/apex/log"
 	"os"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -87,23 +86,17 @@ func (processor *PgLogProcessor) ProcessMessage(line string, flushBuffer bool) {
 	getPreviousProcessingState().storeState(line)
 }
 
-func MakeLoggerFunction(f interface{}) interface{} {
-	rf := reflect.TypeOf(f)
-	if rf.Kind() != reflect.Func {
-		fmt.Println(rf.Kind().String())
-		return nil
-		//panic("expects a function")
-	}
-	vf := reflect.ValueOf(f)
-	wrapperF := reflect.MakeFunc(rf, func(in []reflect.Value) []reflect.Value {
-		out := vf.Call(in)
-		return out
-	})
-	return wrapperF.Interface()
+var EnvData struct {
+	ComponentName string
+	Tenant        string
+	Session       string
+	User          string
 }
 
-func LogCollectorWithFields(severity string, fields aplog.Fields, data string) {
-	severityToLoggerMap := map[string]interface{}{
+type LogFunc func(string, string, string, aplog.Fields, string)
+
+func LogCollectorWithFields(severity string, fields aplog.Fields, session string, username string, msg string) {
+	severityToLoggerMap := map[string]LogFunc{
 		"DEBUG1":  log.DebugfCollector,
 		"DEBUG2":  log.DebugfCollector,
 		"DEBUG3":  log.DebugfCollector,
@@ -118,24 +111,22 @@ func LogCollectorWithFields(severity string, fields aplog.Fields, data string) {
 		"PANIC":   log.PanicCollector,
 	}
 
-	loggerName, loggerExists := severityToLoggerMap[severity]
+	logger, loggerExists := severityToLoggerMap[severity]
 	if !loggerExists {
-		fmt.Fprintf(os.Stderr, fmt.Sprintf("Logger function for %s does not exist.", severity))
+		_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("Logger function for %s does not exist.", severity))
 	} else {
-		if len(data) > 0 {
-			fields["message"] = data
+		if len(msg) > 0 {
+			fields["message"] = msg
 		}
-		logger := MakeLoggerFunction(loggerName).(func(aplog.Fields, string))
 		if logger != nil {
-			logger(fields, " ")
+			logger(EnvData.Tenant, session, username, fields, "")
 		} else {
-			// in case when there is no matching log func - what should we do? For now set it to INFO
-			logger := MakeLoggerFunction(severityToLoggerMap["INFO"]).(func(aplog.Fields, string))
+			logger = severityToLoggerMap["INFO"]
 			if logger == nil {
 				// We should never get here since Infof logger is part of the package dymium.log
-				fmt.Fprintf(os.Stderr, fmt.Sprintf("Logger %s function does not exist.", loggerName))
+				_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("Logger for %s does not exist.", severity))
 			} else {
-				logger(fields, " ")
+				logger(EnvData.Tenant, session, username, fields, msg)
 			}
 		}
 	}
@@ -144,22 +135,18 @@ func LogCollectorWithFields(severity string, fields aplog.Fields, data string) {
 func PGMsgLogCollector(msg *PostgresLogMessage) {
 	sevLevel := msg.Error_severity
 	extra := aplog.Fields{
-		"eventtime":  msg.Log_time,
-		"component":  "logsupervisor", // TODO what should be the component supervisor/PgGaurdian/Postgres?
-		"dbname":     msg.Database_name,
-		"session":    msg.Session_id,
-		"primarykey": fmt.Sprintf("%s:%d", msg.Session_id, msg.Session_line_num),
+		"eventtime": msg.Log_time,
 	}
 
 	data, _ := msg.JsonString() // Ignoring the error, this func must be called only when msg is wellformed
-	LogCollectorWithFields(sevLevel, extra, data)
+	extra["message"] = data
+
+	LogCollectorWithFields(sevLevel, extra, msg.Session_id, msg.User_name, "")
 }
 
-func StrLogCollector(severity string, data string) {
+func StrLogCollector(severity string, msg string) {
 	extra := aplog.Fields{
 		"eventtime": time.Now().Format("2023-04-04 03:20:24.193 UTC"), // add current timestamp
-		"component": "logsupervisor",                                  // TODO what should be the component supervisor/PgGaurdian/Postgres?
-		"message":   data,
 	}
-	LogCollectorWithFields(severity, extra, data)
+	LogCollectorWithFields(severity, extra, "", "", msg)
 }

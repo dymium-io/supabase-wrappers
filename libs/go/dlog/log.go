@@ -332,29 +332,42 @@ func InfoArrayf(format string, arr []string, data ...interface{}) {
 }
 
 // For logsupervisor added few pass-through
-func InfofCollector(extra log.Fields, data string) {
-	Log := log.WithFields(extra)
-	Log.Infof(data)
+func addMetadata(tenant, session, user string, extra log.Fields) log.Fields {
+	extra["tenant"] = tenant
+	extra["session"] = session
+	extra["user"] = user
+	return extra
 }
-func DebugfCollector(extra log.Fields, data string) {
+
+func InfofCollector(tenant, session, user string, extra log.Fields, msg string) {
+	extra = addMetadata(tenant, session, user, extra)
 	Log := log.WithFields(extra)
-	Log.Debugf(data)
+	Log.Infof(msg)
 }
-func WarnfCollector(extra log.Fields, data string) {
+func DebugfCollector(tenant, session, user string, extra log.Fields, msg string) {
+	extra = addMetadata(tenant, session, user, extra)
 	Log := log.WithFields(extra)
-	Log.Warnf(data)
+	Log.Debugf(msg)
 }
-func ErrorfCollector(extra log.Fields, data string) {
+func WarnfCollector(tenant, session, user string, extra log.Fields, msg string) {
+	extra = addMetadata(tenant, session, user, extra)
 	Log := log.WithFields(extra)
-	Log.Errorf(data)
+	Log.Warnf(msg)
 }
-func FatalfCollector(extra log.Fields, data string) {
+func ErrorfCollector(tenant, session, user string, extra log.Fields, msg string) {
+	extra = addMetadata(tenant, session, user, extra)
 	Log := log.WithFields(extra)
-	Log.Fatalf(data)
+	Log.Errorf(msg)
 }
-func PanicCollector(extra log.Fields, data string) {
+func FatalfCollector(tenant, session, user string, extra log.Fields, msg string) {
+	extra = addMetadata(tenant, session, user, extra)
 	Log := log.WithFields(extra)
-	Log.Fatalf(data)
+	Log.Fatalf(msg)
+}
+func PanicCollector(tenant, session, user string, extra log.Fields, msg string) {
+	extra = addMetadata(tenant, session, user, extra)
+	Log := log.WithFields(extra)
+	Log.Fatalf(msg)
 }
 
 func Init(component string) {
