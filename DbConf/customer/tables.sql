@@ -82,3 +82,11 @@ ALTER TABLE tables ALTER COLUMN semantics TYPE varchar;
 -- requires: ["customer/tables", "customer/tables-remove-size1"]; 
 ALTER TABLE tables ALTER COLUMN action TYPE varchar;
 ALTER TABLE tables ALTER COLUMN typ TYPE varchar;
+
+
+-- #!migration
+-- name: "customer/tables-adjust-constraint",
+-- description: "add connectionid to unique",
+-- requires: ["customer/tables-remove-size2"];     
+ALTER TABLE tables drop constraint tables_datascope_id_schem_tabl_col_key;
+ALTER TABLE tables add constraint tables_datascope_id_connection_id_schem_tabl_col_key unique(datascope_id, connection_id, schem, tabl, col);
