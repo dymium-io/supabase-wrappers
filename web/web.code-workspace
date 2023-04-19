@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "go/src"
+		},
+		{
+			"path": "js/packages/portal/src"
+		},
+		{
+			"path": "js/packages/common"
+		},
+		{
+			"path": "js/packages/admin/src"
+		},
+		{
+			"path": "../libs/go"
+		}
+	]
+}
