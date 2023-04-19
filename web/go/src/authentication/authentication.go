@@ -1731,10 +1731,11 @@ func DeleteMapping(schema, id string) error {
 	_, err := db.Exec(sql, id)
 	if(err != nil) {
 		log.Errorf("DeleteMapping error %s", err.Error())
+		if(strings.Contains(err.Error(), "foreign key")) {
+			err = errors.New( fmt.Sprintf("%s. <br/><br/><b>Most likely the group is assigned to a Ghost Database. It has to be detached first.</b>", err.Error()) )
+		}		
 	}
-	if(strings.Contains(err.Error(), "foreign key ")) {
-		err = errors.New( fmt.Sprintf("%s. <br/><br/><b>Most likely the group is assigned to a Ghost Database. It has to be detached first.</b>", err.Error()) )
-	}
+
 	return err
 }
 func SaveDatascope(schema string, dscope types.Datascope) error {
@@ -1840,7 +1841,7 @@ func DeleteConnection(schema, id string) error {
 	if err != nil {
 		tx.Rollback()
 		log.Errorf("DeleteConnection error 5: %s", err.Error())
-		if(strings.Contains(err.Error(), "foreign key ")) {
+		if(strings.Contains(err.Error(), "foreign key")) {
 			err = errors.New( fmt.Sprintf("%s. <br/><br/><b>Most likely the Data Source is used in a Ghost Database. It has to be cleaned up first.</b>", err.Error()) )
 		}
 		return err
@@ -2469,7 +2470,7 @@ func DeleteConnector(schema, Id string) error {
 	if err != nil {
 		tx.Rollback()
 		log.Errorf("DeleteConnector error 0: %s", err.Error())
-		if(strings.Contains(err.Error(), "foreign key ")) {
+		if(strings.Contains(err.Error(), "foreign key")) {
 			err = errors.New( fmt.Sprintf("%s. <br/><br/><b>Most likely the connector is used in a Data Source. It has to be cleaned up first.</b>", err.Error()) )
 		}
 		return err
