@@ -26,6 +26,7 @@ import * as http from '@dymium/common/Api/Http'
 import { useInitialize } from '../Utils/CustomHooks'
 import { useAppDispatch, useAppSelector } from './hooks'
 import { setActiveGroupsTab } from '../Slices/menuSlice'
+import ReactHtmlParser from 'html-react-parser'; 
 
 const { SearchBar, ClearSearchButton } = Search;
 
@@ -220,9 +221,10 @@ function GroupMapping() {
               </Alert>
             )
           } else {
+      
             setAlert(
               < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
-                Error deleting mapping: {js.errormessage} !
+                Error deleting mapping: {ReactHtmlParser(js.errormessage)}
               </Alert >)
           }
           setSpinner(false)
@@ -272,7 +274,7 @@ function GroupMapping() {
     }
   }, [])
 
-  let handleSubmit = event => {
+  let handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     if (form.current == null) {
       return false
     }
@@ -298,7 +300,7 @@ function GroupMapping() {
 
     return false
   }
-  let onEdit = (id, dymiumgroup, directorygroup, comments, adminaccess) => {
+  let onEdit = (id: string, dymiumgroup: string, directorygroup: string, comments: string, adminaccess: boolean) => {
 
     return e => {
 

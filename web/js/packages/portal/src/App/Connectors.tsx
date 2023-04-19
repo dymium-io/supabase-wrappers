@@ -16,7 +16,7 @@ import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/rea
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import Offcanvas from '@dymium/common/Components/Offcanvas'
 const { SearchBar, ClearSearchButton } = Search;
-
+import ReactHtmlParser from 'html-react-parser'; 
 
 import { tooltip } from '@dymium/common/Components/Tooltip'
 import PasswordField from '@dymium/common/Components/PasswordField'
@@ -752,7 +752,7 @@ export function EditConnectors(props) {
                     } else {
                         setAlert(
                             <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                                Error deleting connection: {js.errormessage}
+                                Error deleting connection: {ReactHtmlParser(js.errormessage)}
                             </Alert>
                         )
                     }
