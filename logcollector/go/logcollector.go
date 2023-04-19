@@ -5,23 +5,49 @@ import (
 	"context"
 	"dymium.com/dymium/log"
 	"errors"
+	"flag"
 	"fmt"
 	"logcollector/logsparser"
 	"os"
 	"time"
 )
 
+// Define the flag
+var help = flag.Bool("help", false, "Show help")
+var pipeFlag string
+var sourceFlag string
+var componentFlag string
+
 func main() {
-	argsWithProg := os.Args
-	nArgs, startTime := len(argsWithProg), time.Now().Format("2023-04-04 03:20:24.193 UTC")
-	logsparser.EnvData.ComponentName = "logcollector"
+	// Bind the flag
+	flag.StringVar(&pipeFlag,
+		"pipename",
+		"/tmp/logpipe",
+		"Named pipe to monitor: ex. /tmp/logpipe")
+	flag.StringVar(&sourceFlag,
+		"sourcename",
+		"logstream",
+		"A string that will be added to log message as source name: ex. logstream, errstream.")
+	flag.StringVar(&componentFlag,
+		"componentname",
+		"logcollector",
+		"Component name that will be added to log messages.")
+
+	// Parse the flag
+	flag.Parse()
+
+	// Usage Demo
+	if *help {
+		flag.Usage()
+		os.Exit(0)
+	}
+
+	startTime := time.Now().Format("2023-04-04 03:20:24.193 UTC")
+	logsparser.EnvData.ComponentName = componentFlag
+	logsparser.EnvData.SourceName = sourceFlag
 	log.Init(logsparser.EnvData.ComponentName)
 
-	if nArgs <= 1 {
-		_, _ = fmt.Fprintf(os.Stderr, "Log named pipe is missing. Expected command: logcollector <NAMED_PIPE>\n")
-		panic("Invalid command line")
-	}
-	pipeName := argsWithProg[1]
+	pipeName := pipeFlag
 	pipe, err := os.OpenFile(pipeName, os.O_RDONLY, os.ModeNamedPipe)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Open named pipe file error: %s", err)

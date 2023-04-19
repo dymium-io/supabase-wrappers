@@ -88,6 +88,7 @@ func (processor *PgLogProcessor) ProcessMessage(line string, flushBuffer bool) {
 
 var EnvData struct {
 	ComponentName string
+	SourceName    string
 	Tenant        string
 	Session       string
 	User          string
@@ -136,6 +137,8 @@ func PGMsgLogCollector(msg *PostgresLogMessage) {
 	sevLevel := msg.Error_severity
 	extra := aplog.Fields{
 		"eventtime": msg.Log_time,
+		"source":    EnvData.SourceName,
+		"component": EnvData.ComponentName,
 	}
 
 	data, _ := msg.JsonString() // Ignoring the error, this func must be called only when msg is wellformed
@@ -147,6 +150,8 @@ func PGMsgLogCollector(msg *PostgresLogMessage) {
 func StrLogCollector(severity string, msg string) {
 	extra := aplog.Fields{
 		"eventtime": time.Now().Format("2023-04-04 03:20:24.193 UTC"), // add current timestamp
+		"source":    EnvData.SourceName,
+		"component": EnvData.ComponentName,
 	}
 	LogCollectorWithFields(severity, extra, "", "", msg)
 }

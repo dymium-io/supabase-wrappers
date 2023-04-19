@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 echo "Starting Log Collector $@"
-/usr/local/bin/logcollector /tmp/logpipe &
+/usr/local/bin/logcollector -componentname logcollector -pipename /tmp/logpipe -sourcename logstream &
 
 /usr/local/bin/docker-entrypoint.sh postgres "$@" -c log_destination='csvlog' \
                                                           -c log_statement=all \
