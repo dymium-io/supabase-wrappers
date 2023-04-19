@@ -316,9 +316,9 @@ _main() {
 			echo
 		fi
 	fi
-	echo "Starting Postgres"
-  echo "$@"
-	exec "$@"
+
+		echo "Starting $@"
+    exec "$@"
 }
 
 if ! _is_sourced; then
