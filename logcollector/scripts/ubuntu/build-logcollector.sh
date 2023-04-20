@@ -26,23 +26,16 @@ retval=$?
 cat <<EOF | docker build  -t postgres-splogging -f - .
 FROM ubuntu/postgres
 #####
-RUN addgroup nobody tty
-RUN addgroup postgres tty
+RUN addgroup nobody tty && addgroup postgres tty
+
 
 
 # forward postgres logs to docker log collector
-RUN mkdir -p /var/log/postgres
-RUN chown postgres:postgres /var/log/postgres
-RUN chmod a+rwx /var/log/postgres
-RUN mkdir -p /tmp
-RUN mkfifo /tmp/logpipe
-RUN chmod a+rw /tmp/logpipe
+RUN mkdir -p /var/log/postgres && chown postgres:postgres /var/log/postgres && chmod a+rwx /var/log/postgres && \
+mkdir -p /tmp && mkfifo /tmp/logpipe && chmod a+rw /tmp/logpipe && mkfifo /tmp/errpipe && chmod a+rw /tmp/errpipe
 
-RUN ln -sf /tmp/logpipe /var/log/postgres/postgres.csv
-RUN ln -sf /dev/stderr /var/log/postgres/postgres.log
+RUN ln -sf /tmp/logpipe /var/log/postgres/postgres.csv #&& ln -sf /tmp/errpipe /var/log/postgres/postgres.log
 
-#COPY --chown=postgres ./docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-#RUN chmod a+x /usr/local/bin/docker-entrypoint.sh
 
 COPY --chown=postgres ./BLD/logcollector /usr/local/bin/logcollector
 RUN chmod a+x /usr/local/bin/logcollector

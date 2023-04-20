@@ -110,20 +110,15 @@ RUN echo /opt/oracle/${instantclient_version} > /etc/ld.so.conf.d/oracle-instant
     ldconfig
 
 # Add logcollector
-RUN addgroup nobody tty
-RUN addgroup postgres tty
+RUN addgroup nobody tty && addgroup postgres tty
+
+
 
 # forward postgres logs to docker log collector
-RUN mkdir -p /var/log/postgres
-RUN chown postgres:postgres /var/log/postgres
-RUN chmod a+rwx /var/log/postgres
+RUN mkdir -p /var/log/postgres && chown postgres:postgres /var/log/postgres && chmod a+rwx /var/log/postgres && \
+mkdir -p /tmp && mkfifo /tmp/logpipe && chmod a+rw /tmp/logpipe && mkfifo /tmp/errpipe && chmod a+rw /tmp/errpipe
 
-RUN mkdir -p /tmp
-RUN mkfifo /tmp/logpipe
-RUN chmod a+rw /tmp/logpipe
-
-RUN ln -sf /tmp/logpipe /var/log/postgres/postgres.csv
-RUN ln -sf /dev/stderr /var/log/postgres/postgres.log
+RUN ln -sf /tmp/logpipe /var/log/postgres/postgres.csv #&& ln -sf /tmp/errpipe /var/log/postgres/postgres.log
 
 COPY ./logcollector /usr/local/bin/logcollector
 RUN chmod a+x /usr/local/bin/logcollector
