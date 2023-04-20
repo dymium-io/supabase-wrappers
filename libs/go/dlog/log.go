@@ -1,13 +1,13 @@
 package log
 
 import (
+	"github.com/apex/log/handlers/text"
 	"os"
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/json"
 	"github.com/apex/log/handlers/kinesis"
 	"github.com/apex/log/handlers/multi"
-	"github.com/apex/log/handlers/text"
 )
 
 var gComponent string

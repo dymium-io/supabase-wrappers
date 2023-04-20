@@ -53,7 +53,9 @@ func main() {
 		_, _ = fmt.Fprintf(os.Stderr, "Open named pipe file error: %s", err)
 		panic("Open named pipe file error")
 	}
-	defer pipe.Close()
+	defer func() {
+		_ = pipe.Close()
+	}()
 
 	tenant, ok := os.LookupEnv("CUSTOMER")
 	if !ok || !(len(tenant) > 0) {

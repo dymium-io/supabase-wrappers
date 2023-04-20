@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
 )
 
 // PgLogProcessor Processor for PostgreSQL log messages (stdout)
@@ -116,11 +115,8 @@ func LogCollectorWithFields(severity string, fields aplog.Fields, session string
 	if !loggerExists {
 		_, _ = fmt.Fprintf(os.Stderr, fmt.Sprintf("Logger function for %s does not exist.", severity))
 	} else {
-		if len(msg) > 0 {
-			fields["message"] = msg
-		}
 		if logger != nil {
-			logger(EnvData.Tenant, session, username, fields, "")
+			logger(EnvData.Tenant, session, username, fields, msg)
 		} else {
 			logger = severityToLoggerMap["INFO"]
 			if logger == nil {
@@ -136,20 +132,16 @@ func LogCollectorWithFields(severity string, fields aplog.Fields, session string
 func PGMsgLogCollector(msg *PostgresLogMessage) {
 	sevLevel := msg.Error_severity
 	extra := aplog.Fields{
-		"eventtime": msg.Log_time,
 		"source":    EnvData.SourceName,
 		"component": EnvData.ComponentName,
 	}
 
 	data, _ := msg.JsonString() // Ignoring the error, this func must be called only when msg is wellformed
-	extra["message"] = data
-
-	LogCollectorWithFields(sevLevel, extra, msg.Session_id, msg.User_name, "")
+	LogCollectorWithFields(sevLevel, extra, msg.Session_id, msg.User_name, data)
 }
 
 func StrLogCollector(severity string, msg string) {
 	extra := aplog.Fields{
-		"eventtime": time.Now().Format("2023-04-04 03:20:24.193 UTC"), // add current timestamp
 		"source":    EnvData.SourceName,
 		"component": EnvData.ComponentName,
 	}
