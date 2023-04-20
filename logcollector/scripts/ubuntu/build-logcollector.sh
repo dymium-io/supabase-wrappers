@@ -33,6 +33,7 @@ RUN addgroup postgres tty
 # forward postgres logs to docker log collector
 RUN mkdir -p /var/log/postgres
 RUN chown postgres:postgres /var/log/postgres
+RUN chmod a+rwx /var/log/postgres
 RUN mkdir -p /tmp
 RUN mkfifo /tmp/logpipe
 RUN chmod a+rw /tmp/logpipe
