@@ -402,10 +402,11 @@ export default function EditDatascopes() {
 
                             com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
                                 if(slatedToDelete !== t) {
-                                    setSelectedDatascope(t)
-                                    appDispatch(setSelectedDatascopeDefault(""))
+                                    //setSelectedDatascope(t)
+                                    //appDispatch(setSelectedDatascopeDefault(""))
                                 } else {
-                                   
+                                    setSelectedDatascope("")
+                                    appDispatch(setSelectedDatascopeDefault(""))
                                 }
                             })
                         })

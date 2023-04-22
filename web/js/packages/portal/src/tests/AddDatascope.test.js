@@ -101,12 +101,12 @@ test('add-datascope', async () => {
     )    
     // fill it with employee
     await act(async () => {    
-        fireEvent.change(table, { target: { value: "employee" } })
+        fireEvent.change(table, { target: { value: "shift" } })
     }) 
     // find and click on the dropdown
     let tableselection =  
     await act( async () => 
-        component.findByText( "employee" )
+        component.findByText( "shift" )
     )    
     await act(async () => {    
         fireEvent.click(tableselection)

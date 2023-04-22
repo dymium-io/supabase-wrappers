@@ -45,6 +45,7 @@ interface Rule {
 
 type SubRule = {
     regexp: string,
+    semantics: string,
     detection: string,
     action: string
 }
@@ -136,9 +137,10 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             let role = policy.actions[i].role
             Prefills[role] = createLevel(policy, i)
             for (let j = 0; j < policy.piisuggestions.length; j++) {
-                if (policy.piisuggestions[j].detector.method !== "columnregexp") continue
+
                 let rule: SubRule = {
                     detection: policy.piisuggestions[j].detector.name,
+                    semantics: policy.piisuggestions[j].detector.id!,
                     regexp: policy.piisuggestions[j].detector.data,
                     action: policy.piisuggestions[j].actions[i].handling
                 }
@@ -146,6 +148,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             }
             let defaultrule: SubRule = {
                 regexp: "",
+                semantics: "",
                 detection: "N/A",
                 action: "Allow"
             }
@@ -234,7 +237,10 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     }
                
                 }).catch((error) => {
-
+                    props.onAlert(<Alert variant="danger" onClose={() => props.onAlert(<></>)} dismissible>
+                    Exception: {error.message}
+                </Alert>)     
+                console.log(error.stack)
                 })
             },
             resp => {
@@ -291,7 +297,11 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         setTable(table[0].toString())
     }
 
-    let selectTable = (table: any) => {
+    let selectTable = (table: any[] ) => {
+        if(table.length === 0 ) {
+            setTables(tables => [])
+            return
+        }
        let b = {
             ConnectionId: props.connectionId,
             Schema: schema,
@@ -307,6 +317,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             resp => {
                 resp.json().then(js => {
                     if (js.status !== "OK") {
+                        window.document.dispatchEvent(new Event('reauthenticate'));
                         props.onAlert(<Alert variant="danger" onClose={() => props.onAlert(<></>)} dismissible>
                             {js.errormessage}
                         </Alert>)
@@ -521,13 +532,13 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         )
         return ret
     }
-    let ActionByName = (predo, name: string) => {
+    let ActionByName = (predo, semantics: string) => {
         let action = "N/A"
         for (let i = 0; i < predo.rules.length; i++) {
-            let re = new RegExp(predo.rules[i].regexp, "i")
-            if (name.match(re) != null) {
+            
+            if (semantics === predo.rules[i].semantics) {
 
-                return [predo.rules[i].action.toLowerCase(), predo.rules[i].detection]
+                return [predo.rules[i].action.toLowerCase(), predo.rules[i].id]
             }
         }
         return []
@@ -545,14 +556,14 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         for (let i = 0; i < newtablestructure.length; i++) {
             let table = newtablestructure[i]
 
-            let [action, semantics] = ActionByName(predo, newtablestructure[i].name)
+            let [action, semantics] = ActionByName(predo, newtablestructure[i].semantics)
             let possible: string[] = cloneDeep(table.possibleActions)
             //possible.push("allow")
 
             if (possible.includes(action))
                 newtablestructure[i].action = action
             else
-                newtablestructure[i].action = table.possibleActions[0]
+                newtablestructure[i].action = possible[possible.length - 1]
 
         }
 
@@ -610,13 +621,13 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="dbname">
                             <Form.Label>Table Name:</Form.Label>
-                            <Typeahead id="tables" inputProps={{ id: "tables" }} onChange={selectTable} size="sm"
+                            <Typeahead id="tables" inputProps={{ id: "tables" }} onChange={_selectTable} size="sm"
                                 clearButton
                                 options={getTables()}
                                 defaultOpen={false}
                                 labelKey="Table"
                                 placeholder="Choose table..."
-                                selected={table != undefined ? [table] : []}
+                                defaultSelected={table != undefined ? [table] : []}
                                 disabled={ (props.table.connection !== undefined && props.table.connection !== "") || (props.table.table !== "")}
                             />
 

@@ -241,7 +241,9 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 			egress.Close()
 			out := protocol.TransmissionUnit{protocol.Close, id, nil}
 			messages <- out
-			conn.LogDownstream(0, true)
+			if ok {
+				conn.LogDownstream(0, true)
+			}
 			return
 		}
 		b := buff[:n]

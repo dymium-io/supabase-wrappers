@@ -26,6 +26,7 @@
     "bootstrap": "4.6.1",
     "enzyme-to-json": "^3.6.2",
     "gsap": "^3.10.4",
+    "html-react-parser": "^3.0.15",
     "http-proxy-middleware": "^2.0.6",
     "jest-environment-jsdom": "^28.1.2",
     "lodash": "^4.17.21",
