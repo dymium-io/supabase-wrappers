@@ -1,18 +1,22 @@
 package tunnel
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/gob"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"net"
 	"os"
+	"os/signal"
 	"strings"
-	"time"
 	"sync"
-	"context"
 	"sync/atomic"
+	"syscall"
+	"time"
+
 	"dymium.com/dymium/log"
 	"dymium.com/server/gotypes"
 	"dymium.com/server/protocol"
@@ -274,7 +278,11 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder,
 
 		err := enc.Encode(buff)
 		if err != nil {
-			log.Errorf("Error in encoder: %s", err.Error())
+			if strings.Contains(err.Error(), "closed network connection") {
+				log.Debugf("Error in encoder: %s", err.Error())
+			} else {
+				log.Errorf("Error in encoder: %s", err.Error())
+			}
 			ingress.Close()
 		}
 	}
@@ -299,8 +307,12 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 		err := dec.Decode(&buff)
 
 		if err != nil {
-			log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!", customer, err.Error())
-			// close all outgoing connections
+			if(err != io.EOF) {
+				log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!", customer, err.Error())
+			} else {
+
+			}
+				// close all outgoing connections
 			mu.Lock()
 			for key := range conmap {
 				conmap[key].sock.Close()

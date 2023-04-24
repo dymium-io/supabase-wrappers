@@ -17,7 +17,9 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-
+	"os/signal"
+	"strings"
+	"syscall"
 	"dymium.com/client/ca"
 	"dymium.com/client/content"
 	"dymium.com/client/installer"
@@ -282,10 +284,10 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 
 		n, err := ingress.Read(buff)
 		if err != nil {
-			if err.Error() != "EOF" {
+			if err != io.EOF {
 				log.Errorf("Read on loopback failed '%s'", err.Error())
 			} else {
-				log.Infof("Loopback connection closed")
+				log.Infof("Connection closed by client")
 			}
 			ingress.Close()
 			back := protocol.TransmissionUnit{protocol.Close, id, nil}
@@ -322,7 +324,11 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder,
 		var buff protocol.TransmissionUnit
 		err := dec.Decode(&buff)
 		if err != nil {
-			log.Errorf("Еrror reading from tunnel%s, closing...", err.Error())
+			if strings.Contains(err.Error(), "use of closed network connection") {
+				log.Infof("Tunnel is closed, shutting down...")
+			} else {
+				log.Errorf("Еrror reading from tunnel %s, closing...", err.Error())
+			}
 			mu.Lock()
 			for key := range conmap {
 				back := protocol.TransmissionUnit{protocol.Close, key, nil}
@@ -427,6 +433,9 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 	go MultiplexReader(egress, conmap, dec, messages, mu)
 
 	back <- "end"
+
+	go handleSignal(listener, egress) 
+	setReuseAddr(listener)
 
 	for {
 		ingress, err := listener.Accept() //*TCPConn

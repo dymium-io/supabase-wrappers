@@ -23,4 +23,4 @@ cd ../meshscripts/connector
 docker build --compress -f Dockerfile \
        --label "git.branch=$(git branch --show-current)" \
        --label "git.commit=$(git rev-parse HEAD)" \
-       -t meshconnector $build_d
+       -t dymiumconnector $build_d

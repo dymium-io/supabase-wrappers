@@ -27,6 +27,7 @@ export REDIS_PASSWORD=""
 [ -z "$DATABASE_PASSWORD" ] && {
     DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )
 }
+export POSTGRES_PORT=9090
 export DATABASE_PASSWORD=$DATABASE_PASSWORD
 export LOCAL_ENVIRONMENT=true
 export LOG_LEVEL=Debug
