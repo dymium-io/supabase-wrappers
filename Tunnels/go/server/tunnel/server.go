@@ -310,6 +310,7 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 			if(err != io.EOF) {
 				log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!", customer, err.Error())
 			} else {
+				log.Debugf("Customer %s, EOF!", customer)
 
 			}
 				// close all outgoing connections
