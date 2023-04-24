@@ -378,6 +378,15 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder,
 		}
 	}
 }
+func handleSignal(listener *net.TCPListener, egress *tls.Conn) {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+
+	<-signalChan
+	log.Info("Received an interrupt, stopping the client.")
+	egress.Close()
+	listener.Close()
+}
 
 func runProxy(listener *net.TCPListener, back chan string, port int, token string) {
 	defer wg.Done()
