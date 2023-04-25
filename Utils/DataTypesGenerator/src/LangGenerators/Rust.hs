@@ -75,8 +75,11 @@ genModule
         importString em = T.concat ["use ",rPath,"::",transformPathT em," as ",lName,";\n"]
           where
             lName = mNameMapper nameMappers  em
-            rPath = T.pack $ "super::" <> intercalate "::"
-                    (transform <$> C.calcRelativePath (snd $ mPath mDef) (snd $ modulesPaths nameMappers em))
+            rPath =
+              if null relPath
+              then "super"
+              else T.pack $ "super::" <> intercalate "::" (transform <$> relPath)
+            relPath = C.calcRelativePath (snd $ mPath mDef) (snd $ modulesPaths nameMappers em)
             transform = \case
               ".." -> "super"
               p    -> transformPath p
@@ -92,7 +95,8 @@ genModule
 
 enumDef :: NameMappers -> T.Text -> EnumDef -> T.Text
 enumDef nameMappers _mName' eDef = [untrimming|
-  #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+  #[derive(PartialEq, Clone, Debug)]
+  #[derive(Serialize, Deserialize)]
   pub enum ${eName'} {
     ${eFlds}
   }|]
@@ -106,7 +110,8 @@ enumDef nameMappers _mName' eDef = [untrimming|
 
 structDef :: NameMappers -> T.Text -> StructDef -> T.Text
 structDef nameMappers _mName' sDef = [untrimming|
-  #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+  #[derive(PartialEq, Clone, Debug)]
+  #[derive(Serialize, Deserialize)]
   pub struct ${csn} {
     ${fldDefs}
   }|]

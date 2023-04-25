@@ -296,29 +296,29 @@ data NameMappers NameMappers32,33
   , structNameMapper structNameMapper38,39
   , structFldMapper structFldMapper39,40
 genModule genModule42,43
-enumDef enumDef92,93
-structDef structDef106,107
-genMappers genMappers145,146
-defineMods defineMods181,182
-capitalize capitalize215,216
-rustKeywords rustKeywords221,222
-rustString rustString232,233
-rustShow rustShow235,236
-rustEmptyString rustEmptyString238,239
-goNull goNull241,242
-goDate goDate244,245
-sanitize sanitize247,248
-transformPath transformPath255,256
-transformPathT transformPathT258,259
-data State State261,262
-  InitInit262,263
-  | C1C1263,264
-  | CWordCWord264,265
-  | WordWord265,266
-snakeCase snakeCase267,268
-snakeCaseT snakeCaseT287,288
-upperCamelCase upperCamelCase290,291
-upperCamelCaseT upperCamelCaseT308,309
+enumDef enumDef95,96
+structDef structDef110,111
+genMappers genMappers150,151
+defineMods defineMods186,187
+capitalize capitalize220,221
+rustKeywords rustKeywords226,227
+rustString rustString237,238
+rustShow rustShow240,241
+rustEmptyString rustEmptyString243,244
+goNull goNull246,247
+goDate goDate249,250
+sanitize sanitize252,253
+transformPath transformPath260,261
+transformPathT transformPathT263,264
+data State State266,267
+  InitInit267,268
+  | C1C1268,269
+  | CWordCWord269,270
+  | WordWord270,271
+snakeCase snakeCase272,273
+snakeCaseT snakeCaseT292,293
+upperCamelCase upperCamelCase295,296
+upperCamelCaseT upperCamelCaseT313,314
 
 ./src/LangGenerators/Haskell.hs,703
 module LangGenerators.Haskell LangGenerators.Haskell3,4
