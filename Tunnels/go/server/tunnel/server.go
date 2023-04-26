@@ -324,16 +324,22 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 	
 		switch buff.Action {
 		case protocol.Open:
-
-			jwtKey := []byte(os.Getenv("SESSION_SECRET"))
 			
-
+			var p jwt.Parser
+			_, _, err = p.ParseUnverified(string(buff.Data), claim)  // only informational
+			if err != nil {
+				log.Errorf("Error: token invalid, can't continue %s", err.Error())
+				os.Exit(1)
+			}
+/*
+			jwtKey := []byte(os.Getenv("SESSION_SECRET"))
 			_, err = jwt.ParseWithClaims(string(buff.Data), claim, func(token *jwt.Token) (interface{}, error) {
 				return jwtKey, nil
 			})
 			if err != nil {
 				log.Errorf("Error parsing token %s: %s", string(buff.Data), err.Error())
 			}
+*/
 			conn := &Virtcon{}
 			conn.tenant = claim.Schema
 			conn.email = claim.Email
