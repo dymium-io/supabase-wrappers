@@ -212,7 +212,12 @@ func configureDatabase(db *sql.DB,
                                       OPTIONS (%s)`,
 				opts.userMapping(cred.User_name, cred.Password))
 			if _, err := tx.ExecContext(ctx, sql); err != nil {
-				return rollback(err, "["+sql+"] failed")
+				errSql := fmt.Sprintf(`
+                                      CREATE USER MAPPING FOR `+localUser+`
+                                      SERVER `+c.Name+`_server
+                                      OPTIONS (%s)`,
+					opts.userMapping(cred.User_name, "******"))
+				return rollback(err, "["+errSql+"] failed")
 			}
 		}
 	}

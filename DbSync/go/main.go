@@ -171,14 +171,16 @@ func getConnections(db *sql.DB, infoSchema, connectorDomain string) (*map[string
 func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]types.Scope, error) {
 	infoDatascope_ := ""
 	if infoDatascope != nil {
-		infoDatascope_ = fmt.Sprintf("d.name = '%s' AND ", esc(*infoDatascope))
+		infoDatascope_ = fmt.Sprintf("WHERE d.name = '%s'", esc(*infoDatascope))
 	}
 	rows, err := db.Query(fmt.Sprintf(`SELECT d.name, c.id,
                                       t.schem, t.tabl, t.col,
                                       t.typ, t.is_nullable,
                                       t.semantics, LOWER(t.action)
-                               FROM %s.tables t, %s.datascopes d, %s.connections c
-                               WHERE %s t.datascope_id = d.id AND t.connection_id = c.id
+                               FROM %s.datascopes d
+                               LEFT JOIN %s.tables t on t.datascope_id = d.id
+                               LEFT JOIN %s.connections c on c.id = t.connection_id
+                               %s
                                ORDER BY d.name, t.schem, t.tabl, t.connection_id, t."position"`,
 		infoSchema, infoSchema, infoSchema, infoDatascope_))
 	if err != nil {
@@ -191,57 +193,128 @@ func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]typ
 	var s *types.Schema
 	var t *types.Table
 	for rows.Next() {
-		var dscope, con, schem, tblName string
-		var col types.Column
+		var dscope string
+		var con, schem, tblName *string
+		var colName, colTyp, colSemantics *string
+		var colIsNullable *bool
+		var colAction *types.DataHandling
 		err = rows.Scan(&dscope, &con, &schem, &tblName,
-			&col.Name, &col.Typ, &col.IsNullable, &col.Semantics, &col.Action)
+			&colName, &colTyp, &colIsNullable, &colSemantics, &colAction)
 		if err != nil {
 			return nil, err
 		}
 		if d == nil || dscope != d.Name {
+			var connections []string
+			var schemas []types.Schema
+			if con != nil {
+				connections = []string{*con}
+				if schem != nil {
+					var tables []types.Table
+					if tblName != nil {
+						tables = []types.Table{
+							{
+								Name:       *tblName,
+								Connection: *con,
+								Columns: []types.Column{
+									{
+										Name:       *colName,
+										Typ:        *colTyp,
+										IsNullable: *colIsNullable,
+										Semantics:  *colSemantics,
+										Action:     *colAction,
+									},
+								},
+							},
+						}
+					} else {
+						tables = []types.Table{}
+					}
+					schemas = []types.Schema{
+						{
+							Name:   *schem,
+							Tables: tables,
+						},
+					}
+				} else {
+					schemas = []types.Schema{}
+				}
+			} else {
+				connections = []string{}
+				schemas = []types.Schema{}
+			}
 			datascopes = append(datascopes, types.Scope{
 				Name:        dscope,
-				Connections: []string{con},
-				Schemas: []types.Schema{
+				Connections: connections,
+				Schemas:     schemas,
+			})
+			d = &datascopes[len(datascopes)-1]
+			if len(d.Schemas) > 0 {
+				s = &d.Schemas[0]
+				if len(s.Tables) > 0 {
+					t = &s.Tables[0]
+				} else {
+					t = nil
+				}
+			} else {
+				s = nil
+				t = nil
+			}
+		} else if con == nil {
+		} else if schem == nil ||
+			tblName == nil ||
+			colName == nil ||
+			colTyp == nil ||
+			colIsNullable == nil ||
+			colSemantics == nil ||
+			colAction == nil {
+			d.Connections = append(d.Connections, *con)
+		} else if s == nil || *schem != s.Name {
+			d.Schemas = append(d.Schemas, types.Schema{
+				Name: *schem,
+				Tables: []types.Table{
 					{
-						Name: schem,
-						Tables: []types.Table{
+						Name:       *tblName,
+						Connection: *con,
+						Columns: []types.Column{
 							{
-								Name:       tblName,
-								Connection: con,
-								Columns:    []types.Column{col},
+								Name:       *colName,
+								Typ:        *colTyp,
+								IsNullable: *colIsNullable,
+								Semantics:  *colSemantics,
+								Action:     *colAction,
 							},
 						},
 					},
 				},
 			})
-			d = &datascopes[len(datascopes)-1]
-			s = &d.Schemas[0]
+			d.Connections = append(d.Connections, *con)
+			s = &d.Schemas[len(d.Schemas)-1]
 			t = &s.Tables[0]
-		} else if schem != s.Name {
-			d.Schemas = append(d.Schemas, types.Schema{
-				Name: schem,
-				Tables: []types.Table{
+		} else if tblName == nil {
+		} else if t == nil || *tblName != t.Name || *con != t.Connection {
+			s.Tables = append(s.Tables, types.Table{
+				Name:       *tblName,
+				Connection: *con,
+				Columns: []types.Column{
 					{
-						Name:       tblName,
-						Connection: con,
-						Columns:    []types.Column{col},
+						Name:       *colName,
+						Typ:        *colTyp,
+						IsNullable: *colIsNullable,
+						Semantics:  *colSemantics,
+						Action:     *colAction,
 					},
 				},
 			})
-			d.Connections = append(d.Connections, con)
-			s = &d.Schemas[len(d.Schemas)-1]
-			t = &s.Tables[0]
-		} else if tblName != t.Name || con != t.Connection {
-			s.Tables = append(s.Tables, types.Table{
-				Name:       tblName,
-				Connection: con,
-				Columns:    []types.Column{col},
-			})
-			d.Connections = append(d.Connections, con)
+			d.Connections = append(d.Connections, *con)
 			t = &s.Tables[len(s.Tables)-1]
 		} else {
-			t.Columns = append(t.Columns, col)
+			t.Columns = append(t.Columns, types.Column{
+				Name:       *colName,
+				Typ:        *colTyp,
+				IsNullable: *colIsNullable,
+				Semantics:  *colSemantics,
+				Action:     *colAction,
+			})
 		}
 	}
 
