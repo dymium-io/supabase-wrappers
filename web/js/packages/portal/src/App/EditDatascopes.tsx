@@ -285,6 +285,11 @@ export default function EditDatascopes() {
             })
 
         })
+        if(retarray.length === 0)  {
+            DeleteDatascope(selectedDatascope)
+            setSelectedDatascope("")
+            return
+        }
         // now do send
         setSpinner(true)
         let retob: internal.DataScope = { name: dbname, records: retarray }
@@ -379,12 +384,10 @@ export default function EditDatascopes() {
             setTable({ schema, table })
         setShowOffcanvas(true)
     }
-    let deleteDatascope = () => {
-        setShowdelete(false)
-        setSpinner(true)
+    let DeleteDatascope = toDelete => {
         let retob: types.DatascopeIdName = new types.DatascopeIdName()
-        retob.id = slatedToDelete
-        retob.name = nameById(slatedToDelete)
+        retob.id = toDelete
+        retob.name = nameById(toDelete)
         let body = retob.toJson()
 
         http.sendToServer("POST", "/api/deletedatascope",
@@ -437,6 +440,12 @@ export default function EditDatascopes() {
             })
 
     }
+    let onDeleteDatascope = () => {
+        setShowdelete(false)
+        setSpinner(true)
+        DeleteDatascope(slatedToDelete)
+
+    }
     let onDeleteConnection = (c: string) => {
         delete datascope[c]
         setDatascope(datascope)
@@ -468,7 +477,7 @@ export default function EditDatascopes() {
                     <Button variant="danger" role="button" id="Delete" data-testid="Delete"
                         aria-label={"Delete"}
                         onClick={() => {
-                            deleteDatascope()
+                            onDeleteDatascope()
                         }
                         }>Delete</Button> <Button variant="dymium" onClick={() => {
                             setShowdelete(false)

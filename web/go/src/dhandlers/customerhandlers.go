@@ -883,7 +883,6 @@ func DeleteDatascope(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-
 	js, err = json.Marshal(status)
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteDatascope, Error: %s", err.Error())
