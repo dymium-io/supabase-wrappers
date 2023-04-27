@@ -40,16 +40,24 @@ func doUpdate(
 				defer rows.Close()
 
 				if !rows.Next() {
-					if _, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s OWNER %s", datascope.Name, cnf.GuardianUser)); err != nil {
+					sql := fmt.Sprintf("CREATE DATABASE %s OWNER %s", datascope.Name, cnf.GuardianUser)
+					log.Println(sql)
+					if _, err = db.Exec(sql); err != nil {
 						return empty, fmt.Errorf("%s connection: Can not create database %q: %v", a, datascope.Name, err)
 					}
-					if _, err = db.Exec(fmt.Sprintf("REVOKE CONNECT ON DATABASE %s FROM PUBLIC", datascope.Name)); err != nil {
+					sql = fmt.Sprintf("REVOKE CONNECT ON DATABASE %s FROM PUBLIC", datascope.Name)
+					log.Println(sql)
+					if _, err = db.Exec(sql); err != nil {
 						return empty, fmt.Errorf("%s connection: Can not revoke access to database %s: %v", a, datascope.Name, err)
 					}
-					if _, err = db.Exec(fmt.Sprintf("CREATE ROLE %s", localUser)); err != nil {
+					sql = fmt.Sprintf("CREATE ROLE %s", localUser)
+					log.Println(sql)
+					if _, err = db.Exec(sql); err != nil {
 						return empty, fmt.Errorf("%s connection: Can not create role %s: %v", a, localUser, err)
 					}
-					if _, err = db.Exec(fmt.Sprintf("GRANT CONNECT ON DATABASE %s TO %s", datascope.Name, localUser)); err != nil {
+					sql = fmt.Sprintf("GRANT CONNECT ON DATABASE %s TO %s", datascope.Name, localUser)
+					log.Println(sql)					
+					if _, err = db.Exec(sql); err != nil {
 						return empty, fmt.Errorf("%s connection: Can not grant connect on %s to %s: %v",
 							a, datascope.Name, localUser, err)
 					}
@@ -75,6 +83,7 @@ func doUpdate(
 func clearDatabase(db *sql.DB) error {
 
 	exec := func(sql string) error {
+		log.Println(sql)
 		if _, err := db.Exec(sql); err != nil {
 			return fmt.Errorf("%s failed: %v", err, err)
 		}

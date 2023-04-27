@@ -105,6 +105,8 @@ func configureDatabase(db *sql.DB,
 	credentials map[string]types.Credential,
 	createDymiumTables bool) error {
 
+	log.Printf("configureDatabase: datascope=%+v connections=%+v\n",datascope,connections)
+
 	localUser := fmt.Sprintf(`_%x_`, md5.Sum([]byte(datascope.Name+"_dymium")))
 
 	connectionTypes := map[types.ConnectionType]struct{}{}
@@ -212,7 +214,12 @@ func configureDatabase(db *sql.DB,
                                       OPTIONS (%s)`,
 				opts.userMapping(cred.User_name, cred.Password))
 			if _, err := tx.ExecContext(ctx, sql); err != nil {
-				return rollback(err, "["+sql+"] failed")
+				errSql := fmt.Sprintf(`
+                                      CREATE USER MAPPING FOR `+localUser+`
+                                      SERVER `+c.Name+`_server
+                                      OPTIONS (%s)`,
+					opts.userMapping(cred.User_name, "******"))
+				return rollback(err, "["+errSql+"] failed")
 			}
 		}
 	}

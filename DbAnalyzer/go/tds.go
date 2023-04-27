@@ -6,6 +6,7 @@ import (
 	"fmt"
 	_ "github.com/denisenkom/go-mssqldb"
 	"net/url"
+	"strings"
 
 	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
@@ -114,6 +115,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
                                     data_type,
                                     character_maximum_length,
                                     numeric_precision, numeric_scale,
+                                    datetime_precision,
                                     is_nullable, column_default
                              FROM information_schema.columns
                              WHERE table_schema = @p1 and table_name = @p2
@@ -135,26 +137,30 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		isNullable                      bool
 		dflt                            *string
 		cTyp                            string
-		cCharMaxLen, cPrecision, cScale *int
+		cCharMaxLen, cPrecision, cScale, dPrecision *int
 	}
 
 	descr := []*data{}
+	isNullable := []bool{}
 
 	for rows.Next() {
 		var d data
-		var isNullable string
+		var isNullable_ string
 		err = rows.Scan(&d.pos, &d.cName,
-			&d.cTyp, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
-			&isNullable, &d.dflt)
+			&d.cTyp, &d.cCharMaxLen,
+			&d.cPrecision, &d.cScale,
+			&d.dPrecision,
+			&isNullable_, &d.dflt)
 		if err != nil {
 			return nil, err
 		}
-		if isNullable == "YES" {
+		if isNullable_ == "YES" {
 			d.isNullable = true
 		} else {
 			d.isNullable = false
 		}
 		descr = append(descr, &d)
+		isNullable = append(isNullable, d.isNullable)
 	}
 
 	detectors, err := detect.Compile(tip.Rules)
@@ -162,7 +168,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		return nil, err
 	}
 
-	sample, err := da.getSample(tip.Schema, tip.Table, len(descr))
+	sample, err := da.getSample(tip.Schema, tip.Table, isNullable)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +178,23 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		var t string
 		var semantics *string
 		switch d.cTyp {
-		case "decimal":
+		case "bigint", "smallint":
+			t = d.cTyp
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+		case "int":
+			t = "integer"
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+		case "tinyint":
+			t = "smallint"
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+		case "bit":
+			t = "boolean"
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+		case "dec", "decimal", "numeric":
 			if d.cPrecision != nil {
 				if d.cScale != nil {
 					t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
@@ -184,6 +206,38 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			}
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 			semantics = detectors.FindSemantics(d.cName, nil)
+		case "money", "smallmoney":
+			t = "money"
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+		case "date":
+			t = "date"
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+		case "datetime", "datetime2", "smalldatetime":
+			if d.dPrecision != nil {
+				t = fmt.Sprintf("timestamp (%d) without time zone", *d.dPrecision)
+			} else {
+				t = "timestamp without time zone"
+			}
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}			
+		case "datetimeoffset":
+			if d.dPrecision != nil {
+				t = fmt.Sprintf("timestamp (%d) with time zone", *d.dPrecision)
+			} else {
+				t = "timestamp with time zone"
+			}
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}			
+		case "time":
+			if d.dPrecision != nil {
+				t = fmt.Sprintf("time (%d) with time zone", *d.dPrecision)
+			} else {
+				t = "time with time zone"
+			}
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}			
 		case "varchar", "nvarchar":
 			if d.cCharMaxLen != nil && *d.cCharMaxLen > 0 {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
@@ -205,11 +259,30 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		case "text", "ntext":
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
-			t = fmt.Sprintf("text")
+			t = "text"
+		case "binary", "varbinary", "image":
+			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			t = "bytea"
 		default:
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-			semantics = detectors.FindSemantics(d.cName, nil)
-			t = d.cTyp
+			switch {
+			case strings.HasPrefix(d.cTyp, "real"):
+				t = "real"
+				semantics = detectors.FindSemantics(d.cName, nil)
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			case strings.HasPrefix(d.cTyp, "float"):
+				if d.cPrecision != nil && *d.cPrecision <= 24 {
+					t = "real"
+				} else {
+					t = "double precision"
+				}
+				semantics = detectors.FindSemantics(d.cName, nil)
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			default:
+				t = d.cTyp
+				semantics = utils.Unsupported
+				possibleActions = &[]types.DataHandling{types.DH_Block}
+			}
 		}
 		c := types.Column{
 			Name:            d.cName,
@@ -291,14 +364,21 @@ func (da *SqlServer) isSysTable(tblName string) bool {
 		tblName == "spt_values"
 }
 
-func (da *SqlServer) getSample(schema, table string, nColumns int) (*[][]string, error) {
+func (da *SqlServer) getSample(schema, table string, isNullable []bool) (*[][]string, error) {
+
+	nColumns := len(isNullable)
 
 	rows := make([][]*string, 0, detect.SampleSize)
 
 	i := make([]interface{}, nColumns)
-	s := make([]*string, nColumns)
+	s := make([]string, nColumns)
+	p := make([]*string, nColumns)
 	for k := 0; k != nColumns; k++ {
-		i[k] = &s[k]
+		if isNullable[k] {
+			i[k] = &p[k]
+		} else {
+			i[k] = &s[k]
+		}
 	}
 
 	// sql := fmt.Sprintf(`SELECT * from [%s].[%s] TABLESAMPLE(%d ROWS)`, schema, table, detect.SampleSize)
@@ -313,7 +393,7 @@ func (da *SqlServer) getSample(schema, table string, nColumns int) (*[][]string,
 		if err := r.Scan(i...); err != nil {
 			return nil, err
 		}
-		rows = append(rows, utils.CopyPointers(s))
+		rows = append(rows, utils.CopyPointers(s, p, isNullable))
 	}
 
 	scanned := make([][]string, nColumns)

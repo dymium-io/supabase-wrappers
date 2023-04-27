@@ -1,10 +1,15 @@
 package utils
 
-func CopyPointers[T any](s []*T) ([]*T) {
+func CopyPointers[T any](s []T, p []*T, isNullable []bool) ([]*T) {
 	r := make([]*T, len(s))
-	for k, p := range s {
-		if p != nil {
-			v := *p
+	for k, _ := range s {
+		if isNullable[k] {
+			if p[k] != nil {
+				v := *p[k]
+				r[k] = &v
+			}
+		} else {
+			v := s[k]
 			r[k] = &v
 		}
 	}
