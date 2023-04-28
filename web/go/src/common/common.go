@@ -7,11 +7,12 @@ package common
 import (
 	_ "errors"
 	_ "fmt"
-	"github.com/gorilla/mux"
 	"io"
 	"net/http"
-	"strings"
 	"os"
+	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 const Nocache = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"

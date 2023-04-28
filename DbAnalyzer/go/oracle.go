@@ -152,23 +152,25 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 	}
 
 	descr := []*data{}
+	isNullable := []bool{}
 
 	for rows.Next() {
 		var d data
-		var isNullable *string
+		var isNullable_ *string
 		err = rows.Scan(&d.pos, &d.cName,
 			&d.cTyp, &d.cDataLen, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
-			&isNullable, &d.dLength, &d.cDflt)
+			&isNullable_, &d.dLength, &d.cDflt)
 		if err != nil {
 			return nil, err
 		}
 
-		if isNullable != nil && *isNullable == "N" {
+		if isNullable_ != nil && *isNullable_ == "N" {
 			d.isNullable = false
 		} else {
-			d.isNullable = false
+			d.isNullable = true
 		}
 		descr = append(descr, &d)
+		isNullable = append(isNullable, d.isNullable)
 	}
 
 	detectors, err := detect.Compile(tip.Rules)
@@ -176,7 +178,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 		return nil, err
 	}
 
-	sample, err := da.getSample(tip.Schema, tip.Table, len(descr))
+	sample, err := da.getSample(tip.Schema, tip.Table, isNullable)
 	if err != nil {
 		return nil, err
 	}
@@ -190,8 +192,9 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 			semantics = detectors.FindSemantics(d.cName, nil)
 		} else {
-			switch strings.ToLower(*d.cTyp) {
-			case "number":
+			cTyp := strings.ToLower(*d.cTyp)
+			switch cTyp {
+			case "number", "float":
 				if d.cPrecision != nil {
 					if d.cScale != nil {
 						t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
@@ -203,7 +206,15 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 				}
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				semantics = detectors.FindSemantics(d.cName, nil)
-			case "varchar2", "nvarchar2":
+			case "binary_float":
+				t = "real"
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				semantics = detectors.FindSemantics(d.cName, nil)
+			case "binary_double":
+				t = "double precision"
+				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				semantics = detectors.FindSemantics(d.cName, nil)
+			case "varchar", "varchar2", "nvarchar2":
 				if d.cCharMaxLen != nil && *d.cCharMaxLen > 0 {
 					t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 				} else {
@@ -234,8 +245,58 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				semantics = detectors.FindSemantics(d.cName, nil)
 			default:
-				// ignore other datatypes (e.g. GEOM)
-				continue
+				switch {
+				case strings.HasPrefix(cTyp, "timestamp"):
+					switch {
+					case utils.Timestamp_r.MatchString(cTyp):
+						if d.cScale != nil {
+							t = fmt.Sprintf("timestamp(%d) without time zone", *d.cScale)
+						} else {
+							t = "timestamp without time zone"
+						}
+						possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+						semantics = detectors.FindSemantics(d.cName, nil)
+					case utils.Timestamp_with_zone_r.MatchString(cTyp):
+						if d.cScale != nil {
+							t = fmt.Sprintf("timestamp(%d) with time zone", *d.cScale)
+						} else {
+							t = "timestamp with time zone"
+						}
+						possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+						semantics = detectors.FindSemantics(d.cName, nil)
+					default:
+						t = *d.cTyp
+						semantics = utils.Unsupported
+						possibleActions = &[]types.DataHandling{types.DH_Block}
+					}
+				case strings.HasPrefix(cTyp, "interval"):
+					switch {
+					case utils.Interval_year_r.MatchString(cTyp):
+						t = "interval year to month"
+						semantics = detectors.FindSemantics(d.cName, nil)
+						possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+					case utils.Interval_day_r.MatchString(cTyp):
+						if d.cScale != nil {
+							t = fmt.Sprintf("interval day to second (%d)", *d.cScale)
+						} else {
+							t = "interval day to second"
+						}
+						semantics = detectors.FindSemantics(d.cName, nil)
+						possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+					default:
+						t = *d.cTyp
+						semantics = utils.Unsupported
+						possibleActions = &[]types.DataHandling{types.DH_Block}
+					}
+				case strings.HasPrefix(cTyp, "raw"):
+					t = "bytea"
+					semantics = detectors.FindSemantics(d.cName, nil)
+					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				default:
+					t = *d.cTyp
+					semantics = utils.Unsupported
+					possibleActions = &[]types.DataHandling{types.DH_Block}
+				}
 			}
 		}
 		if d.pos == nil {
@@ -315,7 +376,9 @@ func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 	return nil
 }
 
-func (da *OracleDB) getSample(schema, table string, nColumns int) (*[][]string, error) {
+func (da *OracleDB) getSample(schema, table string, isNullable []bool) (*[][]string, error) {
+
+	nColumns := len(isNullable)
 
 	var percent float32
 	{
@@ -334,6 +397,17 @@ func (da *OracleDB) getSample(schema, table string, nColumns int) (*[][]string, 
 
 	rows := make([][]*string, 0, detect.SampleSize)
 
+	i := make([]interface{}, nColumns)
+	s := make([]string, nColumns)
+	p := make([]*string, nColumns)
+	for k := 0; k != nColumns; k++ {
+		if isNullable[k] {
+			i[k] = &p[k]
+		} else {
+			i[k] = &s[k]
+		}
+	}
+
 	sql := fmt.Sprintf(`SELECT * from "%s"."%s" SAMPLE(%f)`, schema, table, percent)
 	r, err := da.db.Query(sql)
 	if err != nil {
@@ -341,17 +415,11 @@ func (da *OracleDB) getSample(schema, table string, nColumns int) (*[][]string, 
 	}
 	defer r.Close()
 
-	i := make([]interface{}, nColumns)
-	s := make([]*string, nColumns)
-	for k := 0; k != nColumns; k++ {
-		i[k] = &s[k]
-	}
-
 	for r.Next() {
 		if err := r.Scan(i...); err != nil {
 			return nil, err
 		}
-		rows = append(rows, utils.CopyPointers(s))
+		rows = append(rows, utils.CopyPointers(s, p, isNullable))
 	}
 
 	scanned := make([][]string, nColumns)

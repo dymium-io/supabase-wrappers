@@ -126,11 +126,6 @@ RUN chmod a+x /usr/local/bin/logcollector
 COPY ./startup.sh /usr/local/bin/startup.sh
 RUN chmod a+x /usr/local/bin/startup.sh
 
-# FOR LOCAL TESTS ONLY
-ENV LOCAL_ENVIRONMENT=true
-ENV CUSTOMER=spoofcorp
-#####
-
 ENTRYPOINT ["/usr/local/bin/startup.sh"]
 
 EOF

@@ -136,22 +136,24 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 	}
 
 	descr := []*data{}
+	isNullable := []bool{}
 
 	for rows.Next() {
 		var d data
-		var isNullable string
+		var isNullable_ string
 		err = rows.Scan(&d.pos, &d.cName,
 			&d.cTyp, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
-			&isNullable, &d.dflt)
+			&isNullable_, &d.dflt)
 		if err != nil {
 			return nil, err
 		}
-		if isNullable == "YES" {
+		if isNullable_ == "YES" {
 			d.isNullable = true
 		} else {
 			d.isNullable = false
 		}
 		descr = append(descr, &d)
+		isNullable = append(isNullable, d.isNullable)
 	}
 
 	detectors, err := detect.Compile(tip.Rules)
@@ -159,7 +161,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 		return nil, err
 	}
 
-	sample, err := da.getSample(tip.Schema, tip.Table, len(descr))
+	sample, err := da.getSample(tip.Schema, tip.Table, isNullable)
 	if err != nil {
 		return nil, err
 	}
@@ -272,14 +274,20 @@ func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData
 	return nil
 }
 
-func (da *MySQL) getSample(schema, table string, nColumns int) (*[][]string, error) {
+func (da *MySQL) getSample(schema, table string, isNullable []bool) (*[][]string, error) {
 
 	rows := make([][]*string, 0, detect.SampleSize)
 
+	nColumns := len(isNullable)
 	i := make([]interface{}, nColumns)
-	s := make([]*string, nColumns)
+	s := make([]string, nColumns)
+	p := make([]*string, nColumns)
 	for k := 0; k != nColumns; k++ {
-		i[k] = &s[k]
+		if isNullable[k] {
+			i[k] = &p[k]
+		} else {
+			i[k] = &s[k]
+		}
 	}
 
 	sql := fmt.Sprintf("SELECT * from `%s`.`%s` ORDER BY RAND() LIMIT %d", schema, table, detect.SampleSize)
@@ -293,7 +301,7 @@ func (da *MySQL) getSample(schema, table string, nColumns int) (*[][]string, err
 		if err := r.Scan(i...); err != nil {
 			return nil, err
 		}
-		rows = append(rows, utils.CopyPointers(s))
+		rows = append(rows, utils.CopyPointers(s, p, isNullable))
 	}
 
 	scanned := make([][]string, nColumns)

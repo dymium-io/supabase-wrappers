@@ -139,23 +139,25 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 	}
 
 	descr := []*data{}
+	isNullable := []bool{}
 
 	for rows.Next() {
 		var d data
-		var isNullable string
+		var isNullable_ string
 		err = rows.Scan(&d.pos, &d.cName,
 			&d.cTyp, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
 			&d.eTyp, &d.eCharMaxLen, &d.ePrecision, &d.eScale,
-			&isNullable, &d.dflt)
+			&isNullable_, &d.dflt)
 		if err != nil {
 			return nil, err
 		}
-		if isNullable == "YES" {
+		if isNullable_ == "YES" {
 			d.isNullable = true
 		} else {
 			d.isNullable = false
 		}
 		descr = append(descr, &d)
+		isNullable = append(isNullable, d.isNullable)
 	}
 
 	detectors, err := detect.Compile(tip.Rules)
@@ -163,7 +165,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		return nil, err
 	}
 
-	sample, err := da.getSample(tip.Schema, tip.Table, len(descr))
+	sample, err := da.getSample(tip.Schema, tip.Table, isNullable)
 	if err != nil {
 		return nil, err
 	}
@@ -336,14 +338,21 @@ func (da *Postgres) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 	return nil
 }
 
-func (da *Postgres) getSample(schema, table string, nColumns int) (*[][]string, error) {
+func (da *Postgres) getSample(schema, table string, isNullable []bool) (*[][]string, error) {
 
+	nColumns := len(isNullable)
+	
 	rows := make([][]*string, 0, detect.SampleSize)
 
 	i := make([]interface{}, nColumns)
-	s := make([]*string, nColumns)
+	s := make([]string, nColumns)
+	p := make([]*string, nColumns)
 	for k := 0; k != nColumns; k++ {
-		i[k] = &s[k]
+		if isNullable[k] {
+			i[k] = &p[k]
+		} else {
+			i[k] = &s[k]
+		}
 	}
 
 	sql := fmt.Sprintf(`SELECT * from "%s"."%s" ORDER BY RANDOM() LIMIT %d`, schema, table, detect.SampleSize)
@@ -357,7 +366,7 @@ func (da *Postgres) getSample(schema, table string, nColumns int) (*[][]string, 
 		if err := r.Scan(i...); err != nil {
 			return nil, err
 		}
-		rows = append(rows, utils.CopyPointers(s))
+		rows = append(rows, utils.CopyPointers(s, p, isNullable))
 	}
 
 	scanned := make([][]string, nColumns)
