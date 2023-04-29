@@ -220,7 +220,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         let po = ctypes.DataPolicy.fromJson(js)
                         setPolicy(po)
                         createLevels(po)
-                        let newPIIs:PiiPair[] = [{id: "", label: "N/A"}].concat(po.piisuggestions.map(x => { 
+                        let newPIIs:PiiPair[] = [{id: "", label: "N/A"}, {id: "xx", label: "UNSUPPORTED"} ].concat(po.piisuggestions.map(x => { 
                                 let id = ""
                                 if(x.detector.id != null)   
                                     id = x.detector.id
@@ -262,7 +262,10 @@ const AddTable: React.FC<AddTableProps> = (props) => {
     }, [tables])
     
     let getSemanticsFromId = (semantics) => {
-        if(semantics === '' || semantics == null) return "N/A"
+        if(semantics === '' || semantics == null) 
+            return "N/A"
+        if(semantics === "UNSUPPORTED") 
+            return "UNSUPPORTED"
 
         for (let i = 0; i < policy.piisuggestions.length; i++) {
             if (policy.piisuggestions[i].detector.id === semantics) {
@@ -446,7 +449,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         if (props.table.connection === undefined || props.table.connection === "") {
             initTableSchema()
         }
-        if(table !== "" && tables.length === 0 && (props.table.tablescope === undefined)) {
+        if(table !== "" /*&& tables.length === 0*/ && (props.table.tablescope === undefined)) {
             selectTable([table])
         }
     }, [table])
