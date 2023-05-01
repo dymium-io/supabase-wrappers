@@ -357,7 +357,39 @@ export default function EditDatascopes() {
             setValidated(true)
             return false
         }
-
+        let conns = Object.keys(datascope)
+        let _submittable = true
+        if(conns.length === 0) {
+            _submittable = false
+            } else {
+            for(let i = 0; i < conns.length; i++) {
+                let connection = conns[i]
+                let conn = datascope[connection]
+                let schematables = Object.keys(conn)
+                if(schematables.length === 0) {
+                    _submittable = false
+                    break
+                }
+                for(let j = 0; j < schematables.length; j++) {
+                    let schematable = schematables[j]
+                    let st = conn[schematable]
+                    if(st.tablescope.length === 0) {
+                        _submittable = false
+                        break
+                    }
+                }
+            }
+        }
+        if(!_submittable) {
+            setAlert(
+                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                    Can't save a Ghost Database with empty or no connections. Either remove them, or add connections and tables.
+                </Alert>
+            )
+            event.preventDefault();
+            setValidated(true)
+            return false            
+        }        
         event.preventDefault();
         setValidated(false)
         event.stopPropagation();

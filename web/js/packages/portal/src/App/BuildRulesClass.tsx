@@ -164,7 +164,7 @@ export default class BuildRulesClass extends Component {
       let y = types.PIISuggestor.fromJson({ actions: [], detector: x.detector })
       return y
     })
-    debugger
+    
     let suggs = piisuggestions.map((x, ind) => {
       let out: Rule = {
         index: ind,
