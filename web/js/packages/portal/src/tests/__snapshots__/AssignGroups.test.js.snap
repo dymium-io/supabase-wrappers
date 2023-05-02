@@ -14,7 +14,7 @@ exports[`assign-groups 1`] = `
       className="spinner"
       src="/logo.png"
       style={
-        Object {
+        {
           "width": "28px",
         }
       }
@@ -23,7 +23,7 @@ exports[`assign-groups 1`] = `
   <div
     className="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
     style={
-      Object {
+      {
         "right": -300,
         "width": 0,
       }
@@ -62,7 +62,7 @@ exports[`assign-groups 1`] = `
       <div
         className="pl-0 col"
         style={
-          Object {
+          {
             "paddingRight": "10px",
           }
         }
@@ -104,7 +104,7 @@ exports[`assign-groups 1`] = `
             onClick={[Function]}
             onKeyUp={[Function]}
             style={
-              Object {
+              {
                 "width": "20em",
               }
             }
@@ -129,7 +129,7 @@ exports[`assign-groups 1`] = `
           </th>
           <th
             style={
-              Object {
+              {
                 "width": "50px",
               }
             }
@@ -142,7 +142,7 @@ exports[`assign-groups 1`] = `
       <tbody>
         <tr
           className={null}
-          style={Object {}}
+          style={{}}
         >
           <td>
             test1
@@ -154,7 +154,7 @@ exports[`assign-groups 1`] = `
           </td>
           <td
             style={
-              Object {
+              {
                 "height": "30px",
                 "textAlign": "center",
               }
@@ -169,7 +169,7 @@ exports[`assign-groups 1`] = `
         </tr>
         <tr
           className={null}
-          style={Object {}}
+          style={{}}
         >
           <td>
             test2
@@ -184,7 +184,7 @@ exports[`assign-groups 1`] = `
           </td>
           <td
             style={
-              Object {
+              {
                 "height": "30px",
                 "textAlign": "center",
               }
@@ -209,7 +209,7 @@ exports[`assign-groups 1`] = `
       <span
         className="react-bs-table-sizePerPage-dropdown dropdown"
         style={
-          Object {
+          {
             "visibility": "visible",
           }
         }

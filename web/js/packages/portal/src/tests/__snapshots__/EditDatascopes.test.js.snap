@@ -11,7 +11,7 @@ exports[`add-datascope 1`] = `
   <div
     className="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim "
     style={
-      Object {
+      {
         "right": -600,
         "width": 0,
       }
@@ -51,7 +51,7 @@ exports[`add-datascope 1`] = `
       <div
         className="pl-0 col"
         style={
-          Object {
+          {
             "paddingRight": "10px",
           }
         }
@@ -61,7 +61,7 @@ exports[`add-datascope 1`] = `
   <div
     className="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
     style={
-      Object {
+      {
         "right": -300,
         "width": 0,
       }
@@ -100,7 +100,7 @@ exports[`add-datascope 1`] = `
       <div
         className="pl-0 col"
         style={
-          Object {
+          {
             "paddingRight": "10px",
           }
         }
@@ -146,7 +146,7 @@ exports[`add-datascope 1`] = `
                 className="spinner"
                 src="/logo.png"
                 style={
-                  Object {
+                  {
                     "width": "28px",
                   }
                 }
@@ -154,7 +154,7 @@ exports[`add-datascope 1`] = `
             </h5>
             <div
               style={
-                Object {
+                {
                   "marginLeft": "auto",
                 }
               }
@@ -176,7 +176,7 @@ exports[`add-datascope 1`] = `
                   onChange={[Function]}
                   onKeyUp={[Function]}
                   placeholder="Search"
-                  style={Object {}}
+                  style={{}}
                   type="text"
                   value=""
                 />
@@ -192,7 +192,7 @@ exports[`add-datascope 1`] = `
                 className="fa fa-refresh ablue cursor-pointer"
                 onClick={[Function]}
                 style={
-                  Object {
+                  {
                     "position": "relative",
                     "top": "2px",
                   }
@@ -234,7 +234,7 @@ exports[`add-datascope 1`] = `
                       onClick={[Function]}
                       onKeyUp={[Function]}
                       style={
-                        Object {
+                        {
                           "width": "auto",
                         }
                       }
@@ -251,7 +251,7 @@ exports[`add-datascope 1`] = `
                       onClick={[Function]}
                       onKeyUp={[Function]}
                       style={
-                        Object {
+                        {
                           "width": "auto",
                         }
                       }
@@ -264,7 +264,7 @@ exports[`add-datascope 1`] = `
                     </th>
                     <th
                       style={
-                        Object {
+                        {
                           "width": "50px",
                         }
                       }
@@ -274,7 +274,7 @@ exports[`add-datascope 1`] = `
                     </th>
                     <th
                       style={
-                        Object {
+                        {
                           "width": "90px",
                         }
                       }
@@ -286,7 +286,7 @@ exports[`add-datascope 1`] = `
                 </thead>
                 <tbody>
                   <tr
-                    style={Object {}}
+                    style={{}}
                   >
                     <td
                       className="selection-cell"
@@ -315,7 +315,7 @@ exports[`add-datascope 1`] = `
                     </td>
                     <td
                       style={
-                        Object {
+                        {
                           "height": "30px",
                           "textAlign": "center",
                         }
@@ -329,7 +329,7 @@ exports[`add-datascope 1`] = `
                     </td>
                     <td
                       style={
-                        Object {
+                        {
                           "height": "30px",
                           "textAlign": "center",
                         }
@@ -343,7 +343,7 @@ exports[`add-datascope 1`] = `
                     </td>
                   </tr>
                   <tr
-                    style={Object {}}
+                    style={{}}
                   >
                     <td
                       className="selection-cell"
@@ -372,7 +372,7 @@ exports[`add-datascope 1`] = `
                     </td>
                     <td
                       style={
-                        Object {
+                        {
                           "height": "30px",
                           "textAlign": "center",
                         }
@@ -386,7 +386,7 @@ exports[`add-datascope 1`] = `
                     </td>
                     <td
                       style={
-                        Object {
+                        {
                           "height": "30px",
                           "textAlign": "center",
                         }
@@ -411,7 +411,7 @@ exports[`add-datascope 1`] = `
                 <span
                   className="react-bs-table-sizePerPage-dropdown dropdown"
                   style={
-                    Object {
+                    {
                       "visibility": "visible",
                     }
                   }

@@ -494,10 +494,10 @@ function Test() {
 export default function TestSQL() {
 
   return (
-    <Tabs
+    <Tabs id="tabs"
 
       unmountOnExit={true} className="mb-3 text-left">
-      <Tab eventKey="test" title="Test SQL" className="mx-4">
+      <Tab eventKey="test" id="test" title="Test SQL" className="mx-4">
         <Test />
       </Tab>
 
