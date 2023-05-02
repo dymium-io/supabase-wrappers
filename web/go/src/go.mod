@@ -9,7 +9,7 @@ require (
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.9
-	github.com/redis/go-redis/v9 v9.0.3
+	github.com/redis/go-redis/v9 v9.0.4
 	github.com/stretchr/testify v1.8.2
 	github.com/victorspringer/http-cache v0.0.0-20221205073845-df6d061f29cb
 	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
@@ -17,7 +17,7 @@ require (
 )
 
 require (
-	github.com/aws/aws-sdk-go v1.44.254 // indirect
+	github.com/aws/aws-sdk-go v1.44.255 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-http-utils/fresh v0.0.0-20161124030543-7231e26a4b27 // indirect
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a // indirect

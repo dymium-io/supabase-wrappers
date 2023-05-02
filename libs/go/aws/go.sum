@@ -5,6 +5,8 @@ github.com/aws/aws-sdk-go v1.44.27 h1:8CMspeZSrewnbvAwgl8qo5R7orDLwQnTGBf/OKPiHx
 github.com/aws/aws-sdk-go v1.44.27/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/aws/aws-sdk-go v1.44.254 h1:8baW4yal2xGiM/Wm5/ZU10drS8sd+BVjMjPFjJx2ooc=
 github.com/aws/aws-sdk-go v1.44.254/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.255 h1:tOd7OP5V6BeHhANksc7CFB/ILS2mHj3kRhTfZKFnsS0=
+github.com/aws/aws-sdk-go v1.44.255/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-secretsmanager-caching-go v1.1.0 h1:vcV94XGJ9KouXKYBTMqgrBw96Tae8JKLmoUZ5SbaXNo=
 github.com/aws/aws-secretsmanager-caching-go v1.1.0/go.mod h1:wahQpJP1dZKMqjGFAjGCqilHkTlN0zReGWocPLbXmxg=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=

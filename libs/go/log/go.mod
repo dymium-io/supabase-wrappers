@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/apex/logs v1.1.0
 	github.com/aphistic/golf v0.0.0-20180712155816-02c07f170c5a
-	github.com/aws/aws-sdk-go v1.44.254
+	github.com/aws/aws-sdk-go v1.44.255
 	github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59
 	github.com/fatih/color v1.15.0
 	github.com/go-logfmt/logfmt v0.6.0

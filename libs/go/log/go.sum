@@ -8,6 +8,8 @@ github.com/aws/aws-sdk-go v1.44.130 h1:a/qwOxmYJF47xTZvTjECSJXnfRbjegb3YxvCXfETt
 github.com/aws/aws-sdk-go v1.44.130/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/aws/aws-sdk-go v1.44.254 h1:8baW4yal2xGiM/Wm5/ZU10drS8sd+BVjMjPFjJx2ooc=
 github.com/aws/aws-sdk-go v1.44.254/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.255 h1:tOd7OP5V6BeHhANksc7CFB/ILS2mHj3kRhTfZKFnsS0=
+github.com/aws/aws-sdk-go v1.44.255/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59 h1:WWB576BN5zNSZc/M9d/10pqEx5VHNhaQ/yOVAkmj5Yo=
 github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59/go.mod h1:q/89r3U2H7sSsE2t6Kca0lfwTK8JdoNGS/yzM/4iH5I=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
