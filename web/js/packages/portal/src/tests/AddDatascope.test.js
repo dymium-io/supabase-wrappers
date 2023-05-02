@@ -48,10 +48,10 @@ test('add-datascope', async () => {
     }) 
 
     // select adventureworks connection
-    userEvent.selectOptions(
-        screen.getByRole('combobox'),
-        screen.getByTestId( 'adventureworks' ),
-      )
+    const selectElement = screen.getByRole("combobox");
+    await userEvent.selectOptions(selectElement, "adventureworks");
+    expect(selectElement).toHaveValue("adventureworks");
+
     // click on add connection button
     let addconnection =  
     await act( async () => 

@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`add-datascope 1`] = `
-Object {
+{
   "asFragment": [Function],
   "baseElement": <body>
     <div>
@@ -145,7 +145,7 @@ Object {
                 class="col-auto"
               >
                 <div
-                  class="mb-3 form-group"
+                  class="mb-3"
                 >
                   <label
                     class="form-label"
@@ -183,7 +183,7 @@ Object {
                 style="align-items: center;"
               >
                 <div
-                  class="mb-3 form-group"
+                  class="mb-3"
                 >
                   <label
                     class="form-label"
@@ -206,11 +206,39 @@ Object {
                     >
                       northwind
                     </option>
+                    <option
+                      data-testid="aircrafts"
+                      value="aircrafts"
+                    >
+                      aircrafts
+                    </option>
+                    <option
+                      data-testid="xxx"
+                      value="xxx"
+                    >
+                      xxx
+                    </option>
+                    <option
+                      data-testid="aworks"
+                      value="aworks"
+                    >
+                      aworks
+                    </option>
+                    <option
+                      data-testid="111"
+                      value="111"
+                    >
+                      111
+                    </option>
+                    <option
+                      data-testid="sqlserver"
+                      value="sqlserver"
+                    >
+                      sqlserver
+                    </option>
                   </select>
                 </div>
-                <div
-                  class="form-group"
-                >
+                <div>
                   <label
                     class="form-label"
                   />
@@ -433,7 +461,7 @@ Object {
               class="col-auto"
             >
               <div
-                class="mb-3 form-group"
+                class="mb-3"
               >
                 <label
                   class="form-label"
@@ -471,7 +499,7 @@ Object {
               style="align-items: center;"
             >
               <div
-                class="mb-3 form-group"
+                class="mb-3"
               >
                 <label
                   class="form-label"
@@ -494,11 +522,39 @@ Object {
                   >
                     northwind
                   </option>
+                  <option
+                    data-testid="aircrafts"
+                    value="aircrafts"
+                  >
+                    aircrafts
+                  </option>
+                  <option
+                    data-testid="xxx"
+                    value="xxx"
+                  >
+                    xxx
+                  </option>
+                  <option
+                    data-testid="aworks"
+                    value="aworks"
+                  >
+                    aworks
+                  </option>
+                  <option
+                    data-testid="111"
+                    value="111"
+                  >
+                    111
+                  </option>
+                  <option
+                    data-testid="sqlserver"
+                    value="sqlserver"
+                  >
+                    sqlserver
+                  </option>
                 </select>
               </div>
-              <div
-                class="form-group"
-              >
+              <div>
                 <label
                   class="form-label"
                 />
@@ -634,7 +690,7 @@ Object {
 `;
 
 exports[`add-datascope 2`] = `
-Object {
+{
   "asFragment": [Function],
   "baseElement": <body>
     <div>
@@ -763,7 +819,7 @@ Object {
                       class="mr-0 pr-0 col-auto"
                     >
                       <div
-                        class="mb-3 form-group"
+                        class="mb-3"
                       >
                         <label
                           class="form-label"
@@ -878,7 +934,7 @@ Object {
                 class="col-auto"
               >
                 <div
-                  class="mb-3 form-group"
+                  class="mb-3"
                 >
                   <label
                     class="form-label"
@@ -916,7 +972,7 @@ Object {
                 style="align-items: center;"
               >
                 <div
-                  class="mb-3 form-group"
+                  class="mb-3"
                 >
                   <label
                     class="form-label"
@@ -939,11 +995,39 @@ Object {
                     >
                       northwind
                     </option>
+                    <option
+                      data-testid="aircrafts"
+                      value="aircrafts"
+                    >
+                      aircrafts
+                    </option>
+                    <option
+                      data-testid="xxx"
+                      value="xxx"
+                    >
+                      xxx
+                    </option>
+                    <option
+                      data-testid="aworks"
+                      value="aworks"
+                    >
+                      aworks
+                    </option>
+                    <option
+                      data-testid="111"
+                      value="111"
+                    >
+                      111
+                    </option>
+                    <option
+                      data-testid="sqlserver"
+                      value="sqlserver"
+                    >
+                      sqlserver
+                    </option>
                   </select>
                 </div>
-                <div
-                  class="form-group"
-                >
+                <div>
                   <label
                     class="form-label"
                   />
@@ -1151,7 +1235,7 @@ Object {
                     class="mr-0 pr-0 col-auto"
                   >
                     <div
-                      class="mb-3 form-group"
+                      class="mb-3"
                     >
                       <label
                         class="form-label"
@@ -1266,7 +1350,7 @@ Object {
               class="col-auto"
             >
               <div
-                class="mb-3 form-group"
+                class="mb-3"
               >
                 <label
                   class="form-label"
@@ -1304,7 +1388,7 @@ Object {
               style="align-items: center;"
             >
               <div
-                class="mb-3 form-group"
+                class="mb-3"
               >
                 <label
                   class="form-label"
@@ -1327,11 +1411,39 @@ Object {
                   >
                     northwind
                   </option>
+                  <option
+                    data-testid="aircrafts"
+                    value="aircrafts"
+                  >
+                    aircrafts
+                  </option>
+                  <option
+                    data-testid="xxx"
+                    value="xxx"
+                  >
+                    xxx
+                  </option>
+                  <option
+                    data-testid="aworks"
+                    value="aworks"
+                  >
+                    aworks
+                  </option>
+                  <option
+                    data-testid="111"
+                    value="111"
+                  >
+                    111
+                  </option>
+                  <option
+                    data-testid="sqlserver"
+                    value="sqlserver"
+                  >
+                    sqlserver
+                  </option>
                 </select>
               </div>
-              <div
-                class="form-group"
-              >
+              <div>
                 <label
                   class="form-label"
                 />
@@ -1467,7 +1579,7 @@ Object {
 `;
 
 exports[`add-datascope 3`] = `
-Object {
+{
   "asFragment": [Function],
   "baseElement": <body>
     <div>
@@ -1596,7 +1708,7 @@ Object {
                       class="mr-0 pr-0 col-auto"
                     >
                       <div
-                        class="mb-3 form-group"
+                        class="mb-3"
                       >
                         <label
                           class="form-label"
@@ -1681,7 +1793,7 @@ Object {
                       class="col"
                     >
                       <div
-                        class="mb-3 form-group"
+                        class="mb-3"
                       >
                         <label
                           class="form-label"
@@ -1719,6 +1831,7 @@ Object {
                           <button
                             class="mr-1 btn btn-dymium btn-sm"
                             data-testid="fill-security"
+                            disabled=""
                             style="margin-top: 0.0em;"
                             type="button"
                           >
@@ -1738,7 +1851,7 @@ Object {
                       class="col-auto"
                     >
                       <div
-                        class="mb-3 form-group"
+                        class="mb-3"
                       >
                         <label
                           class="form-label"
@@ -1881,7 +1994,7 @@ Object {
                                   aria-hidden="true"
                                   class="rbt-input-hint"
                                   readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
                                   tabindex="-1"
                                   value=""
                                 />
@@ -1911,7 +2024,7 @@ Object {
                           </td>
                           <td>
                             <div
-                              class="rbt has-aux"
+                              class="rbt"
                               style="outline: none; position: relative;"
                               tabindex="-1"
                             >
@@ -1930,7 +2043,7 @@ Object {
                                   required=""
                                   role="combobox"
                                   type="text"
-                                  value="Allow"
+                                  value=""
                                 />
                                 <input
                                   aria-hidden="true"
@@ -1940,27 +2053,6 @@ Object {
                                   tabindex="-1"
                                   value=""
                                 />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
                               </div>
                             </div>
                           </td>
@@ -2001,7 +2093,7 @@ Object {
                                   aria-hidden="true"
                                   class="rbt-input-hint"
                                   readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
                                   tabindex="-1"
                                   value=""
                                 />
@@ -2031,7 +2123,7 @@ Object {
                           </td>
                           <td>
                             <div
-                              class="rbt has-aux"
+                              class="rbt"
                               style="outline: none; position: relative;"
                               tabindex="-1"
                             >
@@ -2050,7 +2142,7 @@ Object {
                                   required=""
                                   role="combobox"
                                   type="text"
-                                  value="Allow"
+                                  value=""
                                 />
                                 <input
                                   aria-hidden="true"
@@ -2060,27 +2152,6 @@ Object {
                                   tabindex="-1"
                                   value=""
                                 />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
                               </div>
                             </div>
                           </td>
@@ -2121,7 +2192,7 @@ Object {
                                   aria-hidden="true"
                                   class="rbt-input-hint"
                                   readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
                                   tabindex="-1"
                                   value=""
                                 />
@@ -2151,7 +2222,7 @@ Object {
                           </td>
                           <td>
                             <div
-                              class="rbt has-aux"
+                              class="rbt"
                               style="outline: none; position: relative;"
                               tabindex="-1"
                             >
@@ -2170,7 +2241,7 @@ Object {
                                   required=""
                                   role="combobox"
                                   type="text"
-                                  value="Allow"
+                                  value=""
                                 />
                                 <input
                                   aria-hidden="true"
@@ -2180,27 +2251,6 @@ Object {
                                   tabindex="-1"
                                   value=""
                                 />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
                               </div>
                             </div>
                           </td>
@@ -2241,7 +2291,7 @@ Object {
                                   aria-hidden="true"
                                   class="rbt-input-hint"
                                   readonly=""
-                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
                                   tabindex="-1"
                                   value=""
                                 />
@@ -2271,7 +2321,7 @@ Object {
                           </td>
                           <td>
                             <div
-                              class="rbt has-aux"
+                              class="rbt"
                               style="outline: none; position: relative;"
                               tabindex="-1"
                             >
@@ -2290,7 +2340,7 @@ Object {
                                   required=""
                                   role="combobox"
                                   type="text"
-                                  value="Allow"
+                                  value=""
                                 />
                                 <input
                                   aria-hidden="true"
@@ -2300,27 +2350,6 @@ Object {
                                   tabindex="-1"
                                   value=""
                                 />
-                              </div>
-                              <div
-                                class="rbt-aux"
-                              >
-                                <button
-                                  aria-label="Clear"
-                                  class="close btn-close rbt-close rbt-close-sm"
-                                  type="button"
-                                >
-                                  <span
-                                    aria-hidden="true"
-                                    class="rbt-close-content"
-                                  >
-                                    ×
-                                  </span>
-                                  <span
-                                    class="sr-only visually-hidden"
-                                  >
-                                    Clear
-                                  </span>
-                                </button>
                               </div>
                             </div>
                           </td>
@@ -2365,7 +2394,7 @@ Object {
                 class="col-auto"
               >
                 <div
-                  class="mb-3 form-group"
+                  class="mb-3"
                 >
                   <label
                     class="form-label"
@@ -2403,7 +2432,7 @@ Object {
                 style="align-items: center;"
               >
                 <div
-                  class="mb-3 form-group"
+                  class="mb-3"
                 >
                   <label
                     class="form-label"
@@ -2426,11 +2455,39 @@ Object {
                     >
                       northwind
                     </option>
+                    <option
+                      data-testid="aircrafts"
+                      value="aircrafts"
+                    >
+                      aircrafts
+                    </option>
+                    <option
+                      data-testid="xxx"
+                      value="xxx"
+                    >
+                      xxx
+                    </option>
+                    <option
+                      data-testid="aworks"
+                      value="aworks"
+                    >
+                      aworks
+                    </option>
+                    <option
+                      data-testid="111"
+                      value="111"
+                    >
+                      111
+                    </option>
+                    <option
+                      data-testid="sqlserver"
+                      value="sqlserver"
+                    >
+                      sqlserver
+                    </option>
                   </select>
                 </div>
-                <div
-                  class="form-group"
-                >
+                <div>
                   <label
                     class="form-label"
                   />
@@ -2638,7 +2695,7 @@ Object {
                     class="mr-0 pr-0 col-auto"
                   >
                     <div
-                      class="mb-3 form-group"
+                      class="mb-3"
                     >
                       <label
                         class="form-label"
@@ -2723,7 +2780,7 @@ Object {
                     class="col"
                   >
                     <div
-                      class="mb-3 form-group"
+                      class="mb-3"
                     >
                       <label
                         class="form-label"
@@ -2761,6 +2818,7 @@ Object {
                         <button
                           class="mr-1 btn btn-dymium btn-sm"
                           data-testid="fill-security"
+                          disabled=""
                           style="margin-top: 0.0em;"
                           type="button"
                         >
@@ -2780,7 +2838,7 @@ Object {
                     class="col-auto"
                   >
                     <div
-                      class="mb-3 form-group"
+                      class="mb-3"
                     >
                       <label
                         class="form-label"
@@ -2923,7 +2981,7 @@ Object {
                                 aria-hidden="true"
                                 class="rbt-input-hint"
                                 readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
                                 tabindex="-1"
                                 value=""
                               />
@@ -2953,7 +3011,7 @@ Object {
                         </td>
                         <td>
                           <div
-                            class="rbt has-aux"
+                            class="rbt"
                             style="outline: none; position: relative;"
                             tabindex="-1"
                           >
@@ -2972,7 +3030,7 @@ Object {
                                 required=""
                                 role="combobox"
                                 type="text"
-                                value="Allow"
+                                value=""
                               />
                               <input
                                 aria-hidden="true"
@@ -2982,27 +3040,6 @@ Object {
                                 tabindex="-1"
                                 value=""
                               />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
                             </div>
                           </div>
                         </td>
@@ -3043,7 +3080,7 @@ Object {
                                 aria-hidden="true"
                                 class="rbt-input-hint"
                                 readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
                                 tabindex="-1"
                                 value=""
                               />
@@ -3073,7 +3110,7 @@ Object {
                         </td>
                         <td>
                           <div
-                            class="rbt has-aux"
+                            class="rbt"
                             style="outline: none; position: relative;"
                             tabindex="-1"
                           >
@@ -3092,7 +3129,7 @@ Object {
                                 required=""
                                 role="combobox"
                                 type="text"
-                                value="Allow"
+                                value=""
                               />
                               <input
                                 aria-hidden="true"
@@ -3102,27 +3139,6 @@ Object {
                                 tabindex="-1"
                                 value=""
                               />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
                             </div>
                           </div>
                         </td>
@@ -3163,7 +3179,7 @@ Object {
                                 aria-hidden="true"
                                 class="rbt-input-hint"
                                 readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
                                 tabindex="-1"
                                 value=""
                               />
@@ -3193,7 +3209,7 @@ Object {
                         </td>
                         <td>
                           <div
-                            class="rbt has-aux"
+                            class="rbt"
                             style="outline: none; position: relative;"
                             tabindex="-1"
                           >
@@ -3212,7 +3228,7 @@ Object {
                                 required=""
                                 role="combobox"
                                 type="text"
-                                value="Allow"
+                                value=""
                               />
                               <input
                                 aria-hidden="true"
@@ -3222,27 +3238,6 @@ Object {
                                 tabindex="-1"
                                 value=""
                               />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
                             </div>
                           </div>
                         </td>
@@ -3283,7 +3278,7 @@ Object {
                                 aria-hidden="true"
                                 class="rbt-input-hint"
                                 readonly=""
-                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
                                 tabindex="-1"
                                 value=""
                               />
@@ -3313,7 +3308,7 @@ Object {
                         </td>
                         <td>
                           <div
-                            class="rbt has-aux"
+                            class="rbt"
                             style="outline: none; position: relative;"
                             tabindex="-1"
                           >
@@ -3332,7 +3327,7 @@ Object {
                                 required=""
                                 role="combobox"
                                 type="text"
-                                value="Allow"
+                                value=""
                               />
                               <input
                                 aria-hidden="true"
@@ -3342,27 +3337,6 @@ Object {
                                 tabindex="-1"
                                 value=""
                               />
-                            </div>
-                            <div
-                              class="rbt-aux"
-                            >
-                              <button
-                                aria-label="Clear"
-                                class="close btn-close rbt-close rbt-close-sm"
-                                type="button"
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  class="rbt-close-content"
-                                >
-                                  ×
-                                </span>
-                                <span
-                                  class="sr-only visually-hidden"
-                                >
-                                  Clear
-                                </span>
-                              </button>
                             </div>
                           </div>
                         </td>
@@ -3407,7 +3381,7 @@ Object {
               class="col-auto"
             >
               <div
-                class="mb-3 form-group"
+                class="mb-3"
               >
                 <label
                   class="form-label"
@@ -3445,7 +3419,7 @@ Object {
               style="align-items: center;"
             >
               <div
-                class="mb-3 form-group"
+                class="mb-3"
               >
                 <label
                   class="form-label"
@@ -3468,11 +3442,39 @@ Object {
                   >
                     northwind
                   </option>
+                  <option
+                    data-testid="aircrafts"
+                    value="aircrafts"
+                  >
+                    aircrafts
+                  </option>
+                  <option
+                    data-testid="xxx"
+                    value="xxx"
+                  >
+                    xxx
+                  </option>
+                  <option
+                    data-testid="aworks"
+                    value="aworks"
+                  >
+                    aworks
+                  </option>
+                  <option
+                    data-testid="111"
+                    value="111"
+                  >
+                    111
+                  </option>
+                  <option
+                    data-testid="sqlserver"
+                    value="sqlserver"
+                  >
+                    sqlserver
+                  </option>
                 </select>
               </div>
-              <div
-                class="form-group"
-              >
+              <div>
                 <label
                   class="form-label"
                 />
@@ -3608,7 +3610,7 @@ Object {
 `;
 
 exports[`add-datascope 4`] = `
-Object {
+{
   "asFragment": [Function],
   "baseElement": <body>
     <div>
@@ -3685,12 +3687,12 @@ Object {
           </div>
         </div>
         <div
-          class="bs-canvas-overlay position-fixed  w-100 h-100"
+          class="bs-canvas-overlay-show position-fixed  w-100 h-100"
           id="bs-offcanvas-overlay"
         />
         <div
           class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim "
-          style="width: 0px; right: -600px;"
+          style="width: 600px; right: 0px;"
         >
           <div>
             <div
@@ -3724,7 +3726,677 @@ Object {
             <div
               class="pl-0 col"
               style="padding-right: 10px;"
-            />
+            >
+              <div>
+                <form
+                  class="was-validated"
+                  novalidate=""
+                >
+                  <div
+                    class="row"
+                  >
+                    <div
+                      class="mr-0 pr-0 col-auto"
+                    >
+                      <div
+                        class="mb-3"
+                      >
+                        <label
+                          class="form-label"
+                          for="schemaname"
+                        >
+                          Schema
+                           Name:
+                        </label>
+                        <div
+                          class="rbt has-aux"
+                          style="outline: none; position: relative;"
+                          tabindex="-1"
+                        >
+                          <div
+                            style="display: flex; flex: 1; height: 100%; position: relative;"
+                          >
+                            <input
+                              aria-autocomplete="both"
+                              aria-expanded="false"
+                              aria-haspopup="listbox"
+                              autocomplete="off"
+                              class="rbt-input-main form-control rbt-input form-control-sm"
+                              id="schemaname"
+                              placeholder="Choose Schema..."
+                              role="combobox"
+                              type="text"
+                              value="humanresources"
+                            />
+                            <input
+                              aria-hidden="true"
+                              class="rbt-input-hint"
+                              readonly=""
+                              style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                              tabindex="-1"
+                              value=""
+                            />
+                          </div>
+                          <div
+                            class="rbt-aux"
+                          >
+                            <button
+                              aria-label="Clear"
+                              class="close btn-close rbt-close rbt-close-sm"
+                              type="button"
+                            >
+                              <span
+                                aria-hidden="true"
+                                class="rbt-close-content"
+                              >
+                                ×
+                              </span>
+                              <span
+                                class="sr-only visually-hidden"
+                              >
+                                Clear
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          class="valid-feedback"
+                        >
+                          Looks good!
+                        </div>
+                        <div
+                          class="invalid-feedback"
+                        >
+                          Client side name for Dymium database
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      class="ml-0 pl-0 col-auto"
+                    >
+                      <img
+                        class="hiddenspinner"
+                        src="/logo.png"
+                        style="margin-top: 26px; width: 28px;"
+                      />
+                    </div>
+                    <div
+                      class="col"
+                    >
+                      <div
+                        class="mb-3"
+                      >
+                        <label
+                          class="form-label"
+                          for="connection"
+                        >
+                          Select Access Level:
+                        </label>
+                        <div
+                          class="input-group"
+                        >
+                          <select
+                            class="form-control form-control-sm"
+                            data-testid="seclevel"
+                            id="connection"
+                            role="combobox"
+                          >
+                            <option
+                              value=""
+                            >
+                              ...
+                            </option>
+                            <option
+                              data-testid="Admin"
+                              value="Admin"
+                            >
+                              Admin
+                            </option>
+                            <option
+                              data-testid="Data Scientist"
+                              value="Data Scientist"
+                            >
+                              Data Scientist
+                            </option>
+                          </select>
+                          <button
+                            class="mr-1 btn btn-dymium btn-sm"
+                            data-testid="fill-security"
+                            style="margin-top: 0.0em;"
+                            type="button"
+                          >
+                            <i
+                              class="fa-solid fa-table mr-2"
+                            />
+                            Fill
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="row"
+                  >
+                    <div
+                      class="col-auto"
+                    >
+                      <div
+                        class="mb-3"
+                      >
+                        <label
+                          class="form-label"
+                          for="dbname"
+                        >
+                          Table Name:
+                        </label>
+                        <div
+                          class="rbt has-aux"
+                          style="outline: none; position: relative;"
+                          tabindex="-1"
+                        >
+                          <div
+                            style="display: flex; flex: 1; height: 100%; position: relative;"
+                          >
+                            <input
+                              aria-autocomplete="both"
+                              aria-expanded="false"
+                              aria-haspopup="listbox"
+                              autocomplete="off"
+                              class="rbt-input-main form-control rbt-input form-control-sm"
+                              id="tables"
+                              placeholder="Choose table..."
+                              role="combobox"
+                              type="text"
+                              value="shift"
+                            />
+                            <input
+                              aria-hidden="true"
+                              class="rbt-input-hint"
+                              readonly=""
+                              style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                              tabindex="-1"
+                              value=""
+                            />
+                          </div>
+                          <div
+                            class="rbt-aux"
+                          >
+                            <button
+                              aria-label="Clear"
+                              class="close btn-close rbt-close rbt-close-sm"
+                              type="button"
+                            >
+                              <span
+                                aria-hidden="true"
+                                class="rbt-close-content"
+                              >
+                                ×
+                              </span>
+                              <span
+                                class="sr-only visually-hidden"
+                              >
+                                Clear
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          class="valid-feedback"
+                        >
+                          Looks good!
+                        </div>
+                        <div
+                          class="invalid-feedback"
+                        >
+                          Client side name for Dymium database
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      class="col"
+                    />
+                  </div>
+                  <div
+                    class="react-bootstrap-table"
+                  >
+                    <table
+                      class="table table-striped table-sm"
+                      id="schematable"
+                    >
+                      <thead>
+                        <tr>
+                          <th
+                            tabindex="0"
+                          >
+                            Column
+                          </th>
+                          <th
+                            tabindex="0"
+                          >
+                            Type:
+                          </th>
+                          <th
+                            tabindex="0"
+                          >
+                            PII:
+                          </th>
+                          <th
+                            tabindex="0"
+                          >
+                            Action:
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td
+                            class="overflow-hidden"
+                          >
+                            departmentid
+                          </td>
+                          <td>
+                            integer
+                          </td>
+                          <td>
+                            <div
+                              class="rbt has-aux"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics0"
+                                  pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                  placeholder="Data type..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value="N/A"
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                              <div
+                                class="rbt-aux"
+                              >
+                                <button
+                                  aria-label="Clear"
+                                  class="close btn-close rbt-close rbt-close-sm"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    class="rbt-close-content"
+                                  >
+                                    ×
+                                  </span>
+                                  <span
+                                    class="sr-only visually-hidden"
+                                  >
+                                    Clear
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div
+                              class="rbt"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action0"
+                                  pattern="^(Block|Redact|Allow)$"
+                                  placeholder="Access..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value=""
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            class="overflow-hidden"
+                          >
+                            name
+                          </td>
+                          <td>
+                            varchar(50)
+                          </td>
+                          <td>
+                            <div
+                              class="rbt has-aux"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics1"
+                                  pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                  placeholder="Data type..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value="N/A"
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                              <div
+                                class="rbt-aux"
+                              >
+                                <button
+                                  aria-label="Clear"
+                                  class="close btn-close rbt-close rbt-close-sm"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    class="rbt-close-content"
+                                  >
+                                    ×
+                                  </span>
+                                  <span
+                                    class="sr-only visually-hidden"
+                                  >
+                                    Clear
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div
+                              class="rbt"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action1"
+                                  pattern="^(Block|Redact|Obfuscate|Allow)$"
+                                  placeholder="Access..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value=""
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            class="overflow-hidden"
+                          >
+                            groupname
+                          </td>
+                          <td>
+                            varchar(50)
+                          </td>
+                          <td>
+                            <div
+                              class="rbt has-aux"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics2"
+                                  pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                  placeholder="Data type..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value="N/A"
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                              <div
+                                class="rbt-aux"
+                              >
+                                <button
+                                  aria-label="Clear"
+                                  class="close btn-close rbt-close rbt-close-sm"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    class="rbt-close-content"
+                                  >
+                                    ×
+                                  </span>
+                                  <span
+                                    class="sr-only visually-hidden"
+                                  >
+                                    Clear
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div
+                              class="rbt"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action2"
+                                  pattern="^(Block|Redact|Obfuscate|Allow)$"
+                                  placeholder="Access..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value=""
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            class="overflow-hidden"
+                          >
+                            modifieddate
+                          </td>
+                          <td>
+                            timestamp without time zone
+                          </td>
+                          <td>
+                            <div
+                              class="rbt has-aux"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics3"
+                                  pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                  placeholder="Data type..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value="N/A"
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                              <div
+                                class="rbt-aux"
+                              >
+                                <button
+                                  aria-label="Clear"
+                                  class="close btn-close rbt-close rbt-close-sm"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    class="rbt-close-content"
+                                  >
+                                    ×
+                                  </span>
+                                  <span
+                                    class="sr-only visually-hidden"
+                                  >
+                                    Clear
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div
+                              class="rbt"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action3"
+                                  pattern="^(Block|Redact|Allow)$"
+                                  placeholder="Access..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value=""
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <button
+                    class="mt-4 btn btn-dymium btn-sm"
+                    data-testid="apply-structure"
+                    type="submit"
+                  >
+                    Apply
+                  </button>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
         <h5>
@@ -3752,7 +4424,7 @@ Object {
                 class="col-auto"
               >
                 <div
-                  class="mb-3 form-group"
+                  class="mb-3"
                 >
                   <label
                     class="form-label"
@@ -3790,7 +4462,7 @@ Object {
                 style="align-items: center;"
               >
                 <div
-                  class="mb-3 form-group"
+                  class="mb-3"
                 >
                   <label
                     class="form-label"
@@ -3813,11 +4485,39 @@ Object {
                     >
                       northwind
                     </option>
+                    <option
+                      data-testid="aircrafts"
+                      value="aircrafts"
+                    >
+                      aircrafts
+                    </option>
+                    <option
+                      data-testid="xxx"
+                      value="xxx"
+                    >
+                      xxx
+                    </option>
+                    <option
+                      data-testid="aworks"
+                      value="aworks"
+                    >
+                      aworks
+                    </option>
+                    <option
+                      data-testid="111"
+                      value="111"
+                    >
+                      111
+                    </option>
+                    <option
+                      data-testid="sqlserver"
+                      value="sqlserver"
+                    >
+                      sqlserver
+                    </option>
                   </select>
                 </div>
-                <div
-                  class="form-group"
-                >
+                <div>
                   <label
                     class="form-label"
                   />
@@ -3885,118 +4585,7 @@ Object {
               </div>
               <div
                 class="p-0 mx-0 card-body"
-              >
-                <div
-                  class="react-bootstrap-table"
-                >
-                  <table
-                    class="table table-striped table-sm"
-                    id="scaledtable"
-                  >
-                    <thead>
-                      <tr>
-                        <th
-                          aria-label="Schema: sortable"
-                          class="sortable"
-                          tabindex="0"
-                        >
-                          Schema:
-                          <span
-                            class="order-4"
-                          />
-                        </th>
-                        <th
-                          aria-label="Table name: sortable"
-                          class="sortable"
-                          tabindex="0"
-                        >
-                          Table name:
-                          <span
-                            class="order-4"
-                          />
-                        </th>
-                        <th
-                          aria-label="# of columns: sortable"
-                          class="sortable"
-                          tabindex="0"
-                        >
-                          # of columns:
-                          <span
-                            class="order-4"
-                          />
-                        </th>
-                        <th
-                          aria-label="Sensitivity: sortable"
-                          class="sortable"
-                          tabindex="0"
-                        >
-                          Sensitivity:
-                          <span
-                            class="order-4"
-                          />
-                        </th>
-                        <th
-                          aria-label="Access: sortable"
-                          class="sortable"
-                          tabindex="0"
-                        >
-                          Access:
-                          <span
-                            class="order-4"
-                          />
-                        </th>
-                        <th
-                          style="width: 50px;"
-                          tabindex="0"
-                        >
-                          Edit
-                        </th>
-                        <th
-                          style="width: 90px;"
-                          tabindex="0"
-                        >
-                          Delete
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>
-                          humanresources
-                        </td>
-                        <td>
-                          department
-                        </td>
-                        <td>
-                          4
-                        </td>
-                        <td>
-                          Not sensitive
-                        </td>
-                        <td>
-                          Transparent
-                        </td>
-                        <td
-                          style="height: 30px; text-align: center;"
-                        >
-                          <i
-                            class="fas fa-edit ablue"
-                            role="button"
-                          />
-                        </td>
-                        <td
-                          style="height: 30px; text-align: center;"
-                        >
-                          <i
-                            class="fas fa-trash ablue"
-                            role="button"
-                          />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              />
             </div>
             <button
               class="mt-4 btn btn-dymium btn-sm"
@@ -4084,12 +4673,12 @@ Object {
         </div>
       </div>
       <div
-        class="bs-canvas-overlay position-fixed  w-100 h-100"
+        class="bs-canvas-overlay-show position-fixed  w-100 h-100"
         id="bs-offcanvas-overlay"
       />
       <div
         class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim "
-        style="width: 0px; right: -600px;"
+        style="width: 600px; right: 0px;"
       >
         <div>
           <div
@@ -4123,7 +4712,677 @@ Object {
           <div
             class="pl-0 col"
             style="padding-right: 10px;"
-          />
+          >
+            <div>
+              <form
+                class="was-validated"
+                novalidate=""
+              >
+                <div
+                  class="row"
+                >
+                  <div
+                    class="mr-0 pr-0 col-auto"
+                  >
+                    <div
+                      class="mb-3"
+                    >
+                      <label
+                        class="form-label"
+                        for="schemaname"
+                      >
+                        Schema
+                         Name:
+                      </label>
+                      <div
+                        class="rbt has-aux"
+                        style="outline: none; position: relative;"
+                        tabindex="-1"
+                      >
+                        <div
+                          style="display: flex; flex: 1; height: 100%; position: relative;"
+                        >
+                          <input
+                            aria-autocomplete="both"
+                            aria-expanded="false"
+                            aria-haspopup="listbox"
+                            autocomplete="off"
+                            class="rbt-input-main form-control rbt-input form-control-sm"
+                            id="schemaname"
+                            placeholder="Choose Schema..."
+                            role="combobox"
+                            type="text"
+                            value="humanresources"
+                          />
+                          <input
+                            aria-hidden="true"
+                            class="rbt-input-hint"
+                            readonly=""
+                            style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                            tabindex="-1"
+                            value=""
+                          />
+                        </div>
+                        <div
+                          class="rbt-aux"
+                        >
+                          <button
+                            aria-label="Clear"
+                            class="close btn-close rbt-close rbt-close-sm"
+                            type="button"
+                          >
+                            <span
+                              aria-hidden="true"
+                              class="rbt-close-content"
+                            >
+                              ×
+                            </span>
+                            <span
+                              class="sr-only visually-hidden"
+                            >
+                              Clear
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                      <div
+                        class="valid-feedback"
+                      >
+                        Looks good!
+                      </div>
+                      <div
+                        class="invalid-feedback"
+                      >
+                        Client side name for Dymium database
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="ml-0 pl-0 col-auto"
+                  >
+                    <img
+                      class="hiddenspinner"
+                      src="/logo.png"
+                      style="margin-top: 26px; width: 28px;"
+                    />
+                  </div>
+                  <div
+                    class="col"
+                  >
+                    <div
+                      class="mb-3"
+                    >
+                      <label
+                        class="form-label"
+                        for="connection"
+                      >
+                        Select Access Level:
+                      </label>
+                      <div
+                        class="input-group"
+                      >
+                        <select
+                          class="form-control form-control-sm"
+                          data-testid="seclevel"
+                          id="connection"
+                          role="combobox"
+                        >
+                          <option
+                            value=""
+                          >
+                            ...
+                          </option>
+                          <option
+                            data-testid="Admin"
+                            value="Admin"
+                          >
+                            Admin
+                          </option>
+                          <option
+                            data-testid="Data Scientist"
+                            value="Data Scientist"
+                          >
+                            Data Scientist
+                          </option>
+                        </select>
+                        <button
+                          class="mr-1 btn btn-dymium btn-sm"
+                          data-testid="fill-security"
+                          style="margin-top: 0.0em;"
+                          type="button"
+                        >
+                          <i
+                            class="fa-solid fa-table mr-2"
+                          />
+                          Fill
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="row"
+                >
+                  <div
+                    class="col-auto"
+                  >
+                    <div
+                      class="mb-3"
+                    >
+                      <label
+                        class="form-label"
+                        for="dbname"
+                      >
+                        Table Name:
+                      </label>
+                      <div
+                        class="rbt has-aux"
+                        style="outline: none; position: relative;"
+                        tabindex="-1"
+                      >
+                        <div
+                          style="display: flex; flex: 1; height: 100%; position: relative;"
+                        >
+                          <input
+                            aria-autocomplete="both"
+                            aria-expanded="false"
+                            aria-haspopup="listbox"
+                            autocomplete="off"
+                            class="rbt-input-main form-control rbt-input form-control-sm"
+                            id="tables"
+                            placeholder="Choose table..."
+                            role="combobox"
+                            type="text"
+                            value="shift"
+                          />
+                          <input
+                            aria-hidden="true"
+                            class="rbt-input-hint"
+                            readonly=""
+                            style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                            tabindex="-1"
+                            value=""
+                          />
+                        </div>
+                        <div
+                          class="rbt-aux"
+                        >
+                          <button
+                            aria-label="Clear"
+                            class="close btn-close rbt-close rbt-close-sm"
+                            type="button"
+                          >
+                            <span
+                              aria-hidden="true"
+                              class="rbt-close-content"
+                            >
+                              ×
+                            </span>
+                            <span
+                              class="sr-only visually-hidden"
+                            >
+                              Clear
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                      <div
+                        class="valid-feedback"
+                      >
+                        Looks good!
+                      </div>
+                      <div
+                        class="invalid-feedback"
+                      >
+                        Client side name for Dymium database
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="col"
+                  />
+                </div>
+                <div
+                  class="react-bootstrap-table"
+                >
+                  <table
+                    class="table table-striped table-sm"
+                    id="schematable"
+                  >
+                    <thead>
+                      <tr>
+                        <th
+                          tabindex="0"
+                        >
+                          Column
+                        </th>
+                        <th
+                          tabindex="0"
+                        >
+                          Type:
+                        </th>
+                        <th
+                          tabindex="0"
+                        >
+                          PII:
+                        </th>
+                        <th
+                          tabindex="0"
+                        >
+                          Action:
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td
+                          class="overflow-hidden"
+                        >
+                          departmentid
+                        </td>
+                        <td>
+                          integer
+                        </td>
+                        <td>
+                          <div
+                            class="rbt has-aux"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics0"
+                                pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                placeholder="Data type..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value="N/A"
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                            <div
+                              class="rbt-aux"
+                            >
+                              <button
+                                aria-label="Clear"
+                                class="close btn-close rbt-close rbt-close-sm"
+                                type="button"
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  class="rbt-close-content"
+                                >
+                                  ×
+                                </span>
+                                <span
+                                  class="sr-only visually-hidden"
+                                >
+                                  Clear
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div
+                            class="rbt"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action0"
+                                pattern="^(Block|Redact|Allow)$"
+                                placeholder="Access..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value=""
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td
+                          class="overflow-hidden"
+                        >
+                          name
+                        </td>
+                        <td>
+                          varchar(50)
+                        </td>
+                        <td>
+                          <div
+                            class="rbt has-aux"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics1"
+                                pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                placeholder="Data type..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value="N/A"
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                            <div
+                              class="rbt-aux"
+                            >
+                              <button
+                                aria-label="Clear"
+                                class="close btn-close rbt-close rbt-close-sm"
+                                type="button"
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  class="rbt-close-content"
+                                >
+                                  ×
+                                </span>
+                                <span
+                                  class="sr-only visually-hidden"
+                                >
+                                  Clear
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div
+                            class="rbt"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action1"
+                                pattern="^(Block|Redact|Obfuscate|Allow)$"
+                                placeholder="Access..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value=""
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td
+                          class="overflow-hidden"
+                        >
+                          groupname
+                        </td>
+                        <td>
+                          varchar(50)
+                        </td>
+                        <td>
+                          <div
+                            class="rbt has-aux"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics2"
+                                pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                placeholder="Data type..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value="N/A"
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                            <div
+                              class="rbt-aux"
+                            >
+                              <button
+                                aria-label="Clear"
+                                class="close btn-close rbt-close rbt-close-sm"
+                                type="button"
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  class="rbt-close-content"
+                                >
+                                  ×
+                                </span>
+                                <span
+                                  class="sr-only visually-hidden"
+                                >
+                                  Clear
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div
+                            class="rbt"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action2"
+                                pattern="^(Block|Redact|Obfuscate|Allow)$"
+                                placeholder="Access..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value=""
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td
+                          class="overflow-hidden"
+                        >
+                          modifieddate
+                        </td>
+                        <td>
+                          timestamp without time zone
+                        </td>
+                        <td>
+                          <div
+                            class="rbt has-aux"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics3"
+                                pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                placeholder="Data type..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value="N/A"
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                            <div
+                              class="rbt-aux"
+                            >
+                              <button
+                                aria-label="Clear"
+                                class="close btn-close rbt-close rbt-close-sm"
+                                type="button"
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  class="rbt-close-content"
+                                >
+                                  ×
+                                </span>
+                                <span
+                                  class="sr-only visually-hidden"
+                                >
+                                  Clear
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div
+                            class="rbt"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action3"
+                                pattern="^(Block|Redact|Allow)$"
+                                placeholder="Access..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value=""
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <button
+                  class="mt-4 btn btn-dymium btn-sm"
+                  data-testid="apply-structure"
+                  type="submit"
+                >
+                  Apply
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
       <h5>
@@ -4151,7 +5410,7 @@ Object {
               class="col-auto"
             >
               <div
-                class="mb-3 form-group"
+                class="mb-3"
               >
                 <label
                   class="form-label"
@@ -4189,7 +5448,7 @@ Object {
               style="align-items: center;"
             >
               <div
-                class="mb-3 form-group"
+                class="mb-3"
               >
                 <label
                   class="form-label"
@@ -4212,11 +5471,39 @@ Object {
                   >
                     northwind
                   </option>
+                  <option
+                    data-testid="aircrafts"
+                    value="aircrafts"
+                  >
+                    aircrafts
+                  </option>
+                  <option
+                    data-testid="xxx"
+                    value="xxx"
+                  >
+                    xxx
+                  </option>
+                  <option
+                    data-testid="aworks"
+                    value="aworks"
+                  >
+                    aworks
+                  </option>
+                  <option
+                    data-testid="111"
+                    value="111"
+                  >
+                    111
+                  </option>
+                  <option
+                    data-testid="sqlserver"
+                    value="sqlserver"
+                  >
+                    sqlserver
+                  </option>
                 </select>
               </div>
-              <div
-                class="form-group"
-              >
+              <div>
                 <label
                   class="form-label"
                 />
@@ -4284,118 +5571,7 @@ Object {
             </div>
             <div
               class="p-0 mx-0 card-body"
-            >
-              <div
-                class="react-bootstrap-table"
-              >
-                <table
-                  class="table table-striped table-sm"
-                  id="scaledtable"
-                >
-                  <thead>
-                    <tr>
-                      <th
-                        aria-label="Schema: sortable"
-                        class="sortable"
-                        tabindex="0"
-                      >
-                        Schema:
-                        <span
-                          class="order-4"
-                        />
-                      </th>
-                      <th
-                        aria-label="Table name: sortable"
-                        class="sortable"
-                        tabindex="0"
-                      >
-                        Table name:
-                        <span
-                          class="order-4"
-                        />
-                      </th>
-                      <th
-                        aria-label="# of columns: sortable"
-                        class="sortable"
-                        tabindex="0"
-                      >
-                        # of columns:
-                        <span
-                          class="order-4"
-                        />
-                      </th>
-                      <th
-                        aria-label="Sensitivity: sortable"
-                        class="sortable"
-                        tabindex="0"
-                      >
-                        Sensitivity:
-                        <span
-                          class="order-4"
-                        />
-                      </th>
-                      <th
-                        aria-label="Access: sortable"
-                        class="sortable"
-                        tabindex="0"
-                      >
-                        Access:
-                        <span
-                          class="order-4"
-                        />
-                      </th>
-                      <th
-                        style="width: 50px;"
-                        tabindex="0"
-                      >
-                        Edit
-                      </th>
-                      <th
-                        style="width: 90px;"
-                        tabindex="0"
-                      >
-                        Delete
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        humanresources
-                      </td>
-                      <td>
-                        department
-                      </td>
-                      <td>
-                        4
-                      </td>
-                      <td>
-                        Not sensitive
-                      </td>
-                      <td>
-                        Transparent
-                      </td>
-                      <td
-                        style="height: 30px; text-align: center;"
-                      >
-                        <i
-                          class="fas fa-edit ablue"
-                          role="button"
-                        />
-                      </td>
-                      <td
-                        style="height: 30px; text-align: center;"
-                      >
-                        <i
-                          class="fas fa-trash ablue"
-                          role="button"
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            />
           </div>
           <button
             class="mt-4 btn btn-dymium btn-sm"
@@ -4463,13 +5639,24 @@ Object {
 `;
 
 exports[`add-datascope 5`] = `
-Object {
+{
   "asFragment": [Function],
   "baseElement": <body>
     <div>
       <div
         class=" text-left"
       >
+        <div
+          class="fade alert alert-danger alert-dismissible show"
+          role="alert"
+        >
+          <button
+            aria-label="Close alert"
+            class="btn-close"
+            type="button"
+          />
+          Can't save a Ghost Database with empty or no connections.
+        </div>
         <div
           class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
           style="width: 0px; right: -300px;"
@@ -4540,12 +5727,12 @@ Object {
           </div>
         </div>
         <div
-          class="bs-canvas-overlay position-fixed  w-100 h-100"
+          class="bs-canvas-overlay-show position-fixed  w-100 h-100"
           id="bs-offcanvas-overlay"
         />
         <div
           class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim "
-          style="width: 0px; right: -600px;"
+          style="width: 600px; right: 0px;"
         >
           <div>
             <div
@@ -4579,7 +5766,677 @@ Object {
             <div
               class="pl-0 col"
               style="padding-right: 10px;"
-            />
+            >
+              <div>
+                <form
+                  class="was-validated"
+                  novalidate=""
+                >
+                  <div
+                    class="row"
+                  >
+                    <div
+                      class="mr-0 pr-0 col-auto"
+                    >
+                      <div
+                        class="mb-3"
+                      >
+                        <label
+                          class="form-label"
+                          for="schemaname"
+                        >
+                          Schema
+                           Name:
+                        </label>
+                        <div
+                          class="rbt has-aux"
+                          style="outline: none; position: relative;"
+                          tabindex="-1"
+                        >
+                          <div
+                            style="display: flex; flex: 1; height: 100%; position: relative;"
+                          >
+                            <input
+                              aria-autocomplete="both"
+                              aria-expanded="false"
+                              aria-haspopup="listbox"
+                              autocomplete="off"
+                              class="rbt-input-main form-control rbt-input form-control-sm"
+                              id="schemaname"
+                              placeholder="Choose Schema..."
+                              role="combobox"
+                              type="text"
+                              value="humanresources"
+                            />
+                            <input
+                              aria-hidden="true"
+                              class="rbt-input-hint"
+                              readonly=""
+                              style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                              tabindex="-1"
+                              value=""
+                            />
+                          </div>
+                          <div
+                            class="rbt-aux"
+                          >
+                            <button
+                              aria-label="Clear"
+                              class="close btn-close rbt-close rbt-close-sm"
+                              type="button"
+                            >
+                              <span
+                                aria-hidden="true"
+                                class="rbt-close-content"
+                              >
+                                ×
+                              </span>
+                              <span
+                                class="sr-only visually-hidden"
+                              >
+                                Clear
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          class="valid-feedback"
+                        >
+                          Looks good!
+                        </div>
+                        <div
+                          class="invalid-feedback"
+                        >
+                          Client side name for Dymium database
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      class="ml-0 pl-0 col-auto"
+                    >
+                      <img
+                        class="hiddenspinner"
+                        src="/logo.png"
+                        style="margin-top: 26px; width: 28px;"
+                      />
+                    </div>
+                    <div
+                      class="col"
+                    >
+                      <div
+                        class="mb-3"
+                      >
+                        <label
+                          class="form-label"
+                          for="connection"
+                        >
+                          Select Access Level:
+                        </label>
+                        <div
+                          class="input-group"
+                        >
+                          <select
+                            class="form-control form-control-sm"
+                            data-testid="seclevel"
+                            id="connection"
+                            role="combobox"
+                          >
+                            <option
+                              value=""
+                            >
+                              ...
+                            </option>
+                            <option
+                              data-testid="Admin"
+                              value="Admin"
+                            >
+                              Admin
+                            </option>
+                            <option
+                              data-testid="Data Scientist"
+                              value="Data Scientist"
+                            >
+                              Data Scientist
+                            </option>
+                          </select>
+                          <button
+                            class="mr-1 btn btn-dymium btn-sm"
+                            data-testid="fill-security"
+                            style="margin-top: 0.0em;"
+                            type="button"
+                          >
+                            <i
+                              class="fa-solid fa-table mr-2"
+                            />
+                            Fill
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="row"
+                  >
+                    <div
+                      class="col-auto"
+                    >
+                      <div
+                        class="mb-3"
+                      >
+                        <label
+                          class="form-label"
+                          for="dbname"
+                        >
+                          Table Name:
+                        </label>
+                        <div
+                          class="rbt has-aux"
+                          style="outline: none; position: relative;"
+                          tabindex="-1"
+                        >
+                          <div
+                            style="display: flex; flex: 1; height: 100%; position: relative;"
+                          >
+                            <input
+                              aria-autocomplete="both"
+                              aria-expanded="false"
+                              aria-haspopup="listbox"
+                              autocomplete="off"
+                              class="rbt-input-main form-control rbt-input form-control-sm"
+                              id="tables"
+                              placeholder="Choose table..."
+                              role="combobox"
+                              type="text"
+                              value="shift"
+                            />
+                            <input
+                              aria-hidden="true"
+                              class="rbt-input-hint"
+                              readonly=""
+                              style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                              tabindex="-1"
+                              value=""
+                            />
+                          </div>
+                          <div
+                            class="rbt-aux"
+                          >
+                            <button
+                              aria-label="Clear"
+                              class="close btn-close rbt-close rbt-close-sm"
+                              type="button"
+                            >
+                              <span
+                                aria-hidden="true"
+                                class="rbt-close-content"
+                              >
+                                ×
+                              </span>
+                              <span
+                                class="sr-only visually-hidden"
+                              >
+                                Clear
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          class="valid-feedback"
+                        >
+                          Looks good!
+                        </div>
+                        <div
+                          class="invalid-feedback"
+                        >
+                          Client side name for Dymium database
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      class="col"
+                    />
+                  </div>
+                  <div
+                    class="react-bootstrap-table"
+                  >
+                    <table
+                      class="table table-striped table-sm"
+                      id="schematable"
+                    >
+                      <thead>
+                        <tr>
+                          <th
+                            tabindex="0"
+                          >
+                            Column
+                          </th>
+                          <th
+                            tabindex="0"
+                          >
+                            Type:
+                          </th>
+                          <th
+                            tabindex="0"
+                          >
+                            PII:
+                          </th>
+                          <th
+                            tabindex="0"
+                          >
+                            Action:
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td
+                            class="overflow-hidden"
+                          >
+                            departmentid
+                          </td>
+                          <td>
+                            integer
+                          </td>
+                          <td>
+                            <div
+                              class="rbt has-aux"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics0"
+                                  pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                  placeholder="Data type..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value="N/A"
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                              <div
+                                class="rbt-aux"
+                              >
+                                <button
+                                  aria-label="Clear"
+                                  class="close btn-close rbt-close rbt-close-sm"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    class="rbt-close-content"
+                                  >
+                                    ×
+                                  </span>
+                                  <span
+                                    class="sr-only visually-hidden"
+                                  >
+                                    Clear
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div
+                              class="rbt"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action0"
+                                  pattern="^(Block|Redact|Allow)$"
+                                  placeholder="Access..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value=""
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            class="overflow-hidden"
+                          >
+                            name
+                          </td>
+                          <td>
+                            varchar(50)
+                          </td>
+                          <td>
+                            <div
+                              class="rbt has-aux"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics1"
+                                  pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                  placeholder="Data type..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value="N/A"
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                              <div
+                                class="rbt-aux"
+                              >
+                                <button
+                                  aria-label="Clear"
+                                  class="close btn-close rbt-close rbt-close-sm"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    class="rbt-close-content"
+                                  >
+                                    ×
+                                  </span>
+                                  <span
+                                    class="sr-only visually-hidden"
+                                  >
+                                    Clear
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div
+                              class="rbt"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action1"
+                                  pattern="^(Block|Redact|Obfuscate|Allow)$"
+                                  placeholder="Access..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value=""
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            class="overflow-hidden"
+                          >
+                            groupname
+                          </td>
+                          <td>
+                            varchar(50)
+                          </td>
+                          <td>
+                            <div
+                              class="rbt has-aux"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics2"
+                                  pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                  placeholder="Data type..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value="N/A"
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                              <div
+                                class="rbt-aux"
+                              >
+                                <button
+                                  aria-label="Clear"
+                                  class="close btn-close rbt-close rbt-close-sm"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    class="rbt-close-content"
+                                  >
+                                    ×
+                                  </span>
+                                  <span
+                                    class="sr-only visually-hidden"
+                                  >
+                                    Clear
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div
+                              class="rbt"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action2"
+                                  pattern="^(Block|Redact|Obfuscate|Allow)$"
+                                  placeholder="Access..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value=""
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            class="overflow-hidden"
+                          >
+                            modifieddate
+                          </td>
+                          <td>
+                            timestamp without time zone
+                          </td>
+                          <td>
+                            <div
+                              class="rbt has-aux"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="semantics3"
+                                  pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                  placeholder="Data type..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value="N/A"
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                              <div
+                                class="rbt-aux"
+                              >
+                                <button
+                                  aria-label="Clear"
+                                  class="close btn-close rbt-close rbt-close-sm"
+                                  type="button"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    class="rbt-close-content"
+                                  >
+                                    ×
+                                  </span>
+                                  <span
+                                    class="sr-only visually-hidden"
+                                  >
+                                    Clear
+                                  </span>
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div
+                              class="rbt"
+                              style="outline: none; position: relative;"
+                              tabindex="-1"
+                            >
+                              <div
+                                style="display: flex; flex: 1; height: 100%; position: relative;"
+                              >
+                                <input
+                                  aria-autocomplete="both"
+                                  aria-expanded="false"
+                                  aria-haspopup="listbox"
+                                  autocomplete="off"
+                                  class="rbt-input-main form-control rbt-input form-control-sm"
+                                  id="action3"
+                                  pattern="^(Block|Redact|Allow)$"
+                                  placeholder="Access..."
+                                  required=""
+                                  role="combobox"
+                                  type="text"
+                                  value=""
+                                />
+                                <input
+                                  aria-hidden="true"
+                                  class="rbt-input-hint"
+                                  readonly=""
+                                  style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                  tabindex="-1"
+                                  value=""
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <button
+                    class="mt-4 btn btn-dymium btn-sm"
+                    data-testid="apply-structure"
+                    type="submit"
+                  >
+                    Apply
+                  </button>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
         <h5>
@@ -4597,7 +6454,7 @@ Object {
           class=" text-left"
         >
           <form
-            class=""
+            class="was-validated"
             novalidate=""
           >
             <div
@@ -4607,7 +6464,7 @@ Object {
                 class="col-auto"
               >
                 <div
-                  class="mb-3 form-group"
+                  class="mb-3"
                 >
                   <label
                     class="form-label"
@@ -4645,7 +6502,7 @@ Object {
                 style="align-items: center;"
               >
                 <div
-                  class="mb-3 form-group"
+                  class="mb-3"
                 >
                   <label
                     class="form-label"
@@ -4668,11 +6525,39 @@ Object {
                     >
                       northwind
                     </option>
+                    <option
+                      data-testid="aircrafts"
+                      value="aircrafts"
+                    >
+                      aircrafts
+                    </option>
+                    <option
+                      data-testid="xxx"
+                      value="xxx"
+                    >
+                      xxx
+                    </option>
+                    <option
+                      data-testid="aworks"
+                      value="aworks"
+                    >
+                      aworks
+                    </option>
+                    <option
+                      data-testid="111"
+                      value="111"
+                    >
+                      111
+                    </option>
+                    <option
+                      data-testid="sqlserver"
+                      value="sqlserver"
+                    >
+                      sqlserver
+                    </option>
                   </select>
                 </div>
-                <div
-                  class="form-group"
-                >
+                <div>
                   <label
                     class="form-label"
                   />
@@ -4740,118 +6625,7 @@ Object {
               </div>
               <div
                 class="p-0 mx-0 card-body"
-              >
-                <div
-                  class="react-bootstrap-table"
-                >
-                  <table
-                    class="table table-striped table-sm"
-                    id="scaledtable"
-                  >
-                    <thead>
-                      <tr>
-                        <th
-                          aria-label="Schema: sortable"
-                          class="sortable"
-                          tabindex="0"
-                        >
-                          Schema:
-                          <span
-                            class="order-4"
-                          />
-                        </th>
-                        <th
-                          aria-label="Table name: sortable"
-                          class="sortable"
-                          tabindex="0"
-                        >
-                          Table name:
-                          <span
-                            class="order-4"
-                          />
-                        </th>
-                        <th
-                          aria-label="# of columns: sortable"
-                          class="sortable"
-                          tabindex="0"
-                        >
-                          # of columns:
-                          <span
-                            class="order-4"
-                          />
-                        </th>
-                        <th
-                          aria-label="Sensitivity: sortable"
-                          class="sortable"
-                          tabindex="0"
-                        >
-                          Sensitivity:
-                          <span
-                            class="order-4"
-                          />
-                        </th>
-                        <th
-                          aria-label="Access: sortable"
-                          class="sortable"
-                          tabindex="0"
-                        >
-                          Access:
-                          <span
-                            class="order-4"
-                          />
-                        </th>
-                        <th
-                          style="width: 50px;"
-                          tabindex="0"
-                        >
-                          Edit
-                        </th>
-                        <th
-                          style="width: 90px;"
-                          tabindex="0"
-                        >
-                          Delete
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>
-                          humanresources
-                        </td>
-                        <td>
-                          department
-                        </td>
-                        <td>
-                          4
-                        </td>
-                        <td>
-                          Not sensitive
-                        </td>
-                        <td>
-                          Transparent
-                        </td>
-                        <td
-                          style="height: 30px; text-align: center;"
-                        >
-                          <i
-                            class="fas fa-edit ablue"
-                            role="button"
-                          />
-                        </td>
-                        <td
-                          style="height: 30px; text-align: center;"
-                        >
-                          <i
-                            class="fas fa-trash ablue"
-                            role="button"
-                          />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              />
             </div>
             <button
               class="mt-4 btn btn-dymium btn-sm"
@@ -4869,6 +6643,17 @@ Object {
     <div
       class=" text-left"
     >
+      <div
+        class="fade alert alert-danger alert-dismissible show"
+        role="alert"
+      >
+        <button
+          aria-label="Close alert"
+          class="btn-close"
+          type="button"
+        />
+        Can't save a Ghost Database with empty or no connections.
+      </div>
       <div
         class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
         style="width: 0px; right: -300px;"
@@ -4939,12 +6724,12 @@ Object {
         </div>
       </div>
       <div
-        class="bs-canvas-overlay position-fixed  w-100 h-100"
+        class="bs-canvas-overlay-show position-fixed  w-100 h-100"
         id="bs-offcanvas-overlay"
       />
       <div
         class="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim "
-        style="width: 0px; right: -600px;"
+        style="width: 600px; right: 0px;"
       >
         <div>
           <div
@@ -4978,7 +6763,677 @@ Object {
           <div
             class="pl-0 col"
             style="padding-right: 10px;"
-          />
+          >
+            <div>
+              <form
+                class="was-validated"
+                novalidate=""
+              >
+                <div
+                  class="row"
+                >
+                  <div
+                    class="mr-0 pr-0 col-auto"
+                  >
+                    <div
+                      class="mb-3"
+                    >
+                      <label
+                        class="form-label"
+                        for="schemaname"
+                      >
+                        Schema
+                         Name:
+                      </label>
+                      <div
+                        class="rbt has-aux"
+                        style="outline: none; position: relative;"
+                        tabindex="-1"
+                      >
+                        <div
+                          style="display: flex; flex: 1; height: 100%; position: relative;"
+                        >
+                          <input
+                            aria-autocomplete="both"
+                            aria-expanded="false"
+                            aria-haspopup="listbox"
+                            autocomplete="off"
+                            class="rbt-input-main form-control rbt-input form-control-sm"
+                            id="schemaname"
+                            placeholder="Choose Schema..."
+                            role="combobox"
+                            type="text"
+                            value="humanresources"
+                          />
+                          <input
+                            aria-hidden="true"
+                            class="rbt-input-hint"
+                            readonly=""
+                            style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                            tabindex="-1"
+                            value=""
+                          />
+                        </div>
+                        <div
+                          class="rbt-aux"
+                        >
+                          <button
+                            aria-label="Clear"
+                            class="close btn-close rbt-close rbt-close-sm"
+                            type="button"
+                          >
+                            <span
+                              aria-hidden="true"
+                              class="rbt-close-content"
+                            >
+                              ×
+                            </span>
+                            <span
+                              class="sr-only visually-hidden"
+                            >
+                              Clear
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                      <div
+                        class="valid-feedback"
+                      >
+                        Looks good!
+                      </div>
+                      <div
+                        class="invalid-feedback"
+                      >
+                        Client side name for Dymium database
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="ml-0 pl-0 col-auto"
+                  >
+                    <img
+                      class="hiddenspinner"
+                      src="/logo.png"
+                      style="margin-top: 26px; width: 28px;"
+                    />
+                  </div>
+                  <div
+                    class="col"
+                  >
+                    <div
+                      class="mb-3"
+                    >
+                      <label
+                        class="form-label"
+                        for="connection"
+                      >
+                        Select Access Level:
+                      </label>
+                      <div
+                        class="input-group"
+                      >
+                        <select
+                          class="form-control form-control-sm"
+                          data-testid="seclevel"
+                          id="connection"
+                          role="combobox"
+                        >
+                          <option
+                            value=""
+                          >
+                            ...
+                          </option>
+                          <option
+                            data-testid="Admin"
+                            value="Admin"
+                          >
+                            Admin
+                          </option>
+                          <option
+                            data-testid="Data Scientist"
+                            value="Data Scientist"
+                          >
+                            Data Scientist
+                          </option>
+                        </select>
+                        <button
+                          class="mr-1 btn btn-dymium btn-sm"
+                          data-testid="fill-security"
+                          style="margin-top: 0.0em;"
+                          type="button"
+                        >
+                          <i
+                            class="fa-solid fa-table mr-2"
+                          />
+                          Fill
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="row"
+                >
+                  <div
+                    class="col-auto"
+                  >
+                    <div
+                      class="mb-3"
+                    >
+                      <label
+                        class="form-label"
+                        for="dbname"
+                      >
+                        Table Name:
+                      </label>
+                      <div
+                        class="rbt has-aux"
+                        style="outline: none; position: relative;"
+                        tabindex="-1"
+                      >
+                        <div
+                          style="display: flex; flex: 1; height: 100%; position: relative;"
+                        >
+                          <input
+                            aria-autocomplete="both"
+                            aria-expanded="false"
+                            aria-haspopup="listbox"
+                            autocomplete="off"
+                            class="rbt-input-main form-control rbt-input form-control-sm"
+                            id="tables"
+                            placeholder="Choose table..."
+                            role="combobox"
+                            type="text"
+                            value="shift"
+                          />
+                          <input
+                            aria-hidden="true"
+                            class="rbt-input-hint"
+                            readonly=""
+                            style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%; border-style: inset inset inset inset; border-width: 2px 2px 2px 2px; line-height: normal; padding: 1px 1px 1px 1px;"
+                            tabindex="-1"
+                            value=""
+                          />
+                        </div>
+                        <div
+                          class="rbt-aux"
+                        >
+                          <button
+                            aria-label="Clear"
+                            class="close btn-close rbt-close rbt-close-sm"
+                            type="button"
+                          >
+                            <span
+                              aria-hidden="true"
+                              class="rbt-close-content"
+                            >
+                              ×
+                            </span>
+                            <span
+                              class="sr-only visually-hidden"
+                            >
+                              Clear
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                      <div
+                        class="valid-feedback"
+                      >
+                        Looks good!
+                      </div>
+                      <div
+                        class="invalid-feedback"
+                      >
+                        Client side name for Dymium database
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="col"
+                  />
+                </div>
+                <div
+                  class="react-bootstrap-table"
+                >
+                  <table
+                    class="table table-striped table-sm"
+                    id="schematable"
+                  >
+                    <thead>
+                      <tr>
+                        <th
+                          tabindex="0"
+                        >
+                          Column
+                        </th>
+                        <th
+                          tabindex="0"
+                        >
+                          Type:
+                        </th>
+                        <th
+                          tabindex="0"
+                        >
+                          PII:
+                        </th>
+                        <th
+                          tabindex="0"
+                        >
+                          Action:
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td
+                          class="overflow-hidden"
+                        >
+                          departmentid
+                        </td>
+                        <td>
+                          integer
+                        </td>
+                        <td>
+                          <div
+                            class="rbt has-aux"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics0"
+                                pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                placeholder="Data type..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value="N/A"
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                            <div
+                              class="rbt-aux"
+                            >
+                              <button
+                                aria-label="Clear"
+                                class="close btn-close rbt-close rbt-close-sm"
+                                type="button"
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  class="rbt-close-content"
+                                >
+                                  ×
+                                </span>
+                                <span
+                                  class="sr-only visually-hidden"
+                                >
+                                  Clear
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div
+                            class="rbt"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action0"
+                                pattern="^(Block|Redact|Allow)$"
+                                placeholder="Access..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value=""
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td
+                          class="overflow-hidden"
+                        >
+                          name
+                        </td>
+                        <td>
+                          varchar(50)
+                        </td>
+                        <td>
+                          <div
+                            class="rbt has-aux"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics1"
+                                pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                placeholder="Data type..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value="N/A"
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                            <div
+                              class="rbt-aux"
+                            >
+                              <button
+                                aria-label="Clear"
+                                class="close btn-close rbt-close rbt-close-sm"
+                                type="button"
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  class="rbt-close-content"
+                                >
+                                  ×
+                                </span>
+                                <span
+                                  class="sr-only visually-hidden"
+                                >
+                                  Clear
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div
+                            class="rbt"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action1"
+                                pattern="^(Block|Redact|Obfuscate|Allow)$"
+                                placeholder="Access..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value=""
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td
+                          class="overflow-hidden"
+                        >
+                          groupname
+                        </td>
+                        <td>
+                          varchar(50)
+                        </td>
+                        <td>
+                          <div
+                            class="rbt has-aux"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics2"
+                                pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                placeholder="Data type..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value="N/A"
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                            <div
+                              class="rbt-aux"
+                            >
+                              <button
+                                aria-label="Clear"
+                                class="close btn-close rbt-close rbt-close-sm"
+                                type="button"
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  class="rbt-close-content"
+                                >
+                                  ×
+                                </span>
+                                <span
+                                  class="sr-only visually-hidden"
+                                >
+                                  Clear
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div
+                            class="rbt"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action2"
+                                pattern="^(Block|Redact|Obfuscate|Allow)$"
+                                placeholder="Access..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value=""
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td
+                          class="overflow-hidden"
+                        >
+                          modifieddate
+                        </td>
+                        <td>
+                          timestamp without time zone
+                        </td>
+                        <td>
+                          <div
+                            class="rbt has-aux"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="semantics3"
+                                pattern="^(N/A|UNSUPPORTED|Address|Age|CVV|Credit Card Expiry|Credit Card Number|Date/Time|Driver License Number|Email|International Bank Account Number|IP Address|License Plate Number|MAC Address|Name|Password|Phone|Pin|SWIFT Code|URL|Username|VIN|Bank Account Number|Bank Routing Number|Passport Number|Individual TIN|SSN|Processor or device serial number|Device ID|Cookie|Citizenship|Visa or immigration status|Ethnic background|Religious affiliation|Sexual orientation|Criminal history|Medical information|Authentication information|Country|State|City|Zip code|Job position|Company|Work Address|Vehicle Identification Number|Contact Info)$"
+                                placeholder="Data type..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value="N/A"
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                            <div
+                              class="rbt-aux"
+                            >
+                              <button
+                                aria-label="Clear"
+                                class="close btn-close rbt-close rbt-close-sm"
+                                type="button"
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  class="rbt-close-content"
+                                >
+                                  ×
+                                </span>
+                                <span
+                                  class="sr-only visually-hidden"
+                                >
+                                  Clear
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div
+                            class="rbt"
+                            style="outline: none; position: relative;"
+                            tabindex="-1"
+                          >
+                            <div
+                              style="display: flex; flex: 1; height: 100%; position: relative;"
+                            >
+                              <input
+                                aria-autocomplete="both"
+                                aria-expanded="false"
+                                aria-haspopup="listbox"
+                                autocomplete="off"
+                                class="rbt-input-main form-control rbt-input form-control-sm"
+                                id="action3"
+                                pattern="^(Block|Redact|Allow)$"
+                                placeholder="Access..."
+                                required=""
+                                role="combobox"
+                                type="text"
+                                value=""
+                              />
+                              <input
+                                aria-hidden="true"
+                                class="rbt-input-hint"
+                                readonly=""
+                                style="background-color: transparent; border-color: transparent; box-shadow: none; color: rgba(0, 0, 0, 0.54); left: 0px; pointer-events: none; position: absolute; top: 0px; width: 100%;"
+                                tabindex="-1"
+                                value=""
+                              />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <button
+                  class="mt-4 btn btn-dymium btn-sm"
+                  data-testid="apply-structure"
+                  type="submit"
+                >
+                  Apply
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
       <h5>
@@ -4996,7 +7451,7 @@ Object {
         class=" text-left"
       >
         <form
-          class=""
+          class="was-validated"
           novalidate=""
         >
           <div
@@ -5006,7 +7461,7 @@ Object {
               class="col-auto"
             >
               <div
-                class="mb-3 form-group"
+                class="mb-3"
               >
                 <label
                   class="form-label"
@@ -5044,7 +7499,7 @@ Object {
               style="align-items: center;"
             >
               <div
-                class="mb-3 form-group"
+                class="mb-3"
               >
                 <label
                   class="form-label"
@@ -5067,11 +7522,39 @@ Object {
                   >
                     northwind
                   </option>
+                  <option
+                    data-testid="aircrafts"
+                    value="aircrafts"
+                  >
+                    aircrafts
+                  </option>
+                  <option
+                    data-testid="xxx"
+                    value="xxx"
+                  >
+                    xxx
+                  </option>
+                  <option
+                    data-testid="aworks"
+                    value="aworks"
+                  >
+                    aworks
+                  </option>
+                  <option
+                    data-testid="111"
+                    value="111"
+                  >
+                    111
+                  </option>
+                  <option
+                    data-testid="sqlserver"
+                    value="sqlserver"
+                  >
+                    sqlserver
+                  </option>
                 </select>
               </div>
-              <div
-                class="form-group"
-              >
+              <div>
                 <label
                   class="form-label"
                 />
@@ -5139,118 +7622,7 @@ Object {
             </div>
             <div
               class="p-0 mx-0 card-body"
-            >
-              <div
-                class="react-bootstrap-table"
-              >
-                <table
-                  class="table table-striped table-sm"
-                  id="scaledtable"
-                >
-                  <thead>
-                    <tr>
-                      <th
-                        aria-label="Schema: sortable"
-                        class="sortable"
-                        tabindex="0"
-                      >
-                        Schema:
-                        <span
-                          class="order-4"
-                        />
-                      </th>
-                      <th
-                        aria-label="Table name: sortable"
-                        class="sortable"
-                        tabindex="0"
-                      >
-                        Table name:
-                        <span
-                          class="order-4"
-                        />
-                      </th>
-                      <th
-                        aria-label="# of columns: sortable"
-                        class="sortable"
-                        tabindex="0"
-                      >
-                        # of columns:
-                        <span
-                          class="order-4"
-                        />
-                      </th>
-                      <th
-                        aria-label="Sensitivity: sortable"
-                        class="sortable"
-                        tabindex="0"
-                      >
-                        Sensitivity:
-                        <span
-                          class="order-4"
-                        />
-                      </th>
-                      <th
-                        aria-label="Access: sortable"
-                        class="sortable"
-                        tabindex="0"
-                      >
-                        Access:
-                        <span
-                          class="order-4"
-                        />
-                      </th>
-                      <th
-                        style="width: 50px;"
-                        tabindex="0"
-                      >
-                        Edit
-                      </th>
-                      <th
-                        style="width: 90px;"
-                        tabindex="0"
-                      >
-                        Delete
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        humanresources
-                      </td>
-                      <td>
-                        department
-                      </td>
-                      <td>
-                        4
-                      </td>
-                      <td>
-                        Not sensitive
-                      </td>
-                      <td>
-                        Transparent
-                      </td>
-                      <td
-                        style="height: 30px; text-align: center;"
-                      >
-                        <i
-                          class="fas fa-edit ablue"
-                          role="button"
-                        />
-                      </td>
-                      <td
-                        style="height: 30px; text-align: center;"
-                      >
-                        <i
-                          class="fas fa-trash ablue"
-                          role="button"
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            />
           </div>
           <button
             class="mt-4 btn btn-dymium btn-sm"

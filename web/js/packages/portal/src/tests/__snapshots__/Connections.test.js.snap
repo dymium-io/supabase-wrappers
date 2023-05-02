@@ -7,7 +7,7 @@ exports[`test-connections 1`] = `
   <div
     className="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
     style={
-      Object {
+      {
         "right": -300,
         "width": 0,
       }
@@ -46,7 +46,7 @@ exports[`test-connections 1`] = `
       <div
         className="pl-0 col"
         style={
-          Object {
+          {
             "paddingRight": "10px",
           }
         }
@@ -77,7 +77,7 @@ exports[`test-connections 1`] = `
     className="text-center"
     id="tablecontainer"
     style={
-      Object {
+      {
         "width": "90%",
       }
     }
@@ -95,10 +95,10 @@ exports[`test-connections 1`] = `
             onClick={[Function]}
           />
           <img
-            className="spinner"
+            className="hiddenspinner"
             src="/logo.png"
             style={
-              Object {
+              {
                 "width": "28px",
               }
             }
@@ -106,7 +106,7 @@ exports[`test-connections 1`] = `
         </h5>
         <div
           style={
-            Object {
+            {
               "marginLeft": "auto",
             }
           }
@@ -128,7 +128,7 @@ exports[`test-connections 1`] = `
               onChange={[Function]}
               onKeyUp={[Function]}
               placeholder="Search"
-              style={Object {}}
+              style={{}}
               type="text"
               value=""
             />
@@ -144,7 +144,7 @@ exports[`test-connections 1`] = `
             className="fa fa-refresh ablue cursor-pointer"
             onClick={[Function]}
             style={
-              Object {
+              {
                 "position": "relative",
                 "top": "2px",
               }
@@ -230,7 +230,7 @@ exports[`test-connections 1`] = `
                   onClick={[Function]}
                   onKeyUp={[Function]}
                   style={
-                    Object {
+                    {
                       "width": "130px",
                     }
                   }
@@ -243,7 +243,7 @@ exports[`test-connections 1`] = `
                 </th>
                 <th
                   style={
-                    Object {
+                    {
                       "width": "50px",
                     }
                   }
@@ -253,7 +253,7 @@ exports[`test-connections 1`] = `
                 </th>
                 <th
                   style={
-                    Object {
+                    {
                       "width": "90px",
                     }
                   }
@@ -266,7 +266,7 @@ exports[`test-connections 1`] = `
             <tbody>
               <tr
                 className={null}
-                style={Object {}}
+                style={{}}
               >
                 <td>
                   adventureworks
@@ -281,7 +281,7 @@ exports[`test-connections 1`] = `
                     <i
                       className=" mr-2 fa fa-cloud-arrow-up blue"
                       style={
-                        Object {
+                        {
                           "position": "relative",
                           "top": "0.3em",
                         }
@@ -296,18 +296,18 @@ exports[`test-connections 1`] = `
                   Adventureworks
                 </td>
                 <td>
-                  edited test data base from Microsoft
+                  test data base from Microsoft
                 </td>
                 <td
                   style={
-                    Object {
+                    {
                       "textAlign": "center",
                     }
                   }
                 />
                 <td
                   style={
-                    Object {
+                    {
                       "height": "30px",
                       "textAlign": "center",
                     }
@@ -323,7 +323,7 @@ exports[`test-connections 1`] = `
                 </td>
                 <td
                   style={
-                    Object {
+                    {
                       "height": "30px",
                       "textAlign": "center",
                     }
@@ -340,7 +340,7 @@ exports[`test-connections 1`] = `
               </tr>
               <tr
                 className={null}
-                style={Object {}}
+                style={{}}
               >
                 <td>
                   northwind
@@ -355,7 +355,7 @@ exports[`test-connections 1`] = `
                     <i
                       className=" mr-2 fa fa-cloud-arrow-up blue"
                       style={
-                        Object {
+                        {
                           "position": "relative",
                           "top": "0.3em",
                         }
@@ -370,18 +370,18 @@ exports[`test-connections 1`] = `
                   northwind
                 </td>
                 <td>
-                  another MS database edited with password
+                  another MS database
                 </td>
                 <td
                   style={
-                    Object {
+                    {
                       "textAlign": "center",
                     }
                   }
                 />
                 <td
                   style={
-                    Object {
+                    {
                       "height": "30px",
                       "textAlign": "center",
                     }
@@ -397,7 +397,7 @@ exports[`test-connections 1`] = `
                 </td>
                 <td
                   style={
-                    Object {
+                    {
                       "height": "30px",
                       "textAlign": "center",
                     }
@@ -407,6 +407,376 @@ exports[`test-connections 1`] = `
                     aria-label="delete1"
                     className="fas fa-trash ablue"
                     id="delete1"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+              </tr>
+              <tr
+                className={null}
+                style={{}}
+              >
+                <td>
+                  aircrafts
+                </td>
+                <td>
+                  PostgreSQL
+                </td>
+                <td>
+                  <div
+                    className="d-flex"
+                  >
+                    <i
+                      className=" mr-2 fa fa-cloud-arrow-up blue"
+                      style={
+                        {
+                          "position": "relative",
+                          "top": "0.3em",
+                        }
+                      }
+                    />
+                    docker.for.mac.host.internal
+                    :
+                    5432
+                  </div>
+                </td>
+                <td>
+                  aircrafts
+                </td>
+                <td>
+                  images
+                </td>
+                <td
+                  style={
+                    {
+                      "textAlign": "center",
+                    }
+                  }
+                />
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="edit2"
+                    className="fas fa-edit ablue"
+                    id="edit2"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="delete2"
+                    className="fas fa-trash ablue"
+                    id="delete2"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+              </tr>
+              <tr
+                className={null}
+                style={{}}
+              >
+                <td>
+                  xxx
+                </td>
+                <td>
+                  PostgreSQL
+                </td>
+                <td>
+                  <div
+                    className="d-flex "
+                  >
+                    <i
+                      className="mr-2 fas fa-diagram-project fa-fw blue"
+                      style={
+                        {
+                          "position": "relative",
+                          "top": "0.3em",
+                        }
+                      }
+                    />
+                    Test
+                    /
+                    test
+                  </div>
+                </td>
+                <td>
+                  adventureworks
+                </td>
+                <td>
+                  ccc
+                </td>
+                <td
+                  style={
+                    {
+                      "textAlign": "center",
+                    }
+                  }
+                />
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="edit3"
+                    className="fas fa-edit ablue"
+                    id="edit3"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="delete3"
+                    className="fas fa-trash ablue"
+                    id="delete3"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+              </tr>
+              <tr
+                className={null}
+                style={{}}
+              >
+                <td>
+                  aworks
+                </td>
+                <td>
+                  PostgreSQL
+                </td>
+                <td>
+                  <div
+                    className="d-flex"
+                  >
+                    <i
+                      className=" mr-2 fa fa-cloud-arrow-up blue"
+                      style={
+                        {
+                          "position": "relative",
+                          "top": "0.3em",
+                        }
+                      }
+                    />
+                    docker.for.mac.host.internal
+                    :
+                    5432
+                  </div>
+                </td>
+                <td>
+                  Adventureworks
+                </td>
+                <td>
+                  MS test database, yes yes
+                </td>
+                <td
+                  style={
+                    {
+                      "textAlign": "center",
+                    }
+                  }
+                />
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="edit4"
+                    className="fas fa-edit ablue"
+                    id="edit4"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="delete4"
+                    className="fas fa-trash ablue"
+                    id="delete4"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+              </tr>
+              <tr
+                className={null}
+                style={{}}
+              >
+                <td>
+                  111
+                </td>
+                <td>
+                  PostgreSQL
+                </td>
+                <td>
+                  <div
+                    className="d-flex"
+                  >
+                    <i
+                      className=" mr-2 fa fa-cloud-arrow-up blue"
+                      style={
+                        {
+                          "position": "relative",
+                          "top": "0.3em",
+                        }
+                      }
+                    />
+                    docker.for.mac.host.internal
+                    :
+                    5432
+                  </div>
+                </td>
+                <td>
+                  Adventureworks
+                </td>
+                <td>
+                  xxx
+                </td>
+                <td
+                  style={
+                    {
+                      "textAlign": "center",
+                    }
+                  }
+                />
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="edit5"
+                    className="fas fa-edit ablue"
+                    id="edit5"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="delete5"
+                    className="fas fa-trash ablue"
+                    id="delete5"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+              </tr>
+              <tr
+                className={null}
+                style={{}}
+              >
+                <td>
+                  sqlserver
+                </td>
+                <td>
+                  SQL Server
+                </td>
+                <td>
+                  <div
+                    className="d-flex"
+                  >
+                    <i
+                      className=" mr-2 fa fa-cloud-arrow-up blue"
+                      style={
+                        {
+                          "position": "relative",
+                          "top": "0.3em",
+                        }
+                      }
+                    />
+                    host.docker.internal
+                    :
+                    1433
+                  </div>
+                </td>
+                <td>
+                  WideWorldImporters
+                </td>
+                <td>
+                  test sql server
+                </td>
+                <td
+                  style={
+                    {
+                      "textAlign": "center",
+                    }
+                  }
+                />
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="edit6"
+                    className="fas fa-edit ablue"
+                    id="edit6"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="delete6"
+                    className="fas fa-trash ablue"
+                    id="delete6"
                     onClick={[Function]}
                     role="button"
                   />
@@ -424,7 +794,7 @@ exports[`test-connections 1`] = `
             <span
               className="react-bs-table-sizePerPage-dropdown dropdown"
               style={
-                Object {
+                {
                   "visibility": "visible",
                 }
               }
