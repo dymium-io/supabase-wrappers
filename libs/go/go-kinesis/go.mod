@@ -3,8 +3,8 @@ module go-kinesis
 go 1.18
 
 require (
-	github.com/apex/log v0.0.0-00010101000000-000000000000
-	github.com/aws/aws-sdk-go v1.44.130
+	github.com/apex/log v1.9.0
+	github.com/aws/aws-sdk-go v1.44.254
 	github.com/jpillora/backoff v1.0.0
 )
 

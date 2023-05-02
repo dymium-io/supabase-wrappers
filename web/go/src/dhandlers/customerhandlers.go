@@ -846,7 +846,12 @@ func DeleteDatascope(w http.ResponseWriter, r *http.Request) {
 
 	rq.Customer = schema
 	rq.Datascope = &t.Name
-	snc, _ := json.Marshal(rq)
+	snc, err := json.Marshal(rq)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteDatascope, marshaling error: %s", err.Error() )
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	invokebody, err := authentication.Invoke("DbSync", nil, snc)
 	if err != nil {
@@ -867,6 +872,8 @@ func DeleteDatascope(w http.ResponseWriter, r *http.Request) {
 	jsonParsed, err := gabs.ParseJSON(invokebody)
 	if(err != nil) {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteDatascope, DbSync Error parsing output: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	value, ok := jsonParsed.Path("Errormessage").Data().(string)
 	var js []byte

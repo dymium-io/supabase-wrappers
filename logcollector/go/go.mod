@@ -5,11 +5,11 @@ go 1.20
 require github.com/looplab/fsm v1.0.1
 
 require (
-	github.com/aws/aws-sdk-go v1.44.130 // indirect
+	github.com/aws/aws-sdk-go v1.44.254 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/rogpeppe/fastuuid v1.1.0 // indirect
+	github.com/rogpeppe/fastuuid v1.2.0 // indirect
 	github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
 )
 
