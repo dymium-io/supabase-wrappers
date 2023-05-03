@@ -9,7 +9,6 @@ import (
 
 	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
-	"DbAnalyzer/utils"
 )
 
 type Postgres struct {
@@ -139,7 +138,6 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 	}
 
 	descr := []*data{}
-	isNullable := []bool{}
 
 	for rows.Next() {
 		var d data
@@ -157,7 +155,6 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			d.isNullable = false
 		}
 		descr = append(descr, &d)
-		isNullable = append(isNullable, d.isNullable)
 	}
 
 	detectors, err := detect.Compile(tip.Rules)
@@ -165,14 +162,10 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		return nil, err
 	}
 
-	sample, err := da.getSample(tip.Schema, tip.Table, isNullable)
-	if err != nil {
-		return nil, err
-	}
+	sample := make([]detect.Sample, len(descr))
 
 	for k, d := range descr {
 		var possibleActions *[]types.DataHandling
-		var semantics *string
 		var t string
 		switch d.cTyp {
 		case "numeric":
@@ -186,7 +179,11 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "numeric"
 			}
-			semantics = detectors.FindSemantics(d.cName, nil)
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
 		case "character varying":
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 			if d.cCharMaxLen != nil {
@@ -194,40 +191,52 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "varchar"
 			}
-			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
 		case "text":
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 			t = "text"
-			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
 		case "character":
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
 				if *d.cCharMaxLen > 1 {
 					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-					semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
 				} else {
 					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-					semantics = detectors.FindSemantics(d.cName, nil)
 				}
 			} else {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				t = "bpchar"
-				semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			}
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
 			}
 		case "bpchar":
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
 				if *d.cCharMaxLen > 1 {
 					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-					semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
 				} else {
 					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-					semantics = detectors.FindSemantics(d.cName, nil)
 				}
 			} else {
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				t = "bpchar"
-				semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			}
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
 			}
 		case "ARRAY":
 			switch *d.eTyp {
@@ -242,7 +251,11 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				} else {
 					t = "numeric[]"
 				}
-				semantics = detectors.FindSemantics(d.cName, nil)
+				sample[k] = detect.Sample{
+					IsSamplable: true,
+					IsNullable:  d.isNullable,
+					Name:        d.cName,
+				}
 			case "character varying":
 				if d.eCharMaxLen != nil {
 					t = fmt.Sprintf("varchar(%d)[]", *d.eCharMaxLen)
@@ -250,30 +263,49 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 					t = "varchar[]"
 				}
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-				semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+				sample[k] = detect.Sample{
+					IsSamplable: true,
+					IsNullable:  d.isNullable,
+					Name:        d.cName,
+				}
 			case "character":
 				if d.eCharMaxLen != nil {
 					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 					t = fmt.Sprintf("character(%d)[]", *d.eCharMaxLen)
-					semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
 				} else {
 					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 					t = "bpchar[]"
-					semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+				}
+				sample[k] = detect.Sample{
+					IsSamplable: true,
+					IsNullable:  d.isNullable,
+					Name:        d.cName,
 				}
 			case "text":
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 				t = "text[]"
-				semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+				sample[k] = detect.Sample{
+					IsSamplable: true,
+					IsNullable:  d.isNullable,
+					Name:        d.cName,
+				}
 			default:
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 				t = *d.eTyp + "[]"
-				semantics = detectors.FindSemantics(d.cName, nil)
+				sample[k] = detect.Sample{
+					IsSamplable: true,
+					IsNullable:  d.isNullable,
+					Name:        d.cName,
+				}
 			}
 		default:
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 			t = d.cTyp
-			semantics = detectors.FindSemantics(d.cName, nil)
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
 		}
 		c := types.Column{
 			Name:            d.cName,
@@ -282,7 +314,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			IsNullable:      d.isNullable,
 			Default:         d.dflt,
 			Reference:       nil,
-			Semantics:       semantics,
+			Semantics:       nil,
 			PossibleActions: *possibleActions,
 		}
 		ti.Columns = append(ti.Columns, c)
@@ -290,6 +322,17 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 
 	if err = da.resolveRefs(tip, &ti); err != nil {
 		return nil, err
+	}
+
+	if err = da.getSample(tip.Schema, tip.Table, sample); err != nil {
+		return nil, err
+	}
+	if err = detectors.FindSemantics(sample); err != nil {
+		return nil, err
+	}
+
+	for k := range ti.Columns {
+		ti.Columns[k].Semantics = sample[k].Semantics
 	}
 
 	return &ti, nil
@@ -338,46 +381,67 @@ func (da *Postgres) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 	return nil
 }
 
-func (da *Postgres) getSample(schema, table string, isNullable []bool) (*[][]string, error) {
+func (da *Postgres) getSample(schema, table string, sample []detect.Sample) error {
 
-	nColumns := len(isNullable)
-	
-	rows := make([][]*string, 0, detect.SampleSize)
+	nColumns := len(sample)
+
+	for _, s := range sample {
+		if s.IsSamplable {
+			s.Data = make([]*string, 0, detect.SampleSize)
+		} else {
+			s.Data = make([]*string, 0)
+		}
+	}
 
 	i := make([]interface{}, nColumns)
 	s := make([]string, nColumns)
 	p := make([]*string, nColumns)
+	var colNames strings.Builder
+	kk := 0
 	for k := 0; k != nColumns; k++ {
-		if isNullable[k] {
-			i[k] = &p[k]
-		} else {
-			i[k] = &s[k]
+		if sample[k].IsSamplable {
+			if sample[k].IsNullable {
+				i[kk] = &p[k]
+			} else {
+				i[kk] = &s[k]
+			}
+			if kk > 0 {
+				colNames.WriteString(", ")
+			}
+			colNames.WriteString(sample[k].Name)
+			kk++
 		}
 	}
 
-	sql := fmt.Sprintf(`SELECT * from "%s"."%s" ORDER BY RANDOM() LIMIT %d`, schema, table, detect.SampleSize)
+	sql := fmt.Sprintf(`SELECT %s from "%s"."%s" ORDER BY RANDOM() LIMIT %d`,
+		colNames.String(), schema, table, detect.SampleSize)
+	fmt.Println("SQL:",sql)
 	r, err := da.db.Query(sql)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer r.Close()
 
 	for r.Next() {
 		if err := r.Scan(i...); err != nil {
-			return nil, err
+			return err
 		}
-		rows = append(rows, utils.CopyPointers(s, p, isNullable))
-	}
-
-	scanned := make([][]string, nColumns)
-	for k := 0; k != nColumns; k++ {
-		scanned[k] = make([]string, 0, len(rows))
-		for j := 0; j != len(rows); j++ {
-			if rows[j][k] != nil {
-				scanned[k] = append(scanned[k], *rows[j][k])
+		for k := range sample {
+			if sample[k].IsSamplable {
+				if sample[k].IsNullable {
+					if p[k] == nil {
+						sample[k].Data = append(sample[k].Data, nil)
+					} else {
+						v := (*p[k])[:]
+						sample[k].Data = append(sample[k].Data, &v)
+					}
+				} else {
+					v := s[k][:]
+					sample[k].Data = append(sample[k].Data, &v)
+				}
 			}
 		}
 	}
 
-	return &scanned, nil
+	return nil
 }

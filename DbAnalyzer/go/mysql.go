@@ -5,10 +5,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 
 	"fmt"
+	"strings"
 
 	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
-	"DbAnalyzer/utils"
 )
 
 type MySQL struct {
@@ -136,7 +136,6 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 	}
 
 	descr := []*data{}
-	isNullable := []bool{}
 
 	for rows.Next() {
 		var d data
@@ -153,7 +152,6 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 			d.isNullable = false
 		}
 		descr = append(descr, &d)
-		isNullable = append(isNullable, d.isNullable)
 	}
 
 	detectors, err := detect.Compile(tip.Rules)
@@ -161,14 +159,10 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 		return nil, err
 	}
 
-	sample, err := da.getSample(tip.Schema, tip.Table, isNullable)
-	if err != nil {
-		return nil, err
-	}
+	sample := make([]detect.Sample, len(descr))
 
 	for k, d := range descr {
 		var t string
-		var semantics *string
 		var possibleActions *[]types.DataHandling
 		switch d.cTyp {
 		case "decimal":
@@ -182,7 +176,11 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = "numeric"
 			}
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-			semantics = detectors.FindSemantics(d.cName, nil)
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
 		case "varchar":
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
@@ -190,21 +188,32 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = "varchar"
 			}
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-			semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
 		case "char":
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-				semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
 			} else {
 				t = "bpchar"
 				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-				semantics = detectors.FindSemantics(d.cName, nil)
+			}
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
 			}
 		default:
 			t = d.cTyp
 			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-			semantics = detectors.FindSemantics(d.cName, nil)
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
 		}
 
 		c := types.Column{
@@ -214,7 +223,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 			IsNullable:      d.isNullable,
 			Default:         d.dflt,
 			Reference:       nil,
-			Semantics:       semantics,
+			Semantics:       nil,
 			PossibleActions: *possibleActions,
 		}
 
@@ -223,6 +232,18 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 
 	if err = da.resolveRefs(tip, &ti); err != nil {
 		return nil, err
+	}
+
+	if err = da.getSample(tip.Schema, tip.Table, sample); err != nil {
+		return nil, err
+	}
+
+	if err = detectors.FindSemantics(sample); err != nil {
+		return nil, err
+	}
+
+	for k := range ti.Columns {
+		ti.Columns[k].Semantics = sample[k].Semantics
 	}
 
 	return &ti, nil
@@ -242,7 +263,7 @@ func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData
 		 ON tc.constraint_name = kcu.constraint_name
 		 AND tc.table_schema = kcu.table_schema
 	   WHERE tc.table_schema = ? and tc.table_name = ? and tc.constraint_type = 'FOREIGN KEY'`)
-	
+
 	if err != nil {
 		return err
 	}
@@ -274,45 +295,67 @@ func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData
 	return nil
 }
 
-func (da *MySQL) getSample(schema, table string, isNullable []bool) (*[][]string, error) {
+func (da *MySQL) getSample(schema, table string, sample []detect.Sample) error {
 
-	rows := make([][]*string, 0, detect.SampleSize)
+	nColumns := len(sample)
 
-	nColumns := len(isNullable)
-	i := make([]interface{}, nColumns)
-	s := make([]string, nColumns)
-	p := make([]*string, nColumns)
-	for k := 0; k != nColumns; k++ {
-		if isNullable[k] {
-			i[k] = &p[k]
+	for _, s := range sample {
+		if s.IsSamplable {
+			s.Data = make([]*string, 0, detect.SampleSize)
 		} else {
-			i[k] = &s[k]
+			s.Data = make([]*string, 0)
 		}
 	}
 
-	sql := fmt.Sprintf("SELECT * from `%s`.`%s` ORDER BY RAND() LIMIT %d", schema, table, detect.SampleSize)
+	i := make([]interface{}, nColumns)
+	s := make([]string, nColumns)
+	p := make([]*string, nColumns)
+	var colNames strings.Builder
+	kk := 0
+	for k := 0; k != nColumns; k++ {
+		if sample[k].IsSamplable {
+			if sample[k].IsNullable {
+				i[kk] = &p[k]
+			} else {
+				i[kk] = &s[k]
+			}
+			if kk > 0 {
+				colNames.WriteString(", ")
+			}
+			colNames.WriteString(sample[k].Name)
+			kk++
+		}
+	}
+
+	sql := fmt.Sprintf("SELECT %s from `%s`.`%s` ORDER BY RAND() LIMIT %d",
+		colNames.String(), schema, table, detect.SampleSize)
 	r, err := da.db.Query(sql)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer r.Close()
 
 	for r.Next() {
 		if err := r.Scan(i...); err != nil {
-			return nil, err
+			return err
 		}
-		rows = append(rows, utils.CopyPointers(s, p, isNullable))
-	}
 
-	scanned := make([][]string, nColumns)
-	for k := 0; k != nColumns; k++ {
-		scanned[k] = make([]string, 0, len(rows))
-		for j := 0; j != len(rows); j++ {
-			if rows[j][k] != nil {
-				scanned[k] = append(scanned[k], *rows[j][k])
+		for k := range sample {
+			if sample[k].IsSamplable {
+				if sample[k].IsNullable {
+					if p[k] == nil {
+						sample[k].Data = append(sample[k].Data, nil)
+					} else {
+						v := (*p[k])[:]
+						sample[k].Data = append(sample[k].Data, &v)
+					}
+				} else {
+					v := s[k][:]
+					sample[k].Data = append(sample[k].Data, &v)
+				}
 			}
 		}
 	}
 
-	return &scanned, nil
+	return nil
 }
