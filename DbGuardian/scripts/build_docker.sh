@@ -86,7 +86,7 @@ cd $build_d
 DataGuardian=$(docker images data-guardian -q)
 [ -z "$DataGuardian" ] || docker rmi -f "$DataGuardian"
 
-cat <<EOF | docker build --platform amd64 --compress --label "git.branch=$(git branch --show-current)" --label "git.commit=$(git rev-parse HEAD)" -t data-guardian -f - .
+cat <<EOF | docker build --compress --label "git.branch=$(git branch --show-current)" --label "git.commit=$(git rev-parse HEAD)" -t data-guardian -f - .
 FROM ubuntu/postgres
 
 RUN apt update &&                \

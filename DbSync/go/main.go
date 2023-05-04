@@ -36,7 +36,7 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 			return nil, err
 		}
 	case types.A_Return:
-		if cnf, err = getConf(c.Customer, true); err != nil {
+		if cnf, err = getConf(c.Customer, false); err != nil {
 			return nil, err
 		}
 	case types.A_ConfUser:
