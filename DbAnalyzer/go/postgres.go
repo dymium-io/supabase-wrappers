@@ -164,12 +164,17 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 
 	sample := make([]detect.Sample, len(descr))
 
+	obfuscatable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+	allowable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+	// blocked := &[]types.DataHandling{types.DH_Block}
+	
 	for k, d := range descr {
 		var possibleActions *[]types.DataHandling
 		var t string
+		var sem *string
 		switch d.cTyp {
 		case "numeric":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			if d.cPrecision != nil {
 				if d.cScale != nil {
 					t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
@@ -185,7 +190,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				Name:        d.cName,
 			}
 		case "character varying":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+			possibleActions = obfuscatable
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
@@ -197,7 +202,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				Name:        d.cName,
 			}
 		case "text":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+			possibleActions = obfuscatable
 			t = "text"
 			sample[k] = detect.Sample{
 				IsSamplable: true,
@@ -208,12 +213,12 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
 				if *d.cCharMaxLen > 1 {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+					possibleActions = obfuscatable
 				} else {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+					possibleActions = allowable
 				}
 			} else {
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				possibleActions = obfuscatable
 				t = "bpchar"
 			}
 			sample[k] = detect.Sample{
@@ -225,12 +230,12 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
 				if *d.cCharMaxLen > 1 {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+					possibleActions = obfuscatable
 				} else {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+					possibleActions = allowable
 				}
 			} else {
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				possibleActions = obfuscatable
 				t = "bpchar"
 			}
 			sample[k] = detect.Sample{
@@ -241,7 +246,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		case "ARRAY":
 			switch *d.eTyp {
 			case "numeric":
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				possibleActions = allowable
 				if d.ePrecision != nil {
 					if d.cScale != nil {
 						t = fmt.Sprintf("numeric(%d,%d)[]", *d.ePrecision, *d.eScale)
@@ -262,7 +267,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				} else {
 					t = "varchar[]"
 				}
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				possibleActions = obfuscatable
 				sample[k] = detect.Sample{
 					IsSamplable: true,
 					IsNullable:  d.isNullable,
@@ -270,10 +275,10 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				}
 			case "character":
 				if d.eCharMaxLen != nil {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+					possibleActions = obfuscatable
 					t = fmt.Sprintf("character(%d)[]", *d.eCharMaxLen)
 				} else {
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+					possibleActions = obfuscatable
 					t = "bpchar[]"
 				}
 				sample[k] = detect.Sample{
@@ -282,7 +287,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 					Name:        d.cName,
 				}
 			case "text":
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				possibleActions = obfuscatable
 				t = "text[]"
 				sample[k] = detect.Sample{
 					IsSamplable: true,
@@ -290,7 +295,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 					Name:        d.cName,
 				}
 			default:
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				possibleActions = allowable
 				t = *d.eTyp + "[]"
 				sample[k] = detect.Sample{
 					IsSamplable: true,
@@ -299,7 +304,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				}
 			}
 		default:
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			t = d.cTyp
 			sample[k] = detect.Sample{
 				IsSamplable: true,
@@ -314,7 +319,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			IsNullable:      d.isNullable,
 			Default:         d.dflt,
 			Reference:       nil,
-			Semantics:       nil,
+			Semantics:       sem,
 			PossibleActions: *possibleActions,
 		}
 		ti.Columns = append(ti.Columns, c)

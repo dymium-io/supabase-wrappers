@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+
 	_ "github.com/go-sql-driver/mysql"
 
 	"fmt"
@@ -9,6 +10,7 @@ import (
 
 	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
+	"DbAnalyzer/utils"
 )
 
 type MySQL struct {
@@ -105,6 +107,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
                                     data_type,
                                     character_maximum_length,
                                     numeric_precision, numeric_scale,
+                                    datetime_precision,
                                     is_nullable, column_default
                              FROM information_schema.columns
                              WHERE table_schema = ? and table_name = ?
@@ -127,12 +130,12 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 	}
 
 	type data struct {
-		cName                           string
-		pos                             int
-		isNullable                      bool
-		dflt                            *string
-		cTyp                            string
-		cCharMaxLen, cPrecision, cScale *int
+		cName                                       string
+		pos                                         int
+		isNullable                                  bool
+		dflt                                        *string
+		cTyp                                        string
+		cCharMaxLen, cPrecision, cScale, dPrecision *int
 	}
 
 	descr := []*data{}
@@ -142,6 +145,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 		var isNullable_ string
 		err = rows.Scan(&d.pos, &d.cName,
 			&d.cTyp, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
+			&d.dPrecision,
 			&isNullable_, &d.dflt)
 		if err != nil {
 			return nil, err
@@ -161,11 +165,51 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 
 	sample := make([]detect.Sample, len(descr))
 
+	obfuscatable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+	allowable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+	blocked := &[]types.DataHandling{types.DH_Block}
+
 	for k, d := range descr {
 		var t string
+		var sem *string
 		var possibleActions *[]types.DataHandling
 		switch d.cTyp {
-		case "decimal":
+		case "bigint", "smallint":
+			t = d.cTyp
+			possibleActions = allowable
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		case "int", "mediumint":
+			t = "integer"
+			possibleActions = allowable
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		case "tinyint":
+			t = "smallint"
+			possibleActions = allowable
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+			/*
+					   // TBD: bit and bit[]
+				case "bit":
+					t = "boolean"
+					possibleActions = allowable
+					sample[k] = detect.Sample{
+						IsSamplable: true,
+						IsNullable:  d.isNullable,
+						Name:        d.cName,
+					}
+			*/
+		case "decimal", "numeric":
 			if d.cPrecision != nil {
 				if d.cScale != nil {
 					t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
@@ -175,19 +219,83 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 			} else {
 				t = "numeric"
 			}
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
 				Name:        d.cName,
 			}
-		case "varchar":
+		case "date":
+			t = "date"
+			possibleActions = allowable
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		case "datetime":
+			if d.dPrecision != nil {
+				t = fmt.Sprintf("timestamp (%d) without time zone", *d.dPrecision)
+			} else {
+				t = "timestamp without time zone"
+			}
+			possibleActions = allowable
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		case "time":
+			if d.dPrecision != nil {
+				t = fmt.Sprintf("time (%d) with time zone", *d.dPrecision)
+			} else {
+				t = "time with time zone"
+			}
+			possibleActions = allowable
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		case "timestamp":
+			if d.dPrecision != nil {
+				t = fmt.Sprintf("time (%d) with time zone", *d.dPrecision)
+			} else {
+				t = "time with time zone"
+			}
+			possibleActions = allowable
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		case "year":
+			t = "integer"
+			possibleActions = allowable
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		case "varchar", "long", "long varchar":
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
 				t = "varchar"
 			}
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+			possibleActions = obfuscatable
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		case "text", "mediumtext", "longtext":
+			if d.cCharMaxLen != nil {
+				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
+			} else {
+				t = "varchar"
+			}
+			possibleActions = obfuscatable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
@@ -196,23 +304,71 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 		case "char":
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				possibleActions = obfuscatable
 			} else {
 				t = "bpchar"
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				possibleActions = allowable
 			}
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
+			t = "bytea"
+			possibleActions = allowable
+			sample[k] = detect.Sample{
+				IsSamplable: false,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		case "enum":
+			t = "varchar"
+			possibleActions = allowable
+			sample[k] = detect.Sample{
+				IsSamplable: true,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		case "json":
+			t = "json"
+			possibleActions = obfuscatable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
 				Name:        d.cName,
 			}
 		default:
-			t = d.cTyp
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
+			switch {
+			case strings.HasPrefix(d.cTyp, "real"):
+				t = "real"
+				possibleActions = allowable
+				sample[k] = detect.Sample{
+					IsSamplable: true,
+					IsNullable:  d.isNullable,
+					Name:        d.cName,
+				}
+			case strings.HasPrefix(d.cTyp, "float"):
+				if d.cPrecision != nil && *d.cPrecision <= 24 {
+					t = "real"
+				} else {
+					t = "double precision"
+				}
+				possibleActions = allowable
+				sample[k] = detect.Sample{
+					IsSamplable: true,
+					IsNullable:  d.isNullable,
+					Name:        d.cName,
+				}
+			default:
+				t = d.cTyp
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = detect.Sample{
+					IsSamplable: false,
+					IsNullable:  d.isNullable,
+					Name:        d.cName,
+				}
 			}
 		}
 
@@ -223,7 +379,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 			IsNullable:      d.isNullable,
 			Default:         d.dflt,
 			Reference:       nil,
-			Semantics:       nil,
+			Semantics:       sem,
 			PossibleActions: *possibleActions,
 		}
 
