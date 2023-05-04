@@ -11,7 +11,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import BootstrapTable from 'react-bootstrap-table-next';
 import Multiselect from 'multiselect-react-dropdown';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
+import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 
 const { SearchBar, ClearSearchButton } = Search;

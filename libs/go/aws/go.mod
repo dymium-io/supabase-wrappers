@@ -1,4 +1,4 @@
-module zeitro.com/aws
+module dymium.io/aws
 
 go 1.18
 

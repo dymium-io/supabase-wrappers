@@ -12,7 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import * as tun from '@dymium/common/Types/Tunnel'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
+import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import Offcanvas from '@dymium/common/Components/Offcanvas'
 const { SearchBar, ClearSearchButton } = Search;

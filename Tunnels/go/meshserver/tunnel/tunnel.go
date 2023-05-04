@@ -121,7 +121,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 
 		if err != nil {
 			if err == io.EOF {
-				log.ErrorTenantf(customer, "Connection closed, cleanup the proxy connection!", err.Error())
+				log.ErrorTenantf(customer, "Connection closed, cleanup the proxy connection: %s!", err.Error())
 
 			} else {
 				log.ErrorTenantf(customer, "Read from client failed '%s', cleanup the proxy connection!", err.Error())

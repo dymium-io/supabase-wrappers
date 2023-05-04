@@ -8,7 +8,7 @@ import Col from 'react-bootstrap/Col'
 import { Link } from "react-router-dom";
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import ToolkitProvider, { ColumnToggle } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
+import ToolkitProvider, { ColumnToggle } from 'react-bootstrap-table2-toolkit';
 import Offcanvas from '@dymium/common/Components/Offcanvas'
 import Alert from 'react-bootstrap/Alert'
 import Spinner from '@dymium/common/Components/Spinner'

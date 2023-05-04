@@ -602,7 +602,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 <Col xs="auto" className="ml-0 pl-0"><Spinner show={spinner} style={{ marginTop: '26px', width: '28px' }}></Spinner></Col>
 
                 <Col>
-                    {schema !== "" && schema != undefined && table !== "" && table != undefined && tablestructure != [] &&
+                    {schema !== "" && schema != undefined && table !== "" && table != undefined && tablestructure.length > 0 &&
                         <Form.Group className="mb-3" controlId="connection" >
                             <Form.Label >Select Access Level:</Form.Label>
                             <InputGroup>
