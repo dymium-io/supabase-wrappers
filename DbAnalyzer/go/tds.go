@@ -458,23 +458,24 @@ func (da *SqlServer) getSample(schema, table string, sample []detect.Sample) err
 		}
 	}
 
-	i := make([]interface{}, nColumns)
+	i := make([]interface{}, 0, nColumns)
 	s := make([]string, nColumns)
 	p := make([]*string, nColumns)
 	var colNames strings.Builder
-	kk := 0
+	start := true
 	for k := 0; k != nColumns; k++ {
 		if sample[k].IsSamplable {
 			if sample[k].IsNullable {
-				i[kk] = &p[k]
+				i = append(i, &p[k])
 			} else {
-				i[kk] = &s[k]
+				i = append(i, &s[k])
 			}
-			if kk > 0 {
+			if start {
+				start = false
+			} else {
 				colNames.WriteString(", ")
 			}
 			colNames.WriteString(sample[k].Name)
-			kk++
 		}
 	}
 
