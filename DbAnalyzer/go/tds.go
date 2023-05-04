@@ -380,7 +380,9 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 	}
 
 	for k := range ti.Columns {
-		ti.Columns[k].Semantics = sample[k].Semantics
+		if sample[k].Semantics != nil {
+			ti.Columns[k].Semantics = sample[k].Semantics
+		}
 	}
 
 	return &ti, nil

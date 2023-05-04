@@ -399,7 +399,9 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 	}
 
 	for k := range ti.Columns {
-		ti.Columns[k].Semantics = sample[k].Semantics
+		if sample[k].Semantics != nil {
+			ti.Columns[k].Semantics = sample[k].Semantics
+		}
 	}
 
 	return &ti, nil
