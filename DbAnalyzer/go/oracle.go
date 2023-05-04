@@ -349,6 +349,14 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 						IsNullable:  d.isNullable,
 						Name:        d.cName,
 					}
+				default:
+					t = *utils.Unsupported
+					possibleActions = &[]types.DataHandling{types.DH_Block}
+					sample[k] = detect.Sample{
+						IsSamplable: false,
+						IsNullable:  d.isNullable,
+						Name:        d.cName,
+					}
 				}
 			}
 		}
