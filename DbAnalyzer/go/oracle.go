@@ -178,12 +178,18 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 
 	sample := make([]detect.Sample, len(descr))
 
+	obfuscatable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+	allowable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+	blocked := &[]types.DataHandling{types.DH_Block}
+
 	for k, d := range descr {
 		var t string
 		var possibleActions *[]types.DataHandling
+		var sem *string
 		if d.cTyp == nil {
 			t = "undefined"
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			sem = utils.Unsupported
+			possibleActions = blocked
 			sample[k] = detect.Sample{
 				IsSamplable: false,
 				IsNullable:  d.isNullable,
@@ -202,7 +208,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 				} else {
 					t = fmt.Sprintf("numeric(%d)", d.cDataLen)
 				}
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				possibleActions = allowable
 				sample[k] = detect.Sample{
 					IsSamplable: true,
 					IsNullable:  d.isNullable,
@@ -210,7 +216,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 				}
 			case "binary_float":
 				t = "real"
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				possibleActions = allowable
 				sample[k] = detect.Sample{
 					IsSamplable: true,
 					IsNullable:  d.isNullable,
@@ -218,7 +224,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 				}
 			case "binary_double":
 				t = "double precision"
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				possibleActions = allowable
 				sample[k] = detect.Sample{
 					IsSamplable: true,
 					IsNullable:  d.isNullable,
@@ -230,7 +236,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 				} else {
 					t = "varchar"
 				}
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				possibleActions = obfuscatable
 				sample[k] = detect.Sample{
 					IsSamplable: true,
 					IsNullable:  d.isNullable,
@@ -239,10 +245,10 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 			case "char", "nchar":
 				if d.cCharMaxLen != nil {
 					t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+					possibleActions = obfuscatable
 				} else {
 					t = "bpchar"
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+					possibleActions = allowable
 				}
 				sample[k] = detect.Sample{
 					IsSamplable: true,
@@ -251,7 +257,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 				}
 			case "clob", "nclob", "long":
 				t = "text"
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				possibleActions = obfuscatable
 				sample[k] = detect.Sample{
 					IsSamplable: true,
 					IsNullable:  d.isNullable,
@@ -259,7 +265,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 				}
 			case "blob", "bfile", "long raw":
 				t = "bytea"
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				possibleActions = allowable
 				sample[k] = detect.Sample{
 					IsSamplable: true,
 					IsNullable:  d.isNullable,
@@ -267,7 +273,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 				}
 			case "date":
 				t = "date"
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				possibleActions = allowable
 				sample[k] = detect.Sample{
 					IsSamplable: true,
 					IsNullable:  d.isNullable,
@@ -283,7 +289,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 						} else {
 							t = "timestamp without time zone"
 						}
-						possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+						possibleActions = allowable
 						sample[k] = detect.Sample{
 							IsSamplable: true,
 							IsNullable:  d.isNullable,
@@ -295,7 +301,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 						} else {
 							t = "timestamp with time zone"
 						}
-						possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+						possibleActions = allowable
 						sample[k] = detect.Sample{
 							IsSamplable: true,
 							IsNullable:  d.isNullable,
@@ -303,7 +309,8 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 						}
 					default:
 						t = *d.cTyp
-						possibleActions = &[]types.DataHandling{types.DH_Block}
+						sem = utils.Unsupported
+						possibleActions = blocked
 						sample[k] = detect.Sample{
 							IsSamplable: false,
 							IsNullable:  d.isNullable,
@@ -314,7 +321,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 					switch {
 					case utils.Interval_year_r.MatchString(cTyp):
 						t = "interval year to month"
-						possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+						possibleActions = allowable
 						sample[k] = detect.Sample{
 							IsSamplable: true,
 							IsNullable:  d.isNullable,
@@ -326,7 +333,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 						} else {
 							t = "interval day to second"
 						}
-						possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+						possibleActions = allowable
 						sample[k] = detect.Sample{
 							IsSamplable: true,
 							IsNullable:  d.isNullable,
@@ -334,7 +341,8 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 						}
 					default:
 						t = *d.cTyp
-						possibleActions = &[]types.DataHandling{types.DH_Block}
+						sem = utils.Unsupported
+						possibleActions = blocked
 						sample[k] = detect.Sample{
 							IsSamplable: false,
 							IsNullable:  d.isNullable,
@@ -350,8 +358,9 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 						Name:        d.cName,
 					}
 				default:
-					t = *utils.Unsupported
-					possibleActions = &[]types.DataHandling{types.DH_Block}
+					t = *d.cTyp
+					sem = utils.Unsupported
+					possibleActions = blocked
 					sample[k] = detect.Sample{
 						IsSamplable: false,
 						IsNullable:  d.isNullable,
@@ -378,7 +387,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 			IsNullable:      d.isNullable,
 			Default:         dflt,
 			Reference:       nil,
-			Semantics:       nil,
+			Semantics:       sem,
 			PossibleActions: *possibleActions,
 		}
 

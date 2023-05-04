@@ -4,12 +4,14 @@ import (
 	"database/sql"
 	//_ "github.com/thda/tds"
 	"fmt"
-	_ "github.com/denisenkom/go-mssqldb"
 	"net/url"
 	"strings"
 
+	_ "github.com/denisenkom/go-mssqldb"
+
 	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
+	"DbAnalyzer/utils"
 )
 
 type SqlServer struct {
@@ -166,13 +168,18 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 
 	sample := make([]detect.Sample, len(descr))
 
+	obfuscatable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+	allowable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+	blocked := &[]types.DataHandling{types.DH_Block}
+
 	for k, d := range descr {
 		var possibleActions *[]types.DataHandling
 		var t string
+		var sem *string
 		switch d.cTyp {
 		case "bigint", "smallint":
 			t = d.cTyp
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
@@ -180,7 +187,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			}
 		case "int":
 			t = "integer"
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
@@ -188,20 +195,23 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			}
 		case "tinyint":
 			t = "smallint"
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
 				Name:        d.cName,
 			}
+			/*
+			   // TBD: bit and bit[]
 		case "bit":
 			t = "boolean"
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
 				Name:        d.cName,
 			}
+			*/
 		case "dec", "decimal", "numeric":
 			if d.cPrecision != nil {
 				if d.cScale != nil {
@@ -212,7 +222,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "numeric"
 			}
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
@@ -220,7 +230,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			}
 		case "money", "smallmoney":
 			t = "money"
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
@@ -228,7 +238,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			}
 		case "date":
 			t = "date"
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
@@ -240,7 +250,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "timestamp without time zone"
 			}
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
@@ -252,7 +262,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "timestamp with time zone"
 			}
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
@@ -264,7 +274,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "time with time zone"
 			}
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+			possibleActions = allowable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
@@ -276,7 +286,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "varchar"
 			}
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+			possibleActions = obfuscatable
 			sample[k] = detect.Sample{
 				IsSamplable: true,
 				IsNullable:  d.isNullable,
@@ -284,10 +294,10 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			}
 		case "char", "nchar":
 			if d.cCharMaxLen != nil && *d.cCharMaxLen > 0 {
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+				possibleActions = obfuscatable
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
 			} else {
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				possibleActions = allowable
 				t = "bpchar"
 			}
 			sample[k] = detect.Sample{
@@ -296,7 +306,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				Name:        d.cName,
 			}
 		case "text", "ntext":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+			possibleActions = obfuscatable
 			t = "text"
 			sample[k] = detect.Sample{
 				IsSamplable: true,
@@ -304,7 +314,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				Name:        d.cName,
 			}
 		case "binary", "varbinary", "image":
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+			possibleActions = allowable
 			t = "bytea"
 			sample[k] = detect.Sample{
 				IsSamplable: false,
@@ -315,7 +325,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			switch {
 			case strings.HasPrefix(d.cTyp, "real"):
 				t = "real"
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				possibleActions = allowable
 				sample[k] = detect.Sample{
 					IsSamplable: true,
 					IsNullable:  d.isNullable,
@@ -327,7 +337,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				} else {
 					t = "double precision"
 				}
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+				possibleActions = allowable
 				sample[k] = detect.Sample{
 					IsSamplable: true,
 					IsNullable:  d.isNullable,
@@ -335,7 +345,8 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				}
 			default:
 				t = d.cTyp
-				possibleActions = &[]types.DataHandling{types.DH_Block}
+				possibleActions = blocked
+				sem = utils.Unsupported
 				sample[k] = detect.Sample{
 					IsSamplable: false,
 					IsNullable:  d.isNullable,
@@ -350,7 +361,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			IsNullable:      d.isNullable,
 			Default:         d.dflt,
 			Reference:       nil,
-			Semantics:       nil,
+			Semantics:       sem,
 			PossibleActions: *possibleActions,
 		}
 		ti.Columns = append(ti.Columns, c)
