@@ -9,7 +9,7 @@ import * as http from '@dymium/common/Api/Http'
 import * as com from '../Common'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
+import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit';
 import Spinner from '@dymium/common/Components/Spinner'
 import Alert from 'react-bootstrap/Alert'
 import { defaultDetectors, regexpDetectors } from "./Detectors"
