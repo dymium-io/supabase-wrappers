@@ -415,7 +415,6 @@ func (da *Postgres) getSample(schema, table string, sample []detect.Sample) erro
 
 	sql := fmt.Sprintf(`SELECT %s from "%s"."%s" ORDER BY RANDOM() LIMIT %d`,
 		colNames.String(), schema, table, detect.SampleSize)
-	fmt.Println("SQL:",sql)
 	r, err := da.db.Query(sql)
 	if err != nil {
 		return err

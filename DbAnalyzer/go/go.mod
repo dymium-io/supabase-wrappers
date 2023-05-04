@@ -3,6 +3,7 @@ module DbAnalyzer
 go 1.20
 
 require (
+	aws v0.0.0-00010101000000-000000000000
 	github.com/aws/aws-lambda-go v1.40.0
 	github.com/aws/aws-sdk-go v1.44.255
 	github.com/denisenkom/go-mssqldb v0.12.3
@@ -17,3 +18,5 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 )
+
+replace aws => ../../libs/go/aws

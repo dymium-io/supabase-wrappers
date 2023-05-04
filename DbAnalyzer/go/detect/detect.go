@@ -11,7 +11,7 @@ const SampleSize = 32
 type Detectors struct {
 	columnNameDetectors []detector
 	contentDetectors    []detector
-	invokeComprehend    bool
+	comprehendDetected  map[string]string
 }
 
 type detector struct {
@@ -31,12 +31,12 @@ func Compile(piis []types.PIIDetector) (*Detectors, error) {
 	d := Detectors{
 		columnNameDetectors: []detector{},
 		contentDetectors:    []detector{},
-		invokeComprehend:    false,
+		comprehendDetected:  map[string]string{},
 	}
 	for _, p := range piis {
 		switch p.Method {
 		case types.PIIDT_Comprehend:
-			d.invokeComprehend = true
+			d.comprehendDetected[p.Data] = *p.Id
 		case types.PIIDT_Columnregexp:
 			if r, err := regexp.Compile(`(?i)` + p.Data); err != nil {
 				return nil, fmt.Errorf("Erroneous regexp %s: %v", p.Data, err)
@@ -64,7 +64,9 @@ func Compile(piis []types.PIIDetector) (*Detectors, error) {
 
 func (d *Detectors) FindSemantics(sample []Sample) error {
 
-	tryComprehend(sample)
+	if err := tryComprehend(sample, d.comprehendDetected); err != nil {
+		fmt.Printf("Comprehend returned error (ignored): %+v\n",err)
+	}
 
 	for _, s := range sample {
 		if s.IsSamplable {

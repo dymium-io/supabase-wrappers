@@ -41,7 +41,6 @@ func (da *SqlServer) Connect(c *types.ConnectionParams) error {
 	}
 	tdsconn := u.String()
 
-	fmt.Println("tdsconn:", tdsconn)
 	db, err := sql.Open("sqlserver", tdsconn)
 	if err != nil {
 		return err

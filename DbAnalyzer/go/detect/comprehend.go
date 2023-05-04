@@ -1,17 +1,13 @@
 package detect
 
 import (
-	// "github.com/aws/aws-sdk-go/aws"
-	// "github.com/aws/aws-sdk-go/aws/session"
-	//"github.com/aws/aws-sdk-go/service/comprehend"
-
 	"fmt"
 	"strings"
+
+	"aws"
 )
 
-func tryComprehend(sample []Sample) error {
-
-	fmt.Println(sample)
+func tryComprehend(sample []Sample, comprehendDetected map[string]string) error {
 
 	size := 0
 	for _, s := range sample {
@@ -59,37 +55,26 @@ func tryComprehend(sample []Sample) error {
 				lims = append(lims, l)
 			}
 		}
-		inp.WriteByte('.')
+		inp.WriteString(".\n")
 	}
 
-	fmt.Println(inp.String())
+	piis, err := aws.Comprehend(inp.String())
+	if err != nil {
+		return err
+	}
 
-	/*
-		awsInp = make([]*string, len(inp))
-		for k := 0; k != len(inp); k++ {
-			awsInp[k] = aws.String(inp[k].String())
-		}
-
-		comprehendInp := &comprehend.BatchDetectEntitiesInput{
-			TextList: awsInp,
-			LanguageCode: aws.String("en"),
-		}
-
-		output, err := client.BatchDetectEntities(comprehendInp)
-		if err != nil {
-			return err
-		}
-
-		// Process the output from Comprehend
-		for _, result := range output.ResultList {
-			for _, entity := range result.Entities {
-				// Check if the entity is PII
-				if aws.StringValue(entity.Type) == "PERSONAL_IDENTIFIABLE_INFORMATION" {
-					// This is PII, do something with it...
+	for _, pii := range piis {
+		for _, l := range lims {
+			if pii.BeginOffset >= l.beg && pii.EndOffset <= l.end {
+				if t, ok := comprehendDetected[pii.Type]; ok {
+					sample[l.col].Semantics = &t
+				} else {
+					fmt.Printf("Undefined PII type %s (ignored)\n", pii.Type)
 				}
+				break
 			}
 		}
-	*/
+	}
 
 	return nil
 }
