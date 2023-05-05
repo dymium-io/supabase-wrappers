@@ -267,7 +267,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 				t = "bytea"
 				possibleActions = allowable
 				sample[k] = detect.Sample{
-					IsSamplable: true,
+					IsSamplable: false,
 					IsNullable:  d.isNullable,
 					Name:        d.cName,
 				}
