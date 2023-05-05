@@ -381,7 +381,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             {
                 dataField: 'name',
                 text: 'Column',
-                classes: 'overflow-hidden'
+                classes: 'overflow-x-scroll'
             },
             {
                 dataField: 'typ',
@@ -579,7 +579,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
 
             <Row>
-                <Col xs="auto" className="mr-0 pr-0">
+                <Col  className="mr-0 pr-0">
                     <Form.Group className="mb-3" controlId="schemaname">
                         <Form.Label>{correctname} Name:</Form.Label>
                         <Typeahead id="schemaname" inputProps={{ id: "schemaname" }}
@@ -621,7 +621,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             </Row>
             {schema !== "" && schema != undefined &&
                 <Row>
-                    <Col xs="auto">
+                    <Col className="mr-2">
                         <Form.Group className="mb-3" controlId="dbname">
                             <Form.Label>Table Name:</Form.Label>
                             <Typeahead id="tables" inputProps={{ id: "tables" }} onChange={_selectTable} size="sm"
@@ -640,9 +640,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                             </Form.Control.Feedback>
                         </Form.Group>
                     </Col>
-                    <Col>
-
-                    </Col>
+             
                 </Row>
             }
             {schema !== "" && schema != undefined && table !== "" && table != undefined && 
