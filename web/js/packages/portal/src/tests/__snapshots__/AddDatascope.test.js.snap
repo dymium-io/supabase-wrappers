@@ -816,7 +816,7 @@ exports[`add-datascope 2`] = `
                     class="row"
                   >
                     <div
-                      class="mr-0 pr-0 col-auto"
+                      class="mr-0 pr-0 col"
                     >
                       <div
                         class="mb-3"
@@ -1232,7 +1232,7 @@ exports[`add-datascope 2`] = `
                   class="row"
                 >
                   <div
-                    class="mr-0 pr-0 col-auto"
+                    class="mr-0 pr-0 col"
                   >
                     <div
                       class="mb-3"
@@ -1705,7 +1705,7 @@ exports[`add-datascope 3`] = `
                     class="row"
                   >
                     <div
-                      class="mr-0 pr-0 col-auto"
+                      class="mr-0 pr-0 col"
                     >
                       <div
                         class="mb-3"
@@ -1848,7 +1848,7 @@ exports[`add-datascope 3`] = `
                     class="row"
                   >
                     <div
-                      class="col-auto"
+                      class="mr-2 col"
                     >
                       <div
                         class="mb-3"
@@ -1922,9 +1922,6 @@ exports[`add-datascope 3`] = `
                         </div>
                       </div>
                     </div>
-                    <div
-                      class="col"
-                    />
                   </div>
                   <div
                     class="react-bootstrap-table"
@@ -1960,7 +1957,7 @@ exports[`add-datascope 3`] = `
                       <tbody>
                         <tr>
                           <td
-                            class="overflow-hidden"
+                            class="overflow-x-scroll"
                           >
                             departmentid
                           </td>
@@ -2059,7 +2056,7 @@ exports[`add-datascope 3`] = `
                         </tr>
                         <tr>
                           <td
-                            class="overflow-hidden"
+                            class="overflow-x-scroll"
                           >
                             name
                           </td>
@@ -2158,7 +2155,7 @@ exports[`add-datascope 3`] = `
                         </tr>
                         <tr>
                           <td
-                            class="overflow-hidden"
+                            class="overflow-x-scroll"
                           >
                             groupname
                           </td>
@@ -2257,7 +2254,7 @@ exports[`add-datascope 3`] = `
                         </tr>
                         <tr>
                           <td
-                            class="overflow-hidden"
+                            class="overflow-x-scroll"
                           >
                             modifieddate
                           </td>
@@ -2692,7 +2689,7 @@ exports[`add-datascope 3`] = `
                   class="row"
                 >
                   <div
-                    class="mr-0 pr-0 col-auto"
+                    class="mr-0 pr-0 col"
                   >
                     <div
                       class="mb-3"
@@ -2835,7 +2832,7 @@ exports[`add-datascope 3`] = `
                   class="row"
                 >
                   <div
-                    class="col-auto"
+                    class="mr-2 col"
                   >
                     <div
                       class="mb-3"
@@ -2909,9 +2906,6 @@ exports[`add-datascope 3`] = `
                       </div>
                     </div>
                   </div>
-                  <div
-                    class="col"
-                  />
                 </div>
                 <div
                   class="react-bootstrap-table"
@@ -2947,7 +2941,7 @@ exports[`add-datascope 3`] = `
                     <tbody>
                       <tr>
                         <td
-                          class="overflow-hidden"
+                          class="overflow-x-scroll"
                         >
                           departmentid
                         </td>
@@ -3046,7 +3040,7 @@ exports[`add-datascope 3`] = `
                       </tr>
                       <tr>
                         <td
-                          class="overflow-hidden"
+                          class="overflow-x-scroll"
                         >
                           name
                         </td>
@@ -3145,7 +3139,7 @@ exports[`add-datascope 3`] = `
                       </tr>
                       <tr>
                         <td
-                          class="overflow-hidden"
+                          class="overflow-x-scroll"
                         >
                           groupname
                         </td>
@@ -3244,7 +3238,7 @@ exports[`add-datascope 3`] = `
                       </tr>
                       <tr>
                         <td
-                          class="overflow-hidden"
+                          class="overflow-x-scroll"
                         >
                           modifieddate
                         </td>
@@ -3736,7 +3730,7 @@ exports[`add-datascope 4`] = `
                     class="row"
                   >
                     <div
-                      class="mr-0 pr-0 col-auto"
+                      class="mr-0 pr-0 col"
                     >
                       <div
                         class="mb-3"
@@ -3878,7 +3872,7 @@ exports[`add-datascope 4`] = `
                     class="row"
                   >
                     <div
-                      class="col-auto"
+                      class="mr-2 col"
                     >
                       <div
                         class="mb-3"
@@ -3952,9 +3946,6 @@ exports[`add-datascope 4`] = `
                         </div>
                       </div>
                     </div>
-                    <div
-                      class="col"
-                    />
                   </div>
                   <div
                     class="react-bootstrap-table"
@@ -3990,7 +3981,7 @@ exports[`add-datascope 4`] = `
                       <tbody>
                         <tr>
                           <td
-                            class="overflow-hidden"
+                            class="overflow-x-scroll"
                           >
                             departmentid
                           </td>
@@ -4089,7 +4080,7 @@ exports[`add-datascope 4`] = `
                         </tr>
                         <tr>
                           <td
-                            class="overflow-hidden"
+                            class="overflow-x-scroll"
                           >
                             name
                           </td>
@@ -4188,7 +4179,7 @@ exports[`add-datascope 4`] = `
                         </tr>
                         <tr>
                           <td
-                            class="overflow-hidden"
+                            class="overflow-x-scroll"
                           >
                             groupname
                           </td>
@@ -4287,7 +4278,7 @@ exports[`add-datascope 4`] = `
                         </tr>
                         <tr>
                           <td
-                            class="overflow-hidden"
+                            class="overflow-x-scroll"
                           >
                             modifieddate
                           </td>
@@ -4722,7 +4713,7 @@ exports[`add-datascope 4`] = `
                   class="row"
                 >
                   <div
-                    class="mr-0 pr-0 col-auto"
+                    class="mr-0 pr-0 col"
                   >
                     <div
                       class="mb-3"
@@ -4864,7 +4855,7 @@ exports[`add-datascope 4`] = `
                   class="row"
                 >
                   <div
-                    class="col-auto"
+                    class="mr-2 col"
                   >
                     <div
                       class="mb-3"
@@ -4938,9 +4929,6 @@ exports[`add-datascope 4`] = `
                       </div>
                     </div>
                   </div>
-                  <div
-                    class="col"
-                  />
                 </div>
                 <div
                   class="react-bootstrap-table"
@@ -4976,7 +4964,7 @@ exports[`add-datascope 4`] = `
                     <tbody>
                       <tr>
                         <td
-                          class="overflow-hidden"
+                          class="overflow-x-scroll"
                         >
                           departmentid
                         </td>
@@ -5075,7 +5063,7 @@ exports[`add-datascope 4`] = `
                       </tr>
                       <tr>
                         <td
-                          class="overflow-hidden"
+                          class="overflow-x-scroll"
                         >
                           name
                         </td>
@@ -5174,7 +5162,7 @@ exports[`add-datascope 4`] = `
                       </tr>
                       <tr>
                         <td
-                          class="overflow-hidden"
+                          class="overflow-x-scroll"
                         >
                           groupname
                         </td>
@@ -5273,7 +5261,7 @@ exports[`add-datascope 4`] = `
                       </tr>
                       <tr>
                         <td
-                          class="overflow-hidden"
+                          class="overflow-x-scroll"
                         >
                           modifieddate
                         </td>
@@ -5776,7 +5764,7 @@ exports[`add-datascope 5`] = `
                     class="row"
                   >
                     <div
-                      class="mr-0 pr-0 col-auto"
+                      class="mr-0 pr-0 col"
                     >
                       <div
                         class="mb-3"
@@ -5918,7 +5906,7 @@ exports[`add-datascope 5`] = `
                     class="row"
                   >
                     <div
-                      class="col-auto"
+                      class="mr-2 col"
                     >
                       <div
                         class="mb-3"
@@ -5992,9 +5980,6 @@ exports[`add-datascope 5`] = `
                         </div>
                       </div>
                     </div>
-                    <div
-                      class="col"
-                    />
                   </div>
                   <div
                     class="react-bootstrap-table"
@@ -6030,7 +6015,7 @@ exports[`add-datascope 5`] = `
                       <tbody>
                         <tr>
                           <td
-                            class="overflow-hidden"
+                            class="overflow-x-scroll"
                           >
                             departmentid
                           </td>
@@ -6129,7 +6114,7 @@ exports[`add-datascope 5`] = `
                         </tr>
                         <tr>
                           <td
-                            class="overflow-hidden"
+                            class="overflow-x-scroll"
                           >
                             name
                           </td>
@@ -6228,7 +6213,7 @@ exports[`add-datascope 5`] = `
                         </tr>
                         <tr>
                           <td
-                            class="overflow-hidden"
+                            class="overflow-x-scroll"
                           >
                             groupname
                           </td>
@@ -6327,7 +6312,7 @@ exports[`add-datascope 5`] = `
                         </tr>
                         <tr>
                           <td
-                            class="overflow-hidden"
+                            class="overflow-x-scroll"
                           >
                             modifieddate
                           </td>
@@ -6773,7 +6758,7 @@ exports[`add-datascope 5`] = `
                   class="row"
                 >
                   <div
-                    class="mr-0 pr-0 col-auto"
+                    class="mr-0 pr-0 col"
                   >
                     <div
                       class="mb-3"
@@ -6915,7 +6900,7 @@ exports[`add-datascope 5`] = `
                   class="row"
                 >
                   <div
-                    class="col-auto"
+                    class="mr-2 col"
                   >
                     <div
                       class="mb-3"
@@ -6989,9 +6974,6 @@ exports[`add-datascope 5`] = `
                       </div>
                     </div>
                   </div>
-                  <div
-                    class="col"
-                  />
                 </div>
                 <div
                   class="react-bootstrap-table"
@@ -7027,7 +7009,7 @@ exports[`add-datascope 5`] = `
                     <tbody>
                       <tr>
                         <td
-                          class="overflow-hidden"
+                          class="overflow-x-scroll"
                         >
                           departmentid
                         </td>
@@ -7126,7 +7108,7 @@ exports[`add-datascope 5`] = `
                       </tr>
                       <tr>
                         <td
-                          class="overflow-hidden"
+                          class="overflow-x-scroll"
                         >
                           name
                         </td>
@@ -7225,7 +7207,7 @@ exports[`add-datascope 5`] = `
                       </tr>
                       <tr>
                         <td
-                          class="overflow-hidden"
+                          class="overflow-x-scroll"
                         >
                           groupname
                         </td>
@@ -7324,7 +7306,7 @@ exports[`add-datascope 5`] = `
                       </tr>
                       <tr>
                         <td
-                          class="overflow-hidden"
+                          class="overflow-x-scroll"
                         >
                           modifieddate
                         </td>
