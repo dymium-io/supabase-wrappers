@@ -1498,6 +1498,11 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 	var t types.CertificateRequestWithSecret
 
 	err := json.Unmarshal(body, &t)
+	if err != nil {
+		log.Errorf("Api GetConnectorCertificate, error unmarshaling cert: %s", err.Error())
+		http.Error(w, "Invalid request", http.StatusInternalServerError)
+		return
+	}
 	schema := t.Customer
 	key := t.Key
 	secret := t.Secret
@@ -1509,23 +1514,18 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 	}
 	//fmt.Printf("schema: %s, key: %s, secret %s\n", schema, key, secret)
 
-	if err != nil {
-		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error unmarshaling cert: %s", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-    
+
 	pemBlock, _ := pem.Decode( []byte(t.Csr) )
     if pemBlock == nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, pem.Decode failed")
-		http.Error(w, "pem.Decode failed", http.StatusInternalServerError)
+		http.Error(w, "Certificate Request has invalid encoding", http.StatusInternalServerError)
 		return		
     }
 
 	clientCSR, err := x509.ParseCertificateRequest(pemBlock.Bytes) 
     if err = clientCSR.CheckSignature(); err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Certificate Request has invalid format", http.StatusInternalServerError)
 		return 
     }
 
@@ -1555,7 +1555,7 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 	
     if err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Dymium failed to create a client cert", http.StatusInternalServerError)
 		return
     }
 

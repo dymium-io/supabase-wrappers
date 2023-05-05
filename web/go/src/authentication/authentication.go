@@ -1885,10 +1885,15 @@ func CheckConnectorAuth(schema, key, secret string) error {
 	var realsecret string
 	err := row.Scan(&realsecret)
 	if err != nil {
+		serr := err.(*pq.Error)
+		switch serr.Code {
+		case "02000": case "P0002":
+			err = errors.New("The record for this connector does not exist. Please check configuration in the portal.")
+		}
 		return err
 	}
 	if  secret != realsecret {
-		return errors.New("Invalid secret")
+		return errors.New("Invalid shared secret, connection refused")
 	}
 	return nil
 }
@@ -1915,7 +1920,7 @@ func GetTargets(schema, key, secret string, ) ([]string, error) {
 			targets = append(targets, s)
 		}
 	} else {
-		return nil, err
+		return nil, errors.New("Tunnels for the connector are not configured properly")
 	}
 
 
