@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+set -e
+
 script_d=$PWD/$(dirname $0)
 build_d=${script_d}/BLD
 setup_d=${script_d}/../../setup
@@ -86,7 +88,7 @@ cd $build_d
 DataGuardian=$(docker images data-guardian -q)
 [ -z "$DataGuardian" ] || docker rmi -f "$DataGuardian"
 
-cat <<EOF | docker build --compress --label "git.branch=$(git branch --show-current)" --label "git.commit=$(git rev-parse HEAD)" -t data-guardian -f - .
+cat <<EOF | docker build --platform linux/amd64 --compress --label "git.branch=$(git branch --show-current)" --label "git.commit=$(git rev-parse HEAD)" -t data-guardian -f - .
 FROM ubuntu/postgres
 
 RUN apt update &&                \

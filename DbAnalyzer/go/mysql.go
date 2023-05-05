@@ -481,7 +481,6 @@ func (da *MySQL) getSample(schema, table string, sample []detect.Sample) error {
 				start = false
 			} else {
 				colNames.WriteString(", ")
-				start = false
 			}
 			colNames.WriteString(sample[k].Name)
 		}
