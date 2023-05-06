@@ -1,14 +1,14 @@
 package main
 
 import (
-	"bufio"
-	"context"
 	"dymium.com/dymium/log"
-	"errors"
 	"flag"
 	"fmt"
-	"logcollector/logsparser"
+	"io"
 	"os"
+	"os/signal"
+	"strings"
+	"syscall"
 	"time"
 )
 
@@ -42,86 +42,99 @@ func main() {
 		os.Exit(0)
 	}
 
-	startTime := time.Now().Format("2023-04-04 03:20:24.193 UTC")
-	logsparser.EnvData.ComponentName = componentFlag
-	logsparser.EnvData.SourceName = sourceFlag
-	log.Init(logsparser.EnvData.ComponentName)
-
-	pipeName := pipeFlag
-	pipe, err := os.OpenFile(pipeName, os.O_RDONLY, os.ModeNamedPipe)
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Open named pipe file error: %s", err)
-		panic("Open named pipe file error")
-	}
-	defer func() {
-		_ = pipe.Close()
-	}()
+	startTime := time.Now().UTC().Format("2023-04-04 03:20:24.193 UTC")
+	EnvData.ComponentName = componentFlag
+	EnvData.SourceName = sourceFlag
+	log.Init(EnvData.ComponentName)
 
 	tenant, ok := os.LookupEnv("CUSTOMER")
 	if !ok || !(len(tenant) > 0) {
 		_, _ = fmt.Fprintf(os.Stderr, "Tenant name is not defined.")
 		panic("Tenant name is not defined.")
 	}
-	logsparser.EnvData.Tenant = tenant
+	EnvData.Tenant = tenant
 
-	logsparser.StrLogCollector("INFO", fmt.Sprintf("%s Start collecting log messages from %", startTime, pipeName))
+	StrLogCollector("INFO", fmt.Sprintf("%s Start collecting log messages from %s", startTime, pipeFlag))
 
-	err = runner(pipe, processLine)
-
-	errMessage := "no errors"
+	// Open the named pipe for reading
+	pipe, err := os.OpenFile(pipeFlag, os.O_RDONLY, 0666)
 	if err != nil {
-		errMessage = err.Error()
+		fmt.Println("Error opening named pipe:", err)
+		return
 	}
+	defer pipe.Close()
 
-	logsparser.StrLogCollector("INFO", fmt.Sprintf("%s exiting with %.", logsparser.EnvData.ComponentName, errMessage))
+	// Set up signal handling
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-}
+	// Set up channels for communication between goroutines
+	dataChan := make(chan []byte, 1024)
+	doneChan := make(chan bool)
 
-var LogParser *logsparser.PgLogProcessor
-
-func processLine(line string) {
-	if len(line) > 0 {
-		LogParser.ProcessMessage(line, false)
-	}
-}
-
-func flushMsgBuffer() {
-	LogParser.ProcessMessage("", true)
-}
-
-func runner(pipe *os.File, lineprocessor func(line string)) error {
-	LogParser = logsparser.NewPgLogProcessor()
-	reader := bufio.NewReader(pipe)
-	timeOut := time.Duration(time.Second * 1) // hardcoded timout for reading log messages - 1 sec, TODO should it be a parameter?
-	//creating  channels
-	dataStream := make(chan string, 1)
-	errStream := make(chan error)
-
-	var err error = nil
-	for {
-		ctx, cancel := context.WithTimeout(context.Background(), timeOut)
-		defer cancel()
-		go readLineWithTimeout(ctx, reader, dataStream, errStream)
-
-		select {
-		case <-ctx.Done():
-			flushMsgBuffer()
-		case msg := <-dataStream:
-			lineprocessor(msg)
-		case err = <-errStream:
-			return err
+	// Goroutine for reading from named pipe
+	go func() {
+		for {
+			select {
+			case <-doneChan:
+				fmt.Println("Done.")
+				return
+			default:
+				buffer := make([]byte, 4096)
+				n, err := pipe.Read(buffer)
+				if err != nil {
+					if err != io.EOF {
+						fmt.Println("Error reading from named pipe:", err)
+						return
+					}
+					// keep waiting for new input
+					//return
+				}
+				dataChan <- buffer[:n]
+			}
 		}
-	}
+	}()
+
+	// Goroutine for processing the data
+	go func() {
+		for data := range dataChan {
+			// Placeholder for processing the data
+			processData(data)
+		}
+	}()
+
+	// Wait for a signal to exit
+	sig := <-sigChan
+
+	StrLogCollector("INFO", fmt.Sprintf("Log collector exiting.(signal: %s)", sig.String()))
+	fmt.Println("Exiting.")
+	close(doneChan)
+
 }
 
-func readLineWithTimeout(ctx context.Context, reader *bufio.Reader, data chan string, er chan error) {
-	line, err := reader.ReadBytes('\n')
-	if err == nil {
-		if len(line) > 0 {
-			msg := string(line[:len(line)-1])
-			data <- msg
-		} else {
-			er <- errors.New("error reading pipe")
+type LineBuilder struct {
+	sbBuff       *strings.Builder
+	insideQoutes bool
+}
+
+var lineBuilder = LineBuilder{new(strings.Builder), false}
+
+func processData(data []byte) {
+
+	if len(data) > 0 {
+		for _, b := range data {
+			if !lineBuilder.insideQoutes && b == '\n' {
+				lineBuilder.sbBuff.WriteByte(b)
+				ProcessMessage(lineBuilder.sbBuff.String())
+				lineBuilder.sbBuff.Reset()
+				lineBuilder.insideQoutes = false
+			} else {
+				if b == '"' {
+					lineBuilder.insideQoutes = !lineBuilder.insideQoutes
+				}
+				lineBuilder.sbBuff.WriteByte(b)
+
+			}
 		}
 	}
 }
