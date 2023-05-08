@@ -194,6 +194,7 @@ func LogCollectorWithFields(severity string, fields aplog.Fields, session string
 func PGMsgLogCollector(msg *PostgresLogMessage) {
 	sevLevel := msg.Error_severity
 	extra := aplog.Fields{
+		"timestamp": msg.Log_time,
 		"source":    EnvData.SourceName,
 		"component": EnvData.ComponentName,
 	}

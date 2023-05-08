@@ -118,7 +118,8 @@ RUN addgroup nobody tty && addgroup postgres tty
 
 # forward postgres logs to docker log collector
 RUN mkdir -p /var/log/postgres && chown postgres:postgres /var/log/postgres && chmod a+rwx /var/log/postgres && \
-mkdir -p /tmp && mkfifo /tmp/logpipe && chmod a+rw /tmp/logpipe && mkfifo /tmp/errpipe && chmod a+rw /tmp/errpipe
+mkdir -p /tmp && mkfifo /tmp/logpipe && chown postgres:postgres /tmp/logpipe && chmod 0644 /tmp/logpipe && \
+mkfifo /tmp/errpipe && chown postgres:postgres /tmp/logpipe && chmod 0644 /tmp/errpipe
 
 RUN ln -sf /tmp/logpipe /var/log/postgres/postgres.csv #&& ln -sf /tmp/errpipe /var/log/postgres/postgres.log
 

@@ -42,7 +42,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	startTime := time.Now().UTC().Format("2023-04-04 03:20:24.193 UTC")
+	startTime := time.Now().UTC().Format("2006-01-02 15:04:05.193 UTC")
 	EnvData.ComponentName = componentFlag
 	EnvData.SourceName = sourceFlag
 	log.Init(EnvData.ComponentName)
@@ -57,7 +57,7 @@ func main() {
 	StrLogCollector("INFO", fmt.Sprintf("%s Start collecting log messages from %s", startTime, pipeFlag))
 
 	// Open the named pipe for reading
-	pipe, err := os.OpenFile(pipeFlag, os.O_RDONLY, 0666)
+	pipe, err := os.OpenFile(pipeFlag, os.O_RDONLY, 0644)
 	if err != nil {
 		fmt.Println("Error opening named pipe:", err)
 		return
@@ -115,9 +115,10 @@ func main() {
 type LineBuilder struct {
 	sbBuff       *strings.Builder
 	insideQoutes bool
+	prevBSlash   bool
 }
 
-var lineBuilder = LineBuilder{new(strings.Builder), false}
+var lineBuilder = LineBuilder{new(strings.Builder), false, false}
 
 func processData(data []byte) {
 
@@ -129,11 +130,15 @@ func processData(data []byte) {
 				lineBuilder.sbBuff.Reset()
 				lineBuilder.insideQoutes = false
 			} else {
-				if b == '"' {
+				if b == '"' && !lineBuilder.prevBSlash {
 					lineBuilder.insideQoutes = !lineBuilder.insideQoutes
 				}
 				lineBuilder.sbBuff.WriteByte(b)
-
+				if b == '\\' {
+					lineBuilder.prevBSlash = !lineBuilder.prevBSlash
+				} else {
+					lineBuilder.prevBSlash = false
+				}
 			}
 		}
 	}
