@@ -431,7 +431,9 @@ function Test() {
                 //value={table}
                 >
                   return <option value="">...</option>
-                  {tables.map((x, i) => {
+                  {tables.sort( (x,y) => {
+                    return (x.connection + '_' + x.schema + '.' + x.table > y.connection + '_' + y.schema + '.' + y.table) ? 1 : -1
+                  }).map((x, i) => {
 
                     return <option key={i} value={i}>{x.connection + '_' + x.schema + '.' + x.table}</option>
                   })
