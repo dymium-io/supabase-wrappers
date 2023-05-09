@@ -68,7 +68,8 @@ func (d *Detectors) FindSemantics(sample []Sample) error {
 		fmt.Printf("Comprehend returned error (ignored): %+v\n",err)
 	}
 
-	for _, s := range sample {
+	for k := range sample {
+		s := &sample[k]
 		if s.IsSamplable {
 			if s.Semantics == nil && s.Data != nil && len(s.Data) > 0 {
 				s.Semantics = d.matchContent(s.Data)
