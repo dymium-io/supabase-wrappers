@@ -17,12 +17,12 @@ require (
 	dymium.com/server/protocol v0.0.0-00010101000000-000000000000
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.9
-	golang.org/x/net v0.9.0
+	golang.org/x/net v0.10.0
 )
 
 require (
 	github.com/apex/log v1.9.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.255 // indirect
+	github.com/aws/aws-sdk-go v1.44.260 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

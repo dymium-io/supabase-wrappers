@@ -9,11 +9,8 @@
 "scripts": {
   "build": "yarn install && react-scripts build "
 },
-  "resolutions": {
-    "autoprefixer": "10.4.5"
-  },
   "overrides": {
-    "autoprefixer": "10.4.5"
+    "autoprefixer": "10.4.14"
   },
   "babel": {
     "presets": [
