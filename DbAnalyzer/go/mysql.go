@@ -289,7 +289,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				IsNullable:  d.isNullable,
 				Name:        d.cName,
 			}
-		case "text", "mediumtext", "longtext":
+		case "text", "mediumtext", "longtext", "tinytext":
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
