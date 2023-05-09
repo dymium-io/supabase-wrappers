@@ -114,21 +114,11 @@ exports[`add-connection 1`] = `
         role="alert"
       >
         <button
-          className="close"
+          aria-label="Close alert"
+          className="btn-close"
           onClick={[Function]}
           type="button"
-        >
-          <span
-            aria-hidden="true"
-          >
-            ×
-          </span>
-          <span
-            className="sr-only"
-          >
-            Close alert
-          </span>
-        </button>
+        />
         Error retrieving access key: 
         Unhandled request: /api/getconnectors
          
@@ -140,7 +130,7 @@ exports[`add-connection 1`] = `
           className="col-auto"
         >
           <div
-            className="mb-3 form-group"
+            className="mb-3"
           >
             <label
               className="form-label"
@@ -202,7 +192,7 @@ exports[`add-connection 1`] = `
           className="col-auto"
         >
           <div
-            className="mb-3 form-group"
+            className="mb-3"
           >
             <label
               className="form-label"
@@ -257,7 +247,7 @@ exports[`add-connection 1`] = `
           className="col-auto"
         >
           <div
-            className="mb-3 form-group"
+            className="mb-3"
           >
             <label
               className="form-label"
@@ -396,7 +386,7 @@ exports[`add-connection 1`] = `
           className="col-auto"
         >
           <div
-            className="mb-3 form-group"
+            className="mb-3"
           >
             <label
               className="form-label"
@@ -430,7 +420,7 @@ exports[`add-connection 1`] = `
           className="col-auto"
         >
           <div
-            className="mb-3 form-group"
+            className="mb-3"
           >
             <label
               className="form-label"
@@ -553,7 +543,7 @@ exports[`add-connection 1`] = `
           className="col-auto"
         >
           <div
-            className="mb-3 form-group"
+            className="mb-3"
           >
             <label
               className="form-label"
@@ -587,7 +577,7 @@ exports[`add-connection 1`] = `
           className="col-auto"
         >
           <div
-            className="mb-3 form-group"
+            className="mb-3"
           >
             <label
               className="form-label"
@@ -651,7 +641,7 @@ exports[`add-connection 1`] = `
           className="col"
         >
           <div
-            className="mb-3 form-group"
+            className="mb-3"
           >
             <label
               className="form-label"
