@@ -2,34 +2,30 @@
 
 exports[`test-sql 1`] = `
 [
-  <ul
+  <nav
     className="mb-3 text-left nav nav-tabs"
     onKeyDown={[Function]}
     role="tablist"
   >
-    <li
-      className="nav-item"
-      role="presentation"
+    <a
+      aria-controls="tabs-tabpane-test"
+      aria-selected={true}
+      className="nav-item nav-link active"
+      data-rb-event-key="test"
+      href="#"
+      id="tabs-tab-test"
+      onClick={[Function]}
+      onKeyDown={[Function]}
+      role="tab"
     >
-      <button
-        aria-controls="tabs-tabpane-test"
-        aria-selected={true}
-        className="nav-link active"
-        data-rr-ui-event-key="test"
-        disabled={false}
-        id="tabs-tab-test"
-        onClick={[Function]}
-        role="tab"
-        type="button"
-      >
-        Test SQL
-      </button>
-    </li>
-  </ul>,
+      Test SQL
+    </a>
+  </nav>,
   <div
     className="tab-content"
   >
     <div
+      aria-hidden={false}
       aria-labelledby="tabs-tab-test"
       className="fade mx-4 tab-pane active show"
       id="tabs-tabpane-test"
@@ -43,11 +39,21 @@ exports[`test-sql 1`] = `
           role="alert"
         >
           <button
-            aria-label="Close alert"
-            className="btn-close"
+            className="close"
             onClick={[Function]}
             type="button"
-          />
+          >
+            <span
+              aria-hidden="true"
+            >
+              ×
+            </span>
+            <span
+              className="sr-only"
+            >
+              Close alert
+            </span>
+          </button>
           Error creating connection: 
           Unhandled request: /api/getdatascopetables
            
@@ -152,7 +158,7 @@ exports[`test-sql 1`] = `
                 className="col-auto"
               >
                 <div
-                  className="mb-3"
+                  className="mb-3 form-group"
                 >
                   <label
                     className="form-label"
@@ -197,7 +203,7 @@ exports[`test-sql 1`] = `
                 className="col-auto"
               >
                 <div
-                  className="mb-3"
+                  className="mb-3 form-group"
                 >
                   <select
                     className="form-control form-control-sm"
