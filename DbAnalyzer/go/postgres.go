@@ -417,7 +417,7 @@ func (da *Postgres) getSample(schema, table string, sample []detect.Sample) erro
 			} else {
 				colNames.WriteString(", ")
 			}
-			colNames.WriteString(sample[k].Name)
+			colNames.WriteString(`"`+sample[k].Name+`"`)
 		}
 	}
 

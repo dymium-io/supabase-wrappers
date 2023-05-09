@@ -482,7 +482,7 @@ func (da *MySQL) getSample(schema, table string, sample []detect.Sample) error {
 			} else {
 				colNames.WriteString(", ")
 			}
-			colNames.WriteString(sample[k].Name)
+			colNames.WriteString("`"+sample[k].Name+"`")
 		}
 	}
 

@@ -477,7 +477,7 @@ func (da *SqlServer) getSample(schema, table string, sample []detect.Sample) err
 			} else {
 				colNames.WriteString(", ")
 			}
-			colNames.WriteString(sample[k].Name)
+			colNames.WriteString("["+sample[k].Name+"]")
 		}
 	}
 
