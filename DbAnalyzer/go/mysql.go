@@ -278,7 +278,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				Name:        d.cName,
 			}
 		case "varchar", "long", "long varchar":
-			if d.cCharMaxLen != nil {
+			if d.cCharMaxLen != nil && *d.cCharMaxLen <= 10485760 {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
 				t = "varchar"
@@ -290,7 +290,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				Name:        d.cName,
 			}
 		case "text", "mediumtext", "longtext", "tinytext":
-			if d.cCharMaxLen != nil {
+			if d.cCharMaxLen != nil && *d.cCharMaxLen <= 10485760 {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
 				t = "varchar"
