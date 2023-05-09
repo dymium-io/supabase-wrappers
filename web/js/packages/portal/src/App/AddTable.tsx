@@ -20,6 +20,8 @@ import * as ctypes from '@dymium/common/Types/Common'
 import * as dba from '@dymium/common/Types/DbAnalyzer'
 import * as http from '@dymium/common/Api/Http'
 
+import 'bootstrap/dist/css/bootstrap.min.css'
+
 import { PrefillUnclassified, Confidential, Secret, TopSecret } from "./Detectors"
 export const DefaultPrefills = {
     unclassified: PrefillUnclassified,

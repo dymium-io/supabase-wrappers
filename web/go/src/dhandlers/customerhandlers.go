@@ -96,7 +96,7 @@ func QueryTable(w http.ResponseWriter, r *http.Request) {
 
 	log.Infof("ID: %s", t.ConnectionId)
 	// get the connection details
-	conn, err := authentication.GetConnection(schema, t.ConnectionId)
+	conn, use_connector, err := authentication.GetConnection(schema, t.ConnectionId)
 	if(err != nil) {
 		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryTable Error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -121,12 +121,17 @@ func QueryTable(w http.ResponseWriter, r *http.Request) {
 	params := types.TableInfoParams{t.Schema, t.Table, detectors}
 
 	arequest := types.AnalyzerRequest{types.DT_TableInfo, conn, &params}
-	bconn, err := json.Marshal(arequest)
+	bconn, _ := json.Marshal(arequest)
 
 	invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 	if err != nil {
 		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryTable Error: %s", err.Error())
-		status =  types.ConnectionDetailResponse{"Error", err.Error(), nil}
+		if use_connector {
+			status = types.ConnectionDetailResponse{"Error", "Unable to establish connection. Check if the connector is running, and configured properly", nil}
+		} else {
+			status = types.ConnectionDetailResponse{"Error", "Unable to establish connection to the data source", nil}
+		}
+
 		
 	} else {
 		jsonParsed, err := gabs.ParseJSON(invokebody)
@@ -174,7 +179,7 @@ func QueryConnection(w http.ResponseWriter, r *http.Request) {
 	err := json.Unmarshal(body, &t)
 
 	// get the connection details
-	conn, err := authentication.GetConnection(schema, t.ConnectionId)
+	conn, use_connector, err := authentication.GetConnection(schema, t.ConnectionId)
 	if(err != nil) {
 		log.ErrorUserf(schema, sessions, email, groups, roles, "Api Error: %s", err.Error())
 	} else {
@@ -187,7 +192,11 @@ func QueryConnection(w http.ResponseWriter, r *http.Request) {
 	invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 	if err != nil {
 		log.ErrorUserf(schema, sessions, email, groups, roles, "Api DbAnalyzer Error: %s", err.Error())
-		status =  types.ConnectionDetailResponse{"Error", err.Error(), nil}
+		if use_connector {
+			status = types.ConnectionDetailResponse{"Error", "Unable to establish connection. Check if the connector is running, and configured properly", nil}
+		} else {
+			status = types.ConnectionDetailResponse{"Error", "Unable to establish connection to the data source", nil}
+		}
 		
 	} else {
 		jsonParsed, err := gabs.ParseJSON(invokebody)
@@ -494,7 +503,7 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 		t.Address, t.Port, err = authentication.GetConnectorAddress(schema,  t.Tunnelid)
 	}
 	if err == nil {		
-		conn, err := authentication.GetConnection(schema, *t.Id)
+		conn, use_connector, err := authentication.GetConnection(schema, *t.Id)
 		if(err != nil) {
 			log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, error %s, Id %s", err.Error(), *t.Id )
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -518,7 +527,11 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 		invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 		if err != nil {
 			log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, DbAnalyzer error: %s", err.Error())
-			status = types.OperationStatus{"Error", err.Error()}
+			if use_connector {
+				status = types.OperationStatus{"Error", "Unable to establish connection. Check if the connector is running, and configured properly"}
+			} else {
+				status = types.OperationStatus{"Error", "Unable to establish connection to the data source"}
+			}
 			
 		} else {
 			jsonParsed, err := gabs.ParseJSON(invokebody)
@@ -695,7 +708,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 
 	if(error == nil) {
 		// get the connection details
-		conn, err := authentication.GetConnection(schema, id)
+		conn, use_connector, err := authentication.GetConnection(schema, id)
 
 		if err == nil {
 			log.InfoUserf(schema, session, email, groups, roles, "Api Connection to %s created", conn.Database)
@@ -707,7 +720,11 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 			invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 			if err != nil {
 				log.ErrorUserf(schema, session, email, groups, roles, "Api DbAnalyzer Error: %s", err.Error())
-				status = types.OperationStatus{"Error", err.Error()}
+				if use_connector {
+					status = types.OperationStatus{"Error", "Unable to establish connection. Check if the connector is running, and configured properly"}
+				} else {
+					status = types.OperationStatus{"Error", "Unable to establish connection to the data source"}
+				}
 			} else {
 				jsonParsed, err := gabs.ParseJSON(invokebody)
 				if(err != nil) {
@@ -964,7 +981,7 @@ func DeleteConnection(w http.ResponseWriter, r *http.Request) {
 
 	err := json.Unmarshal(body, &t)
 	
-	conn, err := authentication.GetConnection(schema, t.Id)
+	conn, _, err := authentication.GetConnection(schema, t.Id)
 	if(err != nil) {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api Error in DeleteConnection: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)		

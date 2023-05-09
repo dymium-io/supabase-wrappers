@@ -1266,7 +1266,7 @@ func GetConnectorAddress(schema, tunnel_id string) ( string, int, error) {
 	host := os.Getenv("CONNECTOR_DOMAIN")
 	return schema + host, localport, err
 }
-func GetConnection(schema, id string) (types.ConnectionParams, error) {
+func GetConnection(schema, id string) (types.ConnectionParams, bool, error) {
 	sql := `select a.database_type,a.address,a.port,b.username,c.password,a.dbname, a.use_tls, a.use_connector,
 	coalesce(a.connector_id, ''), coalesce(a.tunnel_id, '') from 
 		`+schema+`.connections as a join `+schema+`.admincredentials as b on a.id=b.connection_id 
@@ -1283,7 +1283,7 @@ func GetConnection(schema, id string) (types.ConnectionParams, error) {
 
 	if(err != nil) {
 		log.Errorf("GetConnection error 0: %s", err.Error())
-		return con, err
+		return con, false, err
 	} else {
 		hexkey := os.Getenv( strings.ToUpper(schema) + "_KEY" )
 		plain, err := AESdecrypt(password, hexkey)
@@ -1302,14 +1302,14 @@ func GetConnection(schema, id string) (types.ConnectionParams, error) {
 			err := row.Scan(&localport) 
 			if(err != nil) {
 				log.Errorf("GetConnection error 1: %s", err.Error())
-				return con, err
+				return con, false, err
 			}
 			host := os.Getenv("CONNECTOR_DOMAIN")
 			con.Address = schema + host
 			con.Port = localport
 		}
 	}
-	return con, err
+	return con, use_connector, err
 
 }
 
