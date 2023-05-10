@@ -39,6 +39,8 @@ require (
 	github.com/aws/aws-secretsmanager-caching-go v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/smartystreets/go-aws-auth v0.0.0-20180515143844-0c1422d1fdb9 // indirect
+	github.com/tj/go-elastic v0.0.0-20171221160941-36157cbbebc2 // indirect
 	github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
 )
 
