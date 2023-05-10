@@ -153,7 +153,8 @@ function Test() {
   const [txt, setTxt] = useState<stypes.SqlTestResult>(new stypes.SqlTestResult())
   const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
   const [columns, setColumns] = useState<HeaderCell[]>([])
- 
+  const [selectedTableIndex, setSelectedTableIndex] = useState(-1)
+  
   useEffect(() => {
 
     getDatascopesForSQL(setSpinner, setAlert, setDatascopes, () => {
@@ -163,7 +164,7 @@ function Test() {
   }, [])
   useEffect(() => {
     if (selectedDatascope !== null) {
-      //setSelectedTable()
+      setSelectedTableIndex(-1)
       getTables()
     }
   }, [selectedDatascope])
@@ -225,7 +226,6 @@ function Test() {
     let js = txt
     let counter = 0
     js.columns.forEach(x => {
-      debugger
 
       let col: HeaderCell = {
 
@@ -379,7 +379,7 @@ function Test() {
   let handleSubmit = event => {
 
     getSelect()
-
+    setAlert(<></>)
     event.preventDefault();
     event.stopPropagation();
     return false
@@ -473,12 +473,13 @@ function Test() {
                   onChange={e => {
 
                     setSelectedTable(tables[parseInt(e.target.value)])
+                    setSelectedTableIndex(parseInt(e.target.value))
                     //appDispatch(setSelectedDatascopeDefault(e.target.value))
 
                   }}
-                //value={table}
+                  value={selectedTableIndex}
                 >
-                  return <option value="">...</option>
+                  return <option key={-1} value={-1}>...</option>
                   {tables.sort( (x,y) => {
                     return (x.connection + '_' + x.schema + '.' + x.table > y.connection + '_' + y.schema + '.' + y.table) ? 1 : -1
                   }).map((x, i) => {

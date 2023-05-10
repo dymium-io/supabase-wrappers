@@ -208,10 +208,11 @@ exports[`test-sql 1`] = `
                         "fontFamily": "monospace",
                       }
                     }
+                    value={-1}
                   >
                     return 
                     <option
-                      value=""
+                      value={-1}
                     >
                       ...
                     </option>
