@@ -244,7 +244,7 @@ exports[`add-datascope 1`] = `
                   />
                   <button
                     class="btn btn-dymium btn-sm"
-                    style="margin-top: 1.9em;"
+                    style="margin-top: 0.95em;"
                     type="button"
                   >
                     <i
@@ -560,7 +560,7 @@ exports[`add-datascope 1`] = `
                 />
                 <button
                   class="btn btn-dymium btn-sm"
-                  style="margin-top: 1.9em;"
+                  style="margin-top: 0.95em;"
                   type="button"
                 >
                   <i
@@ -1033,7 +1033,7 @@ exports[`add-datascope 2`] = `
                   />
                   <button
                     class="btn btn-dymium btn-sm"
-                    style="margin-top: 1.9em;"
+                    style="margin-top: 0.95em;"
                     type="button"
                   >
                     <i
@@ -1449,7 +1449,7 @@ exports[`add-datascope 2`] = `
                 />
                 <button
                   class="btn btn-dymium btn-sm"
-                  style="margin-top: 1.9em;"
+                  style="margin-top: 0.95em;"
                   type="button"
                 >
                   <i
@@ -2490,7 +2490,7 @@ exports[`add-datascope 3`] = `
                   />
                   <button
                     class="btn btn-dymium btn-sm"
-                    style="margin-top: 1.9em;"
+                    style="margin-top: 0.95em;"
                     type="button"
                   >
                     <i
@@ -3474,7 +3474,7 @@ exports[`add-datascope 3`] = `
                 />
                 <button
                   class="btn btn-dymium btn-sm"
-                  style="margin-top: 1.9em;"
+                  style="margin-top: 0.95em;"
                   type="button"
                 >
                   <i
@@ -4514,7 +4514,7 @@ exports[`add-datascope 4`] = `
                   />
                   <button
                     class="btn btn-dymium btn-sm"
-                    style="margin-top: 1.9em;"
+                    style="margin-top: 0.95em;"
                     type="button"
                   >
                     <i
@@ -5497,7 +5497,7 @@ exports[`add-datascope 4`] = `
                 />
                 <button
                   class="btn btn-dymium btn-sm"
-                  style="margin-top: 1.9em;"
+                  style="margin-top: 0.95em;"
                   type="button"
                 >
                   <i
@@ -6548,7 +6548,7 @@ exports[`add-datascope 5`] = `
                   />
                   <button
                     class="btn btn-dymium btn-sm"
-                    style="margin-top: 1.9em;"
+                    style="margin-top: 0.95em;"
                     type="button"
                   >
                     <i
@@ -7542,7 +7542,7 @@ exports[`add-datascope 5`] = `
                 />
                 <button
                   class="btn btn-dymium btn-sm"
-                  style="margin-top: 1.9em;"
+                  style="margin-top: 0.95em;"
                   type="button"
                 >
                   <i
