@@ -1,13 +1,17 @@
 package log
 
 import (
+	"github.com/apex/log/handlers/es"
 	"github.com/apex/log/handlers/text"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/json"
 	"github.com/apex/log/handlers/kinesis"
 	"github.com/apex/log/handlers/multi"
+	"github.com/tj/go-elastic"
 )
 
 var gComponent string
@@ -374,7 +378,29 @@ func Init(component string) {
 	//log.SetHandler(json.New(os.Stderr))
 	_, ok := os.LookupEnv("LOCAL_ENVIRONMENT")
 	if ok || component == "connector" { // this is a hack
-		log.SetHandler(text.New(os.Stderr))
+		searchUrl, ok := os.LookupEnv("LOCAL_SEARCH")
+		if ok && len(searchUrl) > 0 {
+			// TODO - we should decide how we are going to connect/auth users for local search
+			user, _ := os.LookupEnv("LOCAL_SEARCH_USER")
+			passwd, _ := os.LookupEnv("LOCAL_SEARCH_PASSWD")
+			esClient := elastic.New(searchUrl)
+			esClient.SetAuthCredentials(user, passwd)
+			esClient.HTTPClient = &http.Client{
+				Timeout: 5 * time.Second,
+			}
+
+			esh := es.New(&es.Config{
+				Client:     esClient,
+				BufferSize: 10,
+				Format:     "devlogs-06-01-02",
+			})
+			log.SetHandler(multi.New(
+				esh,
+				json.New(os.Stderr),
+			))
+		} else {
+			log.SetHandler(text.New(os.Stderr))
+		}
 	} else {
 		log.SetHandler(multi.New(
 			json.New(os.Stderr),
