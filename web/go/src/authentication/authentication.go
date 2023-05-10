@@ -1770,8 +1770,8 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 	records := dscope.Records
 	for _, r := range records {
 
-		sql = `insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col, dflt, is_nullable) 
-		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);`
+		sql = `insert into ` + schema + `.tables(datascope_id, col, connection_id, schem, tabl, typ, semantics, action, position, ref_schem, ref_tabl, ref_col, dflt, is_nullable, possible_actions) 
+		values($1, $2, (select id from ` + schema + `.connections where name=$3), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`
 
 		var rs, rt, rc string
 		if r.Reference != nil {
@@ -1779,7 +1779,7 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 			rt = r.Reference.Table
 			rc = r.Reference.Column
 		}
-		_, err = tx.ExecContext(ctx, sql, ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable)
+		_, err = tx.ExecContext(ctx, sql, ds_id, r.Col, r.Connection, r.Schema, r.Table, r.Typ, r.Semantics, r.Action, r.Position, rs, rt, rc, r.Dflt, r.Isnullable, pq.Array(r.PossibleActions))
 		if err != nil {
 			tx.Rollback()
 			log.Errorf("SaveDatascope error 4: %s", err.Error())

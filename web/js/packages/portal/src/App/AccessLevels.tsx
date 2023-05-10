@@ -33,7 +33,7 @@ export default function AccessLevels() {
   const [alert, setAlert] = useState<JSX.Element>(<></>)
 
   const [name, setName] = useState("")
-  const [level, setLevel] = useState("")
+  const [level, setLevel] = useState("allow")
   const [actions, setActions] = useState<types.DataAction[]>([])
   const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
 
@@ -246,6 +246,18 @@ export default function AccessLevels() {
       default:
         v.handling = 'block'
         break
+    }
+    for(let i = 0; i < actions.length; i++) {
+      if(actions[i].role === v.role) {
+        setAlert(
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>Access level already exists</Alert>
+        )
+        event.preventDefault();
+        //setValidated(false)
+        event.stopPropagation();
+        setName("")
+        return
+      }
     }
     actions.push(v)
     setActions([...actions])
