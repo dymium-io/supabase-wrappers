@@ -59,7 +59,7 @@ function Downloads(props) {
         </div>
         <div className="viewport">
             <div>For x64 Linux:</div>
-            <a href="/meshconnector_linux_amd64.tar.gz" download="meshconnector.tar.gz"> <i className="fab fa-linux mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
+            <a href="/meshconnector_linux_amd64.tgz" download="meshconnector.tar.gz"> <i className="fab fa-linux mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
             <div>
 
                 <div style={{ display: "flex" }}>
@@ -73,7 +73,7 @@ function Downloads(props) {
 
         <div className="viewport">
             <div>For Mac OS X:</div>
-            <a href="/meshconnector_darwin_amd64.tar.gz" download="meshconnector.tar.gz"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
+            <a href="/meshconnector_darwin_amd64.tgz" download="meshconnector.tar.gz"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
             <div>
 
                 <div style={{ display: "flex" }}>

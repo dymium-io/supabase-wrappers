@@ -101,7 +101,7 @@ export function AddDatascope(props) {
                     let ob: types.DatascopeRecord = types.DatascopeRecord.fromJson({
                         connection: st.connection, schema: st.schema, table: st.table,
                         typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
-                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable
+                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isNullable
                     })
                     retarray.push(ob)
                 })

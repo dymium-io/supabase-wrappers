@@ -76,11 +76,13 @@ function getDatascopesForSQL(setSpinner, setAlert, setDatascopes, onSuccess) {
 type HeaderCell = {
   dataField: string,
   text: string,
+  hidden: boolean,
   headerStyle: any,
   formatter: any,
-  headerFormatter: any
+  headerFormatter: any,
+  isDummyField: boolean
 }
-let columns: HeaderCell[] = []
+
 
 
 function IsImage(text): string {
@@ -150,7 +152,8 @@ function Test() {
   const [data, setData] = useState<{}[]>([])
   const [txt, setTxt] = useState<stypes.SqlTestResult>(new stypes.SqlTestResult())
   const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
-
+  const [columns, setColumns] = useState<HeaderCell[]>([])
+ 
   useEffect(() => {
 
     getDatascopesForSQL(setSpinner, setAlert, setDatascopes, () => {
@@ -217,17 +220,25 @@ function Test() {
       })
   }
   useEffect(() => {
-    columns = []
+    let columns:HeaderCell[] = []
     let data: {}[] = []
     let js = txt
+    let counter = 0
     js.columns.forEach(x => {
+      debugger
 
       let col: HeaderCell = {
+
         dataField: x,
         text: x,
+        hidden: false,
+        isDummyField: false,
         headerStyle: { minWidth: '200px' },
         formatter: (cell, row) => {
 
+          if(cell === undefined) {
+            return <div></div>
+          }
 
           let b = cell.substring(1, cell.length)
           if (cell[0] === '1') {
@@ -286,15 +297,31 @@ function Test() {
       }
       columns.push(col)
     })
+    let idcol = {
+      dataField: "dymiumid412354",
+      hidden: true,
+      text: "",
+      isDummyField: true,
+      headerStyle: { minWidth: '200px' },
+      formatter: (cell, row) => {
+        return <div></div>
+      },
+      headerFormatter: (column, colIndex) => {
+        return <div></div>
+      }
+      
+    }
+    columns.push(idcol)
+
     txt.records.forEach(x => {
       let a = {}
-      for (let i = 0; i < columns.length; i++) {
+      for (let i = 0; i < columns.length - 1; i++) {
         a[columns[i].dataField] = x[i]
       }
       data.push(a)
-
-      setData(data)
     })
+    setData(data)
+    setColumns(columns)
 
   }, [txt])
 
@@ -303,13 +330,6 @@ function Test() {
       setTxt(_txt)
     }
 
-    /*    
-        let mock = `{"columns":["id","name","primary_function","contractor","thrust","wingspan","length","height","weight","max_takeoff_weight","fuel_capacity","payload","speed","range_","ceiling","armament"],"records":[["67592d50-bbfe-402a-8781-94c9409033a7","F16","multirole fighter","Lockheed Martin","27000","33","50","16","19700","37500","7000","5x1258 bbmos, 7xPYD9, 1xXGL590, 1x7214surl_tnnxs","1500","2000","50000","xxx"]]}`
-        processData( JSON.parse(mock))
-        return false
-    */
-
-    //let jj = {database: selectedTable.database, schema: selectedTable.schema, table: selectedTable.table}
     if (selectedTable == null || selectedTable == undefined) {
       return
     }
@@ -364,6 +384,34 @@ function Test() {
     event.stopPropagation();
     return false
   }
+  const CustomToggleList = ({
+    columns,
+    onColumnToggle,
+    toggles
+  }) => (
+    <div className="btn-group btn-test  btn-sm btn-group-toggle btn-group-horizontal" data-toggle="buttons">
+      {
+        columns.slice(0, -1)
+          .map(column => ({
+            ...column,
+            toggle: toggles[column.dataField]
+          }))
+          .map(column => (
+            <button
+              type="button"
+              key={ column.dataField }
+              className={ `btn btn-test  btn-sm ${column.toggle ? 'active' : ''}` }
+              data-toggle="button"
+              aria-pressed={ column.toggle ? 'true' : 'false' }
+              onClick={ () => onColumnToggle(column.dataField) }
+            >
+              { column.text }
+            </button>
+          ))
+      }
+    </div>
+  );
+
   return (
     <div className=" text-left">
       {alert}
@@ -460,18 +508,16 @@ function Test() {
         {data.length > 0 &&
           <div id="testtable" className="mb-5 mt-3">
             <ToolkitProvider
-              keyField={columns[0].dataField}
               columns={columns}
-
               id="scaledtable"
               data={data}
-
+              keyField="dymiumid412354"
               columnToggle
             >
               {
                 props => (
                   <div>
-                    <ColumnToggle.ToggleList
+                    <CustomToggleList
                       contextual="success"
                       striped
                       btnClassName="btn-test btn-sm"
@@ -479,9 +525,11 @@ function Test() {
                     />
                     <hr />
                     <BootstrapTable
+                      keyField="dymiumid412354"
                       condensed
                       striped bootstrap4
                       {...props.baseProps}
+                      hiddenColumns={['id']} 
                     />
                   </div>
                 )

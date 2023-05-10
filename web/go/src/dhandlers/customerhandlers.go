@@ -1678,7 +1678,8 @@ func GetImages(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// file exists
 		if strings.HasPrefix(r.URL.Path, "/static") || strings.HasSuffix(r.URL.Path, ".png") || strings.HasSuffix(r.URL.Path, "*.gif") ||
-			strings.HasSuffix(r.URL.Path, ".jpg") || strings.HasSuffix(r.URL.Path, ".svg") {
+			strings.HasSuffix(r.URL.Path, ".jpg") || strings.HasSuffix(r.URL.Path, ".svg") || 
+			strings.HasSuffix(r.URL.Path, ".tgz") || strings.HasSuffix(r.URL.Path, ".zip") {
 
 			w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
 			w.Header().Set("x-content-type-options", "nosniff")

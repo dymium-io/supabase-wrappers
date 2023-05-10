@@ -392,7 +392,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                     </Form.Group>
                     <Form.Group>
                         <Form.Label ></Form.Label>
-                        <Button onClick={onAddConnection} variant="dymium" style={{ marginTop: '1.9em' }} size="sm"><i className="fa-solid fa-database mr-2"></i>Link Connection</Button>
+                        <Button onClick={onAddConnection} variant="dymium" style={{ marginTop: '0.95em' }} size="sm"><i className="fa-solid fa-database mr-2"></i>Link Connection</Button>
                     </Form.Group>
                 </Col>
                 <Col className="text-left">
