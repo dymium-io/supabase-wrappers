@@ -3,14 +3,10 @@
 package es
 
 import (
-	"io"
+	"github.com/apex/log"
 	stdlog "log"
 	"sync"
 	"time"
-
-	"github.com/tj/go-elastic/batch"
-
-	"github.com/apex/log"
 )
 
 // TODO(tj): allow dumping logs to stderr on timeout
@@ -18,10 +14,10 @@ import (
 // TODO(tj): allow interval flushes
 // TODO(tj): allow explicit Flush() (for Lambda where you have to flush at the end of function)
 
-// Elasticsearch interface.
-type Elasticsearch interface {
-	Bulk(io.Reader) error
-}
+//// Elasticsearch interface.
+//type Elasticsearch interface {
+//	Bulk(io.Reader) error
+//}
 
 // Config for handler.
 type Config struct {
@@ -46,7 +42,7 @@ type Handler struct {
 	*Config
 
 	mu    sync.Mutex
-	batch *batch.Batch
+	batch *Batch
 }
 
 // New handler with BufferSize
@@ -63,10 +59,10 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 	defer h.mu.Unlock()
 
 	if h.batch == nil {
-		h.batch = &batch.Batch{
+		h.batch = &Batch{
 			Index:   time.Now().Format(h.Config.Format),
 			Elastic: h.Client,
-			Type:    "log",
+			//Type:    "log",
 		}
 	}
 
@@ -81,7 +77,7 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 }
 
 // flush the given `batch` asynchronously.
-func (h *Handler) flush(batch *batch.Batch) {
+func (h *Handler) flush(batch *Batch) {
 	size := batch.Size()
 	start := time.Now()
 	stdlog.Printf("log/elastic: flushing %d logs", size)
