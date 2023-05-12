@@ -296,8 +296,12 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                 let { schema, table, refby } = references[key]
                 let r = <div className="m-1">Table {refby} refers to {schema}.{table}. <Button onClick={
                     e => {
-                        if (db.id !== null)
+                        if (db.id !== null) {
+                            let c = props.nameToConnection[db.name]
+                            editedConnection.current = c.name
+                            debugger
                             props.AddNewTable(db.id, props.nameToConnection[db.name].dbtype, schema, table)
+                        }
                     }
 
                 } size="sm" style={{ marginTop: "-2px" }} variant="dymium">Click to link {schema}.{table}</Button></div>

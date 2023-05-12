@@ -11,8 +11,7 @@ require (
 )
 
 require (
-	github.com/aws/aws-sdk-go v1.44.255 // indirect
-	github.com/aws/aws-secretsmanager-caching-go v1.1.0 // indirect
+	github.com/aws/aws-sdk-go v1.44.260 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 )
 
