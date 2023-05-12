@@ -1,6 +1,7 @@
 package log
 
 import (
+	"crypto/tls"
 	"github.com/apex/log/handlers/es"
 	"github.com/apex/log/handlers/text"
 	"net/http"
@@ -385,8 +386,21 @@ func Init(component string) {
 			passwd, _ := os.LookupEnv("LOCAL_SEARCH_PASSWD")
 			esClient := elastic.New(searchUrl)
 			esClient.SetAuthCredentials(user, passwd)
+			defaultTransport := http.DefaultTransport.(*http.Transport)
+
+			// Create new Transport that ignores self-signed SSL
+			customTransport := &http.Transport{
+				Proxy:                 defaultTransport.Proxy,
+				DialContext:           defaultTransport.DialContext,
+				MaxIdleConns:          defaultTransport.MaxIdleConns,
+				IdleConnTimeout:       defaultTransport.IdleConnTimeout,
+				ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
+				TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout,
+				TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+			}
 			esClient.HTTPClient = &http.Client{
-				Timeout: 5 * time.Second,
+				Timeout:   5 * time.Second,
+				Transport: customTransport,
 			}
 
 			esh := es.New(&es.Config{
