@@ -315,8 +315,10 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				Name:        d.cName,
 			}
 		case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
-			t = "bytea"
-			possibleActions = allowable
+			// t = "bytea"
+			// possibleActions = allowable
+			t = d.cTyp
+			possibleActions = blocked
 			sample[k] = detect.Sample{
 				IsSamplable: false,
 				IsNullable:  d.isNullable,
@@ -348,7 +350,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 					IsNullable:  d.isNullable,
 					Name:        d.cName,
 				}
-			case strings.HasPrefix(d.cTyp, "float"):
+			case strings.HasPrefix(d.cTyp, "float") || strings.HasPrefix(d.cTyp, "double"):
 				if d.cPrecision != nil && *d.cPrecision <= 24 {
 					t = "real"
 				} else {
