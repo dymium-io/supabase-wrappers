@@ -319,6 +319,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 			// possibleActions = allowable
 			t = d.cTyp
 			possibleActions = blocked
+			sem = utils.Unsupported
 			sample[k] = detect.Sample{
 				IsSamplable: false,
 				IsNullable:  d.isNullable,
