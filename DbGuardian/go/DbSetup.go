@@ -105,6 +105,8 @@ func configureDatabase(db *sql.DB,
 	credentials map[string]types.Credential,
 	createDymiumTables bool) error {
 
+	// log.Printf("configureDatabase: datascope=%+v connections=%+v\n",datascope,connections)
+
 	localUser := fmt.Sprintf(`_%x_`, md5.Sum([]byte(datascope.Name+"_dymium")))
 
 	connectionTypes := map[types.ConnectionType]struct{}{}
@@ -371,11 +373,11 @@ func configureDatabase(db *sql.DB,
 						strings.HasPrefix(c.Typ, "interval"):
 						rtyp = INTERVAL
 					}
-					defs = append(defs, fmt.Sprintf("  %q %s OPTIONS( redact '%d' )%s",
-						strings.ToLower(c.Name), c.Typ, int(ract)|(rnul<<2)|(int(rtyp)<<3), notNull))
+					defs = append(defs, fmt.Sprintf("  %s %s OPTIONS( redact '%d' )%s",
+						PostgresEscape(c.Name), c.Typ,int(ract)|(rnul<<2)|(int(rtyp)<<3),notNull))
 				}
 			}
-			e := "CREATE FOREIGN TABLE %q.%q (\n" + strings.Join(defs, ",\n") + "\n)\n" +
+			e := "CREATE FOREIGN TABLE %s.%s (\n" + strings.Join(defs, ",\n") + "\n)\n" +
 				"  SERVER %s_server OPTIONS(%s)"
 
 			con := connections[t.Connection]
@@ -389,7 +391,7 @@ func configureDatabase(db *sql.DB,
 				}
 			}
 			for _, sch := range schs {
-				if err := exec(fmt.Sprintf(e, strings.ToLower(sch), strings.ToLower(t.Name), con.Name, opts.table(s.Name, t.Name))); err != nil {
+				if err := exec(fmt.Sprintf(e, PostgresEscape(sch), PostgresEscape(t.Name), con.Name, opts.table(s.Name, t.Name))); err != nil {
 					return err
 				}
 			}

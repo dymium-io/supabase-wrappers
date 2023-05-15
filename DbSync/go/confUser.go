@@ -22,10 +22,10 @@ func confUser(
 		return empty, fmt.Errorf("User conf is not defined")
 	}
 
-	log.Printf("confUser: { Name: %s, Datascopes: %v }\n",
-		userCnf.Name, userCnf.Datascopes)
-	log.Printf("guardianCnf: { Address: %v:%d, Database: %s}\n",
-		cnf.GuardianAddress, cnf.GuardianPort, cnf.GuardianDatabase)
+	// log.Printf("confUser: { Name: %s, Datascopes: %v }\n",
+	// userCnf.Name, userCnf.Datascopes)
+	// log.Printf("guardianCnf: { Address: %v:%d, Database: %s}\n",
+	//	cnf.GuardianAddress, cnf.GuardianPort, cnf.GuardianDatabase)
 
 	sslmode_ := "disable"
 	if *cnf.GuardianTls {
@@ -98,10 +98,9 @@ func confUser(
 					toDelete = append(toDelete, d)
 				}
 				if k < len(ds) {
-					log.Println("k=", k, "len(ds)=", len(ds), ds[k:])
 					toAdd = append(toAdd, ds[k:]...)
 				}
-				log.Println("toAdd:", toAdd, "toDelete:", toDelete)
+				// log.Println("toAdd:", toAdd, "toDelete:", toDelete)
 				if !userExists {
 					_, err = db.Exec(fmt.Sprintf("CREATE USER %s WITH ENCRYPTED PASSWORD '%s'", userCnf.Name, userCnf.Password))
 					if err != nil {
