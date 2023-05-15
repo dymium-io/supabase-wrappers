@@ -38,6 +38,8 @@
 #include "utils/lsyscache.h"
 #include "utils/syscache.h"
 
+#define MYSQL_MAX_BLOB_WIDTH 16777216
+
 #define DATE_MYSQL_PG(x, y) \
 do { \
 x->year = y.tm_year; \
@@ -464,9 +466,9 @@ mysql_bind_result(Oid pgtyp, int pgtypmod, MYSQL_FIELD *field,
 		case BYTEAOID:
 			mbind->buffer_type = MYSQL_TYPE_BLOB;
 			/* Leave room at front for bytea buffer length prefix */
-			column->value = (Datum) palloc0(MAX_BLOB_WIDTH + VARHDRSZ);
+			column->value = (Datum) palloc0(MYSQL_MAX_BLOB_WIDTH + VARHDRSZ);
 			mbind->buffer = VARDATA(column->value);
-			mbind->buffer_length = MAX_BLOB_WIDTH;
+			mbind->buffer_length = MYSQL_MAX_BLOB_WIDTH;
 			break;
 		case TEXTOID:
 			mbind->buffer_type = MYSQL_TYPE_VAR_STRING;

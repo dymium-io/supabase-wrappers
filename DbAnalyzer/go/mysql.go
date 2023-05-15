@@ -315,11 +315,11 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				Name:        d.cName,
 			}
 		case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
-			// t = "bytea"
-			// possibleActions = allowable
-			t = d.cTyp
-			possibleActions = blocked
-			sem = utils.Unsupported
+			t = "bytea"
+			possibleActions = allowable
+			// t = d.cTyp
+			// possibleActions = blocked
+			// sem = utils.Unsupported
 			sample[k] = detect.Sample{
 				IsSamplable: false,
 				IsNullable:  d.isNullable,
