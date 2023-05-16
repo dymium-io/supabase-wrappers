@@ -31,4 +31,5 @@ docker run --rm  --name ${CUSTOMER}.guardian.local     \
        -e LOCAL_SEARCH_USER=$LOCAL_SEARCH_USER \
        -e LOCAL_SEARCH_PASSWD=$LOCAL_SEARCH_PASSWD         \
        -e AWS_LAMBDAS='{ "DbSync": "db-sync.dymium.local:8080" }' \
+       -e NO_LOG_COLLECTOR=$NO_LOG_COLLECTOR \
        data-guardian
