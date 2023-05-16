@@ -1599,6 +1599,69 @@ export class RequestById {
   }
 }
 
+export class SetConnectorStatus {
+  private '_customer': string
+  private '_key': string
+  private '_secret': string
+  private '_status': string
+
+  constructor() {
+    this['_customer'] = ''
+    this['_key'] = ''
+    this['_secret'] = ''
+    this['_status'] = ''
+  }
+  get customer(): string { return this['_customer'] }
+  set customer(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_customer'])) {
+      setDirtyFlag()
+      this['_customer'] = __v__
+    }
+  }
+  get key(): string { return this['_key'] }
+  set key(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_key'])) {
+      setDirtyFlag()
+      this['_key'] = __v__
+    }
+  }
+  get secret(): string { return this['_secret'] }
+  set secret(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_secret'])) {
+      setDirtyFlag()
+      this['_secret'] = __v__
+    }
+  }
+  get status(): string { return this['_status'] }
+  set status(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_status'])) {
+      setDirtyFlag()
+      this['_status'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+
+  static fromJson(__a__: any): SetConnectorStatus {
+    disableDF()
+    let cls = new SetConnectorStatus()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.customer = __a__['customer']
+       cls.key = __a__['key']
+       cls.secret = __a__['secret']
+       cls.status = __a__['status']
+    } else {
+       doAlert(`SetConnectorStatus: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class TableQuery {
   private '_connectionId': string
   private '_schema': string

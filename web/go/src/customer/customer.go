@@ -70,7 +70,8 @@ func CustomerHandlers(p *mux.Router) {
 
 	nonauthenticated.HandleFunc("/api/datascopehelp", dhandlers.DatascopeHelp).Queries("token", "{token}", "port", "{port}").Methods("GET")
 	nonauthenticated.HandleFunc("/api/getconnectorcertificate",  dhandlers.GetConnectorCertificate).Methods("POST").Name("getconnectorcertificate")
-
+	nonauthenticated.HandleFunc("/api/connectorstatus",  dhandlers.SetConnectorStatus).Methods("POST").Name("connectorstatus")
+	
 	
 	
 	// For React to work properly, ensure that the URLs going into the React router return index.html

@@ -48,6 +48,7 @@ func main() {
 		go health()
 	}
 	sport := os.Getenv("PORT")
+	
 	if sport != "" {
 		port, _ = strconv.Atoi(sport)
 	}

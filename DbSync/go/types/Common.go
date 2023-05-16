@@ -195,6 +195,13 @@ type RequestById struct {
    Id string `json:"id"`
 }
 
+type SetConnectorStatus struct {
+   Customer string `json:"customer"`
+   Key string `json:"key"`
+   Secret string `json:"secret"`
+   Status string `json:"status"`
+}
+
 type TableQuery struct {
    ConnectionId string `json:"connectionId"`
    Schema string `json:"schema"`

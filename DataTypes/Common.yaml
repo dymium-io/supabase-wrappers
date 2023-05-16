@@ -194,3 +194,9 @@ DataPolicy:
 # GUI handling
 AccessLevels:
   - levels: <|DataAction|>
+
+SetConnectorStatus:
+  - customer: string
+  - key: string
+  - secret: string
+  - status: string
