@@ -128,6 +128,14 @@ function ConnectionForm(props) {
                 tunnel[i].port = n
                 props.setTunnel(tunnel)
             }
+            let graphStatus = () => {
+                switch(props.tunnel[i].status) {
+                    case "active" : return <i className="fa-solid fa-thumbs-up "></i>
+                    case "configured": return <i className="fa-solid fa-thumbs-down "></i>
+                    default: return <i className="fa-solid fa-gears "></i>
+
+                } 
+            }
             out.push(
                 <Row key={"tunnel" + i} className={i % 2 ? "palegray" : "palergray"}>
                     <Col >
@@ -178,8 +186,7 @@ function ConnectionForm(props) {
                     </Col>
                     <Col xs="auto">
                         <div>Status:</div>
-                        <div style={{ marginTop: '0.3em' }} className="thickblue">{props.tunnel[i].status !== "active" ?
-                            <i className="fa-solid fa-gears "></i> : <i className="fa-solid fa-thumbs-up "></i>} {tun.humanReadableTunnelStatus(props.tunnel[i].status)}</div>
+                        <div style={{ marginTop: '0.3em' }} className="thickblue">{graphStatus()} {tun.humanReadableTunnelStatus(props.tunnel[i].status)}</div>
                     </Col>
                     <Col xs="auto" as="div" className="text-right mx-0 mt-0 px-1 aligh-top">
                         <i hidden={i !== props.tunnel.length - 1} className="far fahover fa-plus-square aligh-top fa-1x mr-1 plusminus" onClick={addTunnel} ></i>

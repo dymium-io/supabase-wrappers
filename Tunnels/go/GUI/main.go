@@ -72,7 +72,7 @@ func (g *Gui) LaunchDymium() error {
 	}
 	g.intro.SetText("")
 	cmd := g.Launch(cmdslice)
-
+	g.checkbox.Disable()
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	//d, _ := os.Getwd()
@@ -115,6 +115,7 @@ func (g *Gui) LaunchDymium() error {
 }
 func (g *Gui) SetInactive() {
 	g.button.SetText("Connect")
+	g.checkbox.Enable()
 	g.active = false
 	if(g.pid != nil) {
 		g.pid.Kill()
@@ -233,7 +234,7 @@ func (g *Gui) Run() {
     w.SetContent(g.split)
 
     w.Resize(fyne.NewSize(660, 300))
-	w.SetFixedSize(true)
+	//w.SetFixedSize(true)
     w.ShowAndRun()
 	if(g.pid != nil) {
 		g.pid.Kill()

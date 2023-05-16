@@ -45,6 +45,12 @@ func AuthMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// do stuff
 		token := common.TokenFromHTTPRequest(r)
+		if token == "" {
+			rr := "Auth Error: absent token"
+			log.Errorf(rr)
+			http.Error(w, rr, http.StatusForbidden)
+			return			
+		}
 		schema, roles, groups, email, orgid, session, error := authentication.GetSchemaRolesFromToken(token)
 
 		if error != nil {
@@ -522,17 +528,18 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 		} 
 		arequest := types.AnalyzerRequest{Dtype: types.DT_Test, Connection: conn}
 
-
 		bconn, err := json.Marshal(arequest)
 		invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 		if err != nil {
 			log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, DbAnalyzer error: %s", err.Error())
+			var rr string
 			if use_connector {
-				status = types.OperationStatus{"Error", "Unable to establish connection. Check if the connector is running, and configured properly"}
+				rr = "Unable to establish connection. Check if the connector is running, and configured properly"
 			} else {
-				status = types.OperationStatus{"Error", "Unable to establish connection to the data source"}
+				rr = "Unable to establish connection to the data source"
 			}
-			
+			http.Error(w, rr, http.StatusInternalServerError)
+			return			
 		} else {
 			jsonParsed, err := gabs.ParseJSON(invokebody)
 			if(err != nil) {
@@ -541,21 +548,10 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 			value, ok := jsonParsed.Path("Errormessage").Data().(string)
 			if(ok) {
 				rr := fmt.Sprintf("UpdateConnection, Error in Invoke return: %s", value)
-				status = types.OperationStatus{"Error", rr}
 				log.ErrorUserf(schema, session, email, groups, roles, "Api %s", rr)
-			}
-		}
-		if(status.Status == "Error") {
-			js, err := json.Marshal(status) //
-			if err != nil {
-				log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, Error: %s", err.Error())
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, rr, http.StatusInternalServerError)
 				return
 			}
-			w.Header().Set("Cache-Control", common.Nocache)
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(js)
-			return
 		}
 	}
 
@@ -563,8 +559,8 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 
 	if(error != nil) {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, error: %s", error.Error())
-		status = types.OperationStatus{"Error", error.Error()}
 		http.Error(w, error.Error(), http.StatusInternalServerError)
+		return
 	} else {
 		log.InfoUserf(schema, session, email, groups, roles, "Api UpdateConnection, success")
 		status = types.OperationStatus{"OK", "Connection updated"}
@@ -1592,6 +1588,37 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))
+}
+
+// check the secret here!!!
+func SetConnectorStatus(w http.ResponseWriter, r *http.Request) {
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	var t types.SetConnectorStatus
+
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		log.Errorf("Api SetConnectorStatus, error unmarshaling cert: %s", err.Error())
+		http.Error(w, "Invalid request", http.StatusInternalServerError)
+		return
+	}
+	schema := t.Customer
+	key := t.Key
+	secret := t.Secret
+
+	aerr := authentication.CheckConnectorAuth(schema, key, secret)
+	if aerr != nil {
+		http.Error(w, aerr.Error(), http.StatusInternalServerError)
+		return
+	}
+	status := t.Status
+
+	authentication.SetConnectorStatus(schema, status)
+	log.Info("Api SetConnectorStatus, success")
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write( []byte("status updated"))
 }
 
 

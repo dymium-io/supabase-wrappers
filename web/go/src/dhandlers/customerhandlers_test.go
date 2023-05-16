@@ -4,22 +4,25 @@
 //
 package dhandlers
 
-import "dymium.com/dymium/authentication"
-import "dymium.com/dymium/types"
-import "dymium.com/dymium/log"
-import "os"
-import "os/exec"
-import "testing"
-import "path/filepath"
-import "net/http"
-import "fmt"
-import "io"
-import "net/http/httptest"
-import "bytes"
-import "io/ioutil"
-import "encoding/json"
-import "github.com/stretchr/testify/assert"
-import "github.com/stretchr/testify/require"
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"testing"
+
+	"dymium.com/dymium/authentication"
+	"dymium.com/dymium/log"
+	"dymium.com/dymium/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
 
 var status types.OperationStatus
 var adventureworks = `{"name":"adventureworks","dbtype":"PostgreSQL","address":"docker.for.mac.host.internal","port":5432,"dbname":"Adventureworks","useTLS":false,"username":"postgres","password":"$kdvnMsp4o","description":"test data base from Microsoft"}`
@@ -41,9 +44,9 @@ var groupmapping_3 = `{"dymiumgroup":"foo","directorygroup":"bar","comments":"Ad
 var savegroups_1 = `{"name":"test1", "groups":[{"id":"ae5631a4-5947-42e7-8db9-22b5d2d6f22a","name":"foo"},{"id":"54688195-e574-462d-9c1b-267e9695a178","name":"dada"}]}`
 var savegroups_2 = `{"name":"test2","groups":[{"id":"ae5631a4-5947-42e7-8db9-22b5d2d6f22a","name":"foo"}]}`
 
-func TestApiHandlers(t *testing.T){
-///------------------ db setup start ------------------------	
-	func () {
+func TestApiHandlers(t *testing.T) {
+	///------------------ db setup start ------------------------
+	func() {
 		dbhost := os.Getenv("DATABASE_HOST")
 		dbpassword := os.Getenv("DATABASE_PASSWORD")
 		dbport := os.Getenv("DATABASE_PORT")
@@ -51,66 +54,65 @@ func TestApiHandlers(t *testing.T){
 		dbadminuser := os.Getenv("DATABASE_ADMIN_USER")
 		dbadminpassword := os.Getenv("DATABASE_ADMIN_PASSWORD")
 
-		dbtls  := os.Getenv("DATABASE_TLS")
-		if(dbtls == "")	{
+		dbtls := os.Getenv("DATABASE_TLS")
+		if dbtls == "" {
 			dbtls = "disable"
 		}
-	
+
 		log.Init("webserver")
 		err := authentication.Init(dbhost, dbport, dbadminuser, dbadminpassword, "postgres", dbtls)
-		if(err != nil) {
-			t.Errorf("Error: %s\n", err.Error() )
+		if err != nil {
+			t.Errorf("Error: %s\n", err.Error())
 			return
 		}
 		db := authentication.GetDB()
 
 		sql := `drop database  if exists test ;`
-		_, err =  db.Exec(sql)
-		if(err != nil) {
-			t.Errorf("Error dropping database: %s\n", err.Error() )
+		_, err = db.Exec(sql)
+		if err != nil {
+			t.Errorf("Error dropping database: %s\n", err.Error())
 			return
 		}
 
-		sql = `create database test owner `+dbuser+`;`
-		_, err =  db.Exec(sql)
-		if(err != nil) {
-			t.Errorf("Error creating database: %s\n", err.Error() )
+		sql = `create database test owner ` + dbuser + `;`
+		_, err = db.Exec(sql)
+		if err != nil {
+			t.Errorf("Error creating database: %s\n", err.Error())
 			return
 		}
 
-		sql = `grant all on database test to `+dbuser+`;`
-		_, err =  db.Exec(sql)
-		if(err != nil) {
-			t.Errorf("Error grantin all on database: %s\n", err.Error() )
+		sql = `grant all on database test to ` + dbuser + `;`
+		_, err = db.Exec(sql)
+		if err != nil {
+			t.Errorf("Error grantin all on database: %s\n", err.Error())
 			return
 		}
 		err = db.Close()
 
-
 		// ----------------------------- open test -----------------------------------
 		err = authentication.Init(dbhost, dbport, dbadminuser, dbadminpassword, "test", dbtls)
-		if(err != nil) {
-			t.Errorf("Error: %s\n", err.Error() )
+		if err != nil {
+			t.Errorf("Error: %s\n", err.Error())
 			return
 		}
 		db = authentication.GetDB()
 		sql = `CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public`
-		_, err =  db.Exec( sql)
-		if(err != nil) {
-			t.Errorf("Error creating extension: %s\n", err.Error() )
+		_, err = db.Exec(sql)
+		if err != nil {
+			t.Errorf("Error creating extension: %s\n", err.Error())
 			return
 		}
 
-		exe, err := filepath.Abs("../../../../bin/mallard") 
+		exe, err := filepath.Abs("../../../../bin/mallard")
 		if err != nil {
 			t.Errorf("Error resolving mallard: %s\n", err.Error())
 			return
-		}	
+		}
 		path, err := filepath.Abs("../../../../DbConf/public")
 		if err != nil {
 			t.Errorf("Error resolving public: %s\n", err.Error())
 			return
-		}	
+		}
 
 		path, err = filepath.Abs("../../../../DbConf/global")
 		if err != nil {
@@ -118,8 +120,8 @@ func TestApiHandlers(t *testing.T){
 			return
 		}
 
-		cmd := exec.Command(exe, "migrate", "-s", "global", "-r", path, "--host", dbhost, "--port", dbport, 
-		"--user", dbuser, "--password", dbpassword, "--database", "test", "--apply")
+		cmd := exec.Command(exe, "migrate", "-s", "global", "-r", path, "--host", dbhost, "--port", dbport,
+			"--user", dbuser, "--password", dbpassword, "--database", "test", "--apply")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
@@ -127,7 +129,7 @@ func TestApiHandlers(t *testing.T){
 		if err != nil {
 			t.Errorf("\nError running mallard:\n%s\n %s\n", cmd, err.Error())
 			return
-		}	
+		}
 
 		path, err = filepath.Abs("../../../../DbConf/customer")
 		if err != nil {
@@ -135,38 +137,38 @@ func TestApiHandlers(t *testing.T){
 			return
 		}
 
-		cmd = exec.Command(exe, "migrate", "-s", "spoofcorp", "-r", path, "--host", dbhost, "--port", dbport, 
+		cmd = exec.Command(exe, "migrate", "-s", "spoofcorp", "-r", path, "--host", dbhost, "--port", dbport,
 			"--user", dbuser, "--password", dbpassword, "--database", "test", "--apply")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
-		
+
 		if err != nil {
 			t.Errorf("Error running mallard:\n%s\n %s\n", cmd, err.Error())
 			return
-		}	
+		}
 
 		sql = `insert into global.customers(company_name, schema_name, organization, domain) 
 		values($1,$2,$3,$4) returning id; `
 
-		_, err =  db.Exec( sql, "Spoof Corporation", "spoofcorp", "org_nsEsSgfq3IYXe2pu", "spoofcorp.com")
+		_, err = db.Exec(sql, "Spoof Corporation", "spoofcorp", "org_nsEsSgfq3IYXe2pu", "spoofcorp.com")
 		if err != nil {
 			t.Errorf("Error creating customer: %s\n", err.Error())
 			return
-		}	
+		}
 	}()
-///------------------ db setup done ------------------------
+	///------------------ db setup done ------------------------
 
-//------------------- get JWT ------------------------
-	token, err :=  authentication.GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s", 
-	"spoofcorp", "user", "xxx@xxx.com", []string{"Admins", "Users"}, []string{"admin", "user"}, "org_nsEsSgfq3IYXe2pu")
-	if(err != nil){
+	//------------------- get JWT ------------------------
+	token, err := authentication.GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s",
+		"spoofcorp", "user", "xxx@xxx.com", []string{"Admins", "Users"}, []string{"admin", "user"}, "org_nsEsSgfq3IYXe2pu")
+	if err != nil {
 		t.Errorf("Error creating token: %s\n", err.Error())
-		return		
+		return
 	}
-fmt.Println(token)
-	//---- test static file	
-	func () {
+	fmt.Println(token)
+	//---- test static file
+	func() {
 		req, err := http.NewRequest("GET", "/logo.png", nil)
 		if err != nil {
 			t.Fatal(err)
@@ -182,8 +184,8 @@ fmt.Println(token)
 		}
 		fmt.Println("Static file retrieved correctly")
 	}()
-//---- test missing file
-	func () {
+	//---- test missing file
+	func() {
 		req, err := http.NewRequest("GET", "/xxxxx.yy", nil)
 		if err != nil {
 			t.Fatal(err)
@@ -197,13 +199,13 @@ fmt.Println(token)
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				status, http.StatusNotFound)
 			return
-		}	
+		}
 		fmt.Println("No static file retrieved 404 correctly")
 	}()
 
-// -------- test auth middleware	
+	// -------- test auth middleware
 	func() {
-		req, err := http.NewRequest("POST", "/api/createnewconnection",  bytes.NewBuffer([]byte(northwind )))
+		req, err := http.NewRequest("POST", "/api/createnewconnection", bytes.NewBuffer([]byte(northwind)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -214,7 +216,7 @@ fmt.Println(token)
 		h := http.HandlerFunc(CreateNewConnection)
 		hh := AuthMiddleware(h)
 		hh.ServeHTTP(rr, req)
-		
+
 		if s := rr.Code; s != http.StatusForbidden {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusForbidden)
@@ -223,13 +225,13 @@ fmt.Println(token)
 
 		fmt.Println("Authentication without JWT failed correctly")
 	}()
-	authentication.InitInvoke( func(a string, b *string, data []byte)([]byte, error) {
+	authentication.InitInvoke(func(a string, b *string, data []byte) ([]byte, error) {
 		//fmt.Println("Our InitInvoke called")
 		return []byte(`{}`), nil
-	}) 
-	// -------- create a connection	
-	LoadAuthHandler := func (method string, url string, reader io.Reader, 
-		handler func(http.ResponseWriter, *http.Request))  ( *httptest.ResponseRecorder, []byte) {
+	})
+	// -------- create a connection
+	LoadAuthHandler := func(method string, url string, reader io.Reader,
+		handler func(http.ResponseWriter, *http.Request)) (*httptest.ResponseRecorder, []byte) {
 
 		req, err := http.NewRequest(method, url, reader)
 		if err != nil {
@@ -245,11 +247,11 @@ fmt.Println(token)
 		body, _ := ioutil.ReadAll(rr.Body)
 
 		return rr, body
-	}	
+	}
 	createConnection := func(data string) {
 
-		rr, body := LoadAuthHandler("POST", "/api/createnewconnection", bytes.NewBuffer([]byte(data )), 
-			CreateNewConnection) 
+		rr, body := LoadAuthHandler("POST", "/api/createnewconnection", bytes.NewBuffer([]byte(data)),
+			CreateNewConnection)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
@@ -258,21 +260,21 @@ fmt.Println(token)
 		}
 		err = json.Unmarshal(body, &status)
 		if err != nil {
-			t.Errorf("Unmarshaling error: %s\n", err.Error() )
+			t.Errorf("Unmarshaling error: %s\n", err.Error())
 			return
 		}
-		if(status.Status != "OK") {
-			t.Errorf("Authentication should have passed %s\n", status.Errormessage )
-			return		
+		if status.Status != "OK" {
+			t.Errorf("Authentication should have passed %s\n", status.Errormessage)
+			return
 		}
 		fmt.Println("Created connection, should check the database")
 	}
 	createConnection(adventureworks)
-	countConnections := func (c int) {
+	countConnections := func(c int) {
 		db := authentication.GetDB()
 		sql := `select count(*) from spoofcorp.connections;`
 		row := db.QueryRow(sql)
-		var count int 
+		var count int
 		row.Scan(&count)
 		fmt.Printf("Number of connections: %d\n", count)
 		assert.Equal(t, count, c, "One record should be present")
@@ -280,11 +282,11 @@ fmt.Println(token)
 	countConnections(1)
 	createConnection(northwind)
 	countConnections(2)
-	// -------- create a connection	
+	// -------- create a connection
 	createDupConnection := func(data string) {
 
-		rr, body := LoadAuthHandler("POST", "/api/createnewconnection", bytes.NewBuffer([]byte(data )), 
-			CreateNewConnection) 
+		rr, body := LoadAuthHandler("POST", "/api/createnewconnection", bytes.NewBuffer([]byte(data)),
+			CreateNewConnection)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
@@ -293,24 +295,24 @@ fmt.Println(token)
 		}
 		err = json.Unmarshal(body, &status)
 		if err != nil {
-			t.Errorf("Unmarshaling error: %s\n", err.Error() )
+			t.Errorf("Unmarshaling error: %s\n", err.Error())
 			return
 		}
-		if(status.Status == "OK") {
-			t.Errorf("The insertion of duplicate name in connection should have failed\n" )
-			return		
+		if status.Status == "OK" {
+			t.Errorf("The insertion of duplicate name in connection should have failed\n")
+			return
 		}
 		fmt.Printf("Test properly failed with the error: %s\n", status.Errormessage)
 	}
 	createDupConnection(northwind)
 	createConnection(todelete)
 	countConnections(3)
-	
-	getConnections := func (expected int) (string, []types.ConnectionRecord) {
+
+	getConnections := func(expected int) (string, []types.ConnectionRecord) {
 
 		rr, body := LoadAuthHandler("GET", "/api/getconnections", nil,
-			GetConnections) 
-		
+			GetConnections)
+
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
@@ -318,417 +320,408 @@ fmt.Println(token)
 		}
 		var status types.ConnectionResponse
 		err = json.Unmarshal(body, &status)
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in GetConnections %s\n", status.Errormessage ) )
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in GetConnections %s\n", status.Errormessage))
 		require.Equal(t, expected, len(status.Data), "Three records should be present")
-		return *status.Data[ len(status.Data ) -1 ].Id, status.Data
+		return *status.Data[len(status.Data)-1].Id, status.Data
 	}
 	id, _ := getConnections(3)
-	
-	func (id string)  {
+
+	func(id string) {
 		cdr := types.ConnectionDetailRequest{id}
 		js, _ := json.Marshal(cdr)
 
-		rr, body := LoadAuthHandler("POST", "/api/queryconnection", bytes.NewBuffer(js), 
-			QueryConnection) 
-		
-		require.Equal(t, nil, err, fmt.Errorf("Error reading body: %s\n", err ) )
+		rr, body := LoadAuthHandler("POST", "/api/queryconnection", bytes.NewBuffer(js),
+			QueryConnection)
+
+		require.Equal(t, nil, err, fmt.Errorf("Error reading body: %s\n", err))
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
+			return
 		}
-		var status  types.ConnectionDetailResponse
+		var status types.ConnectionDetailResponse
 		err = json.Unmarshal(body, &status)
-	
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in DeleteConnection %s\n", status.Errormessage ) )
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in DeleteConnection %s\n", status.Errormessage))
 
 		return
 	}(id)
 
-	func (id string)  {
+	func(id string) {
 		cdr := types.ConnectionDetailRequest{id}
 		js, _ := json.Marshal(cdr)
 
-		rr, body := LoadAuthHandler("POST", "/api/queryconnection", bytes.NewBuffer(js), 
-			QueryConnection) 
-		
-		require.Equal(t, nil, err, fmt.Errorf("Error reading body: %s\n", err ) )
+		rr, body := LoadAuthHandler("POST", "/api/queryconnection", bytes.NewBuffer(js),
+			QueryConnection)
+
+		require.Equal(t, nil, err, fmt.Errorf("Error reading body: %s\n", err))
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
+			return
 		}
-		var status  types.ConnectionDetailResponse
+		var status types.ConnectionDetailResponse
 		err = json.Unmarshal(body, &status)
-	
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in Queryonnection %s\n", status.Errormessage ) )
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in Queryonnection %s\n", status.Errormessage))
 
 		return
 	}(id)
 
-
-	func (id string)  {
+	func(id string) {
 		fmt.Printf("Delete connection %s\n", id)
-		var ds types.DatascopeId = types.DatascopeId{Id:id}
+		var ds types.DatascopeId = types.DatascopeId{Id: id}
 		js, err := json.Marshal(ds)
-		require.Equal(t, nil, err, fmt.Errorf("Error marshaling: %s\n", err ) )
+		require.Equal(t, nil, err, fmt.Errorf("Error marshaling: %s\n", err))
 
-		rr, body := LoadAuthHandler("POST", "/api/deleteconnection", bytes.NewBuffer(js), 
-			DeleteConnection) 
-		
-		require.Equal(t, nil, err, fmt.Errorf("Error reading body: %s\n", err ) )
+		rr, body := LoadAuthHandler("POST", "/api/deleteconnection", bytes.NewBuffer(js),
+			DeleteConnection)
+
+		require.Equal(t, nil, err, fmt.Errorf("Error reading body: %s\n", err))
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
+			return
 		}
-		var status  types.OperationStatus
+		var status types.OperationStatus
 		err = json.Unmarshal(body, &status)
-	
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in DeleteConnection %s\n", status.Errormessage ) )
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in DeleteConnection %s\n", status.Errormessage))
 
 		return
 	}(id)
 
 	id, _ = getConnections(2)
-// -------- edit a connection without password
-	func (data string) {
-		rr, _ := LoadAuthHandler("POST", "/api/updateconnection", bytes.NewBuffer([]byte(data)), 
+	// -------- edit a connection without password
+	func(data string) {
+		rr, _ := LoadAuthHandler("POST", "/api/updateconnection", bytes.NewBuffer([]byte(data)),
 			UpdateConnection) 
-
-		require.Equal(t, rr.Code, http.StatusInternalServerError, fmt.Sprintf("Unexpected in UpdateConnection %s\n", status.Errormessage ) )
+		require.Equal(t, rr.Code, http.StatusInternalServerError, fmt.Sprintf("Unexpected in UpdateConnection %s\n", status.Errormessage))
 
 	}(edited_adventureworks)
-	UpdateConn := func (data, name string) {
+	UpdateConn := func(data, name string) {
 		_, conns := getConnections(2)
 		var realid string
 		for i := 0; i < len(conns); i++ {
-			if(conns[i].Name == name) {
+			if conns[i].Name == name {
 				realid = *conns[i].Id
 			}
 		}
 		//fmt.Printf("\n\nDetermined id as %s\n\n", realid)
-		var cr types.ConnectionRecord 
+		var cr types.ConnectionRecord
 		erro := json.Unmarshal([]byte(data), &cr)
 		if erro != nil {
 			fmt.Printf("\nError in unmarshal %s:\n %s\n", string(data), erro.Error())
 		}
-		cr.Id = &realid 
+		cr.Id = &realid
 		js, _ := json.Marshal(cr)
 
-		rr, body := LoadAuthHandler("POST", "/api/updateconnection", bytes.NewBuffer([]byte(js)), 
-			UpdateConnection) 
+		rr, body := LoadAuthHandler("POST", "/api/updateconnection", bytes.NewBuffer([]byte(js)),
+			UpdateConnection)
 		// fmt.Printf("update returned %v\n", rr)
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
-		}		
-		var status  types.OperationStatus
+			return
+		}
+		var status types.OperationStatus
 		err = json.Unmarshal(body, &status)
-	
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in UpdateConnection %s\n", status.Errormessage ) )
-	
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in UpdateConnection %s\n", status.Errormessage))
+
 	}
 	UpdateConn(edited_adventureworks, "adventureworks")
 	UpdateConn(edited_northwind, "northwind")
 
 	// now let' start with datascopes
-	SaveDs := func (data string) {
-		rr, body := LoadAuthHandler("POST", "/api/savedatascope", bytes.NewBuffer([]byte(data)), 
-			SaveDatascope) 
+	SaveDs := func(data string) {
+		rr, body := LoadAuthHandler("POST", "/api/savedatascope", bytes.NewBuffer([]byte(data)),
+			SaveDatascope)
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
-		}		
-		var status  types.OperationStatus
+			return
+		}
+		var status types.OperationStatus
 		err = json.Unmarshal(body, &status)
-		
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in SaveDatascope %s\n", status.Errormessage ) )
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in SaveDatascope %s\n", status.Errormessage))
 
 	}
 	SaveDs(datascope_test_1)
-	func (data string) {
+	func(data string) {
 		fmt.Printf("Save datascope")
-		rr, body := LoadAuthHandler("POST", "/api/savedatascope", bytes.NewBuffer([]byte(data)), 
-			SaveDatascope) 
+		rr, body := LoadAuthHandler("POST", "/api/savedatascope", bytes.NewBuffer([]byte(data)),
+			SaveDatascope)
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
-		}		
-		
-		var status  types.OperationStatus
+			return
+		}
+
+		var status types.OperationStatus
 		err = json.Unmarshal(body, &status)
-	
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.NotEqual(t, "OK", status.Status, fmt.Sprintf("Error in SaveDatascope %s\n", status.Errormessage ) )
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.NotEqual(t, "OK", status.Status, fmt.Sprintf("Error in SaveDatascope %s\n", status.Errormessage))
 		fmt.Println("SaveDatascope properly failing")
 	}(datascope_test_1)
 
 	/*
-	authentication.InitInvoke( func(a string, b *string, data []byte)([]byte, error) {
-		fmt.Println("Our InitInvoke called")
-		return []byte(`{"Errormessage":"Zhopa"}`), nil
-	}) 
-    */
-
+		authentication.InitInvoke( func(a string, b *string, data []byte)([]byte, error) {
+			fmt.Println("Our InitInvoke called")
+			return []byte(`{"Errormessage":"Zhopa"}`), nil
+		})
+	*/
 
 	SaveDs(datascope_test_2)
 
 	//type Invoke_t func(string, *string, []byte) ([]byte, error)
-	authentication.InitInvoke( func(a string, b *string, data []byte)([]byte, error) {
+	authentication.InitInvoke(func(a string, b *string, data []byte) ([]byte, error) {
 		return []byte(`{}`), nil
-	}) 	
-	idnames := func () []types.DatascopeIdName {
-	
-		rr, body := LoadAuthHandler("GET", "/api/getdatascopes", nil, 
-			GetDatascopes) 
+	})
+	idnames := func() []types.DatascopeIdName {
+
+		rr, body := LoadAuthHandler("GET", "/api/getdatascopes", nil,
+			GetDatascopes)
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
 			return nil
-		}		
-		
-		var status  types.DatascopesStatus
-		err = json.Unmarshal(body, &status)
-	
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in GetDatascopes %s\n", status.Errormessage ) )
-		require.Equal(t, 2, len(status.Records), "Error: the number of datascopes must be 2!"  )
-		return status.Records
-	}()	
+		}
 
-	func () {
+		var status types.DatascopesStatus
+		err = json.Unmarshal(body, &status)
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in GetDatascopes %s\n", status.Errormessage))
+		require.Equal(t, 2, len(status.Records), "Error: the number of datascopes must be 2!")
+		return status.Records
+	}()
+
+	func() {
 		fmt.Printf("Get datascope details")
-		
-		id := types.DatascopeId{idnames[0].Id }
+
+		id := types.DatascopeId{idnames[0].Id}
 		js, _ := json.Marshal(id)
 
-		rr, body := LoadAuthHandler("POST", "/api/getdatascopedetails", bytes.NewBuffer([]byte(js)), 
-			GetDatascopeDetails) 
+		rr, body := LoadAuthHandler("POST", "/api/getdatascopedetails", bytes.NewBuffer([]byte(js)),
+			GetDatascopeDetails)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
-		}		
-		
-		var status  types.DatascopesStatus
+			return
+		}
+
+		var status types.DatascopesStatus
 		err = json.Unmarshal(body, &status)
 
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in GetDatascopeDetails %s\n", status.Errormessage ) )
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in GetDatascopeDetails %s\n", status.Errormessage))
 
-	}()	
+	}()
 
-
-	UpdateDs := func (data string) {
-		rr, body := LoadAuthHandler("POST", "/api/updatedatascope", bytes.NewBuffer([]byte(data)), 
-			UpdateDatascope) 
+	UpdateDs := func(data string) {
+		rr, body := LoadAuthHandler("POST", "/api/updatedatascope", bytes.NewBuffer([]byte(data)),
+			UpdateDatascope)
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
-		}		
-		var status  types.OperationStatus
+			return
+		}
+		var status types.OperationStatus
 		err = json.Unmarshal(body, &status)
-		
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in SaveDatascope %s\n", status.Errormessage ) )
 
-	}	
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in SaveDatascope %s\n", status.Errormessage))
+
+	}
 	UpdateDs(datascope_update_test_1)
-	AddGroup := func (data string) {
-		rr, body := LoadAuthHandler("POST", "/api/createmapping", bytes.NewBuffer([]byte(data)), 
-			CreateMapping) 
+	AddGroup := func(data string) {
+		rr, body := LoadAuthHandler("POST", "/api/createmapping", bytes.NewBuffer([]byte(data)),
+			CreateMapping)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
-		}		
-		
-		var status  types.DatascopesStatus
+			return
+		}
+
+		var status types.DatascopesStatus
 		err = json.Unmarshal(body, &status)
 
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage ) )
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage))
 
-	}	
+	}
 	AddGroup(groupmapping_1)
 	AddGroup(groupmapping_2)
 
-
-	func () {
-		rr, body := LoadAuthHandler("POST", "/api/createmapping", bytes.NewBuffer([]byte(groupmapping_1)), 
-			CreateMapping) 
+	func() {
+		rr, body := LoadAuthHandler("POST", "/api/createmapping", bytes.NewBuffer([]byte(groupmapping_1)),
+			CreateMapping)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
-		}		
-		
-		var status  types.DatascopesStatus
+			return
+		}
+
+		var status types.DatascopesStatus
 		err = json.Unmarshal(body, &status)
 
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.NotEqual(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage ) )
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.NotEqual(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage))
 		fmt.Println("Proper error is thrown for CreateMapping")
 	}()
 
 	AddGroup(groupmapping_3)
-		
-	func () string {
-		rr, body := LoadAuthHandler("GET", "/api/updatemapping", nil, GetMappings) 
+
+	func() string {
+		rr, body := LoadAuthHandler("GET", "/api/updatemapping", nil, GetMappings)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
 			return ""
-		}		
-	
-		var status  types.GroupMappingStatus
+		}
+
+		var status types.GroupMappingStatus
 		err = json.Unmarshal(body, &status)
 
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage ) )
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage))
 
 		record := status.Records[0]
 		record.Comments = "Comment changed via test"
 		js, _ := json.Marshal(record)
 
-		rr, body = LoadAuthHandler("POST", "/api/updatemapping", bytes.NewBuffer([]byte(js)), 
-			UpdateMapping) 
+		rr, body = LoadAuthHandler("POST", "/api/updatemapping", bytes.NewBuffer([]byte(js)),
+			UpdateMapping)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
 			return ""
-		}		
-		
-		var ostatus  types.DatascopesStatus
+		}
+
+		var ostatus types.DatascopesStatus
 		err = json.Unmarshal(body, &ostatus)
 
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", ostatus.Status, fmt.Sprintf("Error in UpdateMapping %s\n", ostatus.Errormessage ) )
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", ostatus.Status, fmt.Sprintf("Error in UpdateMapping %s\n", ostatus.Errormessage))
 
 		return *status.Records[0].Id
-	}()		
-	
+	}()
 
-	id = func () string {
-		rr, body := LoadAuthHandler("GET", "/api/getmappings", nil, GetMappings) 
+	id = func() string {
+		rr, body := LoadAuthHandler("GET", "/api/getmappings", nil, GetMappings)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
 			return ""
-		}		
-	
-		var status  types.GroupMappingStatus
+		}
+
+		var status types.GroupMappingStatus
 		err = json.Unmarshal(body, &status)
 
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage ) )
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage))
 		return *status.Records[0].Id
-	}()	
+	}()
 
-	func (id string) {
+	func(id string) {
 		r := types.RequestById{id}
 		js, _ := json.Marshal(r)
-		rr, body := LoadAuthHandler("POST", "/api/deletemapping", bytes.NewBuffer([]byte(js)), 
-			DeleteMapping) 
+		rr, body := LoadAuthHandler("POST", "/api/deletemapping", bytes.NewBuffer([]byte(js)),
+			DeleteMapping)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
-		}		
-		
-		var status  types.DatascopesStatus
+			return
+		}
+
+		var status types.DatascopesStatus
 		err = json.Unmarshal(body, &status)
 
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in DeleteMapping %s\n", status.Errormessage ) )
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in DeleteMapping %s\n", status.Errormessage))
 
-	}	(id)
+	}(id)
 
-	func () string {
-		rr, body := LoadAuthHandler("GET", "/api/getmappings", nil, GetMappings) 
+	func() string {
+		rr, body := LoadAuthHandler("GET", "/api/getmappings", nil, GetMappings)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
 			return ""
-		}		
-	
-		var status  types.GroupMappingStatus
+		}
+
+		var status types.GroupMappingStatus
 		err = json.Unmarshal(body, &status)
 
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in DeleteMapping %s\n", status.Errormessage ) )
-		require.Equal(t, 2, len(status.Records), fmt.Sprintf("Error in DeleteMapping, wrong number of recordds left \n" ) )
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in DeleteMapping %s\n", status.Errormessage))
+		require.Equal(t, 2, len(status.Records), fmt.Sprintf("Error in DeleteMapping, wrong number of recordds left \n"))
 		return *status.Records[0].Id
-	}()	
+	}()
 
-	
 	AddGroupDatascopeMapping := func() {
-		rr, body := LoadAuthHandler("GET", "/api/getmappings", nil, GetMappings) 
+		rr, body := LoadAuthHandler("GET", "/api/getmappings", nil, GetMappings)
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
-		}		
-		var mapping  types.GroupMappingStatus
+			return
+		}
+		var mapping types.GroupMappingStatus
 		err = json.Unmarshal(body, &mapping)
 
-		rr, body = LoadAuthHandler("GET", "/api/getdatascopes", nil, 
-			GetDatascopes) 
+		rr, body = LoadAuthHandler("GET", "/api/getdatascopes", nil,
+			GetDatascopes)
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
-		}		
-		
-		var datascopes  types.DatascopesStatus
+			return
+		}
+
+		var datascopes types.DatascopesStatus
 		err = json.Unmarshal(body, &datascopes)
 
 		var ga types.GroupAssignment
 		ga.Id = datascopes.Records[0].Id
 		ga.Name = datascopes.Records[0].Name
-		ga.Groups = append(ga.Groups, types.DatascopeIdName { mapping.Records[0].Dymiumgroup, *mapping.Records[0].Id, "2023-04-07T05:22:10.17621-07:00","2023-04-07T05:22:10.17621-07:00"})
+		ga.Groups = append(ga.Groups, types.DatascopeIdName{mapping.Records[0].Dymiumgroup, *mapping.Records[0].Id, "2023-04-07T05:22:10.17621-07:00", "2023-04-07T05:22:10.17621-07:00"})
 
 		js, _ := json.Marshal(ga)
 
-		rr, body = LoadAuthHandler("POST", "/api/savegroups", bytes.NewBuffer([]byte(js)), 
-			SaveGroups) 
+		rr, body = LoadAuthHandler("POST", "/api/savegroups", bytes.NewBuffer([]byte(js)),
+			SaveGroups)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
-		}		
-		
-		var status  types.DatascopesStatus
+			return
+		}
+
+		var status types.DatascopesStatus
 		err = json.Unmarshal(body, &status)
 
-		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err ) )
-		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage ) )
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage))
 
-	}	
+	}
 	AddGroupDatascopeMapping()
 }
-
-

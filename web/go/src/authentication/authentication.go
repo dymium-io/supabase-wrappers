@@ -488,12 +488,14 @@ func GetSchemaFromToken(token string) (string, error) {
 	})
 	if nil == err {
 		if !tkn.Valid {
-			err = errors.New("No error, but invalid token")
+			err = errors.New("Authentication failed")
+			return "", err
+		}
+		if claim.Schema == "" {
+			err = errors.New("Empty schema")
 		}
 	}
-	if claim.Schema == "" {
-		err = errors.New("Empty schema")
-	}
+
 	return claim.Schema, err
 }
 
@@ -526,7 +528,7 @@ func GetSessionFromToken(token string) (string, error) {
 		}
 	}
 	if claim.Schema == "" {
-		err = errors.New("Empty schema")
+		err = errors.New("No session")
 	}
 	return claim.Session, err
 
@@ -540,12 +542,14 @@ func GetSchemaRolesFromToken(token string) (string, []string, []string, string, 
 	})
 	if nil == err {
 		if !tkn.Valid {
-			err = errors.New("No error, but invalid token")
+			err = errors.New("Authentication failed")
+			return claim.Schema, claim.Roles, claim.Groups, claim.Email, claim.Orgid, claim.Session, err
+		}
+		if claim.Schema == "" {
+			err = errors.New("Empty schema")
 		}
 	}
-	if claim.Schema == "" {
-		err = errors.New("Empty schema")
-	}
+
 	return claim.Schema, claim.Roles, claim.Groups, claim.Email, claim.Orgid, claim.Session, err
 
 }
@@ -756,12 +760,14 @@ func GetIdentityFromToken(token string) (string, []string, error) {
 	})
 	if nil == err {
 		if !tkn.Valid {
-			err = errors.New("GetIdentityFromToken: no error, but invalid token")
+			err = errors.New("Authentication failed")
+			return claim.Email, claim.Groups, err
+		}
+		if claim.Schema == "" {
+			err = errors.New("Empty schema")
 		}
 	}
-	if claim.Schema == "" {
-		err = errors.New("Empty schema")
-	}
+
 	return claim.Email, claim.Groups, err
 }
 
@@ -2635,4 +2641,12 @@ func GetGlobalUsage() (types.GlobalUsage, error) {
 	usage.Bytesout = bout
 
 	return usage, err
+}
+
+func SetConnectorStatus(schema string, status string) {
+	sql := `update ` + schema + `.connectors set status=$1;`
+	_, err := db.Exec(sql, status)
+	if err != nil {
+		log.Errorf("SetConnectorStatus error: %s", err.Error())
+	}
 }
