@@ -401,8 +401,8 @@ func TestApiHandlers(t *testing.T) {
 	id, _ = getConnections(2)
 	// -------- edit a connection without password
 	func(data string) {
-		rr, _ := LoadAuthHandler("POST", "/api/updateconnection", bytes.NewBuffer([]byte(data)))
-
+		rr, _ := LoadAuthHandler("POST", "/api/updateconnection", bytes.NewBuffer([]byte(data)),
+			UpdateConnection) 
 		require.Equal(t, rr.Code, http.StatusInternalServerError, fmt.Sprintf("Unexpected in UpdateConnection %s\n", status.Errormessage))
 
 	}(edited_adventureworks)
