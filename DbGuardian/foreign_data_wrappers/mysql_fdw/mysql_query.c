@@ -128,11 +128,16 @@ mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column,
 		 * string.
 		 */
 		case BYTEAOID:
+		  if (act == 0x0) {
 			result = (bytea *) palloc(column->length + VARHDRSZ);
 			memcpy(VARDATA(result), VARDATA(column->value), column->length);
 			SET_VARSIZE(result, column->length + VARHDRSZ);
 			return PointerGetDatum(result);
-
+		  } else {
+			bytea *result = palloc(VARHDRSZ);
+			SET_VARSIZE(result, VARHDRSZ);
+			return PointerGetDatum(result);
+		  }
 		case BITOID:
 			sprintf(str, "%d", dec_bin(*((int *) column->value)));
 			obf((char*)str);
