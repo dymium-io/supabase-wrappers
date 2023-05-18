@@ -1,5 +1,6 @@
 #!/bin/bash
 
+ste -e
 
 export DATABASE_PORT=${DATABASE_PORT:-5432}
 export DATABASE_NAME=${DATABASE_NAME:-dymium}

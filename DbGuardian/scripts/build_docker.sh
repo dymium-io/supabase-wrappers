@@ -46,15 +46,23 @@ fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw)
 (
 	cd $script_d/../foreign_data_wrappers
 	for f in ${fdws[@]}; do
-		docker run -it --rm -v $PWD:/fdw postgres-dev /bin/sh -c \
-			"cd /fdw/$f; make USE_PGXS=true; DESTDIR=/fdw make USE_PGXS=true install"
+	    docker run -it --rm \
+		   -v $PWD:/fdw \
+		   postgres-dev \
+		   /bin/sh -c \
+		   "cd /fdw/$f; make USE_PGXS=true; DESTDIR=/fdw make USE_PGXS=true install"
 	done
+	docker run -it --rm \
+		   -e USER_ID=$UID \
+		   -e GROUP_ID=$GID \
+		   -v $PWD:/fdw \
+		   postgres-dev \
+		   /bin/sh -c \
+		   "cd /fdw; tar czv --owner=root --group=root -f usr.tar.gz usr; rm -rf usr"
 )
 
 cd $build_d
-mv ../../foreign_data_wrappers/usr .
-COPYFILE_DISABLE=1 tar czv --uid 0 --gid 0 -f usr.tar.gz usr
-rm -rf usr
+mv ../../foreign_data_wrappers/usr.tar.gz .
 
 for f in ${instantclients[@]}; do
 	unzip ${setup_d}/oracle/$f

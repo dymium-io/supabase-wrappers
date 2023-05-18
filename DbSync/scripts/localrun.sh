@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 PORT=9081
 
 DATABASE_HOST=${DATABASE_HOST:-localhost}
