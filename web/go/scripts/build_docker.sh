@@ -59,10 +59,11 @@ cd ../../../Tunnels/go/client
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
            go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=6' -X 'main.ProtocolVersion=6' -w -extldflags "-static"' -o dymium
 chmod a+x dymium
-mkdir -p ../../../web/go/assets/customer/update/linux/amd64/
-cp tunnel ../../../web/go/assets/customer/update/linux/amd64/
+
 tar -zcvf tunnel.tar.gz dymium
+mkdir -p  ../../../web/go/assets/customer/update/
 cp tunnel.tar.gz ../../../web/go/assets/customer/update/
+mkdir -p  ../../../web/js/packages/portal/public
 mv tunnel.tar.gz ../../../web/js/packages/portal/public
 
 aws s3  --profile dymium --region us-west-2 cp s3://dymium-installers/windows/DymiumInstaller.exe /tmp
