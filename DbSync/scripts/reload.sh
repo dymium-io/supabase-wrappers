@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
 
 FUNCTION_NAME=DbSync
 REPO="db-sync"

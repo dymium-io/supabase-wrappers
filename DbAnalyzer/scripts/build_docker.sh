@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 script_d=$PWD/$(dirname $0)
 build_d=${script_d}/BLD
 
