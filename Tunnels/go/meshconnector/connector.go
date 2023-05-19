@@ -85,7 +85,7 @@ func DoUpdate(portalUrl string) error {
 	}
 	ex, _ := os.Executable()
 	log.Info("Updating the client...")
-	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, ex + ".old"})
+	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, ex + "." + protocol.MeshServerVersion + ".bak"})
 	if err != nil {
 		log.Infof("Error updating: %s", err.Error())
 		if rerr := selfupdate.RollbackError(err); rerr != nil {
@@ -541,6 +541,7 @@ func updateStatus(updown string) {
 		log.Errorf("Invalid response %d from %s: %s", resp.StatusCode, urlStr, string(body))
 		return
 	}
+	log.Info("Status updated")
 
 }
 func DoConnect() {
@@ -605,6 +606,10 @@ func DoConnect() {
 		return
 	}
 	version := string(back.Version)
+	if v := os.Getenv("VERSION"); v != "" {
+		version = v
+		log.Debugf("Imposed version %s", version)
+	}
 	vserver, _ := semver.Make(version)
 	vclient, _ := semver.Make(protocol.MeshServerVersion)
 	if vserver.GT(vclient) {
@@ -612,7 +617,7 @@ func DoConnect() {
 		DoUpdate(portal)
 		os.Exit(0)
 	} else {
-		log.Infof("Server version: %s", version)
+		log.Infof("Server version: %s, client is up to date", version)
 	}
 
 	keyBytes := x509.MarshalPKCS1PrivateKey(certKey)

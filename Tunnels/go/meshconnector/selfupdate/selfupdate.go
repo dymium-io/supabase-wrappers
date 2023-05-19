@@ -128,7 +128,7 @@ func CommitBinary(opts Options) error {
 			return err
 		}
 	} else {
-		fmt.Printf("rename succeeded")
+		// fmt.Printf("rename succeeded")
 	}
 
 	// move the new exectuable in to become the new program
