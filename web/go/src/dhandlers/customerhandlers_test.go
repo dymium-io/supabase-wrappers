@@ -310,7 +310,7 @@ func TestApiHandlers(t *testing.T) {
 
 	getConnections := func(expected int) (string, []types.ConnectionRecord) {
 
-		rr, body := ("GET", "/api/getconnections", nil,
+		rr, body := LoadAuthHandler("GET", "/api/getconnections", nil,
 			GetConnections)
 
 		if s := rr.Code; s != http.StatusOK {
