@@ -12,7 +12,6 @@ import (
 	"github.com/apex/log/handlers/json"
 	"github.com/apex/log/handlers/kinesis"
 	"github.com/apex/log/handlers/multi"
-	"github.com/tj/go-elastic"
 )
 
 var gComponent string
@@ -384,7 +383,8 @@ func Init(component string) {
 			// TODO - we should decide how we are going to connect/auth users for local search
 			user, _ := os.LookupEnv("LOCAL_SEARCH_USER")
 			passwd, _ := os.LookupEnv("LOCAL_SEARCH_PASSWD")
-			esClient := elastic.New(searchUrl)
+			pipeline, _ := os.LookupEnv("SEARCH_IN_PIPELINE")
+			esClient := es.NewClient(searchUrl)
 			esClient.SetAuthCredentials(user, passwd)
 			defaultTransport := http.DefaultTransport.(*http.Transport)
 
@@ -405,13 +405,11 @@ func Init(component string) {
 
 			esh := es.New(&es.Config{
 				Client:     esClient,
-				BufferSize: 10,
+				BufferSize: 1,
 				Format:     "devlogs-06-01-02",
+				Pipeline:   pipeline,
 			})
-			log.SetHandler(multi.New(
-				esh,
-				json.New(os.Stderr),
-			))
+			log.SetHandler(esh)
 		} else {
 			log.SetHandler(text.New(os.Stderr))
 		}

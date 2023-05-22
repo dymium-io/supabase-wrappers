@@ -35,6 +35,10 @@ export LOG_LEVEL=Debug
 export PORT=3009
 export CUSTOMER_PORTAL=portal.dymium.local
 export LOCAL_ENVIRONMENT=true
+export LOCAL_SEARCH=${LOCAL_SEARCH:-http://elastic.dymium.local:9200}
+export LOCAL_SEARCH_USER=${LOCAL_SEARCH_USER:-elastic}
+export LOCAL_SEARCH_PASSWD=${LOCAL_SEARCH_PASSWD:-admin123}
+export SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE:-jsonmessage}
 
 ./meshserver 
 
