@@ -14,6 +14,10 @@ CA_CERTIFICATE='{
 CUSTOMER=spoofcorp
 
 LOCAL_ENVIRONMENT=${LOCAL_ENVIRONMENT:-true}
+export LOCAL_SEARCH=${LOCAL_SEARCH:-}
+export LOCAL_SEARCH_USER=${LOCAL_SEARCH_USER:-elastic}
+export LOCAL_SEARCH_PASSWD=${LOCAL_SEARCH_PASSWD:-admin123}
+export SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE:-jsonmessage}
 
 docker run \
        --name ${CUSTOMER}.tunnel.local \
@@ -24,5 +28,9 @@ docker run \
        -e CA_CERTIFICATE="$CA_CERTIFICATE" \
        -e CUSTOMER="$CUSTOMER" \
        -e LOCAL_ENVIRONMENT="$LOCAL_ENVIRONMENT" \
+       -e LOCAL_SEARCH=$LOCAL_SEARCH                 \
+       -e LOCAL_SEARCH_USER=$LOCAL_SEARCH_USER \
+       -e LOCAL_SEARCH_PASSWD=$LOCAL_SEARCH_PASSWD         \
+       -e SEARCH_IN_PIPELINE=$SEARCH_IN_PIPELINE         \
        tunnel
 
