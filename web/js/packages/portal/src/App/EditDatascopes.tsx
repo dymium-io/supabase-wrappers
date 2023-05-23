@@ -274,6 +274,10 @@ export default function EditDatascopes() {
                 // connection, schema, table, tablescope[typ, semantics, name, position, reference, action]
 
                 st.tablescope.forEach(ts => {
+                    let ref: null | internal.Reference = null
+                    if(ts.reference != null) {
+                        ref = {schema: ts.reference.schema, table: ts.reference.table, column: ts.reference.column}
+                    }
                     let ob: internal.DatascopeRecord = {
                         connection: st.connection, schema: st.schema, table: st.table,
                         typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
@@ -292,8 +296,10 @@ export default function EditDatascopes() {
         }
         // now do send
         setSpinner(true)
-        let retob: internal.DataScope = { name: dbname, records: retarray }
-        let body = JSON.stringify(retob)
+        let retob = new types.Datascope()
+        retob.name = dbname
+        retob.records = retarray 
+        let body = retob.toJson()
         http.sendToServer("POST", "/api/updatedatascope",
             null, body,
             resp => {

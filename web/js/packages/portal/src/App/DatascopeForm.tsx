@@ -299,7 +299,6 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                         if (db.id !== null) {
                             let c = props.nameToConnection[db.name]
                             editedConnection.current = c.name
-                            debugger
                             props.AddNewTable(db.id, props.nameToConnection[db.name].dbtype, schema, table)
                         }
                     }

@@ -1358,16 +1358,10 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 			}
 			var ref *types.Reference
 
-			type Reference struct {
-				Schema string `json:"schema"`
-				Table  string `json:"table"`
-				Column string `json:"column"`
-			}
-
 			if rs == "" && rt == "" && rc == "" {
 				ref = nil
 			} else {
-				ref = &types.Reference{rs, rt, rc}
+				ref = &types.Reference{Schema: rs, Table: rt, Column: rc}
 			}
 			dr.Reference = ref
 			ds.Records = append(ds.Records, dr)
