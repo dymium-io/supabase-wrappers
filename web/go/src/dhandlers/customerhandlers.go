@@ -99,6 +99,11 @@ func QueryTable(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	t := types.TableQuery{}
 	err := json.Unmarshal(body, &t)
+	if err != nil {
+		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryTable Error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	log.Infof("ID: %s", t.ConnectionId)
 	// get the connection details
@@ -183,7 +188,11 @@ func QueryConnection(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	t := types.ConnectionDetailRequest{}
 	err := json.Unmarshal(body, &t)
-
+	if err != nil {
+		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryConnection Error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	// get the connection details
 	conn, use_connector, err := authentication.GetConnection(schema, t.ConnectionId)
 	if(err != nil) {
@@ -425,7 +434,11 @@ func GetDatascapeTables(w http.ResponseWriter, r *http.Request) {
 	var t types.DatascopeId
 
 	err := json.Unmarshal(body, &t)
-
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api QueryConnection Error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	var status types.DatascopeTables
 	ds, err := authentication.GetDatascopeTables(schema, t.Id)
 
@@ -465,7 +478,11 @@ func GetDatascopeDetails(w http.ResponseWriter, r *http.Request) {
 	var t types.DatascopeId
 
 	err := json.Unmarshal(body, &t)
-
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api GetDatascopeDetails Error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	var status types.DatascopeInfoStatus
 	ds, err := authentication.GetDatascope(schema, t.Id)
 	if(err != nil) {
@@ -589,6 +606,11 @@ func DeleteMapping(w http.ResponseWriter, r *http.Request) {
 		Id string
 	}
 	err := json.Unmarshal(body, &t)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteMapping Error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	error := authentication.DeleteMapping(schema, t.Id)
 
@@ -624,6 +646,11 @@ func UpdateMapping(w http.ResponseWriter, r *http.Request) {
 
 	var t types.GroupMapping
 	err := json.Unmarshal(body, &t)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateMapping Error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	error, admincount := authentication.UpdateMapping(schema, *t.Id, t.Dymiumgroup, t.Directorygroup, t.Comments, t.Adminaccess)
 	var status types.GroupStatus
@@ -658,6 +685,11 @@ func CreateMapping(w http.ResponseWriter, r *http.Request) {
 
 	var t types.GroupMapping
 	err := json.Unmarshal(body, &t)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api CreateMapping Error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	error := authentication.CreateNewMapping(schema, t.Dymiumgroup, t.Directorygroup, t.Comments, t.Adminaccess)
 	var status types.OperationStatus
@@ -692,6 +724,11 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 
 	var t types.ConnectionRecord
 	err := json.Unmarshal(body, &t)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api CreateNewConnection Error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	id, error := authentication.CreateNewConnection(schema,  t)
 	var status types.OperationStatus
@@ -712,7 +749,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 			arequest := types.AnalyzerRequest{Dtype: types.DT_Test, Connection: conn}
 			bconn, err := json.Marshal(arequest)
 
-			log.Infof("conn: %s", string(bconn))
+			log.Infof("Api CreateNewConnection, conn: %s", string(bconn))
 			invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 			if err != nil {
 				log.ErrorUserf(schema, session, email, groups, roles, "Api DbAnalyzer Error: %s", err.Error())
@@ -730,7 +767,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 				if(ok) {
 					rr := fmt.Sprintf("Error in Invoke return: %s", value)
 					status = types.OperationStatus{"Error", rr}
-					log.ErrorUserf(schema, session, email, groups, roles, "Api %s", rr)
+					log.ErrorUserf(schema, session, email, groups, roles, "Api GetConnection error %s", rr)
 				} 
 			}
 		} else {
@@ -744,6 +781,9 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 
 	js, err := json.Marshal(status)
 	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api GetConnection Marshal error %s", 
+			err.Error())
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -976,7 +1016,11 @@ func DeleteConnection(w http.ResponseWriter, r *http.Request) {
 	}{}
 
 	err := json.Unmarshal(body, &t)
-	
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteConnection Error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	conn, _, err := authentication.GetConnection(schema, t.Id)
 	if(err != nil) {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api Error in DeleteConnection: %s", err.Error())
@@ -1267,6 +1311,10 @@ func AuthByCode(w http.ResponseWriter, r *http.Request) {
 	var t types.AuthorizationCodeRequest
 
 	err := json.Unmarshal(body, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	domain := os.Getenv("AUTH0_PORTAL_DOMAIN")
 	clientid := os.Getenv("AUTH0_PORTAL_CLIENT_ID")
@@ -1360,7 +1408,10 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 	var t types.CustomerIDRequest
 
 	err := json.Unmarshal(body, &t)
-
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	domain := os.Getenv("AUTH0_PORTAL_DOMAIN")
 	clientid := os.Getenv("AUTH0_PORTAL_CLIENT_ID")
 	redirecturl := os.Getenv("AUTH0_PORTAL_CLI_REDIRECT_URL")
@@ -1737,12 +1788,17 @@ func GetAccessKeys(w http.ResponseWriter, r *http.Request) {
 
 func CreateNewConnector(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	session := r.Context().Value(authenticatedSessionKey).(string)
 
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	t := types.AddConnectorRequest{}
 	err := json.Unmarshal(body, &t)
 	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api CreateNewConnector Error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -1786,12 +1842,17 @@ func GetConnectors(w http.ResponseWriter, r *http.Request) {
 
 func UpdateConnector(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	session := r.Context().Value(authenticatedSessionKey).(string)
 
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	t := types.AddConnectorRequest{}
 	err := json.Unmarshal(body, &t)
 	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnector Error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -1810,12 +1871,17 @@ func UpdateConnector(w http.ResponseWriter, r *http.Request) {
 
 func DeleteConnector(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	session := r.Context().Value(authenticatedSessionKey).(string)
 
 	body, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	t := types.DatascopeId{}
 	err := json.Unmarshal(body, &t)
 	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteConnector Error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

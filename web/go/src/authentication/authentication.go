@@ -830,7 +830,9 @@ func CreateNewConnection(schema string, con types.ConnectionRecord) (string, err
 		return id, err
 	}
 	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
-
+	if hexkey == "" {
+		return id, errors.New("Api CreateNewConnection: No key found")
+	}
 	enc, err := AESencrypt([]byte(*con.Password), hexkey)
 	if err != nil {
 		return id, err
@@ -2313,7 +2315,7 @@ func GetConnectors(schema string) ([]types.Connector, error) {
 				o.Secret = &accesssecret
 			}
 			var st string
-			if nstatus > 0 {
+			if nstatus == 0 {
 				st = "provisioned"
 			} else {
 				st = "configured"
