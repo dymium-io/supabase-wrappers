@@ -24,6 +24,7 @@ type Config struct {
 	BufferSize int           // BufferSize is the number of logs to buffer before flush (default: 100)
 	Format     string        // Format for index
 	Client     Elasticsearch // Client for ES
+	Pipeline   string        // Optional: ingestion pipelie
 }
 
 // defaults applies defaults to the config.
@@ -79,12 +80,8 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 // flush the given `batch` asynchronously.
 func (h *Handler) flush(batch *Batch) {
 	size := batch.Size()
-	start := time.Now()
-	stdlog.Printf("log/elastic: flushing %d logs", size)
 
-	if err := batch.Flush(); err != nil {
+	if err := batch.Flush(h.Pipeline); err != nil {
 		stdlog.Printf("log/elastic: failed to flush %d logs: %s", size, err)
 	}
-
-	stdlog.Printf("log/elastic: flushed %d logs in %s", size, time.Since(start))
 }

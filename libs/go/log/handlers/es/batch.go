@@ -11,6 +11,7 @@ import (
 // Elasticsearch interface.
 type Elasticsearch interface {
 	Bulk(io.Reader) error
+	BulkWithPipeline(body io.Reader, pipeline string) error
 }
 
 // Index metadata.
@@ -72,7 +73,7 @@ func (b *Batch) Bytes() (*bytes.Buffer, error) {
 }
 
 // Flush checks in bulk.
-func (b *Batch) Flush() (err error) {
+func (b *Batch) Flush(pipeline string) (err error) {
 	if b.Size() == 0 {
 		return nil
 	}
@@ -83,6 +84,8 @@ func (b *Batch) Flush() (err error) {
 	}
 
 	b.Docs = nil
-
+	if len(pipeline) > 0 {
+		return b.Elastic.BulkWithPipeline(buf, pipeline)
+	}
 	return b.Elastic.Bulk(buf)
 }

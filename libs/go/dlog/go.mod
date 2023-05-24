@@ -1,10 +1,10 @@
 module dymium.com/dymium/log
 
 go 1.18
+replace github.com/apex/log =>   ../../../libs/go/log
 
 require (
 	github.com/apex/log v1.9.0
-	github.com/tj/go-elastic v0.0.0-20171221160941-36157cbbebc2
 )
 
 require (
