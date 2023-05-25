@@ -178,8 +178,8 @@ aws_params() {
 		tag="latest"
 		shift
 		;;
-	"prod")
-		tag="prod"
+	*)
+		tag="$1"
 		shift
 		;;
 	*) aws_usage -exe "$ex" "tag value \"$1\" is not supported" ;;
