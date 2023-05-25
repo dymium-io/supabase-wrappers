@@ -6634,7 +6634,11 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 				value_len = redact_json(value, value_len);
 				break;
 			  case 0x7:
-				value_len = obfuscate(value, value_len);
+				if(act == 1) {
+				  value_len = redact_uuid(value, value_len);
+				} else {
+				  value_len = obfuscate_uuid(value, value_len);
+				}
 				break;
 			  case 0x8:
 				value = "1970-01-01 00:00:00";

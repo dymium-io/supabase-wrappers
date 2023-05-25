@@ -173,42 +173,34 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 		var t string
 		var sem *string
 		var possibleActions *[]types.DataHandling
+		dtk := func(isSamplable bool) detect.Sample {
+			return detect.Sample{
+				IsSamplable: isSamplable,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		}
 		switch d.cTyp {
-		case "bigint", "smallint":
+		case "smallint", "int", "bigint":
 			t = d.cTyp
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
-		case "int", "mediumint":
-			t = "integer"
-			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
-		case "tinyint":
+			sample[k] = dtk(true)
+		case "tinyint", "tinyint unsigned":
 			t = "smallint"
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
-			/*
-					   // TBD: bit and bit[]
-				case "bit":
-					t = "boolean"
-					possibleActions = allowable
-					sample[k] = detect.Sample{
-						IsSamplable: true,
-						IsNullable:  d.isNullable,
-						Name:        d.cName,
-					}
-			*/
+			sample[k] = dtk(true)
+		case "smallint unsigned", "mediumint", "mediumint unsigned":
+			t = "integer"
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "int unsigned":
+			t = "bigint"
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "bigint unsigned":
+			t = "numeric(20)"
+			possibleActions = allowable
+			sample[k] = dtk(true)
 		case "decimal", "numeric":
 			if d.cPrecision != nil {
 				if d.cScale != nil {
@@ -220,19 +212,11 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = "numeric"
 			}
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "date":
 			t = "date"
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "datetime":
 			if d.dPrecision != nil {
 				t = fmt.Sprintf("timestamp (%d) without time zone", *d.dPrecision)
@@ -240,11 +224,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = "timestamp without time zone"
 			}
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "time":
 			if d.dPrecision != nil {
 				t = fmt.Sprintf("time (%d) with time zone", *d.dPrecision)
@@ -252,11 +232,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = "time with time zone"
 			}
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "timestamp":
 			if d.dPrecision != nil {
 				t = fmt.Sprintf("time (%d) with time zone", *d.dPrecision)
@@ -264,19 +240,11 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = "time with time zone"
 			}
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "year":
 			t = "integer"
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "varchar", "long", "long varchar":
 			if d.cCharMaxLen != nil && *d.cCharMaxLen <= 10485760 {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
@@ -284,11 +252,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = "varchar"
 			}
 			possibleActions = obfuscatable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "text", "mediumtext", "longtext", "tinytext":
 			if d.cCharMaxLen != nil && *d.cCharMaxLen <= 10485760 {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
@@ -296,11 +260,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = "varchar"
 			}
 			possibleActions = obfuscatable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "char":
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
@@ -309,48 +269,28 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = "bpchar"
 				possibleActions = allowable
 			}
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
 			t = "bytea"
 			possibleActions = allowable
 			// t = d.cTyp
 			// possibleActions = blocked
 			// sem = utils.Unsupported
-			sample[k] = detect.Sample{
-				IsSamplable: false,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(false)
 		case "enum":
 			t = "varchar"
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "json":
 			t = "json"
 			possibleActions = obfuscatable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		default:
 			switch {
 			case strings.HasPrefix(d.cTyp, "real"):
 				t = "real"
 				possibleActions = allowable
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(true)
 			case strings.HasPrefix(d.cTyp, "float") || strings.HasPrefix(d.cTyp, "double"):
 				if d.cPrecision != nil && *d.cPrecision <= 24 {
 					t = "real"
@@ -358,20 +298,12 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 					t = "double precision"
 				}
 				possibleActions = allowable
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(true)
 			default:
 				t = d.cTyp
 				possibleActions = blocked
 				sem = utils.Unsupported
-				sample[k] = detect.Sample{
-					IsSamplable: false,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(false)
 			}
 		}
 
@@ -485,7 +417,7 @@ func (da *MySQL) getSample(schema, table string, sample []detect.Sample) error {
 			} else {
 				colNames.WriteString(", ")
 			}
-			colNames.WriteString("`"+sample[k].Name+"`")
+			colNames.WriteString("`" + sample[k].Name + "`")
 		}
 	}
 

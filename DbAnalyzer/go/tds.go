@@ -176,43 +176,39 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		var possibleActions *[]types.DataHandling
 		var t string
 		var sem *string
-		switch d.cTyp {
-		case "bigint", "smallint":
-			t = d.cTyp
-			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
+		dtk := func(isSamplable bool) detect.Sample {
+			return detect.Sample{
+				IsSamplable: isSamplable,
 				IsNullable:  d.isNullable,
 				Name:        d.cName,
 			}
+		}
+		switch d.cTyp {
+		case "bit", "smallint", "tinyint":
+			t = "smallint"
+			possibleActions = allowable
+			sample[k] = dtk(true)
 		case "int":
 			t = "integer"
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
-		case "tinyint":
-			t = "smallint"
+			sample[k] = dtk(true)
+		case "bigint":
+			t = "bigint"
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
+			sample[k] = dtk(true)
+		case "decimal":
+			if d.cPrecision != nil {
+				if d.cScale != nil {
+					t = fmt.Sprintf("decimal(%d,%d)", *d.cPrecision, *d.cScale)
+				} else {
+					t = fmt.Sprintf("decimal(%d)", *d.cPrecision)
+				}
+			} else {
+				t = "numeric"
 			}
-			/*
-			   // TBD: bit and bit[]
-		case "bit":
-			t = "boolean"
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
-			*/
-		case "dec", "decimal", "numeric":
+			sample[k] = dtk(true)
+		case "numeric":
 			if d.cPrecision != nil {
 				if d.cScale != nil {
 					t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
@@ -223,51 +219,37 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				t = "numeric"
 			}
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "money", "smallmoney":
 			t = "money"
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "date":
 			t = "date"
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "datetime", "datetime2", "smalldatetime":
-			if d.dPrecision != nil {
-				t = fmt.Sprintf("timestamp (%d) without time zone", *d.dPrecision)
-			} else {
+			switch {
+			case d.dPrecision == nil:
 				t = "timestamp without time zone"
+			case *d.dPrecision > 6:
+				t = "timestamp (6) without time zone"
+			default:
+				t = fmt.Sprintf("timestamp (%d) without time zone", *d.dPrecision)
 			}
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "datetimeoffset":
-			if d.dPrecision != nil {
-				t = fmt.Sprintf("timestamp (%d) with time zone", *d.dPrecision)
-			} else {
+			switch {
+			case d.dPrecision == nil:
 				t = "timestamp with time zone"
+			case *d.dPrecision > 6:
+				t = "timestamp (6) with time zone"
+			default:
+				t = fmt.Sprintf("timestamp (%d) with time zone", *d.dPrecision)
 			}
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "time":
 			if d.dPrecision != nil {
 				t = fmt.Sprintf("time (%d) with time zone", *d.dPrecision)
@@ -275,23 +257,15 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				t = "time with time zone"
 			}
 			possibleActions = allowable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "varchar", "nvarchar":
 			if d.cCharMaxLen != nil && *d.cCharMaxLen > 0 {
 				t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 			} else {
-				t = "varchar"
+				t = "text"
 			}
 			possibleActions = obfuscatable
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "char", "nchar":
 			if d.cCharMaxLen != nil && *d.cCharMaxLen > 0 {
 				possibleActions = obfuscatable
@@ -300,58 +274,42 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				possibleActions = allowable
 				t = "bpchar"
 			}
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "text", "ntext":
 			possibleActions = obfuscatable
 			t = "text"
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
-		case "binary", "varbinary", "image":
+			sample[k] = dtk(true)
+		case "binary", "varbinary", "image", "rowversion", "timestamp":
 			possibleActions = allowable
 			t = "bytea"
-			sample[k] = detect.Sample{
-				IsSamplable: false,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(false)
+		case "uniqueidentifier":
+			possibleActions = allowable
+			t = "uuid"
+			sample[k] = dtk(true)
+		case "xml":
+			possibleActions = allowable
+			t = "xml"
+			sample[k] = dtk(true)
 		default:
 			switch {
 			case strings.HasPrefix(d.cTyp, "real"):
 				t = "real"
 				possibleActions = allowable
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(true)
 			case strings.HasPrefix(d.cTyp, "float"):
-				if d.cPrecision != nil && *d.cPrecision <= 24 {
-					t = "real"
+				if d.cPrecision != nil {
+					t = fmt.Sprintf("float(%d)", *d.cPrecision)
 				} else {
-					t = "double precision"
+					t = "real"
 				}
 				possibleActions = allowable
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(true)
 			default:
 				t = d.cTyp
 				possibleActions = blocked
 				sem = utils.Unsupported
-				sample[k] = detect.Sample{
-					IsSamplable: false,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(false)
 			}
 		}
 		c := types.Column{
@@ -477,7 +435,7 @@ func (da *SqlServer) getSample(schema, table string, sample []detect.Sample) err
 			} else {
 				colNames.WriteString(", ")
 			}
-			colNames.WriteString("["+sample[k].Name+"]")
+			colNames.WriteString("[" + sample[k].Name + "]")
 		}
 	}
 
