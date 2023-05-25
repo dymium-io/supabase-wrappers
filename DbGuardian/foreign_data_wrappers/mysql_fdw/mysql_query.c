@@ -94,7 +94,7 @@ mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column,
 	  case 0x4: redact_xml(valstr,-1); break;							\
 	  case 0x5: redact_bytea(valstr,-1); break;							\
 	  case 0x6: redact_json(valstr,-1); break;							\
-	  case 0x7: obfuscate(valstr,-1); break;							\
+	  case 0x7: if(act == 1) redact_uuid(valstr,-1); else obfuscate_uuid(valstr,-1); break; \
 	  case 0x8: strcpy(valstr, "1970-01-01 00:00:00"); break;			\
 	  case 0x9: strcpy(valstr, "1970-01-01 00:00:00+00"); break;		\
 	  case 0xa: strcpy(valstr, "1970-01-01"); break;					\

@@ -9,6 +9,7 @@ import (
 
 	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
+	"DbAnalyzer/utils"
 )
 
 type Postgres struct {
@@ -105,9 +106,13 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
                                     c.data_type,
                                     c.character_maximum_length,
                                     c.numeric_precision, c.numeric_scale,
+                                    c.datetime_precision,
+                                    c.interval_precision, c.interval_type,
                                     e.data_type,
                                     e.character_maximum_length,
                                     e.numeric_precision, e.numeric_scale,
+                                    e.datetime_precision,
+                                    e.interval_precision, e.interval_type,
                                     c.is_nullable, c.column_default
                              FROM information_schema.columns c
                              LEFT JOIN information_schema.element_types e
@@ -133,8 +138,12 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		dflt                            *string
 		cTyp                            string
 		cCharMaxLen, cPrecision, cScale *int
+		cdPrecision, ciPrecision        *int
+		cIntervalType                   *string
 		eTyp                            *string
 		eCharMaxLen, ePrecision, eScale *int
+		edPrecision, eiPrecision        *int
+		eIntervalType                   *string
 	}
 
 	descr := []*data{}
@@ -144,7 +153,9 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		var isNullable_ string
 		err = rows.Scan(&d.pos, &d.cName,
 			&d.cTyp, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
+			&d.cdPrecision, &d.ciPrecision, &d.cIntervalType,
 			&d.eTyp, &d.eCharMaxLen, &d.ePrecision, &d.eScale,
+			&d.edPrecision, &d.eiPrecision, &d.eIntervalType,
 			&isNullable_, &d.dflt)
 		if err != nil {
 			return nil, err
@@ -166,17 +177,55 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 
 	obfuscatable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
 	allowable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-	// blocked := &[]types.DataHandling{types.DH_Block}
-	
+	blocked := &[]types.DataHandling{types.DH_Block}
+
 	for k, d := range descr {
 		var possibleActions *[]types.DataHandling
 		var t string
 		var sem *string
+		dtk := func(isSamplable bool) detect.Sample {
+			return detect.Sample{
+				IsSamplable: isSamplable,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		}
 		switch d.cTyp {
+		case "boolean",
+			"smallint", "integer", "bigint", "int", "int2", "int4", "int8",
+			"real", "double precision", "float4", "float8", "money",
+			"json", "jsonb", "xml",
+			"inet", "cidr", "macaddr", "macaddr8",
+			"date",
+			"uuid",
+			"point", "line", "lseg", "box", "path", "polygon", "circle":
+			t = d.cTyp
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "smallserial":
+			t = "smallint"
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "serial":
+			t = "integer"
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "bigserial":
+			t = "bigint"
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "bit", "bit varying":
+			if d.cPrecision != nil && *d.cPrecision > 0 {
+				t = fmt.Sprintf("%s(%d)", d.cTyp, *d.cPrecision)
+			} else {
+				t = d.cTyp
+			}
+			possibleActions = allowable
+			sample[k] = dtk(false)
 		case "numeric":
 			possibleActions = allowable
-			if d.cPrecision != nil {
-				if d.cScale != nil {
+			if d.cPrecision != nil && *d.cPrecision > 0 {
+				if d.cScale != nil && *d.cScale >= 0 {
 					t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
 				} else {
 					t = fmt.Sprintf("numeric(%d)", *d.cPrecision)
@@ -184,11 +233,27 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "numeric"
 			}
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
+			sample[k] = dtk(true)
+		case "decimal":
+			possibleActions = allowable
+			if d.cPrecision != nil && *d.cPrecision > 0 {
+				if d.cScale != nil && *d.cScale >= 0 {
+					t = fmt.Sprintf("decimal(%d,%d)", *d.cPrecision, *d.cScale)
+				} else {
+					t = fmt.Sprintf("decimal(%d)", *d.cPrecision)
+				}
+			} else {
+				t = "decimal"
 			}
+			sample[k] = dtk(true)
+		case "float":
+			possibleActions = allowable
+			if d.cPrecision != nil && *d.cPrecision > 0 {
+				t = fmt.Sprintf("float(%d)", *d.cPrecision)
+			} else {
+				t = "double precision"
+			}
+			sample[k] = dtk(true)
 		case "character varying":
 			possibleActions = obfuscatable
 			if d.cCharMaxLen != nil {
@@ -196,19 +261,11 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			} else {
 				t = "varchar"
 			}
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "text":
 			possibleActions = obfuscatable
 			t = "text"
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "character":
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
@@ -221,11 +278,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				possibleActions = obfuscatable
 				t = "bpchar"
 			}
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(true)
 		case "bpchar":
 			if d.cCharMaxLen != nil {
 				t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
@@ -238,13 +291,72 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				possibleActions = obfuscatable
 				t = "bpchar"
 			}
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
+			sample[k] = dtk(true)
+		case "timestamp without timezone":
+			if d.cdPrecision != nil && *d.cdPrecision < 6 {
+				t = fmt.Sprintf("timestamp(%d) without timezone", *d.cdPrecision)
+			} else {
+				t = "timestamp without timezone"
 			}
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "time without timezone":
+			if d.cdPrecision != nil && *d.cdPrecision < 6 {
+				t = fmt.Sprintf("time(%d) without timezone", *d.cdPrecision)
+			} else {
+				t = "time without timezone"
+			}
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "timestamp with timezone":
+			if d.cdPrecision != nil && *d.cdPrecision < 6 {
+				t = fmt.Sprintf("timestamp(%d) with timezone", *d.cdPrecision)
+			} else {
+				t = "timestamp with timezone"
+			}
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "time with timezone":
+			if d.cdPrecision != nil && *d.cdPrecision < 6 {
+				t = fmt.Sprintf("time(%d) with timezone", *d.cdPrecision)
+			} else {
+				t = "time with timezone"
+			}
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "interval":
+			if d.cIntervalType != nil {
+				t = fmt.Sprintf("interval %s", *d.cIntervalType)
+			} else {
+				t = "interval"
+			}
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "bytea":
+			t = d.cTyp
+			possibleActions = allowable
+			sample[k] = dtk(false)
 		case "ARRAY":
 			switch *d.eTyp {
+			case "boolean",
+				"smallint", "integer", "bigint", "int", "int2", "int4", "int8",
+				"real", "double precision", "float4", "float8", "money",
+				"json", "jsonb", "xml",
+				"inet", "cidr", "macaddr", "macaddr8",
+				"date",
+				"uuid",
+				"point", "line", "lseg", "box", "path", "polygon", "circle":
+				t = *d.eTyp + "[]"
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "bit", "bit varying":
+				if d.ePrecision != nil && *d.ePrecision > 0 {
+					t = fmt.Sprintf("%s(%d)[]", *d.eTyp, *d.ePrecision)
+				} else {
+					t = *d.eTyp + "[]"
+				}
+				possibleActions = allowable
+				sample[k] = dtk(false)
 			case "numeric":
 				possibleActions = allowable
 				if d.ePrecision != nil {
@@ -256,11 +368,27 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				} else {
 					t = "numeric[]"
 				}
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
+				sample[k] = dtk(true)
+			case "decimal":
+				if d.ePrecision != nil && *d.ePrecision > 0 {
+					if d.eScale != nil && *d.eScale >= 0 {
+						t = fmt.Sprintf("decimal(%d,%d)[]", *d.ePrecision, *d.eScale)
+					} else {
+						t = fmt.Sprintf("decimal(%d)[]", *d.ePrecision)
+					}
+				} else {
+					t = "decimal[]"
 				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "float":
+				possibleActions = allowable
+				if d.ePrecision != nil && *d.ePrecision > 0 {
+					t = fmt.Sprintf("float(%d)[]", *d.ePrecision)
+				} else {
+					t = "double precision[]"
+				}
+				sample[k] = dtk(true)
 			case "character varying":
 				if d.eCharMaxLen != nil {
 					t = fmt.Sprintf("varchar(%d)[]", *d.eCharMaxLen)
@@ -268,11 +396,7 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 					t = "varchar[]"
 				}
 				possibleActions = obfuscatable
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(true)
 			case "character":
 				if d.eCharMaxLen != nil {
 					possibleActions = obfuscatable
@@ -281,36 +405,66 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 					possibleActions = obfuscatable
 					t = "bpchar[]"
 				}
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(true)
 			case "text":
 				possibleActions = obfuscatable
 				t = "text[]"
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
+				sample[k] = dtk(true)
+			case "timestamp without timezone":
+				if d.edPrecision != nil && *d.edPrecision < 6 {
+					t = fmt.Sprintf("timestamp(%d) without timezone[]", *d.edPrecision)
+				} else {
+					t = "timestamp without timezone[]"
 				}
-			default:
 				possibleActions = allowable
-				t = *d.eTyp + "[]"
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
+				sample[k] = dtk(true)
+			case "time without timezone":
+				if d.edPrecision != nil && *d.edPrecision < 6 {
+					t = fmt.Sprintf("time(%d) without timezone[]", *d.edPrecision)
+				} else {
+					t = "time without timezone[]"
 				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "timestamp with timezone":
+				if d.edPrecision != nil && *d.edPrecision < 6 {
+					t = fmt.Sprintf("timestamp(%d) with timezone[]", *d.edPrecision)
+				} else {
+					t = "timestamp with timezone[]"
+				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "time with timezone":
+				if d.edPrecision != nil && *d.edPrecision < 6 {
+					t = fmt.Sprintf("time(%d) with timezone[]", *d.edPrecision)
+				} else {
+					t = "time with timezone[]"
+				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "interval":
+				if d.eIntervalType != nil {
+					t = fmt.Sprintf("interval %s[]", *d.eIntervalType)
+				} else {
+					t = "interval[]"
+				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "bytea":
+				t = "bytea[]"
+				possibleActions = allowable
+				sample[k] = dtk(false)
+			default:
+				possibleActions = blocked
+				t = *d.eTyp + "[]"
+				sample[k] = dtk(false)
+				sem = utils.Unsupported
 			}
 		default:
-			possibleActions = allowable
+			possibleActions = blocked
 			t = d.cTyp
-			sample[k] = detect.Sample{
-				IsSamplable: true,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(false)
+			sem = utils.Unsupported
 		}
 		c := types.Column{
 			Name:            d.cName,
@@ -417,7 +571,7 @@ func (da *Postgres) getSample(schema, table string, sample []detect.Sample) erro
 			} else {
 				colNames.WriteString(", ")
 			}
-			colNames.WriteString(`"`+sample[k].Name+`"`)
+			colNames.WriteString(`"` + sample[k].Name + `"`)
 		}
 	}
 

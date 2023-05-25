@@ -77,7 +77,7 @@ func (d *Detectors) FindSemantics(sample []Sample) error {
 			if s.Semantics == nil {
 				s.Semantics = d.matchColumnName(s.Name)
 			}
-		} else {
+		} else if s.Semantics == nil {
 			s.Semantics = d.matchColumnName(s.Name)
 		}
 	}

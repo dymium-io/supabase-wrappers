@@ -7303,7 +7303,7 @@ make_tuple_from_result_row(PGresult *res,
 		    case 0x4: redact_xml(valstr, -1); break;
 		    case 0x5: redact_bytea(valstr, -1); break;
 		    case 0x6: redact_json(valstr, -1); break;
-		    case 0x7: obfuscate(valstr, -1); break;
+		    case 0x7: if(act == 1) redact_uuid(valstr, -1); else obfuscate_uuid(valstr, -1); break;
 			case 0x8: valstr = "1970-01-01 00:00:00"; break;
 			case 0x9: valstr = "1970-01-01 00:00:00+00"; break;
 			case 0xa: valstr = "1970-01-01"; break;			  

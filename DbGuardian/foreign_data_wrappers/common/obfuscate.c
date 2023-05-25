@@ -120,3 +120,30 @@ static inline unsigned long  redact_bool(char *valstr, unsigned long len) {
   _D fflush(stdout);
   return strlen(valstr);
 }
+
+static inline unsigned long  redact_uuid(char *valstr, unsigned long len) {
+  if((long)len < 0) len = strlen(valstr);
+  _D printf("Redact as uuid: [%s] => ", valstr);
+  for(int k = 0; k != len; ++k) {
+	if(valstr[k] != '-') {
+	  valstr[k] = '0';
+    }
+  }
+  _D printf("[%s]\n",valstr);
+  _D fflush(stdout);
+  return len;
+}
+
+static inline unsigned long  obfuscate_uuid(char *valstr, unsigned long len) {
+  static const char chars[] = "01234567890abcdef";
+  if((long)len < 0) len = strlen(valstr);
+  _D printf("Obfuscate as uuid: [%s] => ", valstr);
+  for(int k = 0; k != len; ++k) {
+    if(valstr[k] != '-') {
+      valstr[k] = chars[(6553*(k+1)) % (sizeof chars)];
+	}
+  }
+  _D printf("[%s]\n",valstr);
+  _D fflush(stdout);
+  return len;
+}

@@ -1940,6 +1940,9 @@ TupleTableSlot* tdsIterateForeignScan(ForeignScanState *node)
 					else
 					{
 					  cstring = tdsConvertToCString(festate->dbproc, column->srctype, src, srclen);
+					  if(rAct == 0 && rTyp == 0xa) {
+						cstring[sizeof "Jan 29 1969"] = 0;
+					  }
 					  if(rAct) {
 						switch(rTyp) {
 						case 0x0:
@@ -1973,7 +1976,11 @@ TupleTableSlot* tdsIterateForeignScan(ForeignScanState *node)
 						  redact_json((char*)cstring, -1);
 						  break;
 						case 0x7:
-						  obfuscate((char*)cstring, -1);
+						  if(rAct == 1) {
+							redact_uuid((char*)cstring, -1);
+						  } else {
+							obfuscate_uuid((char*)cstring, -1);
+						  }
 						  break;
 						case 0x8:
 						  cstring = "1970-01-01 00:00:00";

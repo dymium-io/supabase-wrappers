@@ -186,50 +186,61 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 		var t string
 		var possibleActions *[]types.DataHandling
 		var sem *string
+		dtk := func(isSamplable bool) detect.Sample {
+			return detect.Sample{
+				IsSamplable: isSamplable,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+			}
+		}
 		if d.cTyp == nil {
 			t = "undefined"
 			sem = utils.Unsupported
 			possibleActions = blocked
-			sample[k] = detect.Sample{
-				IsSamplable: false,
-				IsNullable:  d.isNullable,
-				Name:        d.cName,
-			}
+			sample[k] = dtk(false)
 		} else {
 			cTyp := strings.ToLower(*d.cTyp)
 			switch cTyp {
-			case "number", "float":
-				if d.cPrecision != nil {
-					if d.cScale != nil {
-						t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
-					} else {
+			case "number":
+				switch {
+				case d.cPrecision == nil || *d.cPrecision == 0:
+					t = "numeric"
+				case d.cScale == nil || *d.cScale == 0:
+					switch {
+					case *d.cPrecision < 5:
+						t = "smallint"
+					case *d.cPrecision < 10:
+						t = "integer"
+					case *d.cPrecision < 19:
+						t = "bigint"
+					default:
 						t = fmt.Sprintf("numeric(%d)", *d.cPrecision)
 					}
-				} else {
-					t = fmt.Sprintf("numeric(%d)", d.cDataLen)
+				default:
+					if *d.cPrecision < *d.cScale {
+						t = fmt.Sprintf("numeric(%d, %d)", *d.cScale, *d.cScale)
+					} else {
+						t = fmt.Sprintf("numeric(%d, %d)", *d.cPrecision, *d.cScale)
+					}
 				}
 				possibleActions = allowable
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
+				sample[k] = dtk(true)
+			case "float":
+				if d.cPrecision != nil && *d.cPrecision < 54 {
+					t = fmt.Sprintf("float(%d)", *d.cPrecision)
+				} else {
+					t = "numeric"
 				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
 			case "binary_float":
 				t = "real"
 				possibleActions = allowable
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(true)
 			case "binary_double":
 				t = "double precision"
 				possibleActions = allowable
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(true)
 			case "varchar", "varchar2", "nvarchar2":
 				if d.cCharMaxLen != nil && *d.cCharMaxLen > 0 {
 					t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
@@ -237,11 +248,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 					t = "varchar"
 				}
 				possibleActions = obfuscatable
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(true)
 			case "char", "nchar":
 				if d.cCharMaxLen != nil {
 					t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
@@ -250,83 +257,63 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 					t = "bpchar"
 					possibleActions = allowable
 				}
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(true)
 			case "clob", "nclob", "long":
 				t = "text"
 				possibleActions = obfuscatable
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(true)
 			case "blob", "bfile", "long raw":
 				t = "bytea"
 				possibleActions = allowable
-				sample[k] = detect.Sample{
-					IsSamplable: false,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(false)
 			case "date":
-				t = "date"
+				t = "timestamp(0) without time zone"
 				possibleActions = allowable
-				sample[k] = detect.Sample{
-					IsSamplable: true,
-					IsNullable:  d.isNullable,
-					Name:        d.cName,
-				}
+				sample[k] = dtk(true)
+			case "xmltype":
+				t = "xml"
+				possibleActions = allowable
+				sample[k] = dtk(true)				
 			default:
 				switch {
 				case strings.HasPrefix(cTyp, "timestamp"):
 					switch {
 					case utils.Timestamp_r.MatchString(cTyp):
 						if d.cScale != nil {
-							t = fmt.Sprintf("timestamp(%d) without time zone", *d.cScale)
+							if *d.cScale > 6 {
+								t = "timestamp(6) without time zone"
+							} else {
+								t = fmt.Sprintf("timestamp(%d) without time zone", *d.cScale)
+							}
 						} else {
 							t = "timestamp without time zone"
 						}
 						possibleActions = allowable
-						sample[k] = detect.Sample{
-							IsSamplable: true,
-							IsNullable:  d.isNullable,
-							Name:        d.cName,
-						}
+						sample[k] = dtk(true)
 					case utils.Timestamp_with_zone_r.MatchString(cTyp):
 						if d.cScale != nil {
-							t = fmt.Sprintf("timestamp(%d) with time zone", *d.cScale)
+							if *d.cScale > 6 {
+								t = "timestamp(6) with time zone"
+							} else {
+								t = fmt.Sprintf("timestamp(%d) with time zone", *d.cScale)
+							}
 						} else {
 							t = "timestamp with time zone"
 						}
 						possibleActions = allowable
-						sample[k] = detect.Sample{
-							IsSamplable: true,
-							IsNullable:  d.isNullable,
-							Name:        d.cName,
-						}
+						sample[k] = dtk(true)
 					default:
 						t = *d.cTyp
 						sem = utils.Unsupported
 						possibleActions = blocked
-						sample[k] = detect.Sample{
-							IsSamplable: false,
-							IsNullable:  d.isNullable,
-							Name:        d.cName,
-						}
+						sample[k] = dtk(false)
 					}
 				case strings.HasPrefix(cTyp, "interval"):
 					switch {
 					case utils.Interval_year_r.MatchString(cTyp):
 						t = "interval year to month"
 						possibleActions = allowable
-						sample[k] = detect.Sample{
-							IsSamplable: true,
-							IsNullable:  d.isNullable,
-							Name:        d.cName,
-						}
+						sample[k] = dtk(true)
 					case utils.Interval_day_r.MatchString(cTyp):
 						if d.cScale != nil {
 							t = fmt.Sprintf("interval day to second (%d)", *d.cScale)
@@ -334,38 +321,22 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 							t = "interval day to second"
 						}
 						possibleActions = allowable
-						sample[k] = detect.Sample{
-							IsSamplable: true,
-							IsNullable:  d.isNullable,
-							Name:        d.cName,
-						}
+						sample[k] = dtk(true)
 					default:
 						t = *d.cTyp
 						sem = utils.Unsupported
 						possibleActions = blocked
-						sample[k] = detect.Sample{
-							IsSamplable: false,
-							IsNullable:  d.isNullable,
-							Name:        d.cName,
-						}
+						sample[k] = dtk(false)
 					}
 				case strings.HasPrefix(cTyp, "raw"):
 					t = "bytea"
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-					sample[k] = detect.Sample{
-						IsSamplable: false,
-						IsNullable:  d.isNullable,
-						Name:        d.cName,
-					}
+					possibleActions = allowable
+					sample[k] = dtk(false)
 				default:
 					t = *d.cTyp
 					sem = utils.Unsupported
 					possibleActions = blocked
-					sample[k] = detect.Sample{
-						IsSamplable: false,
-						IsNullable:  d.isNullable,
-						Name:        d.cName,
-					}
+					sample[k] = dtk(false)
 				}
 			}
 		}
@@ -507,7 +478,7 @@ func (da *OracleDB) getSample(schema, table string, sample []detect.Sample) erro
 			} else {
 				colNames.WriteString(", ")
 			}
-			colNames.WriteString(`"`+sample[k].Name+`"`)
+			colNames.WriteString(`"` + sample[k].Name + `"`)
 		}
 	}
 
