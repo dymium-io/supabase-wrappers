@@ -173,11 +173,16 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 		var t string
 		var sem *string
 		var possibleActions *[]types.DataHandling
-		dtk := func(isSamplable bool) detect.Sample {
+		dtk := func(isSamplable bool, sem ...*string) detect.Sample {
+			var s *string
+			if len(sem) == 1 {
+				s = sem[0]
+			}
 			return detect.Sample{
 				IsSamplable: isSamplable,
 				IsNullable:  d.isNullable,
 				Name:        d.cName,
+				Semantics:   s,
 			}
 		}
 		switch d.cTyp {
@@ -273,9 +278,6 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 		case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
 			t = "bytea"
 			possibleActions = allowable
-			// t = d.cTyp
-			// possibleActions = blocked
-			// sem = utils.Unsupported
 			sample[k] = dtk(false)
 		case "enum":
 			t = "varchar"
@@ -303,7 +305,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 				t = d.cTyp
 				possibleActions = blocked
 				sem = utils.Unsupported
-				sample[k] = dtk(false)
+				sample[k] = dtk(false, sem)
 			}
 		}
 

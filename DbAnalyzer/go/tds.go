@@ -176,11 +176,16 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		var possibleActions *[]types.DataHandling
 		var t string
 		var sem *string
-		dtk := func(isSamplable bool) detect.Sample {
+		dtk := func(isSamplable bool, sem ...*string) detect.Sample {
+			var s *string
+			if len(sem) == 1 {
+				s = sem[0]
+			}
 			return detect.Sample{
 				IsSamplable: isSamplable,
 				IsNullable:  d.isNullable,
 				Name:        d.cName,
+				Semantics:   s,
 			}
 		}
 		switch d.cTyp {
@@ -309,7 +314,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				t = d.cTyp
 				possibleActions = blocked
 				sem = utils.Unsupported
-				sample[k] = dtk(false)
+				sample[k] = dtk(false, sem)
 			}
 		}
 		c := types.Column{

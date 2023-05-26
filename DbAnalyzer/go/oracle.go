@@ -186,11 +186,16 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 		var t string
 		var possibleActions *[]types.DataHandling
 		var sem *string
-		dtk := func(isSamplable bool) detect.Sample {
+		dtk := func(isSamplable bool, sem ...*string) detect.Sample {
+			var s *string
+			if len(sem) == 1 {
+				s = sem[0]
+			}
 			return detect.Sample{
 				IsSamplable: isSamplable,
 				IsNullable:  d.isNullable,
 				Name:        d.cName,
+				Semantics:   s,
 			}
 		}
 		if d.cTyp == nil {
@@ -273,7 +278,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 			case "xmltype":
 				t = "xml"
 				possibleActions = allowable
-				sample[k] = dtk(true)				
+				sample[k] = dtk(true)
 			default:
 				switch {
 				case strings.HasPrefix(cTyp, "timestamp"):
@@ -306,7 +311,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 						t = *d.cTyp
 						sem = utils.Unsupported
 						possibleActions = blocked
-						sample[k] = dtk(false)
+						sample[k] = dtk(false, sem)
 					}
 				case strings.HasPrefix(cTyp, "interval"):
 					switch {
@@ -326,7 +331,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 						t = *d.cTyp
 						sem = utils.Unsupported
 						possibleActions = blocked
-						sample[k] = dtk(false)
+						sample[k] = dtk(false, sem)
 					}
 				case strings.HasPrefix(cTyp, "raw"):
 					t = "bytea"
@@ -336,7 +341,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 					t = *d.cTyp
 					sem = utils.Unsupported
 					possibleActions = blocked
-					sample[k] = dtk(false)
+					sample[k] = dtk(false, sem)
 				}
 			}
 		}

@@ -183,11 +183,16 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 		var possibleActions *[]types.DataHandling
 		var t string
 		var sem *string
-		dtk := func(isSamplable bool) detect.Sample {
+		dtk := func(isSamplable bool, sem ...*string) detect.Sample {
+			var s *string
+			if len(sem) == 1 {
+				s = sem[0]
+			}
 			return detect.Sample{
 				IsSamplable: isSamplable,
 				IsNullable:  d.isNullable,
 				Name:        d.cName,
+				Semantics:   s,
 			}
 		}
 		switch d.cTyp {
@@ -457,14 +462,14 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			default:
 				possibleActions = blocked
 				t = *d.eTyp + "[]"
-				sample[k] = dtk(false)
 				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
 			}
 		default:
 			possibleActions = blocked
 			t = d.cTyp
-			sample[k] = dtk(false)
 			sem = utils.Unsupported
+			sample[k] = dtk(false, sem)
 		}
 		c := types.Column{
 			Name:            d.cName,
