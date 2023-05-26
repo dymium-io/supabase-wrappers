@@ -278,7 +278,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 			case "xmltype":
 				t = "xml"
 				possibleActions = allowable
-				sample[k] = dtk(true)
+				sample[k] = dtk(false) // GoLang driver does not support XMLTYPE
 			default:
 				switch {
 				case strings.HasPrefix(cTyp, "timestamp"):
