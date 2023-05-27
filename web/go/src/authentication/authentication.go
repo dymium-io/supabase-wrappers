@@ -1016,7 +1016,6 @@ func GeneratePortalJWT(picture string, schema string, name string, email string,
 			IssuedAt:  issueTime.Unix(),
 		},
 	}
-	fmt.Printf("key: [%s]\n", os.Getenv("SESSION_SECRET"))
 	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
 	// Create the JWT string
