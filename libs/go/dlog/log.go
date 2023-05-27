@@ -379,7 +379,7 @@ func Init(component string) {
 	_, ok := os.LookupEnv("LOCAL_ENVIRONMENT")
 	if ok || component == "connector" { // this is a hack
 		searchUrl, ok := os.LookupEnv("LOCAL_SEARCH")
-		if ok && len(searchUrl) > 0 {
+		if ok && len(searchUrl) > 0 && component != "connector"{
 			// TODO - we should decide how we are going to connect/auth users for local search
 			user, _ := os.LookupEnv("LOCAL_SEARCH_USER")
 			passwd, _ := os.LookupEnv("LOCAL_SEARCH_PASSWD")
