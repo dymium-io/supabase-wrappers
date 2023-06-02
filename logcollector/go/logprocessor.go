@@ -8,6 +8,7 @@ import (
 	"fmt"
 	aplog "github.com/apex/log"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -106,7 +107,7 @@ func ParseLogCSV(msg string) (*PostgresLogMessage, error) {
 	}
 	pgLogMessage.Error_severity = record[11]
 	pgLogMessage.Sql_state_code = record[12]
-	pgLogMessage.Message = record[13]
+	pgLogMessage.Message = ObfuscatePasswords(record[13])
 	pgLogMessage.Detail = record[14]
 	pgLogMessage.Hint = record[15]
 	pgLogMessage.Internal_query = record[16]
@@ -144,6 +145,24 @@ func ParseLogCSV(msg string) (*PostgresLogMessage, error) {
 		pgLogMessage.Query_id = 0
 	}
 	return pgLogMessage, nil
+}
+
+// List of statements which contain passwords:
+var reStatements = []*regexp.Regexp{
+	regexp.MustCompile(`((?i)statement: CREATE\s+USER\s+MAPPING\s+FOR\s+.*\s+SERVER\s+.*\s+OPTIONS\s+\(.*password\s+['"])(\S+)((?s)['"].*\).*$)`),
+	regexp.MustCompile(`((?i)statement: CREATE\s+USER\s+.*\s+PASSWORD\s+['"])(\S+)((?s)['"].*$)`),
+	regexp.MustCompile(`((?i)statement: ALTER\s+USER\s+.*?WITH\s+.*PASSWORD\s+['"])(\S+)((?s)['"].*$)`),
+}
+
+// ObfuscatePasswords replaces passwords in the message with the string "********"
+func ObfuscatePasswords(msg string) string {
+	for _, re := range reStatements {
+		if re.MatchString(msg) {
+			msg = re.ReplaceAllString(msg, "$1********$3")
+			break
+		}
+	}
+	return msg
 }
 
 var EnvData struct {
