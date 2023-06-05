@@ -553,22 +553,3 @@ td {
 .overflow-x-scroll {
   overflow-x: scroll;
 }
-.rbt-close-content {
-  visibility: visible;
-  font-size: 1.2em;
-  color: $thick-blue !important;
-}
-.rbt-close {
-  position: relative;
-  left: 10px !important;
-  top: -1px;
-
-  font-weight: 800;
-
-  visibility: hidden;
-}
-.rbt-aux  {
-  .rbt-close {
-  color: $main-blue !important;
-  }
-}

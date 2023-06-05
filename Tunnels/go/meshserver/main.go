@@ -10,6 +10,7 @@ import (
 
 	"dymium.com/dymium/log"
 	"dymium.com/meshserver/tunnel"
+	"dymium.com/server/protocol"
 	"github.com/gorilla/mux"
 )
 
@@ -41,8 +42,7 @@ func health() {
 }
 
 func main() {
-	log.Init("Mesh Tunnel")
-	log.Info("Starting Mesh server, Version 0.01")
+	log.Infof("Starting Mesh server, Version %s", protocol.MeshServerVersion)
 
 	if "true" != os.Getenv("LOCAL_ENVIRONMENT") {
 		go health()

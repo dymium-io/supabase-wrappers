@@ -84,7 +84,7 @@ func DoUpdate(portalUrl string) error {
 		return errors.New(fmt.Sprintf("Error downloading update, status %d", resp.StatusCode))
 	}
 	ex, _ := os.Executable()
-	log.Info("Updating the client...")
+	log.Info("Updating the connector...")
 	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, ex + "." + protocol.MeshServerVersion + ".bak"})
 	if err != nil {
 		log.Infof("Error updating: %s", err.Error())
@@ -352,9 +352,9 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 		err := dec.Decode(&buff)
 
 		if err != nil {
-			
+
 			if err == io.EOF {
-				log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!",
+				log.Errorf("Customer %s, read from connector failed '%s', cleanup the proxy connection!",
 					customer, err.Error())
 			} else {
 				if !interrupted {
@@ -495,10 +495,19 @@ func handleSignal(ingress *tls.Conn, x chan int) {
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
 	select {
 	case <-signalChan:
-		log.Info("Received an interrupt, stopping the client.")
-		
+		var overseer bool
+		overseer = os.Getenv("WORKER") != "on"
+
+		if overseer {
+			log.Info("Received an interrupt in overseer, stopping...")
+			updateStatus("configured")
+
+			os.Exit(0)
+		} else {
+			log.Info("Received an interrupt in worker, stopping...")
+		}
 		interrupted = true
-		updateStatus("configured")
+
 		ingress.Close()
 	case <-x:
 		return
@@ -668,6 +677,8 @@ func main() {
 
 	if "" == os.Getenv("WORKER") {
 		log.Infof("overseer started, version %s", protocol.MeshServerVersion)
+		x := make(chan int, 1)
+		go handleSignal(nil, x)
 		restart()
 		health()
 	} else {
@@ -678,7 +689,7 @@ func main() {
 			if interrupted {
 				break
 			}
-			
+
 			log.Infof("Wait 20 sec before retrying...")
 			time.Sleep(20 * time.Second)
 			if interrupted {
