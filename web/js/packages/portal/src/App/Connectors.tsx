@@ -742,7 +742,7 @@ export function EditConnectors(props) {
                     if (js.status === "OK") {
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
-                                Connection {name} updated successfully!
+                                Connector {name} updated successfully! <br/><b>Note</b> that the <b>connector must be restarted</b> to update its configuration.
                             </Alert>
                         )
 

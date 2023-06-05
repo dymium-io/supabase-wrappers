@@ -965,30 +965,33 @@ func GetRoles(schema string, groups []string, admin_group string) []string {
 			roles = append(roles, gotypes.RoleUser)
 		}
 	}
-	if !hasadmin && !hasuser {
-		// check if there are any group mappings
-		log.Infof("In GetRoles, not admin, not user")
-		sql := `select count(*) from ` + schema + `.groupmapping;`
-		row := db.QueryRow(sql)
-		var count int
-		err := row.Scan(&count)
-		log.Infof("In GetRoles, count: %d, err: %v", count, err)
+	if !hasadmin /* && !hasuser */ {
+		/*
+			// check if there are any group mappings
+			log.Infof("In GetRoles, not admin, not user")
+			sql := `select count(*) from ` + schema + `.groupmapping;`
+			row := db.QueryRow(sql)
+			var count int
+			err := row.Scan(&count)
+			log.Infof("In GetRoles, count: %d, err: %v", count, err)
 
-		if err == nil && count == 0 {
-			// do the privilege elevation
-			for _, gr := range groups {
-				if gr == admin_group {
-					roles = append(roles, gotypes.RoleAdmin)
-					roles = append(roles, gotypes.RoleUser)
-					roles = append(roles, gotypes.RoleInstaller)
-					log.Infof("%s == %s", gr, admin_group)
+			if err == nil && count == 0 {
+		*/
+		// do the privilege elevation
+		log.Error("No admin group detected, using fallback group if present")
+		for _, gr := range groups {
+			if gr == admin_group {
+				roles = append(roles, gotypes.RoleAdmin)
+				roles = append(roles, gotypes.RoleUser)
+				roles = append(roles, gotypes.RoleInstaller)
+				log.Infof("No admin, but found fallback group: %s == %s", gr, admin_group)
 
-					break
-				} else {
-					log.Infof("%s != %s", gr, admin_group)
-				}
+				break
+			} else {
+				log.Infof("%s != %s", gr, admin_group)
 			}
 		}
+		//		}
 	}
 	return roles
 }
