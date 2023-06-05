@@ -48,7 +48,13 @@ export default function AssignGroups() {
             resp => {
                 resp.json().then(js => {
                     let grps: types.Group[] = []
+                    
                     js.records.forEach(x => {
+                        for(let i = 0; i < grps.length; i++) {
+                            if(x.dymiumgroup === grps[i].name) {
+                                return
+                            }
+                        }
                         grps.push({ id: x.id, name: x.dymiumgroup })
                     })
                     setGroups(grps)

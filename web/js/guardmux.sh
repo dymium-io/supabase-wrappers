@@ -13,9 +13,9 @@ tmux select-pane -t 0
 tmux split-window -v 
 
 # Change directory in each pane
-tmux send-keys -t guardian:0.0 "cd $repo_root/DbSync/scripts ; ./localrun.sh" C-m
-tmux send-keys -t guardian:0.1 "cd $repo_root/DbAnalyzer/scripts; ./localrun.sh" C-m
-tmux send-keys -t guardian:0.2 "cd $repo_root/DbGuardian/scripts; ./localrun.sh" C-m
+tmux send-keys -t guardian:0.0 "cd $repo_root/DbSync/scripts ; LOCAL_SEARCH=  ./localrun.sh" C-m
+tmux send-keys -t guardian:0.1 "cd $repo_root/DbAnalyzer/scripts; LOCAL_SEARCH=  ./localrun.sh" C-m
+tmux send-keys -t guardian:0.2 "cd $repo_root/DbGuardian/scripts; LOCAL_SEARCH= ./localrun.sh" C-m
 tmux send-keys -t guardian:0.3 "cd $repo_root/DbGuardian/scripts" C-m
 
 # Attach to the new session

@@ -1594,6 +1594,11 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
     }
 
 	targets, err := authentication.GetTargets(clientCSR.Subject.CommonName, key, secret)
+    if err != nil {
+		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
+		http.Error(w, "Dymium failed to get targets", http.StatusInternalServerError)
+		return
+    }
 
 	// create client certificate template
     clientCRTTemplate := x509.Certificate{

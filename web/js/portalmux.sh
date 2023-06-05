@@ -13,7 +13,7 @@ tmux select-pane -t 0
 tmux split-window -v 
 
 # Change directory in each pane
-tmux send-keys -t portal:0.0 "cd $repo_root/web/go/assets ; ./run.sh" C-m
+tmux send-keys -t portal:0.0 "cd $repo_root/web/go/assets ; LOCAL_SEARCH= ./run.sh" C-m
 tmux send-keys -t portal:0.1 "cd $repo_root/web/js/packages/portal; yarn start" C-m
 tmux send-keys -t portal:0.2 "cd $repo_root/web/js/packages/admin; yarn start" C-m
 tmux send-keys -t portal:0.3 "cd $repo_root/web/go/src" C-m
