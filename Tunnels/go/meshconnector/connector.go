@@ -304,7 +304,7 @@ func Pinger(enc *gob.Encoder, ingress net.Conn, wake chan int) {
 		if pingCounter-ackCounter > 2 {
 			ingress.Close()
 			log.Errorf("Ping ack missing: %d %d", pingCounter, ackCounter)
-			return
+			continue
 		}
 		pingLock.Lock()
 		ping.Id = pingCounter
@@ -320,7 +320,7 @@ func Pinger(enc *gob.Encoder, ingress net.Conn, wake chan int) {
 			if !strings.Contains(err.Error(), "closed network connection ") {
 				log.Errorf("Ping failed: %s", err.Error())
 			}
-			return
+			continue
 		}
 	}
 }
@@ -365,13 +365,16 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			}
 			// close all outgoing connections
 			wake <- 1
+			log.Debug("Sent wake to pinger")
 			mu.Lock()
 			for key := range conmap {
 				conmap[key].sock.Close()
 				delete(conmap, key)
 			}
 			mu.Unlock()
+			log.Debug("Cleaned up connection map")
 			ingress.Close()
+			log.Debug("Closed ingress connection")
 			return
 		}
 
@@ -550,7 +553,7 @@ func updateStatus(updown string) {
 		log.Errorf("Invalid response %d from %s: %s", resp.StatusCode, urlStr, string(body))
 		return
 	}
-	log.Info("Status updated")
+	log.Infof("Status updated %s", updown)
 
 }
 func DoConnect() {
@@ -670,6 +673,7 @@ func DoConnect() {
 	go handleSignal(ingress, x)
 	PassTraffic(ingress, customer)
 	x <- 1
+	log.Debug("Woke up signal handler")
 	updateStatus("configured")
 }
 func main() {
@@ -687,6 +691,7 @@ func main() {
 			log.Infof("worker started, version %s", protocol.MeshServerVersion)
 			DoConnect()
 			if interrupted {
+				log.Debug("Exiting on interrupt")
 				break
 			}
 
