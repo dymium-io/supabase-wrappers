@@ -44,11 +44,6 @@ const (
 
 var certKey *rsa.PrivateKey
 var clientCert tls.Certificate
-var customerid string
-var portalurl string
-var lbaddress string
-var lbport int
-var connectionError = false
 var interrupted = false
 
 var (
@@ -58,12 +53,9 @@ var (
 )
 
 type Virtcon struct {
-	sock            net.Conn
-	tenant          string
-	accumDownstream int
-	totalDownstream int
-	accumUpstream   int
-	totalUpstream   int
+	sock    net.Conn
+	tenant  string
+	inbound chan []byte
 }
 
 var pingCounter = 0
@@ -370,7 +362,6 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			pingLock.Unlock()
 
 		case protocol.Open:
-
 			conn := &Virtcon{}
 			conn.tenant = customer
 			mu.RLock()
