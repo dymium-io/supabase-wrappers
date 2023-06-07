@@ -9,4 +9,7 @@ export CUSTOMER=spoofcorp
 export TUNNELSERVER=portal.dymium.local:3009
 export LOCAL_ENVIRONMENT=true
 export HEALTHPORT=9911
-./meshconnector
+export LOCAL_SEARCH=
+./meshconnector 2>&1 | tee output.txt
+
+#go run --race connector.go

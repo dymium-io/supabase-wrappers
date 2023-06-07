@@ -124,7 +124,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 				log.ErrorTenantf(customer, "Connection closed, cleanup the proxy connection: %s!", err.Error())
 
 			} else {
-				log.ErrorTenantf(customer, "Read from client failed '%s', cleanup the proxy connection!", err.Error())
+				log.ErrorTenantf(customer, "Read from connector failed '%s', cleanup the proxy connection!", err.Error())
 			}
 			// close all outgoing connections
 			mu.Lock()
@@ -167,6 +167,8 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 			conn, ok := conmap[buff.Id]
 			mu.RUnlock()
 			//displayBuff("To database: ", buff.Data)
+			log.Debugf("Conn %d, write %d bytes", buff.Id, len(buff.Data))
+
 			if ok {
 				_, err = conn.sock.Write(buff.Data)
 
@@ -192,7 +194,7 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 	messages <- out
 
 	for {
-		buff := make([]byte, 0xffff)
+		buff := make([]byte, 4096)
 		n, err := ingress.Read(buff)
 		mu.RLock()
 		conn, ok := conmap[id]
@@ -220,7 +222,7 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 		if n == 0 {
 			log.Infof("Read returned 0 bytes")
 		}
-		log.Debugf("read local data successfully %d bytes", n)
+		log.Debugf("Conn %d, read %d bytes", id, n)
 		b := buff[:n]
 		out := protocol.TransmissionUnit{protocol.Send, id, b}
 		//write out result

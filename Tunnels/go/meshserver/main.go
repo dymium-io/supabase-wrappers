@@ -42,7 +42,8 @@ func health() {
 }
 
 func main() {
-	log.Infof("Starting Mesh server, Version %s", protocol.MeshServerVersion)
+	log.Init("meshserver")
+	log.Infof("Starting Mesh server, Version %v", protocol.MeshServerVersion)
 
 	if "true" != os.Getenv("LOCAL_ENVIRONMENT") {
 		go health()

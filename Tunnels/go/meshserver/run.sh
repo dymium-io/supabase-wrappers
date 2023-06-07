@@ -30,7 +30,7 @@ export ADDRESS=localhost
 export DATABASE_PASSWORD=$DATABASE_PASSWORD
 export LOCAL_ENVIRONMENT=true
 
-export LOG_LEVEL=Debug
+export LOG_LEVEL=Info
 
 export PORT=3009
 export CUSTOMER_PORTAL=portal.dymium.local
@@ -40,6 +40,7 @@ export LOCAL_SEARCH_USER=${LOCAL_SEARCH_USER:-elastic}
 export LOCAL_SEARCH_PASSWD=${LOCAL_SEARCH_PASSWD:-admin123}
 export SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE:-jsonmessage}
 
-./meshserver 
+#./meshserver 
 
+LOCAL_SEARCH= go run -race main.go
 

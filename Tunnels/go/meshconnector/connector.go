@@ -202,45 +202,12 @@ func generateCSR(customer string) ([]byte, error) {
 	return out, nil
 }
 
-/*
-func restart() {
-
-	ex, _ := os.Executable()
-
-	procAttr := new(os.ProcAttr)
-	procAttr.Files = []*os.File{nil, os.Stdout, os.Stderr}
-	dir, _ := os.Getwd()
-	procAttr.Dir = dir
-	procAttr.Env = os.Environ()
-	args := []string{}
-
-	for _, v := range os.Args {
-		if v == "-u" {
-			continue
-		}
-		args = append(args, v)
-	}
-	args[0] = ex
-	args = append(args, "-r")
-	time.Sleep(time.Second)
-	proc, err := os.StartProcess(ex, args, procAttr)
-	if err != nil {
-		log.Errorf("StartProcess Error: %s", err.Error())
-	}
-	_, err = proc.Wait()
-	if err != nil {
-		log.Errorf("proc.Wait error: %s", err.Error())
-	}
-	os.Exit(0)
-}
-*/
-
 func pipe(conmap map[int]*Virtcon, egress net.Conn,
 	messages chan protocol.TransmissionUnit, id int,
 	token string, mu *sync.RWMutex) {
 
 	for {
-		buff := make([]byte, 0xffff)
+		buff := make([]byte, 4096)
 		n, err := egress.Read(buff)
 		mu.RLock()
 		conn, ok := conmap[id]
@@ -258,6 +225,9 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn,
 						log.Errorf("Db read failed '%s', id:%d", err.Error(), id)
 					}
 				}
+			}
+			if conn != nil && conn.sock != nil {
+				conn.sock.Close()
 			}
 			egress.Close()
 			out := protocol.TransmissionUnit{protocol.Close, id, nil}
@@ -285,7 +255,9 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 		err := enc.Encode(buff)
 		if err != nil {
 			log.Errorf("Error in encoder: %s", err.Error())
-			ingress.Close()
+			if ingress != nil {
+				ingress.Close()
+			}
 		}
 	}
 }
@@ -297,13 +269,16 @@ func Pinger(enc *gob.Encoder, ingress net.Conn, wake chan int) {
 	for {
 		select {
 		case <-wake:
+			log.Debug("Pinger exited")
 			return
 		case <-time.After(20 * time.Second):
 		}
-
-		if pingCounter-ackCounter > 2 {
+		pingLock.RLock()
+		diff := pingCounter - ackCounter
+		pingLock.RUnlock()
+		if diff > 2 {
+			log.Errorf("Ping ack missing: %d %d, close ingress", pingCounter, ackCounter)
 			ingress.Close()
-			log.Errorf("Ping ack missing: %d %d", pingCounter, ackCounter)
 			continue
 		}
 		pingLock.Lock()
@@ -330,7 +305,6 @@ func InformParentOfUpdate() {
 	log.Info("Overseer contacted")
 }
 func PassTraffic(ingress *tls.Conn, customer string) {
-	//	log.Info("in PassTraffic")
 	updateStatus("active")
 
 	var conmap = make(map[int]*Virtcon)
@@ -343,7 +317,7 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 	messages := make(chan protocol.TransmissionUnit, 50)
 	go MultiplexWriter(messages, enc, ingress)
 
-	wake := make(chan int)
+	wake := make(chan int, 1)
 	go Pinger(enc, ingress, wake)
 
 	for {
@@ -369,12 +343,11 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			mu.Lock()
 			for key := range conmap {
 				conmap[key].sock.Close()
+				conmap[key].sock = nil
 				delete(conmap, key)
 			}
 			mu.Unlock()
 			log.Debug("Cleaned up connection map")
-			ingress.Close()
-			log.Debug("Closed ingress connection")
 			return
 		}
 
@@ -384,10 +357,10 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			mu.Lock()
 			for key := range conmap {
 				conmap[key].sock.Close()
+				conmap[key].sock = nil
 				delete(conmap, key)
 			}
 			mu.Unlock()
-			ingress.Close()
 			wake <- 0
 			return
 		case protocol.Ping:
@@ -403,13 +376,17 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			mu.RLock()
 			l := len(conmap)
 			mu.RUnlock()
+			//runtime.GC()
 			log.InfoTenantf(conn.tenant, "Creating connection #%d to db at %s, total #=%d", buff.Id, string(buff.Data), l)
 
 			egress, err := net.Dial("tcp", string(buff.Data))
+
 			if err != nil {
 				log.ErrorTenantf(conn.tenant, "Error connecting to target :  %s, send close back", err.Error())
 				messages <- protocol.TransmissionUnit{protocol.Close, buff.Id, nil}
-				return
+				continue
+			} else {
+				log.InfoTenantf(conn.tenant, "Created connection #%d to db at %s, total #=%d", buff.Id, string(buff.Data), l)
 			}
 			conn.sock = egress
 			mu.Lock()
@@ -424,11 +401,13 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			if ok {
 				log.InfoTenantf(conn.tenant, "Connection #%d closing, %d left", buff.Id, l-1)
 				conn.sock.Close()
+				log.InfoTenantf(conn.tenant, "Connection #%d closed, %d left", buff.Id, l-1)
 				mu.Lock()
+				conn.sock = nil
 				delete(conmap, buff.Id)
 				mu.Unlock()
 			} else {
-				log.Errorf("Error finding the descriptor %d, %v", buff.Id, buff)
+				log.Errorf("Error finding the descriptor %d in Close", buff.Id)
 			}
 		case protocol.Send:
 			mu.RLock()
@@ -442,7 +421,7 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 					conn.sock.Close()
 				}
 			} else {
-				log.Errorf("Error finding the descriptor %d, %v", buff.Id, buff)
+				log.Errorf("Error finding the descriptor %d in Send", buff.Id)
 			}
 		}
 	}
@@ -467,21 +446,12 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 	egress, err := tls.Dial("tcp", tunnelserver, config) // *Conn
 	if err != nil {
 		log.Errorf("Error connecting to %s: %s", tunnelserver, err.Error())
-
 		return nil, err
 	}
 
 	log.Info("Connected to Dymium!")
-
 	state := egress.ConnectionState()
-	/*
-		log.Debugf("Version: %x", state.Version)
-		log.Debugf("HandshakeComplete: %t", state.HandshakeComplete)
-		log.Debugf("DidResume: %t", state.DidResume)
-		log.Debugf("CipherSuite: %x", state.CipherSuite)
-		log.Debugf("NegotiatedProtocol: %s", state.NegotiatedProtocol)
-		log.Debugf("NegotiatedProtocolIsMutual: %t", state.NegotiatedProtocolIsMutual)
-	*/
+
 	log.Debugf("Certificate chain:")
 
 	for i, cert := range state.PeerCertificates {
