@@ -1,4 +1,4 @@
-We are using [[https://www.atlassian.com/git/tutorials/git-subtree][git-subtree]] to get FDW from external Git repositories.
+We are using [git-subtree](https://www.atlassian.com/git/tutorials/git-subtree) to get FDW from external Git repositories.
 
 In particular, this is how it is done for each foreign data wrapper:
 
