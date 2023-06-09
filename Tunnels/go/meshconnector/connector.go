@@ -194,10 +194,49 @@ func generateCSR(customer string) ([]byte, error) {
 	return out, nil
 }
 
-func pipe(conmap map[int]*Virtcon, egress net.Conn,
+func pipe(conmap map[int]*Virtcon,
 	messages chan protocol.TransmissionUnit, id int,
-	token string, mu *sync.RWMutex) {
+	token string, mu *sync.RWMutex, customer string) {
 
+	mu.RLock()
+	l := len(conmap)
+	mu.RUnlock()
+	//runtime.GC()
+	log.InfoTenantf(customer, "Creating connection #%d to db at %s, total #=%d", id, token, l)
+
+	egress, err := net.Dial("tcp", token)
+
+	if err != nil {
+		log.ErrorTenantf(customer, "Error connecting to target :  %s, send close back", err.Error())
+		messages <- protocol.TransmissionUnit{protocol.Close, id, nil}
+		return
+	} else {
+		log.InfoTenantf(customer, "Created connection #%d to db at %s, total #=%d", id, token, l)
+	}
+
+	mu.Lock()
+	conn,ok := conmap[id] // todo process ok
+	if ok {
+		conn.sock = egress
+	} 
+	mu.Unlock()
+	if !ok {
+		log.ErrorTenantf(customer, "Error finding the descriptor %d in pipe", id)
+		messages <- protocol.TransmissionUnit{protocol.Close, id, nil}
+		return
+	}
+	go func() {
+		for {
+			inbound := <-conn.inbound
+			//log.InfoTenantf(customer, "Written for #%d, %d bytes", id, len(inbound))			
+			if conn != nil && conn.sock != nil{
+				conn.sock.Write(inbound)
+			} else {
+				return
+			}
+		}
+	}()
+	// start a goroutine that writes into socket from conn.inbound
 	for {
 		buff := make([]byte, 4096)
 		n, err := egress.Read(buff)
@@ -220,6 +259,7 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn,
 			}
 			if conn != nil && conn.sock != nil {
 				conn.sock.Close()
+				//conn.sock = nil
 			}
 			egress.Close()
 			out := protocol.TransmissionUnit{protocol.Close, id, nil}
@@ -306,7 +346,7 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 	dec := gob.NewDecoder(ingress)
 	enc := gob.NewEncoder(ingress)
 
-	messages := make(chan protocol.TransmissionUnit, 50)
+	messages := make(chan protocol.TransmissionUnit, 100)
 	go MultiplexWriter(messages, enc, ingress)
 
 	wake := make(chan int, 1)
@@ -364,26 +404,12 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 		case protocol.Open:
 			conn := &Virtcon{}
 			conn.tenant = customer
-			mu.RLock()
-			l := len(conmap)
-			mu.RUnlock()
-			//runtime.GC()
-			log.InfoTenantf(conn.tenant, "Creating connection #%d to db at %s, total #=%d", buff.Id, string(buff.Data), l)
-
-			egress, err := net.Dial("tcp", string(buff.Data))
-
-			if err != nil {
-				log.ErrorTenantf(conn.tenant, "Error connecting to target :  %s, send close back", err.Error())
-				messages <- protocol.TransmissionUnit{protocol.Close, buff.Id, nil}
-				continue
-			} else {
-				log.InfoTenantf(conn.tenant, "Created connection #%d to db at %s, total #=%d", buff.Id, string(buff.Data), l)
-			}
-			conn.sock = egress
+			conn.inbound = make(chan []byte, 50)
 			mu.Lock()
 			conmap[buff.Id] = conn
 			mu.Unlock()
-			go pipe(conmap, egress, messages, buff.Id, string(buff.Data), &mu)
+
+			go pipe(conmap, messages, buff.Id, string(buff.Data), &mu, customer)
 		case protocol.Close:
 			mu.RLock()
 			conn, ok := conmap[buff.Id]
@@ -391,7 +417,9 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			mu.RUnlock()
 			if ok {
 				log.InfoTenantf(conn.tenant, "Connection #%d closing, %d left", buff.Id, l-1)
-				conn.sock.Close()
+				if conn != nil && conn.sock != nil {
+					conn.sock.Close()
+				}
 				log.InfoTenantf(conn.tenant, "Connection #%d closed, %d left", buff.Id, l-1)
 				mu.Lock()
 				conn.sock = nil
@@ -405,12 +433,7 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			conn, ok := conmap[buff.Id]
 			mu.RUnlock()
 			if ok {
-				_, err = conn.sock.Write(buff.Data)
-
-				if err != nil {
-					log.ErrorTenantf(conn.tenant, "Write to db error: %s", err.Error())
-					conn.sock.Close()
-				}
+				conn.inbound <- buff.Data
 			} else {
 				log.Errorf("Error finding the descriptor %d in Send", buff.Id)
 			}
