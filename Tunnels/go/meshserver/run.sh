@@ -22,7 +22,7 @@ export DATABASE_PORT=${DATABASE_PORT:-5432}
 export DATABASE_NAME=${DATABASE_NAME:-dymium}
 export DATABASE_USER=${DATABASE_USER:-dymium}
 export DATABASE_TLS=${DATABASE_TLS:-disable}
-export ADDRESS=localhost
+export ADDRESS=192.168.0.104
 
 [ -z "$DATABASE_PASSWORD" ] && {
     DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )

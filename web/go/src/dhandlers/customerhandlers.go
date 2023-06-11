@@ -1393,11 +1393,12 @@ func DownloadUpdate(w http.ResponseWriter, r *http.Request) {
 
 func DownloadConnectorUpdate(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	os, _ := vars["os"]
-	arch, _ := vars["arch"]	
+	os := vars["os"]
+	arch := vars["arch"]	
 
 	fil := fmt.Sprintf("./customer/connector/%s/%s/meshconnector", os, arch)
-	log.Info("Api DownloadConnectorUpdate called")
+	log.Infof("Api DownloadConnectorUpdate called for %s", fil)
+	w.Header().Set("Content-Disposition", "attachment; filename=meshconnector")
 	http.ServeFile(w, r, fil)
 }
 

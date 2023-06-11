@@ -124,6 +124,7 @@ test('add-datascope', async () => {
     await act(async () => {    
         fireEvent.click(fill)
     })     
+    await new Promise((r) => setTimeout(r, 1000));
     // take snapshot of the filled-in form
     expect(component).toMatchSnapshot()
     // click on apply, this should finish the datascope

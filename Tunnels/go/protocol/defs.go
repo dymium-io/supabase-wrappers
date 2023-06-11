@@ -15,4 +15,4 @@ type TransmissionUnit struct {
 	Data   []byte
 }
 
-var MeshServerVersion = "0.1.4"
+var MeshServerVersion = "0.1.5"

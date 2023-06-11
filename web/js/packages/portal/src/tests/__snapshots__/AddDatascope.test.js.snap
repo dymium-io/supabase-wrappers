@@ -151,7 +151,7 @@ exports[`add-datascope 1`] = `
                     class="form-label"
                     for="dbname"
                   >
-                    Database Name
+                    Ghost Database Name:
                   </label>
                   <input
                     class="form-control form-control-sm"
@@ -189,7 +189,7 @@ exports[`add-datascope 1`] = `
                     class="form-label"
                     for="connection"
                   >
-                    Available Data Sources
+                    Available Data Sources:
                   </label>
                   <select
                     class="form-control form-control-sm"
@@ -467,7 +467,7 @@ exports[`add-datascope 1`] = `
                   class="form-label"
                   for="dbname"
                 >
-                  Database Name
+                  Ghost Database Name:
                 </label>
                 <input
                   class="form-control form-control-sm"
@@ -505,7 +505,7 @@ exports[`add-datascope 1`] = `
                   class="form-label"
                   for="connection"
                 >
-                  Available Data Sources
+                  Available Data Sources:
                 </label>
                 <select
                   class="form-control form-control-sm"
@@ -940,7 +940,7 @@ exports[`add-datascope 2`] = `
                     class="form-label"
                     for="dbname"
                   >
-                    Database Name
+                    Ghost Database Name:
                   </label>
                   <input
                     class="form-control form-control-sm"
@@ -978,7 +978,7 @@ exports[`add-datascope 2`] = `
                     class="form-label"
                     for="connection"
                   >
-                    Available Data Sources
+                    Available Data Sources:
                   </label>
                   <select
                     class="form-control form-control-sm"
@@ -1356,7 +1356,7 @@ exports[`add-datascope 2`] = `
                   class="form-label"
                   for="dbname"
                 >
-                  Database Name
+                  Ghost Database Name:
                 </label>
                 <input
                   class="form-control form-control-sm"
@@ -1394,7 +1394,7 @@ exports[`add-datascope 2`] = `
                   class="form-label"
                   for="connection"
                 >
-                  Available Data Sources
+                  Available Data Sources:
                 </label>
                 <select
                   class="form-control form-control-sm"
@@ -1831,7 +1831,6 @@ exports[`add-datascope 3`] = `
                           <button
                             class="mr-1 btn btn-dymium btn-sm"
                             data-testid="fill-security"
-                            disabled=""
                             style="margin-top: 0.0em;"
                             type="button"
                           >
@@ -2397,7 +2396,7 @@ exports[`add-datascope 3`] = `
                     class="form-label"
                     for="dbname"
                   >
-                    Database Name
+                    Ghost Database Name:
                   </label>
                   <input
                     class="form-control form-control-sm"
@@ -2435,7 +2434,7 @@ exports[`add-datascope 3`] = `
                     class="form-label"
                     for="connection"
                   >
-                    Available Data Sources
+                    Available Data Sources:
                   </label>
                   <select
                     class="form-control form-control-sm"
@@ -2815,7 +2814,6 @@ exports[`add-datascope 3`] = `
                         <button
                           class="mr-1 btn btn-dymium btn-sm"
                           data-testid="fill-security"
-                          disabled=""
                           style="margin-top: 0.0em;"
                           type="button"
                         >
@@ -3381,7 +3379,7 @@ exports[`add-datascope 3`] = `
                   class="form-label"
                   for="dbname"
                 >
-                  Database Name
+                  Ghost Database Name:
                 </label>
                 <input
                   class="form-control form-control-sm"
@@ -3419,7 +3417,7 @@ exports[`add-datascope 3`] = `
                   class="form-label"
                   for="connection"
                 >
-                  Available Data Sources
+                  Available Data Sources:
                 </label>
                 <select
                   class="form-control form-control-sm"
@@ -4421,7 +4419,7 @@ exports[`add-datascope 4`] = `
                     class="form-label"
                     for="dbname"
                   >
-                    Database Name
+                    Ghost Database Name:
                   </label>
                   <input
                     class="form-control form-control-sm"
@@ -4459,7 +4457,7 @@ exports[`add-datascope 4`] = `
                     class="form-label"
                     for="connection"
                   >
-                    Available Data Sources
+                    Available Data Sources:
                   </label>
                   <select
                     class="form-control form-control-sm"
@@ -5404,7 +5402,7 @@ exports[`add-datascope 4`] = `
                   class="form-label"
                   for="dbname"
                 >
-                  Database Name
+                  Ghost Database Name:
                 </label>
                 <input
                   class="form-control form-control-sm"
@@ -5442,7 +5440,7 @@ exports[`add-datascope 4`] = `
                   class="form-label"
                   for="connection"
                 >
-                  Available Data Sources
+                  Available Data Sources:
                 </label>
                 <select
                   class="form-control form-control-sm"
@@ -6455,7 +6453,7 @@ exports[`add-datascope 5`] = `
                     class="form-label"
                     for="dbname"
                   >
-                    Database Name
+                    Ghost Database Name:
                   </label>
                   <input
                     class="form-control form-control-sm"
@@ -6493,7 +6491,7 @@ exports[`add-datascope 5`] = `
                     class="form-label"
                     for="connection"
                   >
-                    Available Data Sources
+                    Available Data Sources:
                   </label>
                   <select
                     class="form-control form-control-sm"
@@ -7449,7 +7447,7 @@ exports[`add-datascope 5`] = `
                   class="form-label"
                   for="dbname"
                 >
-                  Database Name
+                  Ghost Database Name:
                 </label>
                 <input
                   class="form-control form-control-sm"
@@ -7487,7 +7485,7 @@ exports[`add-datascope 5`] = `
                   class="form-label"
                   for="connection"
                 >
-                  Available Data Sources
+                  Available Data Sources:
                 </label>
                 <select
                   class="form-control form-control-sm"

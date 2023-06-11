@@ -76,8 +76,8 @@ func DoUpdate(portalUrl string) error {
 		return errors.New(fmt.Sprintf("Error downloading update, status %d", resp.StatusCode))
 	}
 	ex, _ := os.Executable()
-	log.Info("Updating the connector...")
-	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, ex + "." + protocol.MeshServerVersion + ".bak"})
+	log.Infof("Updating %s...", ex)
+	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, "meshconnector." + protocol.MeshServerVersion + ".bak"})
 	if err != nil {
 		log.Infof("Error updating: %s", err.Error())
 		if rerr := selfupdate.RollbackError(err); rerr != nil {
@@ -96,7 +96,7 @@ func DoUpdate(portalUrl string) error {
 }
 func restart() {
 
-	ex, _ := os.Executable()
+	ex := selfupdate.GetEx()
 
 	procAttr := new(os.ProcAttr)
 	procAttr.Files = []*os.File{nil, os.Stdout, os.Stderr}
@@ -113,6 +113,7 @@ func restart() {
 	args[0] = ex
 	args = append(args, "-r")
 	time.Sleep(time.Second)
+	log.Infof("Restart process %s", ex)
 	_, err := os.StartProcess(ex, args, procAttr)
 	if err != nil {
 		log.Errorf("StartProcess Error: %s", err.Error())
@@ -215,10 +216,10 @@ func pipe(conmap map[int]*Virtcon,
 	}
 
 	mu.Lock()
-	conn,ok := conmap[id] // todo process ok
+	conn, ok := conmap[id] // todo process ok
 	if ok {
 		conn.sock = egress
-	} 
+	}
 	mu.Unlock()
 	if !ok {
 		log.ErrorTenantf(customer, "Error finding the descriptor %d in pipe", id)
@@ -228,8 +229,8 @@ func pipe(conmap map[int]*Virtcon,
 	go func() {
 		for {
 			inbound := <-conn.inbound
-			//log.InfoTenantf(customer, "Written for #%d, %d bytes", id, len(inbound))			
-			if conn != nil && conn.sock != nil{
+			//log.InfoTenantf(customer, "Written for #%d, %d bytes", id, len(inbound))
+			if conn != nil && conn.sock != nil {
 				conn.sock.Write(inbound)
 			} else {
 				return

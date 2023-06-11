@@ -21,3 +21,6 @@ func hideFile(path string) error {
 		return nil
 	}
 }
+func GetEx() string {
+	return "/meshconnector.exe"
+}

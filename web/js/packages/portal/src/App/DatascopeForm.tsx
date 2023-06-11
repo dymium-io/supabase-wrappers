@@ -358,7 +358,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                 <Row>
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="dbname">
-                            <Form.Label>Database Name</Form.Label>
+                            <Form.Label>Ghost Database Name:</Form.Label>
                             <Form.Control size="sm" type="text" placeholder="alphanumeric_"
                                 required
                                 pattern="[a-z][a-z0-9_]*"
@@ -380,7 +380,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
             <Row>
                 <Col xs="auto" className="d-flex" style={{ alignItems: "center" }}>
                     <Form.Group className="mb-3" controlId="connection" >
-                        <Form.Label >Available Data Sources</Form.Label>
+                        <Form.Label >Available Data Sources:</Form.Label>
                         <Form.Control as="select" size="sm" 
                             onChange={e => {
 
