@@ -1077,7 +1077,7 @@ func generateError(w http.ResponseWriter, r *http.Request, header string, body s
 	/*
 		Failed to get userinfo: "+err.Error()
 	*/
-	log.Errorf("Error %s: %s", header, body)
+	log.Errorf("In generateError, Error %s: %s", header, body)
 	nonce, _ := GenerateRandomString(32)
 	common.CommonNocacheNocspHeaders(w, r)
 	w.Header().Set("Content-Security-Policy", "script-src 'nonce-"+nonce+"'")

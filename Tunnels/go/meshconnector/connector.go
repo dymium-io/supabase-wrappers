@@ -535,7 +535,7 @@ func updateStatus(updown string) {
 	body, err := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != 200 {
-		log.Errorf("Invalid response %d from %s: %s", resp.StatusCode, urlStr, string(body))
+		log.Errorf("Update Status failed: Invalid response %d from %s: %s", resp.StatusCode, urlStr, string(body))
 		return
 	}
 	log.Infof("Status updated %s", updown)
@@ -586,7 +586,8 @@ func DoConnect() {
 	body, err := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != 200 {
-		log.Errorf("Invalid response %d from %s: %s", resp.StatusCode, urlStr, string(body))
+		log.Errorf("Failed to authenticate, return code: %d from %s: %s", resp.StatusCode, urlStr, strings.Replace(string(body), "\n", "\\n", -1))
+		log.Error("Check connector configuration in the portal, it may be wrong or absent.")
 		return
 	}
 
@@ -607,6 +608,7 @@ func DoConnect() {
 		version = v
 		log.Debugf("Imposed version %s", version)
 	}
+
 	vserver, _ := semver.Make(version)
 	vclient, _ := semver.Make(protocol.MeshServerVersion)
 	if vserver.GT(vclient) {

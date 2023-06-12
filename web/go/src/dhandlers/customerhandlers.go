@@ -1542,6 +1542,7 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
 
 	var certout types.CSRResponse 
 	certout.Certificate = string(out)
+	certout.Version = protocol.MeshServerVersion
 	js, err := json.Marshal(certout)
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetClientCertificate, error: %s", err.Error())
