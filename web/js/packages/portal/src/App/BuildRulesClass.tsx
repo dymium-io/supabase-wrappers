@@ -329,6 +329,8 @@ export default class BuildRulesClass extends Component {
     </Alert>
     this.setState({ spinner: true })
     let body = newpolicy.toJson()
+    debugger
+    let xx = JSON.parse(body)
     http.sendToServer("POST", "/api/savepolicies",
       null, body,
       resp => {
@@ -370,6 +372,18 @@ export default class BuildRulesClass extends Component {
     e.preventDefault();
     e.stopPropagation();
     let newname = this.state.name.trim()
+    if(newname === "") {
+      this.setState({name: ""})
+      this.setState({ validatedPII: true })
+      return false
+    }
+    let newdata = this.state.data.trim()
+    if(newdata === "") {
+      this.setState({data: ""})
+      this.setState({ validatedPII: true })
+      return false
+    }
+
     for (let i = 0; i < this.state.rules.length; i++) {
       let rule = this.state.rules[i]
       if (rule.name === newname) {
@@ -384,7 +398,7 @@ export default class BuildRulesClass extends Component {
       id: uuidv4(),
       name: newname,
       method: this.state.method,
-      data: this.state.data,
+      data: newdata,
       actions: this.state.policy != null ? [...this.state.policy.actions] : []
     }
 
