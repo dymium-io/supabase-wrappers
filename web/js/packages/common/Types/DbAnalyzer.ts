@@ -51,7 +51,7 @@ export class AnalyzerRequest {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): AnalyzerRequest {
     disableDF()
@@ -111,7 +111,7 @@ export class AnalyzerResponse {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): AnalyzerResponse {
     disableDF()
@@ -143,7 +143,7 @@ export class ConnectionDetailRequest {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): ConnectionDetailRequest {
     disableDF()
@@ -197,7 +197,7 @@ export class ConnectionDetailResponse {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): ConnectionDetailResponse {
     disableDF()
@@ -289,7 +289,7 @@ export class ConnectionParams {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): ConnectionParams {
     disableDF()
@@ -332,7 +332,7 @@ export class DatabaseInfoData {
     this['_schemas'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): DatabaseInfoData {
     disableDF()
@@ -390,7 +390,7 @@ export class TableInfoData {
     this['_columns'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): TableInfoData {
     disableDF()
@@ -440,7 +440,7 @@ export class TableInfoParams {
     this['_rules'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): TableInfoParams {
     disableDF()
@@ -557,7 +557,7 @@ export class Column {
     this['_possibleActions'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): Column {
     disableDF()
@@ -611,7 +611,7 @@ export class Schema {
     this['_tables'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): Schema {
     disableDF()
@@ -653,7 +653,7 @@ export class Table {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): Table {
     disableDF()
@@ -729,6 +729,20 @@ function enumReader(__v__,__dflt__) {
     }
     return __a__
   })
+}
+
+function removeLeadingUnderscore(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(val => removeLeadingUnderscore(val));
+  } else if (typeof obj === 'object' && obj !== null) {
+    return Object.keys(obj).reduce((newObj, key) => {
+      const newKey = ( key.length > 0 && key[0] === '_' ) ? key.substring(1) : key;
+      newObj[newKey] = removeLeadingUnderscore(obj[key]);
+      return newObj;
+    }, {} as any)
+  } else {
+    return obj;
+  }
 }
 
 let setDirtyFlag = () => { dirtyFlag = true }

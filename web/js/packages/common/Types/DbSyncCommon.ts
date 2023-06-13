@@ -87,7 +87,7 @@ export class Request {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): Request {
     disableDF()
@@ -141,7 +141,7 @@ export class SqlTestConf {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): SqlTestConf {
     disableDF()
@@ -177,7 +177,7 @@ export class SqlTestResult {
     this['_records'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): SqlTestResult {
     disableDF()
@@ -225,7 +225,7 @@ export class UserConf {
     this['_datascopes'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): UserConf {
     disableDF()
@@ -281,6 +281,20 @@ function enumReader(__v__,__dflt__) {
     }
     return __a__
   })
+}
+
+function removeLeadingUnderscore(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(val => removeLeadingUnderscore(val));
+  } else if (typeof obj === 'object' && obj !== null) {
+    return Object.keys(obj).reduce((newObj, key) => {
+      const newKey = ( key.length > 0 && key[0] === '_' ) ? key.substring(1) : key;
+      newObj[newKey] = removeLeadingUnderscore(obj[key]);
+      return newObj;
+    }, {} as any)
+  } else {
+    return obj;
+  }
 }
 
 let setDirtyFlag = () => { dirtyFlag = true }

@@ -12,7 +12,7 @@ case ${1:-"--darwin"} in
 	zstd -f --rm --ultra darwin/Gen-exe -o ../../bin/darwin/dataTypesGenerator.zst
 	;;
     "--linux")
-	cat <<EOF | docker run --rm -i -v $HOME/.stack:/root/.stack -v $PWD:/z fpco/stack-build-small:lts /bin/bash -
+	cat <<EOF | docker run --rm -i -v $HOME/.stack:/root/.stack -v $PWD:/z ghcup /bin/bash -
 cd /z
 stack build --copy-bins --local-bin-path linux
 EOF

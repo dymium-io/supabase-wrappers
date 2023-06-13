@@ -6,7 +6,6 @@ package types
 
 
 
-
 type Column struct {
    Name string `json:"name"`
    Typ string `json:"typ"`

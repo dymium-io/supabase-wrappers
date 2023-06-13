@@ -25,6 +25,7 @@ import qualified LangGenerators.GoLang  as GoLang
 import qualified LangGenerators.Haskell as Haskell
 import qualified LangGenerators.Js      as Js
 import qualified LangGenerators.Python  as Python
+import qualified LangGenerators.Rust    as Rust
 import qualified LangGenerators.Ts      as Ts
 
 run :: FilePath -> [Text] -> RIO App ()
@@ -61,6 +62,7 @@ run hdtdName installations = do
           go | go == "go" || go == "golang" ->
             GoLang.run  ddt installPath rootModule camelizer
           "python"  -> Python.run  ddt installPath rootModule camelizer
+          "rust"    -> Rust.run  ddt installPath rootModule camelizer
           _ -> do
             logError . displayShow $
               "Language ["<>lang<>"is not supported\n" <>
@@ -69,7 +71,7 @@ run hdtdName installations = do
     Left err -> do
       logError $ displayShow err
       exitFailure
-    _ -> do
+    _ERR -> do
       logError "Multiple sections in HDTD file are not supported"
       exitFailure
 

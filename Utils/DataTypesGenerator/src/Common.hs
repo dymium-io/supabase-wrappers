@@ -20,10 +20,10 @@ createInstallPaths :: InstallPath ->
                       RIO App ()
 createInstallPaths (InstallPath installPath) mDef transformPath = do
   paths <- traverse (normalisePath . joinPath)
-           $ mDef ^..each .to (snd . mPath)
+           $ mDef ^..each .to ((transformPath <$>) . snd . mPath)
   let uniqPaths = Set.elems $ Set.fromList paths
   createDirectoryIfMissing installPath
-  mapM_ (createDirectoryIfMissing . (installPath </>) . transformPath) uniqPaths
+  mapM_ (createDirectoryIfMissing . (installPath </>)) uniqPaths
     where
       createDirectoryIfMissing d = do
         dExists <- D.doesDirectoryExist d
