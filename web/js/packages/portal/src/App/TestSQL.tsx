@@ -8,7 +8,7 @@ import Col from 'react-bootstrap/Col'
 import { Link } from "react-router-dom";
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import ToolkitProvider, { ColumnToggle } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
+import ToolkitProvider, { ColumnToggle } from 'react-bootstrap-table2-toolkit';
 import Offcanvas from '@dymium/common/Components/Offcanvas'
 import Alert from 'react-bootstrap/Alert'
 import Spinner from '@dymium/common/Components/Spinner'
@@ -23,51 +23,51 @@ import * as hex from '../Utils/Hex'
 
 
 
-function getDatascopesForSQL(setSpinner, setAlert, setDatascopes, onSuccess)  {
+function getDatascopesForSQL(setSpinner, setAlert, setDatascopes, onSuccess) {
   setSpinner(true)
   http.sendToServer("GET", "/api/getdatascopesfortestsql",
     null, "",
     resp => {
 
       resp.json().then(js => {
-         if(js.status !== "OK") {
+        if (js.status !== "OK") {
           setAlert(
-              <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                  Error retrieving datascopes: {js.errormessage} { }
-              </Alert>
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+              Error retrieving datascopes: {js.errormessage} { }
+            </Alert>
           )
-         } else {
-            setDatascopes(js.records)
-            onSuccess(js.records)
-         }
-         setTimeout( () => setSpinner(false), 500)
+        } else {
+          setDatascopes(js.records)
+          onSuccess(js.records)
+        }
+        setTimeout(() => setSpinner(false), 500)
       }).catch((error) => {
-          setSpinner(false)
-          setAlert(
-              <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                  Error retrieving datascopes {error.message}
-              </Alert>
-          )            
+        setSpinner(false)
+        setAlert(
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+            Error retrieving datascopes {error.message}
+          </Alert>
+        )
       })
     },
     resp => {
       console.log("on error")
       setSpinner(false)
-      resp != null && resp.text().then(t=>
-      setAlert(
+      resp != null && resp.text().then(t =>
+        setAlert(
           <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-              Error retrieving datascopes: {t}
+            Error retrieving datascopes: {t}
           </Alert>)
-      )        
+      )
     },
     error => {
       console.log("on exception: " + error)
       setSpinner(false)
       setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-              Error retrieving datascopes {error.message}
-          </Alert>
-      )           
+        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+          Error retrieving datascopes {error.message}
+        </Alert>
+      )
     })
 }
 
@@ -76,11 +76,13 @@ function getDatascopesForSQL(setSpinner, setAlert, setDatascopes, onSuccess)  {
 type HeaderCell = {
   dataField: string,
   text: string,
+  hidden: boolean,
   headerStyle: any,
   formatter: any,
-  headerFormatter: any
+  headerFormatter: any,
+  isDummyField: boolean
 }
-let columns: HeaderCell[] = []
+
 
 
 function IsImage(text): string {
@@ -100,40 +102,40 @@ function IsImage(text): string {
   }
 
   if (text[0] === '4'.charCodeAt(0) &&
-      text[1] === '7'.charCodeAt(0) &&
-      text[2] === '4'.charCodeAt(0) &&
-      text[3] === '9'.charCodeAt(0) &&
-      text[4] === '4'.charCodeAt(0) &&
-      text[5] === '6'.charCodeAt(0) &&      
-      text[6] === '3'.charCodeAt(0) &&
-      text[7] === '8'.charCodeAt(0) &&         
-      text[8] === '3'.charCodeAt(0) &&
-      text[9] === '9'.charCodeAt(0) &&   
-      text[10] === '6'.charCodeAt(0) &&
-      text[11] === '1'.charCodeAt(0) ) {   
-      console.log("HEX GIF")
+    text[1] === '7'.charCodeAt(0) &&
+    text[2] === '4'.charCodeAt(0) &&
+    text[3] === '9'.charCodeAt(0) &&
+    text[4] === '4'.charCodeAt(0) &&
+    text[5] === '6'.charCodeAt(0) &&
+    text[6] === '3'.charCodeAt(0) &&
+    text[7] === '8'.charCodeAt(0) &&
+    text[8] === '3'.charCodeAt(0) &&
+    text[9] === '9'.charCodeAt(0) &&
+    text[10] === '6'.charCodeAt(0) &&
+    text[11] === '1'.charCodeAt(0)) {
+    console.log("HEX GIF")
     return "hexgif"
   }
   if (text[0] === 'F'.charCodeAt(0) &&
-      text[1] === 'F'.charCodeAt(0) &&
-      text[2] === 'D'.charCodeAt(0) &&
-      text[3] === '8'.charCodeAt(0)  ) {   
-      console.log("HEX JPEG")
+    text[1] === 'F'.charCodeAt(0) &&
+    text[2] === 'D'.charCodeAt(0) &&
+    text[3] === '8'.charCodeAt(0)) {
+    console.log("HEX JPEG")
     return "hexjpg"
   }
-// 89 50 4E 47
+  // 89 50 4E 47
   if (text[0] === '8'.charCodeAt(0) &&
-      text[1] === '9'.charCodeAt(0) &&
-      text[2] === '5'.charCodeAt(0) &&
-      text[3] === '0'.charCodeAt(0) &&
-      text[4] === '4'.charCodeAt(0) &&
-      text[5] === 'E'.charCodeAt(0) &&      
-      text[6] === '4'.charCodeAt(0) &&
-      text[7] === '7'.charCodeAt(0) 
+    text[1] === '9'.charCodeAt(0) &&
+    text[2] === '5'.charCodeAt(0) &&
+    text[3] === '0'.charCodeAt(0) &&
+    text[4] === '4'.charCodeAt(0) &&
+    text[5] === 'E'.charCodeAt(0) &&
+    text[6] === '4'.charCodeAt(0) &&
+    text[7] === '7'.charCodeAt(0)
 
-      
-      ) {   
-      console.log("HEX PNG")
+
+  ) {
+    console.log("HEX PNG")
     return "hexpng"
   }
 
@@ -148,10 +150,13 @@ function Test() {
   const [tables, setTables] = useState<ctypes.DatascopeTable[]>([])
   const [selectedTable, setSelectedTable] = useState<ctypes.DatascopeTable>()
   const [data, setData] = useState<{}[]>([])
+  const [txt, setTxt] = useState<stypes.SqlTestResult>(new stypes.SqlTestResult())
   const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
-
+  const [columns, setColumns] = useState<HeaderCell[]>([])
+  const [selectedTableIndex, setSelectedTableIndex] = useState(-1)
+  
   useEffect(() => {
-    
+
     getDatascopesForSQL(setSpinner, setAlert, setDatascopes, () => {
 
     })
@@ -159,7 +164,7 @@ function Test() {
   }, [])
   useEffect(() => {
     if (selectedDatascope !== null) {
-      //setSelectedTable()
+      setSelectedTableIndex(-1)
       getTables()
     }
   }, [selectedDatascope])
@@ -198,11 +203,11 @@ function Test() {
       resp => {
         setSpinner(false)
         resp != null && resp.text().then(t =>
-        setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-            Error creating connection: {t}
-          </Alert>
-        ))
+          setAlert(
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+              Error creating connection: {t}
+            </Alert>
+          ))
 
       },
       error => {
@@ -215,96 +220,116 @@ function Test() {
         )
       })
   }
+  useEffect(() => {
+    let columns:HeaderCell[] = []
+    let data: {}[] = []
+    let js = txt
+    let counter = 0
+    js.columns.forEach(x => {
 
-  let getSelect = () => {
-    let processData = txt => {
-      columns = []
-      let data: {}[] = []
-      let js = stypes.SqlTestResult.fromJson(txt)
-      js.columns.forEach(x => {
+      let col: HeaderCell = {
 
-        let col: HeaderCell = {
-          dataField: x,
-          text: x,
-          headerStyle: { minWidth: '200px' },
-          formatter: (cell, row) => {
+        dataField: x,
+        text: x,
+        hidden: false,
+        isDummyField: false,
+        headerStyle: { minWidth: '200px' },
+        formatter: (cell, row) => {
 
+          if(cell === undefined) {
+            return <div></div>
+          }
 
-            let b = cell.substring(1, cell.length)
-            if (cell[0] === '1') {
-              let o
-              let bcell = b64.base64DecToArr(b)
-              let m = IsImage(bcell)
-              if (m !== "") {
+          let b = cell.substring(1, cell.length)
+          if (cell[0] === '1') {
+            let o
+            let bcell = b64.base64DecToArr(b)
+            let m = IsImage(bcell)
+            if (m !== "") {
 
-                switch(m) {
-                  case "hexgif": {
-                    let h = atob(b)
-                    let newb = hex.HexStringToByteArray(h)
-                    b = b64.base64EncArr(newb)
-                    m = "gif"
-                  }
-                  break
-                  case "hexpng": {
-                    let h = atob(b)
-                    let newb = hex.HexStringToByteArray(h)
-                    b = b64.base64EncArr(newb)
-                    m = "png"
-                  }
-                  break
-                  case "hexjpg": {
-                    let h = atob(b)
-                    let newb = hex.HexStringToByteArray(h)
-                    b = b64.base64EncArr(newb)
-                    m = "jpeg"
-                  }
-                  break                                    
-                  default: 
-                  break
+              switch (m) {
+                case "hexgif": {
+                  let h = atob(b)
+                  let newb = hex.HexStringToByteArray(h)
+                  b = b64.base64EncArr(newb)
+                  m = "gif"
                 }
-                let src = `data:image/${m};base64,${b}`
+                  break
+                case "hexpng": {
+                  let h = atob(b)
+                  let newb = hex.HexStringToByteArray(h)
+                  b = b64.base64EncArr(newb)
+                  m = "png"
+                }
+                  break
+                case "hexjpg": {
+                  let h = atob(b)
+                  let newb = hex.HexStringToByteArray(h)
+                  b = b64.base64EncArr(newb)
+                  m = "jpeg"
+                }
+                  break
+                default:
+                  break
+              }
+              let src = `data:image/${m};base64,${b}`
 
-                o = <img src={src} style={{maxWidth: "250px"}}></img>
-              } else
-                o = "BINARY"
-              return <div style={{
-                overflow: 'scroll', minWidth: '200px',
-                marginLeft: '3px', marginRight: '3px'
-              }}>{o}</div>
-            }
-
+              o = <img src={src} style={{ maxWidth: "250px" }}></img>
+            } else
+              o = "BINARY"
             return <div style={{
               overflow: 'scroll', minWidth: '200px',
               marginLeft: '3px', marginRight: '3px'
-            }}>{b}</div>
-          },
-          headerFormatter: (column, colIndex) => {
-            return <div style={{
-              textOverflow: 'ellipsis', overflow: 'hidden',
-              marginLeft: '3px', marginRight: '3px'
-            }}>{column.text}</div>
-          },
-        }
+            }}>{o}</div>
+          }
 
-        columns.push(col)
-      })
-      txt.records.forEach(x => {
-        let a = {}
-        for (let i = 0; i < columns.length; i++) {
-          a[columns[i].dataField] = x[i]
-        }
-        data.push(a)
-      })
-      setData(data)
-
+          return <div style={{
+            overflow: 'scroll', minWidth: '200px',
+            marginLeft: '3px', marginRight: '3px'
+          }}>{b}</div>
+        },
+        headerFormatter: (column, colIndex) => {
+          return <div style={{
+            textOverflow: 'ellipsis', overflow: 'hidden',
+            marginLeft: '3px', marginRight: '3px'
+          }}>{column.text}</div>
+        },
+      }
+      columns.push(col)
+    })
+    let idcol = {
+      dataField: "dymiumid412354",
+      hidden: true,
+      text: "",
+      isDummyField: true,
+      headerStyle: { minWidth: '200px' },
+      formatter: (cell, row) => {
+        return <div></div>
+      },
+      headerFormatter: (column, colIndex) => {
+        return <div></div>
+      }
+      
     }
-    /*    
-        let mock = `{"columns":["id","name","primary_function","contractor","thrust","wingspan","length","height","weight","max_takeoff_weight","fuel_capacity","payload","speed","range_","ceiling","armament"],"records":[["67592d50-bbfe-402a-8781-94c9409033a7","F16","multirole fighter","Lockheed Martin","27000","33","50","16","19700","37500","7000","5x1258 bbmos, 7xPYD9, 1xXGL590, 1x7214surl_tnnxs","1500","2000","50000","xxx"]]}`
-        processData( JSON.parse(mock))
-        return false
-    */
+    columns.push(idcol)
 
-    //let jj = {database: selectedTable.database, schema: selectedTable.schema, table: selectedTable.table}
+    txt.records.forEach(x => {
+      let a = {}
+      for (let i = 0; i < columns.length - 1; i++) {
+        a[columns[i].dataField] = x[i]
+      }
+      data.push(a)
+    })
+    setData(data)
+    setColumns(columns)
+
+  }, [txt])
+
+  let getSelect = () => {
+    let processData = (_txt: stypes.SqlTestResult) => {
+      setTxt(_txt)
+    }
+
     if (selectedTable == null || selectedTable == undefined) {
       return
     }
@@ -315,8 +340,8 @@ function Test() {
       null, body,
       resp => {
         resp.json().then(txt => {
-
-          processData(txt)
+          let tr = stypes.SqlTestResult.fromJson(txt)
+          processData(tr)
           setTimeout(() => setSpinner(false), 500)
 
         }).catch((error) => {
@@ -326,17 +351,17 @@ function Test() {
               Error executing query: {error.message}
             </Alert>
           )
-  
+
         })
       },
       resp => {
         setSpinner(false)
         resp != null && resp.text().then(t =>
-        setAlert(
-          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-            Error executing query: {t}
-          </Alert>
-        ))
+          setAlert(
+            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+              Error executing query: {t}
+            </Alert>
+          ))
 
       },
       error => {
@@ -354,31 +379,59 @@ function Test() {
   let handleSubmit = event => {
 
     getSelect()
-
+    setAlert(<></>)
     event.preventDefault();
     event.stopPropagation();
     return false
   }
+  const CustomToggleList = ({
+    columns,
+    onColumnToggle,
+    toggles
+  }) => (
+    <div className="btn-group btn-test  btn-sm btn-group-toggle btn-group-horizontal" data-toggle="buttons">
+      {
+        columns.slice(0, -1)
+          .map(column => ({
+            ...column,
+            toggle: toggles[column.dataField]
+          }))
+          .map(column => (
+            <button
+              type="button"
+              key={ column.dataField }
+              className={ `btn btn-test  btn-sm ${column.toggle ? 'active' : ''}` }
+              data-toggle="button"
+              aria-pressed={ column.toggle ? 'true' : 'false' }
+              onClick={ () => onColumnToggle(column.dataField) }
+            >
+              { column.text }
+            </button>
+          ))
+      }
+    </div>
+  );
+
   return (
     <div className=" text-left">
       {alert}
-            <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
-                <h5>Testing SQL</h5>
-                <div className="mb-3">
-                    Here you can run small select queries with a limit of 20 records to test the work of Ghost Database, data access and transformation.
-                </div>
-                <div className="mb-3">
-                    Select ghost database, select a table, and hit Apply.
-                </div>
-                <div className="mb-3">
-                    This tool also demonstrates the namespace transformation from the original schemas and tables into the Ghost Database.
-                </div>
+      <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
+        <h5>Testing SQL</h5>
+        <div className="mb-3">
+          Here you can run small select queries with a limit of 20 records to test the work of Ghost Database, data access and transformation.
+        </div>
+        <div className="mb-3">
+          Select ghost database, select a table, and hit Apply.
+        </div>
+        <div className="mb-3">
+          This tool also demonstrates the namespace transformation from the original schemas and tables into the Ghost Database.
+        </div>
 
 
-                <div>
+        <div>
 
-                </div>
-            </Offcanvas>
+        </div>
+      </Offcanvas>
       <h5 > Test data access and transformation <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
       <div className=" text-left">
         <Form onSubmit={handleSubmit} noValidate >
@@ -420,13 +473,16 @@ function Test() {
                   onChange={e => {
 
                     setSelectedTable(tables[parseInt(e.target.value)])
+                    setSelectedTableIndex(parseInt(e.target.value))
                     //appDispatch(setSelectedDatascopeDefault(e.target.value))
 
                   }}
-                //value={table}
+                  value={selectedTableIndex}
                 >
-                  return <option value="">...</option>
-                  {tables.map((x, i) => {
+                  return <option key={-1} value={-1}>...</option>
+                  {tables.sort( (x,y) => {
+                    return (x.connection + '_' + x.schema + '.' + x.table > y.connection + '_' + y.schema + '.' + y.table) ? 1 : -1
+                  }).map((x, i) => {
 
                     return <option key={i} value={i}>{x.connection + '_' + x.schema + '.' + x.table}</option>
                   })
@@ -453,18 +509,16 @@ function Test() {
         {data.length > 0 &&
           <div id="testtable" className="mb-5 mt-3">
             <ToolkitProvider
-              keyField={columns[0].dataField}
               columns={columns}
-
               id="scaledtable"
               data={data}
-
+              keyField="dymiumid412354"
               columnToggle
             >
               {
                 props => (
                   <div>
-                    <ColumnToggle.ToggleList
+                    <CustomToggleList
                       contextual="success"
                       striped
                       btnClassName="btn-test btn-sm"
@@ -472,9 +526,11 @@ function Test() {
                     />
                     <hr />
                     <BootstrapTable
-                   condensed
-                   striped bootstrap4
+                      keyField="dymiumid412354"
+                      condensed
+                      striped bootstrap4
                       {...props.baseProps}
+                      hiddenColumns={['id']} 
                     />
                   </div>
                 )
@@ -482,9 +538,9 @@ function Test() {
             </ToolkitProvider>
 
           </div>
-      }
+        }
 
-    </div>
+      </div>
     </div >
   )
 
@@ -494,10 +550,10 @@ function Test() {
 export default function TestSQL() {
 
   return (
-    <Tabs
+    <Tabs id="tabs"
 
       unmountOnExit={true} className="mb-3 text-left">
-      <Tab eventKey="test" title="Test SQL" className="mx-4">
+      <Tab eventKey="test" id="test" title="Test SQL" className="mx-4">
         <Test />
       </Tab>
 

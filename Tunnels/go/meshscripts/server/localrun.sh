@@ -23,6 +23,10 @@ export DATABASE_TLS=${DATABASE_TLS:-disable}
 }
 export DATABASE_PASSWORD=$DATABASE_PASSWORD
 export LOCAL_ENVIRONMENT=true
+export LOCAL_SEARCH=${LOCAL_SEARCH-http://elasticsearch.dymium.local:9200}
+export LOCAL_SEARCH_USER=${LOCAL_SEARCH_USER:-elastic}
+export LOCAL_SEARCH_PASSWD=${LOCAL_SEARCH_PASSWD:-admin123}
+export SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE:-jsonmessage}
 
 export LOG_LEVEL=Info
 
@@ -48,4 +52,9 @@ docker run --rm  -m="0.5Gb" --cpus="0.5"  \
        -e CA_CERTIFICATE="$CA_CERTIFICATE" \
        -e CERTIFICATE="$CERTIFICATE" \
        -e PASSPHRASE=$PASSPHRASE \
+       -e LOCAL_ENVIRONMENT=true                     \
+       -e LOCAL_SEARCH=$LOCAL_SEARCH                 \
+       -e LOCAL_SEARCH_USER=$LOCAL_SEARCH_USER \
+       -e LOCAL_SEARCH_PASSWD=$LOCAL_SEARCH_PASSWD         \
+       -e SEARCH_IN_PIPELINE=$SEARCH_IN_PIPELINE         \
        meshserver

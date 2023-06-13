@@ -11,7 +11,7 @@ const SampleSize = 32
 type Detectors struct {
 	columnNameDetectors []detector
 	contentDetectors    []detector
-	invokeComprehend    bool
+	comprehendDetected  map[string]string
 }
 
 type detector struct {
@@ -19,18 +19,26 @@ type detector struct {
 	re regexp.Regexp
 }
 
+type Sample struct {
+	IsSamplable bool
+	IsNullable  bool
+	Name        string
+	Data        []*string
+	Semantics   *string
+}
+
 func Compile(piis []types.PIIDetector) (*Detectors, error) {
 	d := Detectors{
 		columnNameDetectors: []detector{},
 		contentDetectors:    []detector{},
-		invokeComprehend:    false,
+		comprehendDetected:  map[string]string{},
 	}
 	for _, p := range piis {
 		switch p.Method {
 		case types.PIIDT_Comprehend:
-			d.invokeComprehend = true
+			d.comprehendDetected[p.Data] = *p.Id
 		case types.PIIDT_Columnregexp:
-			if r, err := regexp.Compile(`(?i)`+p.Data); err != nil {
+			if r, err := regexp.Compile(`(?i)` + p.Data); err != nil {
 				return nil, fmt.Errorf("Erroneous regexp %s: %v", p.Data, err)
 			} else {
 				d.columnNameDetectors = append(d.columnNameDetectors,
@@ -40,7 +48,7 @@ func Compile(piis []types.PIIDetector) (*Detectors, error) {
 					})
 			}
 		case types.PIIDT_Contentregexp:
-			if r, err := regexp.Compile(`(?i)`+p.Data); err != nil {
+			if r, err := regexp.Compile(`(?i)` + p.Data); err != nil {
 				return nil, fmt.Errorf("Erroneous regexp %s: %v", p.Data, err)
 			} else {
 				d.contentDetectors = append(d.contentDetectors,
@@ -54,17 +62,24 @@ func Compile(piis []types.PIIDetector) (*Detectors, error) {
 	return &d, nil
 }
 
-func (d *Detectors) FindSemantics(columnName string, data *[]string) *string {
-	s := d.matchColumnName(columnName)
-	if s != nil {
-		return s
+func (d *Detectors) FindSemantics(sample []Sample) error {
+
+	if err := tryComprehend(sample, d.comprehendDetected); err != nil {
+		fmt.Printf("Comprehend returned error (ignored): %+v\n",err)
 	}
-	if data != nil {
-		s = d.matchContent(*data)
-		if s != nil {
-			return s
+
+	for k := range sample {
+		s := &sample[k]
+		if s.IsSamplable {
+			if s.Semantics == nil && s.Data != nil && len(s.Data) > 0 {
+				s.Semantics = d.matchContent(s.Data)
+			}
+			if s.Semantics == nil {
+				s.Semantics = d.matchColumnName(s.Name)
+			}
+		} else if s.Semantics == nil {
+			s.Semantics = d.matchColumnName(s.Name)
 		}
-		// add AWS.Comprehend call here
 	}
 	return nil
 }
@@ -79,10 +94,14 @@ func (d *Detectors) matchColumnName(s string) *string {
 	return nil
 }
 
-func (d *Detectors) matchContent(s []string) *string {
-	pred := func(p *detector) func(string) bool {
-		return func(ss string) bool {
-			return p.re.MatchString(ss)
+func (d *Detectors) matchContent(s []*string) *string {
+	pred := func(p *detector) func(*string) bool {
+		return func(ss *string) bool {
+			if ss != nil {
+				return p.re.MatchString(*ss)
+			} else {
+				return false
+			}
 		}
 	}
 	for k := range d.contentDetectors {
@@ -92,7 +111,6 @@ func (d *Detectors) matchContent(s []string) *string {
 		}
 	}
 	return nil
-
 }
 
 func All[T any](ts []T, pred func(T) bool) bool {

@@ -1,4 +1,4 @@
-cat <<\EOF | docker build --platform amd64 --compress -t ghcup -f - .
+cat <<\EOF | docker build --platform linux/amd64 --compress -t ghcup -f - .
 FROM ubuntu:latest
 
 RUN apt-get update && \

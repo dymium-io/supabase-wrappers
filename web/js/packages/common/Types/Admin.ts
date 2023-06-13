@@ -81,7 +81,7 @@ export class Customer {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): Customer {
     disableDF()
@@ -126,7 +126,7 @@ export class DeleteCustomer {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): DeleteCustomer {
     disableDF()
@@ -177,7 +177,7 @@ export class GlobalUsage {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): GlobalUsage {
     disableDF()
@@ -202,6 +202,20 @@ function stringReader(__dflt__) {
     doAlert(`stringReader: ${__a__} is not a string`)
     return __dflt__
   })
+}
+
+function removeLeadingUnderscore(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(val => removeLeadingUnderscore(val));
+  } else if (typeof obj === 'object' && obj !== null) {
+    return Object.keys(obj).reduce((newObj, key) => {
+      const newKey = ( key.length > 0 && key[0] === '_' ) ? key.substring(1) : key;
+      newObj[newKey] = removeLeadingUnderscore(obj[key]);
+      return newObj;
+    }, {} as any)
+  } else {
+    return obj;
+  }
 }
 
 let setDirtyFlag = () => { dirtyFlag = true }

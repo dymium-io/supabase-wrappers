@@ -5,7 +5,6 @@ import (
 	_ "github.com/lib/pq"
 
 	"fmt"
-	"log"
 
 	"crypto/md5"
 	b64 "encoding/base64"
@@ -23,10 +22,10 @@ func sqlTest(
 		return nil, fmt.Errorf("sqlTestConf not defined")
 	}
 
-	log.Printf("sqlTest: { datascope: %s, database: %s, schema: %s, table: %s }\n",
-		*datascope, sqlTest.Database, sqlTest.Schema, sqlTest.Table)
-	log.Printf("guardianCnf: { Address: %v:%d, Database: %s}\n",
-		cnf.GuardianAddress, cnf.GuardianPort, cnf.GuardianDatabase)
+	//log.Printf("sqlTest: { datascope: %s, database: %s, schema: %s, table: %s }\n",
+	//	*datascope, sqlTest.Database, PostgresEscape(sqlTest.Schema), PostgresEscape(sqlTest.Table))
+	// log.Printf("guardianCnf: { Address: %v:%d, Database: %s}\n",
+	//	cnf.GuardianAddress, cnf.GuardianPort, cnf.GuardianDatabase)
 
 	sslmode_ := "disable"
 	if *cnf.GuardianTls {
@@ -53,8 +52,9 @@ func sqlTest(
 	}
 
 	var rows *sql.Rows
-	sql := fmt.Sprintf(`select * from %s_%s.%s limit 20`,
-		sqlTest.Database, sqlTest.Schema, sqlTest.Table)
+	sql := fmt.Sprintf(`select * from %s.%s limit 20`,
+		PostgresEscape(sqlTest.Database+"_"+sqlTest.Schema),
+		PostgresEscape(sqlTest.Table))
 	if rows, err = db.Query(sql); err != nil {
 		return nil, fmt.Errorf("Query [%s] failed: %v", sql, err)
 	}

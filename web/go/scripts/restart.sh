@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
 
 CLUSTER="dymium"
 SERVICE="webserver-srv"

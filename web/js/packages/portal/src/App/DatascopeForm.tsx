@@ -296,8 +296,11 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                 let { schema, table, refby } = references[key]
                 let r = <div className="m-1">Table {refby} refers to {schema}.{table}. <Button onClick={
                     e => {
-                        if (db.id !== null)
+                        if (db.id !== null) {
+                            let c = props.nameToConnection[db.name]
+                            editedConnection.current = c.name
                             props.AddNewTable(db.id, props.nameToConnection[db.name].dbtype, schema, table)
+                        }
                     }
 
                 } size="sm" style={{ marginTop: "-2px" }} variant="dymium">Click to link {schema}.{table}</Button></div>
@@ -392,7 +395,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                     </Form.Group>
                     <Form.Group>
                         <Form.Label ></Form.Label>
-                        <Button onClick={onAddConnection} variant="dymium" style={{ marginTop: '1.9em' }} size="sm"><i className="fa-solid fa-database mr-2"></i>Link Connection</Button>
+                        <Button onClick={onAddConnection} variant="dymium" style={{ marginTop: '0.95em' }} size="sm"><i className="fa-solid fa-database mr-2"></i>Link Connection</Button>
                     </Form.Group>
                 </Col>
                 <Col className="text-left">

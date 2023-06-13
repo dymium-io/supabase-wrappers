@@ -15,5 +15,37 @@
 		{
 			"path": "../libs/go"
 		}
-	]
+	],
+	"settings": {
+		"sqltools.connections": [
+			{
+				"mysqlOptions": {
+					"authProtocol": "default"
+				},
+				"previewLimit": 50,
+				"server": "localhost",
+				"port": 3307,
+				"driver": "MariaDB",
+				"name": "Maria",
+				"group": "Maria",
+				"database": "northwind",
+				"username": "root",
+				"password": "1234"
+			},
+			{
+				"mysqlOptions": {
+					"authProtocol": "default"
+				},
+				"previewLimit": 50,
+				"server": "localhost",
+				"port": 3308,
+				"driver": "MySQL",
+				"name": "mysql",
+				"group": "mysql",
+				"database": "northwind",
+				"username": "root",
+				"password": "1234"
+			}
+		]
+	}
 }

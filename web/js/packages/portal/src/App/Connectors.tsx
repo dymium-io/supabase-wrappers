@@ -12,11 +12,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import * as tun from '@dymium/common/Types/Tunnel'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
+import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import Offcanvas from '@dymium/common/Components/Offcanvas'
 const { SearchBar, ClearSearchButton } = Search;
-import ReactHtmlParser from 'html-react-parser'; 
+import ReactHtmlParser from 'html-react-parser';
 
 import { tooltip } from '@dymium/common/Components/Tooltip'
 import PasswordField from '@dymium/common/Components/PasswordField'
@@ -37,6 +37,10 @@ const databases = Object.keys(com.databaseTypes).map(key => {
 })
 
 function Downloads(props) {
+    const docker = "public.ecr.aws/a9d3u0m7/dymiumconnector:latest"
+    let copydocker = e => {
+        navigator.clipboard.writeText(docker);
+    }
     return <div className=" text-left">
 
         <h5 > Connector Binary Downloads</h5>
@@ -55,7 +59,7 @@ function Downloads(props) {
         </div>
         <div className="viewport">
             <div>For x64 Linux:</div>
-            <a href="/meshconnector_linux_amd64.tar.gz" download="meshconnector.tar.gz"> <i className="fab fa-linux mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
+            <a href="/meshconnector_linux_amd64.tgz" download="meshconnector.tar.gz"> <i className="fab fa-linux mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
             <div>
 
                 <div style={{ display: "flex" }}>
@@ -69,7 +73,7 @@ function Downloads(props) {
 
         <div className="viewport">
             <div>For Mac OS X:</div>
-            <a href="/meshconnector_darwin_amd64.tar.gz" download="meshconnector.tar.gz"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
+            <a href="/meshconnector_darwin_amd64.tgz" download="meshconnector.tar.gz"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
             <div>
 
                 <div style={{ display: "flex" }}>
@@ -80,7 +84,13 @@ function Downloads(props) {
                 </div>
             </div>
         </div>
+        <div className="viewport">
+            <div>A Docker container:</div>
+            <i className="fab fa-docker thickblue" style={{ marginRight: '0.3em' }} ></i>{docker}<i style={{ marginTop: '0.1em', marginLeft: '0.3em' }} onClick={copydocker} className="fas fa-copy clipbtn"></i>
 
+        </div>
+        You run the Connector in the address space of your Data Source. The configuration is passed in the form of environment variables.
+        <ContainerHelp />
     </div>
 
 }
@@ -117,6 +127,14 @@ function ConnectionForm(props) {
                 let tunnel = [...props.tunnel]
                 tunnel[i].port = n
                 props.setTunnel(tunnel)
+            }
+            let graphStatus = () => {
+                switch(props.tunnel[i].status) {
+                    case "active" : return <i className="fa-solid fa-thumbs-up "></i>
+                    case "configured": return <i className="fa-solid fa-thumbs-down "></i>
+                    default: return <i className="fa-solid fa-gears "></i>
+
+                } 
             }
             out.push(
                 <Row key={"tunnel" + i} className={i % 2 ? "palegray" : "palergray"}>
@@ -168,8 +186,7 @@ function ConnectionForm(props) {
                     </Col>
                     <Col xs="auto">
                         <div>Status:</div>
-                        <div style={{ marginTop: '0.3em' }} className="thickblue">{props.tunnel[i].status !== "active" ?
-                            <i className="fa-solid fa-gears "></i> : <i className="fa-solid fa-thumbs-up "></i>} {tun.humanReadableTunnelStatus(props.tunnel[i].status)}</div>
+                        <div style={{ marginTop: '0.3em' }} className="thickblue">{graphStatus()} {tun.humanReadableTunnelStatus(props.tunnel[i].status)}</div>
                     </Col>
                     <Col xs="auto" as="div" className="text-right mx-0 mt-0 px-1 aligh-top">
                         <i hidden={i !== props.tunnel.length - 1} className="far fahover fa-plus-square aligh-top fa-1x mr-1 plusminus" onClick={addTunnel} ></i>
@@ -519,6 +536,44 @@ export function AddConnector() {
     )
 }
 
+function ContainerHelp() {
+    return <>
+
+        <div className="mb-3">
+            Below is the complete list of necessary variables, in an example bash script.
+        </div>
+        <div className="mb-3">
+            <div className="d-block " style={{ fontFamily: "monospace", fontSize: "0.6em", overflow: "hidden", color: '#33cc33', backgroundColor: 'black' }}>
+                <div className=" text-nowrap p-1" >
+                    <div >
+                        #!/bin/bash
+                    </div><div>
+                        export LOG_LEVEL=Info
+                    </div><div>
+                        export PORTAL=https://portal.dymium.io/
+                    </div><div>
+                        export CONNECTOR=<span style={{ fontStyle: 'italic' }}>your connector id</span>
+                    </div><div>
+                        export KEY=<span style={{ fontStyle: 'italic' }}>your secret key</span>
+                    </div><div>
+                        export SECRET=<span style={{ fontStyle: 'italic' }}>your secret</span>
+                    </div><div>
+                        export CUSTOMER={com.getTokenProperty("schema")}
+                    </div><div>
+                        export TUNNELSERVER={com.getTokenProperty("schema")}.dymium.io:3009
+                    </div><div>
+                        ./meshconnector
+                    </div>
+                </div>
+            </div>
+
+            <div className="my-3">
+                Please keep in mind that when you edit tunnels and connectors, the connector binary must be restarted with the updated environment variables!
+            </div>
+
+        </div>
+    </>
+}
 export function EditConnectors(props) {
     let [conns, setConns] = useState<tun.Connector[]>([])
     const [showedit, setShowedit] = useState(false)
@@ -922,44 +977,17 @@ export function EditConnectors(props) {
 
         <div className=" text-left">
             <Offcanvas modal={false} width={300} show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}>
-                <h5>Editing Connectors</h5>
-                <div className="mb-3">
-                    If you just created a new connector, please save the parameters. The Secret will only be visible in the GUI for a day. These parameters must be passed to the
-                    connector executable via environment variables.
-                </div>
-                <div className="mb-3">
-                    Below is the complete list of necessary variables, in an example bash script.
-                </div>
-                <div className="mb-3">
-                    <div className="d-block " style={{ fontFamily: "monospace", fontSize: "0.6em", overflow: "hidden", color: '#33cc33', backgroundColor: 'black' }}>
-                        <div className=" text-nowrap p-1" >
-                            <div >
-                                #!/bin/bash
-                            </div><div>
-                                export LOG_LEVEL=Info
-                            </div><div>
-                                export PORTAL=https://portal.dymium.io/
-                            </div><div>
-                                export CONNECTOR=<span style={{ fontStyle: 'italic' }}>your connector id</span>
-                            </div><div>
-                                export KEY=<span style={{ fontStyle: 'italic' }}>your secret key</span>
-                            </div><div>
-                                export SECRET=<span style={{ fontStyle: 'italic' }}>your secret</span>
-                            </div><div>
-                                export CUSTOMER={com.getTokenProperty("schema")}
-                            </div><div>
-                                export TUNNELSERVER={com.getTokenProperty("schema")}.dymium.io:3009
-                            </div><div>
-                                ./meshconnector
-                            </div>
-                        </div>
+                <>
+                    <h5>Connectors</h5>
+                    <div className="mb-3">
+                        If you just created a new connector, please save the parameters. The Secret will only be visible in the GUI for a day. 
                     </div>
-
-                    <div className="my-3">
-                        Please keep in mind that when you edit tunnels and connectors, the connector binary must be restarted with the updated environment variables!
+                    <div className="mb-3">
+                        Click on the Downloads tab to get a binary for your platform or a repository for a container. The configuration parameters must be passed to the
+                        connector executable via environment variables. 
                     </div>
-                </div>
-
+                    <ContainerHelp />
+                </>
             </Offcanvas>
 
             <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
@@ -995,7 +1023,7 @@ export function EditConnectors(props) {
                                 <div className="text-left">
                                     {alert}
                                     <div className="d-flex">
-                                        <h5 >Review And Manage Connectors <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+                                        <h5 >Review And Manage Connectors  <i onClick={e => { setShowOffcanvas(!showOffcanvas) }} className="trash fa-solid fa-circle-info"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
 
 
                                         <div style={{ marginLeft: "auto" }}>

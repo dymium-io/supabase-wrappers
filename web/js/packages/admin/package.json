@@ -3,39 +3,30 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@auth0/auth0-react": "^1.10.0",
+    "@auth0/auth0-react": "^2.0.2",
     "@fontsource/roboto": "^4.5.5",
     "@fortawesome/fontawesome-free": "^6.1.1",
     "@fortawesome/fontawesome-svg-core": "^6.1.1",
     "@fortawesome/free-solid-svg-icons": "^6.1.1",
-    "@fortawesome/react-fontawesome": "^0.1.18",
-    "@testing-library/jest-dom": "^5.14.1",
-    "@testing-library/react": "^13.0.0",
-    "@testing-library/user-event": "^13.2.1",
-    "bootstrap": "4.6.1",
-    "gsap": "^3.10.4",
+    "@fortawesome/react-fontawesome": "^0.2.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.4.3",
+    "bootstrap": "5.2.3",
+    "gsap": "^3.11.5",
     "http-proxy-middleware": "^2.0.6",
-    "react": "^18.1.0",
-    "react-bootstrap": "^1.6.1",
+    "react": "^18.2.0",
+    "react-bootstrap": "^2.7.4",
     "react-bootstrap-table-next": "^4.0.3",
     "react-bootstrap-table2-paginator": "^2.1.2",
     "react-bootstrap-table2-toolkit": "^2.1.3",
     "react-bootstrap-typeahead": "^6.0.0-rc.1",
-    "react-dom": "^18.1.0",
+    "react-dom": "^18.2.0",
     "react-redux": "^8.0.5",
     "react-router-bootstrap": "^0.26.1",
-    "react-router-dom": "^6.3.0",
-    "react-scripts": "5.0.1",
+    "react-router-dom": "^6.11.0",
     "redux-persist": "^6.0.0",
-    "sass": "^1.52.2",
-    "typescript": "^4.7.4",
-    "web-vitals": "^2.1.0"
-  },
-  "resolutions": {
-    "autoprefixer": "10.4.5"
-  },
-  "overrides": {
-    "autoprefixer": "10.4.5"
+    "sass": "^1.62.1",
+    "web-vitals": "^3.3.1"
   },
   "scripts": {
     "start": "HTTPS=true DANGEROUSLY_DISABLE_HOST_CHECK=true SSL_CRT_FILE=../../../devcerts/dymium.crt SSL_KEY_FILE=../../../devcerts/dymium.key HOST=portal.dymium.local PORT=3000 react-app-rewired  start",
@@ -63,7 +54,10 @@
   },
   "proxy": "http://admin.dymium.local",
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.14.1",
     "@types/bootstrap": "^5.1.12",
-    "html-loader": "^4.2.0"
+    "html-loader": "^4.2.0",
+    "react-scripts": "5.0.1",
+    "typescript": "^5.0.4"
   }
 }

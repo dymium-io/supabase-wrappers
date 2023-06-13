@@ -260,29 +260,29 @@ data NameMappers NameMappers28,29
   , nm_structNameMapper nm_structNameMapper34,35
   , nm_structFldMapper nm_structFldMapper35,36
 genModule genModule38,39
-enumDef enumDef126,127
-structDef structDef154,155
-data ReprSelector ReprSelector193,194
-data ReprSelector = RDef RDef193,194
-data ReprSelector = RDef | RGetSet RGetSet193,194
-data ReprSelector = RDef | RGetSet | RJsonRJson193,194
-fldDclr fldDclr195,196
-fldRepr fldRepr226,227
-simpleSetter simpleSetter436,437
-optSetter optSetter440,441
-checkAndSet checkAndSet450,451
-checkAndSetEnum checkAndSetEnum457,458
-readerDef readerDef464,465
-enumReaderDef enumReaderDef627,628
-arrReaderDef arrReaderDef642,643
-jsString jsString666,667
-jsShow jsShow669,670
-jsEmptyString jsEmptyString672,673
-jsNull jsNull675,676
-jsDate jsDate678,679
-genMappers genMappers681,682
-sanitizeEnumFld sanitizeEnumFld748,749
-transformPath transformPath757,758
+enumDef enumDef140,141
+structDef structDef168,169
+data ReprSelector ReprSelector207,208
+data ReprSelector = RDef RDef207,208
+data ReprSelector = RDef | RGetSet RGetSet207,208
+data ReprSelector = RDef | RGetSet | RJsonRJson207,208
+fldDclr fldDclr209,210
+fldRepr fldRepr240,241
+simpleSetter simpleSetter450,451
+optSetter optSetter454,455
+checkAndSet checkAndSet464,465
+checkAndSetEnum checkAndSetEnum471,472
+readerDef readerDef478,479
+enumReaderDef enumReaderDef641,642
+arrReaderDef arrReaderDef656,657
+jsString jsString680,681
+jsShow jsShow683,684
+jsEmptyString jsEmptyString686,687
+jsNull jsNull689,690
+jsDate jsDate692,693
+genMappers genMappers695,696
+sanitizeEnumFld sanitizeEnumFld762,763
+transformPath transformPath771,772
 
 ./src/LangGenerators/Rust.hs,1080
 module LangGenerators.Rust LangGenerators.Rust3,4
@@ -354,25 +354,25 @@ data NameMappers NameMappers28,29
   , nm_structNameMapper nm_structNameMapper34,35
   , nm_structFldMapper nm_structFldMapper35,36
 genModule genModule38,39
-enumDef enumDef128,129
-structDef structDef158,159
-data ReprSelector ReprSelector189,190
-data ReprSelector = RDef RDef189,190
-data ReprSelector = RDef | RGetSet RGetSet189,190
-data ReprSelector = RDef | RGetSet | RJsonRJson189,190
-fldRepr fldRepr191,192
-simpleSetter simpleSetter399,400
-optSetter optSetter403,404
-checkAndSet checkAndSet413,414
-checkAndSetEnum checkAndSetEnum420,421
-readerDef readerDef427,428
-enumReaderDef enumReaderDef590,591
-arrReaderDef arrReaderDef605,606
-genMappers genMappers629,630
-jsString jsString678,679
-jsShow jsShow681,682
-jsEmptyString jsEmptyString684,685
-jsNull jsNull687,688
-jsDate jsDate690,691
-sanitizeEnumFld sanitizeEnumFld693,694
-transformPath transformPath702,703
+enumDef enumDef142,143
+structDef structDef172,173
+data ReprSelector ReprSelector203,204
+data ReprSelector = RDef RDef203,204
+data ReprSelector = RDef | RGetSet RGetSet203,204
+data ReprSelector = RDef | RGetSet | RJsonRJson203,204
+fldRepr fldRepr205,206
+simpleSetter simpleSetter413,414
+optSetter optSetter417,418
+checkAndSet checkAndSet427,428
+checkAndSetEnum checkAndSetEnum434,435
+readerDef readerDef441,442
+enumReaderDef enumReaderDef604,605
+arrReaderDef arrReaderDef619,620
+genMappers genMappers643,644
+jsString jsString692,693
+jsShow jsShow695,696
+jsEmptyString jsEmptyString698,699
+jsNull jsNull701,702
+jsDate jsDate704,705
+sanitizeEnumFld sanitizeEnumFld707,708
+transformPath transformPath716,717

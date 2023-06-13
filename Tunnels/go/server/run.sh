@@ -27,10 +27,15 @@ export REDIS_PASSWORD=""
 [ -z "$DATABASE_PASSWORD" ] && {
     DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )
 }
+export POSTGRES_PORT=9090
 export DATABASE_PASSWORD=$DATABASE_PASSWORD
 export LOCAL_ENVIRONMENT=true
 export LOG_LEVEL=Debug
 //export LOG_LEVEL=Info
+export LOCAL_SEARCH=${LOCAL_SEARCH-http://elasticsearch.dymium.local:9200}
+export LOCAL_SEARCH_USER=${LOCAL_SEARCH_USER:-elastic}
+export LOCAL_SEARCH_PASSWD=${LOCAL_SEARCH_PASSWD:-admin123}
+export SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE:-jsonmessage}
 
 export SESSION_SECRET="b<Qu9K)q}Ksh+R)JzlJJ'X1sHMp$UI@t&OCjDYTEmVe6WZe,rdJ}!I=4N[|yoTq"
 ./server -p 15654 -a 127.0.0.1

@@ -9,7 +9,7 @@ import Modal from 'react-bootstrap/Modal'
 import Alert from 'react-bootstrap/Alert'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
+import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit';
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import Toggle from 'react-toggle'
 import Offcanvas from '@dymium/common/Components/Offcanvas'
@@ -966,7 +966,7 @@ export function EditConnections(props) {
 
                 </div>
             </Offcanvas>
-            {conns !== [] &&
+            {conns.length > 0 &&
                 <div id="tablecontainer" style={{ width: '90%' }} className="text-center">
                     <ToolkitProvider
                         bootstrap4

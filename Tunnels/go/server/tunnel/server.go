@@ -1,18 +1,19 @@
 package tunnel
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/gob"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strings"
-	"time"
 	"sync"
-	"context"
 	"sync/atomic"
+	"time"
 	"dymium.com/dymium/log"
 	"dymium.com/server/gotypes"
 	"dymium.com/server/protocol"
@@ -274,7 +275,11 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder,
 
 		err := enc.Encode(buff)
 		if err != nil {
-			log.Errorf("Error in encoder: %s", err.Error())
+			if strings.Contains(err.Error(), "closed network connection") {
+				log.Debugf("Error in encoder: %s", err.Error())
+			} else {
+				log.Errorf("Error in encoder: %s", err.Error())
+			}
 			ingress.Close()
 		}
 	}
@@ -299,8 +304,13 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 		err := dec.Decode(&buff)
 
 		if err != nil {
-			log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!", customer, err.Error())
-			// close all outgoing connections
+			if(err != io.EOF) {
+				log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!", customer, err.Error())
+			} else {
+				log.Debugf("Customer %s, EOF!", customer)
+
+			}
+				// close all outgoing connections
 			mu.Lock()
 			for key := range conmap {
 				conmap[key].sock.Close()
@@ -314,16 +324,22 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 	
 		switch buff.Action {
 		case protocol.Open:
-
-			jwtKey := []byte(os.Getenv("SESSION_SECRET"))
 			
-
+			var p jwt.Parser
+			_, _, err = p.ParseUnverified(string(buff.Data), claim)  // only informational
+			if err != nil {
+				log.Errorf("Error: token invalid, can't continue %s", err.Error())
+				os.Exit(1)
+			}
+/*
+			jwtKey := []byte(os.Getenv("SESSION_SECRET"))
 			_, err = jwt.ParseWithClaims(string(buff.Data), claim, func(token *jwt.Token) (interface{}, error) {
 				return jwtKey, nil
 			})
 			if err != nil {
 				log.Errorf("Error parsing token %s: %s", string(buff.Data), err.Error())
 			}
+*/
 			conn := &Virtcon{}
 			conn.tenant = claim.Schema
 			conn.email = claim.Email

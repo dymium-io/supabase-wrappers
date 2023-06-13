@@ -38,6 +38,8 @@
 #include "utils/lsyscache.h"
 #include "utils/syscache.h"
 
+#define MYSQL_MAX_BLOB_WIDTH 16777216
+
 #define DATE_MYSQL_PG(x, y) \
 do { \
 x->year = y.tm_year; \
@@ -92,7 +94,7 @@ mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column,
 	  case 0x4: redact_xml(valstr,-1); break;							\
 	  case 0x5: redact_bytea(valstr,-1); break;							\
 	  case 0x6: redact_json(valstr,-1); break;							\
-	  case 0x7: obfuscate(valstr,-1); break;							\
+	  case 0x7: if(act == 1) redact_uuid(valstr,-1); else obfuscate_uuid(valstr,-1); break; \
 	  case 0x8: strcpy(valstr, "1970-01-01 00:00:00"); break;			\
 	  case 0x9: strcpy(valstr, "1970-01-01 00:00:00+00"); break;		\
 	  case 0xa: strcpy(valstr, "1970-01-01"); break;					\
@@ -126,11 +128,16 @@ mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column,
 		 * string.
 		 */
 		case BYTEAOID:
+		  if (act == 0x0) {
 			result = (bytea *) palloc(column->length + VARHDRSZ);
 			memcpy(VARDATA(result), VARDATA(column->value), column->length);
 			SET_VARSIZE(result, column->length + VARHDRSZ);
 			return PointerGetDatum(result);
-
+		  } else {
+			bytea *result = palloc(VARHDRSZ);
+			SET_VARSIZE(result, VARHDRSZ);
+			return PointerGetDatum(result);
+		  }
 		case BITOID:
 			sprintf(str, "%d", dec_bin(*((int *) column->value)));
 			obf((char*)str);
@@ -464,9 +471,9 @@ mysql_bind_result(Oid pgtyp, int pgtypmod, MYSQL_FIELD *field,
 		case BYTEAOID:
 			mbind->buffer_type = MYSQL_TYPE_BLOB;
 			/* Leave room at front for bytea buffer length prefix */
-			column->value = (Datum) palloc0(MAX_BLOB_WIDTH + VARHDRSZ);
+			column->value = (Datum) palloc0(MYSQL_MAX_BLOB_WIDTH + VARHDRSZ);
 			mbind->buffer = VARDATA(column->value);
-			mbind->buffer_length = MAX_BLOB_WIDTH;
+			mbind->buffer_length = MYSQL_MAX_BLOB_WIDTH;
 			break;
 		case TEXTOID:
 			mbind->buffer_type = MYSQL_TYPE_VAR_STRING;

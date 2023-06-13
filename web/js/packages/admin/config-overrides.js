@@ -1,17 +1,19 @@
-var path = require('path')
-
-const { override, babelInclude } = require('customize-cra')
+const path = require('path');
+const { override, babelInclude } = require('customize-cra');
 
 module.exports = function (config, env) {
+  // Add the aliases for the dist directories
   return Object.assign(
     config,
     override(
       babelInclude([
-        /* transpile (converting to es5) code in src/ and shared component library */
         path.resolve('src'),
         path.resolve('../common'),
-        path.resolve('../common/Api')        
-      ])
-    )(config, env)
-  )
-}
+        path.resolve('../common/Api'),
+        path.resolve('../contrib/react-bootstrap-table-next'),
+        path.resolve('../contrib/react-bootstrap-table2-toolkit'),
+        path.resolve('../contrib/react-bootstrap-table2-paginator'),
+      ]),
+    )(config, env),
+  );
+};

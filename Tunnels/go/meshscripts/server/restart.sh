@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
 
 source "../../../../libs/shell/aws-include.sh"
 

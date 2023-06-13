@@ -93,7 +93,7 @@ export class AddConnectorRequest {
     this['_tunnels'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): AddConnectorRequest {
     disableDF()
@@ -137,7 +137,7 @@ export class AuthorizationCodeRequest {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): AuthorizationCodeRequest {
     disableDF()
@@ -185,7 +185,7 @@ export class AuthorizationCodeResponse {
     this['_groups'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): AuthorizationCodeResponse {
     disableDF()
@@ -227,7 +227,7 @@ export class CSRResponse {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): CSRResponse {
     disableDF()
@@ -258,7 +258,7 @@ export class CertificateRequest {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): CertificateRequest {
     disableDF()
@@ -318,7 +318,7 @@ export class CertificateRequestWithSecret {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): CertificateRequestWithSecret {
     disableDF()
@@ -419,7 +419,7 @@ export class Connector {
     this['_tunnels'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): Connector {
     disableDF()
@@ -454,7 +454,7 @@ export class CustomerIDRequest {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): CustomerIDRequest {
     disableDF()
@@ -534,7 +534,7 @@ export class CustomerIDResponse {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): CustomerIDResponse {
     disableDF()
@@ -579,7 +579,7 @@ export class GetKeySecret {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): GetKeySecret {
     disableDF()
@@ -630,7 +630,7 @@ export class RequestUpdate {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): RequestUpdate {
     disableDF()
@@ -733,7 +733,7 @@ export class Tunnel {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): Tunnel {
     disableDF()
@@ -798,6 +798,20 @@ function enumReader(__v__,__dflt__) {
     }
     return __a__
   })
+}
+
+function removeLeadingUnderscore(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(val => removeLeadingUnderscore(val));
+  } else if (typeof obj === 'object' && obj !== null) {
+    return Object.keys(obj).reduce((newObj, key) => {
+      const newKey = ( key.length > 0 && key[0] === '_' ) ? key.substring(1) : key;
+      newObj[newKey] = removeLeadingUnderscore(obj[key]);
+      return newObj;
+    }, {} as any)
+  } else {
+    return obj;
+  }
 }
 
 let setDirtyFlag = () => { dirtyFlag = true }

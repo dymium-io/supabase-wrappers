@@ -49,11 +49,10 @@ function YourDatascopes() {
   }
   let java = scope => {
     let j = `
-  String url = "jdbc:postgresql://localhost:`+ port + `/` + scope.name + `";
-  Properties props = new Properties();
-  props.setProperty("user","${datascopes !== undefined && datascopes.username}");
-  props.setProperty("password","${datascopes !== undefined && datascopes.password}");
-  
+    String url = "jdbc:postgresql://localhost:${port}/${scope.name}";
+
+    // Connect to the database
+    Connection conn = DriverManager.getConnection(url, "${datascopes !== undefined && datascopes.username}", "${datascopes !== undefined && datascopes.password}");
   `
 
     return <div style={{ display: "flex" }}>
@@ -62,6 +61,65 @@ function YourDatascopes() {
       </div>
       <i onClick={copy(j)} className="fas fa-copy clipbtn"></i>
     </div>
+  }
+  let odbc = scope => {
+    let o = `
+using System;
+using Npgsql;
+
+
+class Program
+{
+  static void Main(string[] args)
+  {
+    // Define the connection parameters
+    string connString = "Host=localhost;Port=${+port};Database=${scope.name};Username=${datascopes !== undefined && datascopes.username};Password=${datascopes !== undefined && datascopes.password}";
+    // Connect to the database
+    try
+    {
+        using (var conn = new NpgsqlConnection(connString))
+        {
+            conn.Open();
+            Console.WriteLine("Database connected successfully!");
+
+            // Execute queries here
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Unable to connect to the database: {0}", ex.Message);
+    }
+  }
+}    
+    `
+    return <div style={{ display: "flex" }}>
+      <div><div className=" terminal"> <pre><code>{o}
+      </code></pre></div>
+      </div>
+      <i onClick={copy(o)} className="fas fa-copy clipbtn"></i>
+    </div>    
+  }
+  let julia = scope => {
+    let j = `
+    using LibPQ
+    
+    # Connect to the database
+    try
+        conn = LibPQ.Connection("postgres://${datascopes !== undefined && datascopes.username}:${datascopes !== undefined && datascopes.password}@localhost:${port}/${scope.name}"
+        )
+        println("Database connected successfully!")
+        # Execute queries here
+        LibPQ.finish(conn)
+    catch ex
+        println("Unable to connect to the database: $ex")
+    end
+      `
+    return <div style={{ display: "flex" }}>
+      <div><div className=" terminal"> <pre><code>{j}
+      </code></pre></div>
+      </div>
+      <i onClick={copy(j)} className="fas fa-copy clipbtn"></i>
+    </div>       
   }
   let displayDatascopes = () => {
     let copy = () => {
@@ -116,9 +174,15 @@ function YourDatascopes() {
               <Tab eventKey="python" title="Python" className=" mx-2">
                 {python(x)}
               </Tab>
-              <Tab eventKey="java" title="Java" className=" mx-2">
+              <Tab eventKey="java" title="Java/JDBC" className=" mx-2">
                 {java(x)}
               </Tab>
+              <Tab eventKey="odbc" title="C#/ODBC" className=" mx-2">
+                {odbc(x)}
+              </Tab>      
+              <Tab eventKey="julia" title="Julia" className=" mx-2">
+                {julia(x)}
+              </Tab>                         
             </Tabs>
           </div>
         </div>

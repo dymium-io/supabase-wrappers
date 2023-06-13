@@ -57,29 +57,20 @@ cd ../../../Tunnels/go/client
 
 
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-           go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=6' -X 'main.ProtocolVersion=6' -w -extldflags "-static"' -o tunnel
-chmod a+x tunnel
-mkdir -p ../../../web/go/assets/customer/update/linux/amd64/
-cp tunnel ../../../web/go/assets/customer/update/linux/amd64/
-tar -zcvf tunnel.tar.gz tunnel
+           go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=6' -X 'main.ProtocolVersion=6' -w -extldflags "-static"' -o dymium
+chmod a+x dymium
+
+tar -zcvf tunnel.tar.gz dymium
+mkdir -p  ../../../web/go/assets/customer/update/
 cp tunnel.tar.gz ../../../web/go/assets/customer/update/
+mkdir -p  ../../../web/js/packages/portal/public
 mv tunnel.tar.gz ../../../web/js/packages/portal/public
 
-
-CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-           go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=6' -X 'main.ProtocolVersion=6' -extldflags "-static"' -o tunnel.exe
-mkdir -p ../../../web/go/assets/customer/update/windows/amd64/
-cp tunnel.exe ../../../web/go/assets/customer/update/windows/amd64/tunnel
 aws s3  --profile dymium --region us-west-2 cp s3://dymium-installers/windows/DymiumInstaller.exe /tmp
 cp /tmp/DymiumInstaller.exe ../../../web/go/assets/customer/
 mv /tmp/DymiumInstaller.exe ../../../web/js/packages/portal/public
 
 
-CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
-           go build -a -tags netgo -ldflags '-X 'main.MajorVersion=0' -X 'main.MinorVersion=6' -X 'main.ProtocolVersion=6' -w -extldflags "-static"' -o tunnel
-chmod a+x tunnel
-mkdir -p ../../../web/go/assets/customer/update/darwin/amd64/
-cp tunnel ../../../web/go/assets/customer/update/darwin/amd64/
 aws s3  --profile dymium --region us-west-2 cp s3://dymium-installers/macos/DymiumInstaller.pkg /tmp
 
 cp /tmp/DymiumInstaller.pkg ../../../web/go/assets/customer/
@@ -95,6 +86,7 @@ tar cvzf ../../../web/go/assets/customer/meshconnector_darwin_amd64.tgz -C ../..
 aws s3  --profile dymium --region us-west-2 cp s3://dymium-connector/linux/amd64/meshconnector ../../../web/go/assets/customer/connector/linux/amd64/meshconnector
 tar cvzf ../../../web/go/assets/customer/meshconnector_linux_amd64.tgz -C ../../../web/go/assets/customer/connector/linux/amd64/ meshconnector
 aws s3  --profile dymium --region us-west-2 cp s3://dymium-connector/windows/amd64/meshconnector.exe /tmp/
+mkdir -p ../../../web/go/assets/customer/connector/windows/amd64/
 cp /tmp/meshconnector.exe ../../../web/go/assets/customer/connector/windows/amd64/meshconnector
 zip -rj ../../../web/go/assets/customer/meshconnector_windows_amd64.zip /tmp/meshconnector.exe 
 

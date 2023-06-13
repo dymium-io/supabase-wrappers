@@ -12,3 +12,8 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -a -tags netgo -ldflags '-w -extldflags "-static"' -o meshconnector
 
 aws s3  --profile dymium --region us-west-2 cp meshconnector  s3://dymium-connector/linux/amd64/meshconnector
+
+
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
+go build -a -tags netgo -ldflags "-w -extldflags '-static'" -o meshconnector.exe
+aws s3  --profile dymium --region us-west-2 cp meshconnector.exe  s3://dymium-connector/windows/amd64/meshconnector.exe

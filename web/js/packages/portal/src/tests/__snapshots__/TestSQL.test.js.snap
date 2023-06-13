@@ -1,32 +1,38 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`test-sql 1`] = `
-Array [
-  <nav
+[
+  <ul
     className="mb-3 text-left nav nav-tabs"
     onKeyDown={[Function]}
     role="tablist"
   >
-    <a
-      aria-selected={true}
-      className="nav-item nav-link active"
-      data-rb-event-key="test"
-      href="#"
-      onClick={[Function]}
-      onKeyDown={[Function]}
-      role="tab"
+    <li
+      className="nav-item"
+      role="presentation"
     >
-      Test SQL
-    </a>
-  </nav>,
+      <button
+        aria-controls="tabs-tabpane-test"
+        aria-selected={true}
+        className="nav-link active"
+        data-rr-ui-event-key="test"
+        disabled={false}
+        id="tabs-tab-test"
+        onClick={[Function]}
+        role="tab"
+        type="button"
+      >
+        Test SQL
+      </button>
+    </li>
+  </ul>,
   <div
     className="tab-content"
   >
     <div
-      aria-hidden={false}
-      aria-labelledby={null}
+      aria-labelledby="tabs-tab-test"
       className="fade mx-4 tab-pane active show"
-      id={null}
+      id="tabs-tabpane-test"
       role="tabpanel"
     >
       <div
@@ -37,21 +43,11 @@ Array [
           role="alert"
         >
           <button
-            className="close"
+            aria-label="Close alert"
+            className="btn-close"
             onClick={[Function]}
             type="button"
-          >
-            <span
-              aria-hidden="true"
-            >
-              ×
-            </span>
-            <span
-              className="sr-only"
-            >
-              Close alert
-            </span>
-          </button>
+          />
           Error creating connection: 
           Unhandled request: /api/getdatascopetables
            
@@ -59,7 +55,7 @@ Array [
         <div
           className="bs-offcanvas position-fixed  h-100 bs-offcanvas-anim  cthrough"
           style={
-            Object {
+            {
               "right": -300,
               "width": 0,
             }
@@ -98,7 +94,7 @@ Array [
             <div
               className="pl-0 col"
               style={
-                Object {
+                {
                   "paddingRight": "10px",
                 }
               }
@@ -135,7 +131,7 @@ Array [
             className="hiddenspinner"
             src="/logo.png"
             style={
-              Object {
+              {
                 "width": "28px",
               }
             }
@@ -156,7 +152,7 @@ Array [
                 className="col-auto"
               >
                 <div
-                  className="mb-3 form-group"
+                  className="mb-3"
                 >
                   <label
                     className="form-label"
@@ -188,7 +184,7 @@ Array [
               >
                 <div
                   style={
-                    Object {
+                    {
                       "fontFamily": "monospace",
                       "marginTop": "3px",
                     }
@@ -201,21 +197,22 @@ Array [
                 className="col-auto"
               >
                 <div
-                  className="mb-3 form-group"
+                  className="mb-3"
                 >
                   <select
                     className="form-control form-control-sm"
                     id="connection"
                     onChange={[Function]}
                     style={
-                      Object {
+                      {
                         "fontFamily": "monospace",
                       }
                     }
+                    value={-1}
                   >
                     return 
                     <option
-                      value=""
+                      value={-1}
                     >
                       ...
                     </option>
@@ -227,7 +224,7 @@ Array [
               >
                 <div
                   style={
-                    Object {
+                    {
                       "fontFamily": "monospace",
                       "marginTop": "3px",
                     }

@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+import os
+import subprocess
+import sys
+
+# Allowed file extensions
+allowed_extensions = ['png', 'gif', 'jpg', 'jpeg']
+
+# Get list of all files that have been added or modified
+output = subprocess.check_output(['git', 'diff', '--cached', '--name-only'])
+files = output.decode('utf-8').split('\n')
+
+for f in files:
+    if f:
+        # Get the file extension
+        extension = f.split('.')[-1]
+        
+        # Get the file attributes
+        attributes = subprocess.check_output(['git', 'diff', '--cached', '--numstat', f])
+        
+        # Check if the file is binary (i.e., if the number of lines is '-')
+        is_binary = attributes.decode('utf-8').split()[0] == '-'
+
+        # Allow committing if file is in .binary file
+        directory = os.path.dirname(f)
+        binary_file_path = os.path.join(directory, '.binary')
+        if os.path.exists(binary_file_path):
+            with open(binary_file_path, 'r') as bf:
+                allowed_files = bf.read().split('\n')
+                filename = os.path.basename(f)
+                if filename in allowed_files:
+                    continue
+
+        # If the file is binary and its extension is not in the list of allowed extensions, exit with an error
+        if is_binary and extension not in allowed_extensions:
+            print(f"ERROR: Attempting to commit binary file: {f}")
+            sys.exit(1)
+
+# If we got this far, everything is fine
+sys.exit(0)

@@ -31,7 +31,7 @@ type conf struct {
 	GuardianConf    guardianConf
 }
 
-func getConf(customer string, confGuardian bool) (c *conf, err error) {
+func getConf(customer string, confGuardianAddress bool) (c *conf, err error) {
 
 	returnError := func(err error) (*conf, error) {
 		return nil, err
@@ -79,10 +79,6 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 		} else {
 			return returnError(fmt.Errorf("DATABASE_PASSWORD is not defined: %v", err))
 		}
-	}
-
-	if !confGuardian {
-		return &cnf, nil
 	}
 
 	var cnfM map[string]guardianConf
@@ -158,19 +154,21 @@ func getConf(customer string, confGuardian bool) (c *conf, err error) {
 
 	}
 
-	if len(cnf.GuardianConf.GuardianAddress) == 0 {
-		if ipsIP, err := net.LookupIP(customer + ".guardian.local"); err != nil {
-			return returnError(fmt.Errorf("Can not resolve DNS name %q: %v", customer+".guardian.local", err))
-		} else {
-			cnf.GuardianConf.GuardianAddress = make([]string, len(ipsIP))
-			for k, ip := range ipsIP {
-				cnf.GuardianConf.GuardianAddress[k] = ip.String()
+	if confGuardianAddress {
+		if len(cnf.GuardianConf.GuardianAddress) == 0 {
+			if ipsIP, err := net.LookupIP(customer + ".guardian.local"); err != nil {
+				return returnError(fmt.Errorf("Can not resolve DNS name %q: %v", customer+".guardian.local", err))
+			} else {
+				cnf.GuardianConf.GuardianAddress = make([]string, len(ipsIP))
+				for k, ip := range ipsIP {
+					cnf.GuardianConf.GuardianAddress[k] = ip.String()
+				}
 			}
-		}
-	} else {
-		for k := range cnf.GuardianConf.GuardianAddress {
-			if cnf.GuardianConf.GuardianAddress[k] == "localhost" {
-				cnf.GuardianConf.GuardianAddress[k] = "docker.for.mac.host.internal"
+		} else {
+			for k := range cnf.GuardianConf.GuardianAddress {
+				if cnf.GuardianConf.GuardianAddress[k] == "localhost" {
+					cnf.GuardianConf.GuardianAddress[k] = "docker.for.mac.host.internal"
+				}
 			}
 		}
 	}

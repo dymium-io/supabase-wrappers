@@ -44,16 +44,49 @@ export function AddDatascope(props) {
     const [currentConnectionId, setCurrentConnectionId] = useState<string>("")
     const [currentConnectionType, setCurrentConnectionType] = useState<string>("")
     const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
+    const [submittable, setSubmittable] = useState(false)
     const navigate = useNavigate();
     useEffect(() => {
         capi.getConnections(setSpinner, setConns, setAlert, remap, () => { })
         return () => {
-            if(timeoutid.current !== null) {
+            if (timeoutid.current !== null) {
                 window.clearTimeout(timeoutid.current)
                 timeoutid.current = null
             }
         }
     }, [])
+
+    useEffect(() => {
+        if (dbname === "") {
+            setSubmittable(false)
+            return
+        }
+        let smb = false
+        let conns = Object.keys(datascope)
+        if(conns.length === 0) {
+            setSubmittable(false)
+            return
+        }
+        for(let i = 0; i < conns.length; i++) {
+            let connection = conns[i]
+            let conn = datascope[connection]
+            let schematables = Object.keys(conn)
+            if(schematables.length === 0) {
+                setSubmittable(false)
+                return
+            }
+            for(let j = 0; j < schematables.length; j++) {
+                let schematable = schematables[j]
+                let st = conn[schematable]
+                if(st.tablescope.length === 0) {
+                    setSubmittable(false)
+                    return
+                }
+            }
+        }
+
+        setSubmittable(true)
+    }, [datascope, dbname])
     let timeoutid = useRef<number | null>(null)
 
     let sendConnection = () => {
@@ -68,7 +101,8 @@ export function AddDatascope(props) {
                     let ob: types.DatascopeRecord = types.DatascopeRecord.fromJson({
                         connection: st.connection, schema: st.schema, table: st.table,
                         typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
-                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable
+                        possibleActions: ts.possibleActions,
+                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isNullable
                     })
                     retarray.push(ob)
                 })
@@ -91,7 +125,7 @@ export function AddDatascope(props) {
                                 <Link to="?key=groups">We are navigating you now </Link>to assign groups make it accessible to users.
                             </Alert>
                         )
-                        timeoutid.current = window.setTimeout(() => { 
+                        timeoutid.current = window.setTimeout(() => {
                             timeoutid.current = null
                             navigate("?key=groups")
                         }, 3000)
@@ -137,7 +171,41 @@ export function AddDatascope(props) {
             setValidated(true)
             return false
         }
-
+        
+        let smb = false
+        let conns = Object.keys(datascope)
+        let _submittable = submittable
+        if(conns.length === 0) {
+            _submittable = false
+            } else {
+            for(let i = 0; i < conns.length; i++) {
+                let connection = conns[i]
+                let conn = datascope[connection]
+                let schematables = Object.keys(conn)
+                if(schematables.length === 0) {
+                    _submittable = false
+                    break
+                }
+                for(let j = 0; j < schematables.length; j++) {
+                    let schematable = schematables[j]
+                    let st = conn[schematable]
+                    if(st.tablescope.length === 0) {
+                        _submittable = false
+                        break
+                    }
+                }
+            }
+        }
+        if(!_submittable) {
+            setAlert(
+                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                    Can't save a Ghost Database with empty or no connections. 
+                </Alert>
+            )
+            event.preventDefault();
+            setValidated(true)
+            return false            
+        }
         event.preventDefault();
         setValidated(false)
         event.stopPropagation();
@@ -181,6 +249,7 @@ export function AddDatascope(props) {
         delete datascope[c]
         setDatascope(datascope)
     }
+
     return (
         <div className=" text-left">
             {alert}
@@ -263,7 +332,6 @@ export default function Datascopes() {
             navigate("/app/datascopes")
         }
     }, [t])
-
 
     return (
         <Tabs

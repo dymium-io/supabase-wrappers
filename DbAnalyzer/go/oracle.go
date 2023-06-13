@@ -155,18 +155,18 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 
 	for rows.Next() {
 		var d data
-		var isNullable *string
+		var isNullable_ *string
 		err = rows.Scan(&d.pos, &d.cName,
 			&d.cTyp, &d.cDataLen, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
-			&isNullable, &d.dLength, &d.cDflt)
+			&isNullable_, &d.dLength, &d.cDflt)
 		if err != nil {
 			return nil, err
 		}
 
-		if isNullable != nil && *isNullable == "N" {
+		if isNullable_ != nil && *isNullable_ == "N" {
 			d.isNullable = false
 		} else {
-			d.isNullable = false
+			d.isNullable = true
 		}
 		descr = append(descr, &d)
 	}
@@ -176,66 +176,173 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 		return nil, err
 	}
 
-	sample, err := da.getSample(tip.Schema, tip.Table, len(descr))
-	if err != nil {
-		return nil, err
-	}
+	sample := make([]detect.Sample, len(descr))
+
+	obfuscatable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
+	allowable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
+	blocked := &[]types.DataHandling{types.DH_Block}
 
 	for k, d := range descr {
 		var t string
-		var semantics *string
 		var possibleActions *[]types.DataHandling
+		var sem *string
+		dtk := func(isSamplable bool, sem ...*string) detect.Sample {
+			var s *string
+			if len(sem) == 1 {
+				s = sem[0]
+			}
+			return detect.Sample{
+				IsSamplable: isSamplable,
+				IsNullable:  d.isNullable,
+				Name:        d.cName,
+				Semantics:   s,
+			}
+		}
 		if d.cTyp == nil {
 			t = "undefined"
-			possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-			semantics = detectors.FindSemantics(d.cName, nil)
+			sem = utils.Unsupported
+			possibleActions = blocked
+			sample[k] = dtk(false)
 		} else {
-			switch strings.ToLower(*d.cTyp) {
+			cTyp := strings.ToLower(*d.cTyp)
+			switch cTyp {
 			case "number":
-				if d.cPrecision != nil {
-					if d.cScale != nil {
-						t = fmt.Sprintf("numeric(%d,%d)", *d.cPrecision, *d.cScale)
-					} else {
+				switch {
+				case d.cPrecision == nil || *d.cPrecision == 0:
+					t = "numeric"
+				case d.cScale == nil || *d.cScale == 0:
+					switch {
+					case *d.cPrecision < 5:
+						t = "smallint"
+					case *d.cPrecision < 10:
+						t = "integer"
+					case *d.cPrecision < 19:
+						t = "bigint"
+					default:
 						t = fmt.Sprintf("numeric(%d)", *d.cPrecision)
 					}
-				} else {
-					t = fmt.Sprintf("numeric(%d)", d.cDataLen)
+				default:
+					if *d.cPrecision < *d.cScale {
+						t = fmt.Sprintf("numeric(%d, %d)", *d.cScale, *d.cScale)
+					} else {
+						t = fmt.Sprintf("numeric(%d, %d)", *d.cPrecision, *d.cScale)
+					}
 				}
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-				semantics = detectors.FindSemantics(d.cName, nil)
-			case "varchar2", "nvarchar2":
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "float":
+				if d.cPrecision != nil && *d.cPrecision < 54 {
+					t = fmt.Sprintf("float(%d)", *d.cPrecision)
+				} else {
+					t = "numeric"
+				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "binary_float":
+				t = "real"
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "binary_double":
+				t = "double precision"
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "varchar", "varchar2", "nvarchar2":
 				if d.cCharMaxLen != nil && *d.cCharMaxLen > 0 {
 					t = fmt.Sprintf("varchar(%d)", *d.cCharMaxLen)
 				} else {
 					t = "varchar"
 				}
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-				semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+				possibleActions = obfuscatable
+				sample[k] = dtk(true)
 			case "char", "nchar":
 				if d.cCharMaxLen != nil {
 					t = fmt.Sprintf("character(%d)", *d.cCharMaxLen)
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-					semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+					possibleActions = obfuscatable
 				} else {
 					t = "bpchar"
-					possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-					semantics = detectors.FindSemantics(d.cName, nil)
+					possibleActions = allowable
 				}
+				sample[k] = dtk(true)
 			case "clob", "nclob", "long":
 				t = "text"
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Obfuscate, types.DH_Allow}
-				semantics = detectors.FindSemantics(d.cName, &(*sample)[k])
+				possibleActions = obfuscatable
+				sample[k] = dtk(true)
 			case "blob", "bfile", "long raw":
 				t = "bytea"
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-				semantics = detectors.FindSemantics(d.cName, nil)
+				possibleActions = allowable
+				sample[k] = dtk(false)
 			case "date":
-				t = "date"
-				possibleActions = &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
-				semantics = detectors.FindSemantics(d.cName, nil)
+				t = "timestamp(0) without time zone"
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "xmltype":
+				t = "xml"
+				possibleActions = allowable
+				sample[k] = dtk(false) // GoLang driver does not support XMLTYPE
 			default:
-				// ignore other datatypes (e.g. GEOM)
-				continue
+				switch {
+				case strings.HasPrefix(cTyp, "timestamp"):
+					switch {
+					case utils.Timestamp_r.MatchString(cTyp):
+						if d.cScale != nil {
+							if *d.cScale > 6 {
+								t = "timestamp(6) without time zone"
+							} else {
+								t = fmt.Sprintf("timestamp(%d) without time zone", *d.cScale)
+							}
+						} else {
+							t = "timestamp without time zone"
+						}
+						possibleActions = allowable
+						sample[k] = dtk(true)
+					case utils.Timestamp_with_zone_r.MatchString(cTyp):
+						if d.cScale != nil {
+							if *d.cScale > 6 {
+								t = "timestamp(6) with time zone"
+							} else {
+								t = fmt.Sprintf("timestamp(%d) with time zone", *d.cScale)
+							}
+						} else {
+							t = "timestamp with time zone"
+						}
+						possibleActions = allowable
+						sample[k] = dtk(true)
+					default:
+						t = *d.cTyp
+						sem = utils.Unsupported
+						possibleActions = blocked
+						sample[k] = dtk(false, sem)
+					}
+				case strings.HasPrefix(cTyp, "interval"):
+					switch {
+					case utils.Interval_year_r.MatchString(cTyp):
+						t = "interval year to month"
+						possibleActions = allowable
+						sample[k] = dtk(true)
+					case utils.Interval_day_r.MatchString(cTyp):
+						if d.cScale != nil {
+							t = fmt.Sprintf("interval day to second (%d)", *d.cScale)
+						} else {
+							t = "interval day to second"
+						}
+						possibleActions = allowable
+						sample[k] = dtk(true)
+					default:
+						t = *d.cTyp
+						sem = utils.Unsupported
+						possibleActions = blocked
+						sample[k] = dtk(false, sem)
+					}
+				case strings.HasPrefix(cTyp, "raw"):
+					t = "bytea"
+					possibleActions = allowable
+					sample[k] = dtk(false)
+				default:
+					t = *d.cTyp
+					sem = utils.Unsupported
+					possibleActions = blocked
+					sample[k] = dtk(false, sem)
+				}
 			}
 		}
 		if d.pos == nil {
@@ -256,7 +363,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 			IsNullable:      d.isNullable,
 			Default:         dflt,
 			Reference:       nil,
-			Semantics:       semantics,
+			Semantics:       sem,
 			PossibleActions: *possibleActions,
 		}
 
@@ -265,6 +372,20 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 
 	if err = da.resolveRefs(tip, &ti); err != nil {
 		return nil, err
+	}
+
+	if err = da.getSample(tip.Schema, tip.Table, sample); err != nil {
+		return nil, err
+	}
+
+	if err = detectors.FindSemantics(sample); err != nil {
+		return nil, err
+	}
+
+	for k := range ti.Columns {
+		if sample[k].Semantics != nil {
+			ti.Columns[k].Semantics = sample[k].Semantics
+		}
 	}
 
 	return &ti, nil
@@ -315,54 +436,85 @@ func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 	return nil
 }
 
-func (da *OracleDB) getSample(schema, table string, nColumns int) (*[][]string, error) {
+func (da *OracleDB) getSample(schema, table string, sample []detect.Sample) error {
+
+	nColumns := len(sample)
 
 	var percent float32
 	{
 		r := da.db.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM "%s"."%s"`, schema, table))
 		var count int
 		r.Scan(&count)
-		if count == 0 {
-			ret := make([][]string, nColumns)
-			return &ret, nil
-		}
-		percent = float32(detect.SampleSize) / float32(count) * 100.0
-		if percent >= 100 {
-			percent = 99.9999
+		if count > 0 {
+			percent = float32(detect.SampleSize) / float32(count) * 100.0
+			if percent >= 100 {
+				percent = 99.9999
+			}
+		} else {
+			for _, s := range sample {
+				s.Data = make([]*string, 0)
+			}
+			return nil
 		}
 	}
 
-	rows := make([][]*string, 0, detect.SampleSize)
+	for _, s := range sample {
+		if s.IsSamplable {
+			s.Data = make([]*string, 0, detect.SampleSize)
+		} else {
+			s.Data = make([]*string, 0)
+		}
+	}
 
-	sql := fmt.Sprintf(`SELECT * from "%s"."%s" SAMPLE(%f)`, schema, table, percent)
+	i := make([]interface{}, 0, nColumns)
+	s := make([]string, nColumns)
+	p := make([]*string, nColumns)
+	var colNames strings.Builder
+	start := true
+	for k := 0; k != nColumns; k++ {
+		if sample[k].IsSamplable {
+			if sample[k].IsNullable {
+				i = append(i, &p[k])
+			} else {
+				i = append(i, &s[k])
+			}
+			if start {
+				start = false
+			} else {
+				colNames.WriteString(", ")
+			}
+			colNames.WriteString(`"` + sample[k].Name + `"`)
+		}
+	}
+
+	sql := fmt.Sprintf(`SELECT %s from "%s"."%s" SAMPLE(%f)`, colNames.String(), schema, table, percent)
 	r, err := da.db.Query(sql)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer r.Close()
 
-	i := make([]interface{}, nColumns)
-	s := make([]*string, nColumns)
-	for k := 0; k != nColumns; k++ {
-		i[k] = &s[k]
-	}
-
 	for r.Next() {
 		if err := r.Scan(i...); err != nil {
-			return nil, err
+			return err
 		}
-		rows = append(rows, utils.CopyPointers(s))
-	}
 
-	scanned := make([][]string, nColumns)
-	for k := 0; k != nColumns; k++ {
-		scanned[k] = make([]string, 0, len(rows))
-		for j := 0; j != len(rows); j++ {
-			if rows[j][k] != nil {
-				scanned[k] = append(scanned[k], *rows[j][k])
+		for k := range sample {
+			if sample[k].IsSamplable {
+				if sample[k].IsNullable {
+					if p[k] == nil {
+						sample[k].Data = append(sample[k].Data, nil)
+					} else {
+						v := (*p[k])[:]
+						sample[k].Data = append(sample[k].Data, &v)
+					}
+				} else {
+					v := s[k][:]
+					sample[k].Data = append(sample[k].Data, &v)
+				}
 			}
 		}
 	}
 
-	return &scanned, nil
+	return nil
 }

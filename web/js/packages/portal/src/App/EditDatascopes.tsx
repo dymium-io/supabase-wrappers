@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom'
 import Modal from 'react-bootstrap/Modal'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
+import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit';
 import AddTable from './AddTable'
 import { useAppDispatch, useAppSelector } from './hooks'
 import { setSelectedDatascopeDefault } from '../Slices/menuSlice'
@@ -274,10 +274,14 @@ export default function EditDatascopes() {
                 // connection, schema, table, tablescope[typ, semantics, name, position, reference, action]
 
                 st.tablescope.forEach(ts => {
+                    let ref: null | internal.Reference = null
+                    if(ts.reference != null) {
+                        ref = {schema: ts.reference.schema, table: ts.reference.table, column: ts.reference.column}
+                    }
                     let ob: internal.DatascopeRecord = {
                         connection: st.connection, schema: st.schema, table: st.table,
                         typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
-                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable,
+                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isNullable,
                         possibleActions: ts.possibleActions
                     }
                     retarray.push(ob)
@@ -285,10 +289,17 @@ export default function EditDatascopes() {
             })
 
         })
+        if(retarray.length === 0)  {
+            DeleteDatascope(selectedDatascope)
+            setSelectedDatascope("")
+            return
+        }
         // now do send
         setSpinner(true)
-        let retob: internal.DataScope = { name: dbname, records: retarray }
-        let body = JSON.stringify(retob)
+        let retob = new types.Datascope()
+        retob.name = dbname
+        retob.records = retarray 
+        let body = retob.toJson()
         http.sendToServer("POST", "/api/updatedatascope",
             null, body,
             resp => {
@@ -352,7 +363,39 @@ export default function EditDatascopes() {
             setValidated(true)
             return false
         }
-
+        let conns = Object.keys(datascope)
+        let _submittable = true
+        if(conns.length === 0) {
+            _submittable = false
+            } else {
+            for(let i = 0; i < conns.length; i++) {
+                let connection = conns[i]
+                let conn = datascope[connection]
+                let schematables = Object.keys(conn)
+                if(schematables.length === 0) {
+                    _submittable = false
+                    break
+                }
+                for(let j = 0; j < schematables.length; j++) {
+                    let schematable = schematables[j]
+                    let st = conn[schematable]
+                    if(st.tablescope.length === 0) {
+                        _submittable = false
+                        break
+                    }
+                }
+            }
+        }
+        if(!_submittable) {
+            setAlert(
+                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                    Can't save a Ghost Database with empty or no connections. Either remove them, or add connections and tables.
+                </Alert>
+            )
+            event.preventDefault();
+            setValidated(true)
+            return false            
+        }        
         event.preventDefault();
         setValidated(false)
         event.stopPropagation();
@@ -379,12 +422,10 @@ export default function EditDatascopes() {
             setTable({ schema, table })
         setShowOffcanvas(true)
     }
-    let deleteDatascope = () => {
-        setShowdelete(false)
-        setSpinner(true)
+    let DeleteDatascope = toDelete => {
         let retob: types.DatascopeIdName = new types.DatascopeIdName()
-        retob.id = slatedToDelete
-        retob.name = nameById(slatedToDelete)
+        retob.id = toDelete
+        retob.name = nameById(toDelete)
         let body = retob.toJson()
 
         http.sendToServer("POST", "/api/deletedatascope",
@@ -437,6 +478,12 @@ export default function EditDatascopes() {
             })
 
     }
+    let onDeleteDatascope = () => {
+        setShowdelete(false)
+        setSpinner(true)
+        DeleteDatascope(slatedToDelete)
+
+    }
     let onDeleteConnection = (c: string) => {
         delete datascope[c]
         setDatascope(datascope)
@@ -468,7 +515,7 @@ export default function EditDatascopes() {
                     <Button variant="danger" role="button" id="Delete" data-testid="Delete"
                         aria-label={"Delete"}
                         onClick={() => {
-                            deleteDatascope()
+                            onDeleteDatascope()
                         }
                         }>Delete</Button> <Button variant="dymium" onClick={() => {
                             setShowdelete(false)

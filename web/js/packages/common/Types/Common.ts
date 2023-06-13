@@ -68,7 +68,7 @@ export class AccessLevels {
     this['_levels'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): AccessLevels {
     disableDF()
@@ -118,7 +118,7 @@ export class AuthStatus {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): AuthStatus {
     disableDF()
@@ -328,7 +328,7 @@ export class ConnectionRecord {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): ConnectionRecord {
     disableDF()
@@ -390,7 +390,7 @@ export class ConnectionResponse {
     this['_data'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): ConnectionResponse {
     disableDF()
@@ -446,7 +446,7 @@ export class ConnectionsQuery {
     this['_records'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): ConnectionsQuery {
     disableDF()
@@ -505,7 +505,7 @@ export class DataAction {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): DataAction {
     disableDF()
@@ -541,7 +541,7 @@ export class DataPolicy {
     this['_piisuggestions'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): DataPolicy {
     disableDF()
@@ -606,7 +606,7 @@ export class Datascope {
     this['_records'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): Datascope {
     disableDF()
@@ -669,7 +669,7 @@ export class DatascopeAndGroups {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): DatascopeAndGroups {
     disableDF()
@@ -702,7 +702,7 @@ export class DatascopeId {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): DatascopeId {
     disableDF()
@@ -762,7 +762,7 @@ export class DatascopeIdName {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): DatascopeIdName {
     disableDF()
@@ -819,7 +819,7 @@ export class DatascopeInfoStatus {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): DatascopeInfoStatus {
     disableDF()
@@ -1003,7 +1003,7 @@ export class DatascopeRecord {
     this['_possibleActions'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): DatascopeRecord {
     disableDF()
@@ -1076,7 +1076,7 @@ export class DatascopeTable {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): DatascopeTable {
     disableDF()
@@ -1126,7 +1126,7 @@ export class DatascopeTables {
     this['_tables'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): DatascopeTables {
     disableDF()
@@ -1175,7 +1175,7 @@ export class DatascopesStatus {
     this['_records'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): DatascopesStatus {
     disableDF()
@@ -1224,7 +1224,7 @@ export class GroupAssignment {
     this['_groups'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): GroupAssignment {
     disableDF()
@@ -1303,7 +1303,7 @@ export class GroupMapping {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): GroupMapping {
     disableDF()
@@ -1354,7 +1354,7 @@ export class GroupMappingStatus {
     this['_records'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): GroupMappingStatus {
     disableDF()
@@ -1406,7 +1406,7 @@ export class GroupStatus {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): GroupStatus {
     disableDF()
@@ -1448,7 +1448,7 @@ export class OperationStatus {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): OperationStatus {
     disableDF()
@@ -1516,7 +1516,7 @@ export class PIIDetector {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): PIIDetector {
     disableDF()
@@ -1553,7 +1553,7 @@ export class PIISuggestor {
     this['_detector'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): PIISuggestor {
     disableDF()
@@ -1584,7 +1584,7 @@ export class RequestById {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): RequestById {
     disableDF()
@@ -1593,6 +1593,69 @@ export class RequestById {
        cls.id = __a__['id']
     } else {
        doAlert(`RequestById: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class SetConnectorStatus {
+  private '_customer': string
+  private '_key': string
+  private '_secret': string
+  private '_status': string
+
+  constructor() {
+    this['_customer'] = ''
+    this['_key'] = ''
+    this['_secret'] = ''
+    this['_status'] = ''
+  }
+  get customer(): string { return this['_customer'] }
+  set customer(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_customer'])) {
+      setDirtyFlag()
+      this['_customer'] = __v__
+    }
+  }
+  get key(): string { return this['_key'] }
+  set key(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_key'])) {
+      setDirtyFlag()
+      this['_key'] = __v__
+    }
+  }
+  get secret(): string { return this['_secret'] }
+  set secret(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_secret'])) {
+      setDirtyFlag()
+      this['_secret'] = __v__
+    }
+  }
+  get status(): string { return this['_status'] }
+  set status(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_status'])) {
+      setDirtyFlag()
+      this['_status'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
+
+  static fromJson(__a__: any): SetConnectorStatus {
+    disableDF()
+    let cls = new SetConnectorStatus()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.customer = __a__['customer']
+       cls.key = __a__['key']
+       cls.secret = __a__['secret']
+       cls.status = __a__['status']
+    } else {
+       doAlert(`SetConnectorStatus: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls
@@ -1634,7 +1697,7 @@ export class TableQuery {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): TableQuery {
     disableDF()
@@ -1766,7 +1829,7 @@ export class Usage {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): Usage {
     disableDF()
@@ -1833,7 +1896,7 @@ export class UserDatascopes {
     this['_datascopes'] = __a__
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): UserDatascopes {
     disableDF()
@@ -1886,7 +1949,7 @@ export class Reference {
     }
   }
 
-  toJson(): string { return JSON.stringify(this).split('"_').join('"') }
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
 
   static fromJson(__a__: any): Reference {
     disableDF()
@@ -1963,6 +2026,20 @@ function enumReader(__v__,__dflt__) {
     }
     return __a__
   })
+}
+
+function removeLeadingUnderscore(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(val => removeLeadingUnderscore(val));
+  } else if (typeof obj === 'object' && obj !== null) {
+    return Object.keys(obj).reduce((newObj, key) => {
+      const newKey = ( key.length > 0 && key[0] === '_' ) ? key.substring(1) : key;
+      newObj[newKey] = removeLeadingUnderscore(obj[key]);
+      return newObj;
+    }, {} as any)
+  } else {
+    return obj;
+  }
 }
 
 let setDirtyFlag = () => { dirtyFlag = true }

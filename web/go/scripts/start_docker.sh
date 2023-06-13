@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 [ -z "$(hash yq 2>&1)" ] || {
     echo "Please install 'yq' utility:"
     echo "  brew install yq"

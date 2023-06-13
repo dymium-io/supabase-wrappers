@@ -20,6 +20,8 @@ import * as ctypes from '@dymium/common/Types/Common'
 import * as dba from '@dymium/common/Types/DbAnalyzer'
 import * as http from '@dymium/common/Api/Http'
 
+import 'bootstrap/dist/css/bootstrap.min.css'
+
 import { PrefillUnclassified, Confidential, Secret, TopSecret } from "./Detectors"
 export const DefaultPrefills = {
     unclassified: PrefillUnclassified,
@@ -220,7 +222,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         let po = ctypes.DataPolicy.fromJson(js)
                         setPolicy(po)
                         createLevels(po)
-                        let newPIIs:PiiPair[] = [{id: "", label: "N/A"}].concat(po.piisuggestions.map(x => { 
+                        let newPIIs:PiiPair[] = [{id: "", label: "N/A"}, {id: "xx", label: "UNSUPPORTED"} ].concat(po.piisuggestions.map(x => { 
                                 let id = ""
                                 if(x.detector.id != null)   
                                     id = x.detector.id
@@ -262,7 +264,10 @@ const AddTable: React.FC<AddTableProps> = (props) => {
     }, [tables])
     
     let getSemanticsFromId = (semantics) => {
-        if(semantics === '' || semantics == null) return "N/A"
+        if(semantics === '' || semantics == null) 
+            return "N/A"
+        if(semantics === "UNSUPPORTED") 
+            return "UNSUPPORTED"
 
         for (let i = 0; i < policy.piisuggestions.length; i++) {
             if (policy.piisuggestions[i].detector.id === semantics) {
@@ -378,7 +383,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             {
                 dataField: 'name',
                 text: 'Column',
-                classes: 'overflow-hidden'
+                classes: 'overflow-x-scroll'
             },
             {
                 dataField: 'typ',
@@ -446,7 +451,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         if (props.table.connection === undefined || props.table.connection === "") {
             initTableSchema()
         }
-        if(table !== "" && tables.length === 0 && (props.table.tablescope === undefined)) {
+        if(table !== "" /*&& tables.length === 0*/ && (props.table.tablescope === undefined)) {
             selectTable([table])
         }
     }, [table])
@@ -576,7 +581,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
 
             <Row>
-                <Col xs="auto" className="mr-0 pr-0">
+                <Col  className="mr-0 pr-0">
                     <Form.Group className="mb-3" controlId="schemaname">
                         <Form.Label>{correctname} Name:</Form.Label>
                         <Typeahead id="schemaname" inputProps={{ id: "schemaname" }}
@@ -599,7 +604,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 <Col xs="auto" className="ml-0 pl-0"><Spinner show={spinner} style={{ marginTop: '26px', width: '28px' }}></Spinner></Col>
 
                 <Col>
-                    {schema !== "" && schema != undefined && table !== "" && table != undefined && tablestructure != [] &&
+                    {schema !== "" && schema != undefined && table !== "" && table != undefined && tablestructure.length > 0 &&
                         <Form.Group className="mb-3" controlId="connection" >
                             <Form.Label >Select Access Level:</Form.Label>
                             <InputGroup>
@@ -618,7 +623,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             </Row>
             {schema !== "" && schema != undefined &&
                 <Row>
-                    <Col xs="auto">
+                    <Col className="mr-2">
                         <Form.Group className="mb-3" controlId="dbname">
                             <Form.Label>Table Name:</Form.Label>
                             <Typeahead id="tables" inputProps={{ id: "tables" }} onChange={_selectTable} size="sm"
@@ -637,9 +642,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                             </Form.Control.Feedback>
                         </Form.Group>
                     </Col>
-                    <Col>
-
-                    </Col>
+             
                 </Row>
             }
             {schema !== "" && schema != undefined && table !== "" && table != undefined && 

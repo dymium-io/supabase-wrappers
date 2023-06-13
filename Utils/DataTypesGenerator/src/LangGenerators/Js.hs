@@ -59,6 +59,20 @@ genModule
   ${structDefs}
   ${readers}
 
+  function removeLeadingUnderscore(obj) {
+    if (Array.isArray(obj)) {
+      return obj.map(val => removeLeadingUnderscore(val));
+    } else if (typeof obj === 'object' && obj !== null) {
+      return Object.keys(obj).reduce((newObj, key) => {
+        const newKey = ( key.length > 0 && key[0] === '_' ) ? key.substring(1) : key;
+        newObj[newKey] = removeLeadingUnderscore(obj[key]);
+        return newObj;
+      }, {})
+    } else {
+      return obj;
+    }
+  }
+
   let setDirtyFlag = () => { dirtyFlag = true }
   let [disableDF,enableDF] = (() => {
       let n = 0
@@ -163,7 +177,7 @@ structDef nameMappers mName' sDef = [untrimming|export class ${csn} {
     }
     ${gettersAndSetters}
 
-    toJson() { return JSON.stringify(this).split('"_').join('"') }
+    toJson() { return JSON.stringify(removeLeadingUnderscore(this)); }
 
     static fromJson(__a__) {
       disableDF()

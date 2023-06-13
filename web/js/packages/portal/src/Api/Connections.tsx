@@ -54,7 +54,7 @@ export function getConnections(setSpinner, setConns, setAlert, remap: internal.C
                 }
             })
 
-            setTimeout(() => setSpinner(false), 500)
+            setSpinner(false)
         },
         resp => {
             console.log("on error")

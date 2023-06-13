@@ -15,22 +15,25 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"os"
-	"strings"
-	"errors"
+	"os/signal"
 	"runtime"
+	"strings"
 	"sync"
+	"syscall"
 	"time"
-	"github.com/blang/semver/v4"
+
 	"dymium.com/dymium/log"
 	"dymium.com/meshconnector/ca"
 	"dymium.com/meshconnector/selfupdate"
 	"dymium.com/meshconnector/types"
 	"dymium.com/server/protocol"
+	"github.com/blang/semver/v4"
 	"github.com/gorilla/mux"
 )
 
@@ -46,6 +49,7 @@ var portalurl string
 var lbaddress string
 var lbport int
 var connectionError = false
+var interrupted = false
 
 var (
 	MajorVersion    string
@@ -61,8 +65,9 @@ type Virtcon struct {
 	accumUpstream   int
 	totalUpstream   int
 }
-var pingCounter = 0 
-var ackCounter = 0 
+
+var pingCounter = 0
+var ackCounter = 0
 var pingLock sync.RWMutex
 
 func DoUpdate(portalUrl string) error {
@@ -80,7 +85,7 @@ func DoUpdate(portalUrl string) error {
 	}
 	ex, _ := os.Executable()
 	log.Info("Updating the client...")
-	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, ex + ".old"})
+	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, ex + "." + protocol.MeshServerVersion + ".bak"})
 	if err != nil {
 		log.Infof("Error updating: %s", err.Error())
 		if rerr := selfupdate.RollbackError(err); rerr != nil {
@@ -93,7 +98,7 @@ func DoUpdate(portalUrl string) error {
 		if port == "" {
 			port = "80"
 		}
-		_, _ = http.Get("http://localhost:"+port+"/restart")
+		_, _ = http.Get("http://localhost:" + port + "/restart")
 	}
 	return err
 }
@@ -121,12 +126,12 @@ func restart() {
 		log.Errorf("StartProcess Error: %s", err.Error())
 	}
 	/*
-	_, err = proc.Wait()
-	if err != nil {
-		fmt.Printf("proc.Wait error: %s\n", err.Error())
-	}
+		_, err = proc.Wait()
+		if err != nil {
+			fmt.Printf("proc.Wait error: %s\n", err.Error())
+		}
 	*/
-	
+
 }
 func health() {
 	p := mux.NewRouter()
@@ -245,7 +250,7 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn,
 				// no op
 			} else {
 				if ok {
-					if  err != io.EOF {
+					if err != io.EOF {
 						log.ErrorTenantf(conn.tenant, "Db read failed '%s', id:%d", err.Error(), id)
 					}
 				} else {
@@ -284,22 +289,22 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 		}
 	}
 }
-func Pinger(enc *gob.Encoder, ingress net.Conn, wake chan int ) {
+func Pinger(enc *gob.Encoder, ingress net.Conn, wake chan int) {
 	var ping protocol.TransmissionUnit
 	// log.Infof("In Pinger")
 	ping.Action = protocol.Ping
 
 	for {
 		select {
-			case  <- wake:
-				return
-			case <-time.After(20 * time.Second):
+		case <-wake:
+			return
+		case <-time.After(20 * time.Second):
 		}
 
-		if pingCounter - ackCounter > 2 {
+		if pingCounter-ackCounter > 2 {
 			ingress.Close()
 			log.Errorf("Ping ack missing: %d %d", pingCounter, ackCounter)
-			return			
+			return
 		}
 		pingLock.Lock()
 		ping.Id = pingCounter
@@ -312,20 +317,22 @@ func Pinger(enc *gob.Encoder, ingress net.Conn, wake chan int ) {
 		err := enc.Encode(ping)
 		if err != nil {
 			ingress.Close()
-			if !strings.Contains(err.Error(),  "closed network connection ") {
+			if !strings.Contains(err.Error(), "closed network connection ") {
 				log.Errorf("Ping failed: %s", err.Error())
 			}
 			return
 		}
 	}
 }
-func InformParentOfUpdate( ) {
+func InformParentOfUpdate() {
 	port := os.Getenv("HEALTHPORT")
-	http.Get(":"+port + "/upgrade")
+	http.Get(":" + port + "/upgrade")
 	log.Info("Overseer contacted")
 }
 func PassTraffic(ingress *tls.Conn, customer string) {
-//	log.Info("in PassTraffic")
+	//	log.Info("in PassTraffic")
+	updateStatus("active")
+
 	var conmap = make(map[int]*Virtcon)
 	var mu sync.RWMutex
 	defer ingress.Close()
@@ -337,19 +344,24 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 	go MultiplexWriter(messages, enc, ingress)
 
 	wake := make(chan int)
-	go Pinger(enc, ingress, wake )
+	go Pinger(enc, ingress, wake)
 
 	for {
 		var buff protocol.TransmissionUnit
-//		log.Info("Wait in Decode")
+		//		log.Info("Wait in Decode")
 		err := dec.Decode(&buff)
 
 		if err != nil {
+			
 			if err == io.EOF {
 				log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!",
 					customer, err.Error())
 			} else {
-				log.Errorf("Server closed connection, cleanup the proxy")
+				if !interrupted {
+					log.Errorf("Server closed connection, cleanup the proxy")
+				} else {
+					log.Info("Doing final cleanup")
+				}
 			}
 			// close all outgoing connections
 			wake <- 1
@@ -362,7 +374,7 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			ingress.Close()
 			return
 		}
-	
+
 		switch buff.Action {
 		case protocol.Error:
 			log.Errorf("Server returned error: %s", string(buff.Data))
@@ -375,7 +387,7 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			ingress.Close()
 			wake <- 0
 			return
-		case protocol.Ping: 
+		case protocol.Ping:
 			pingLock.Lock()
 			ackCounter = buff.Id
 			//log.Debugf("Ack: %d", ackCounter)
@@ -478,7 +490,60 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 	log.Info("Tunnel created")
 	return egress, nil
 }
+func handleSignal(ingress *tls.Conn, x chan int) {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
+	select {
+	case <-signalChan:
+		log.Info("Received an interrupt, stopping the client.")
+		
+		interrupted = true
+		updateStatus("configured")
+		ingress.Close()
+	case <-x:
+		return
+	}
 
+}
+func updateStatus(updown string) {
+	// Get Certificate from the portal
+	var status types.SetConnectorStatus
+	customer := os.Getenv("CUSTOMER")
+	secret := os.Getenv("SECRET")
+	key := os.Getenv("KEY")
+	status.Customer = customer
+	status.Secret = secret
+	status.Key = key
+	status.Status = updown
+
+	js, err := json.Marshal(status)
+	if err != nil {
+		log.Errorf("Fatal Error: %s", err.Error())
+		os.Exit(1)
+	}
+
+	portal := os.Getenv("PORTAL")
+	urlStr := fmt.Sprintf("%sapi/connectorstatus", portal)
+
+	req, err := http.NewRequest("POST", urlStr, bytes.NewBuffer(js))
+	req.Header.Add("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf("Error connecting to %s: %s", portal, err.Error())
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+
+	if resp.StatusCode != 200 {
+		log.Errorf("Invalid response %d from %s: %s", resp.StatusCode, urlStr, string(body))
+		return
+	}
+	log.Info("Status updated")
+
+}
 func DoConnect() {
 	// -------------------
 	customer := os.Getenv("CUSTOMER")
@@ -541,6 +606,10 @@ func DoConnect() {
 		return
 	}
 	version := string(back.Version)
+	if v := os.Getenv("VERSION"); v != "" {
+		version = v
+		log.Debugf("Imposed version %s", version)
+	}
 	vserver, _ := semver.Make(version)
 	vclient, _ := semver.Make(protocol.MeshServerVersion)
 	if vserver.GT(vclient) {
@@ -548,7 +617,7 @@ func DoConnect() {
 		DoUpdate(portal)
 		os.Exit(0)
 	} else {
-		log.Infof("Server version: %s", version)
+		log.Infof("Server version: %s, client is up to date", version)
 	}
 
 	keyBytes := x509.MarshalPKCS1PrivateKey(certKey)
@@ -565,14 +634,14 @@ func DoConnect() {
 		log.Errorf("Error in X509KeyPair: %s", err)
 		os.Exit(1)
 	}
-	
+
 	block, _ := pem.Decode([]byte(back.Certificate))
 	if block == nil {
 		log.Errorf("failed to parse certificate PEM")
 	}
 
 	c, e := x509.ParseCertificate(block.Bytes)
-	if e == nil{
+	if e == nil {
 		log.Info("cert parsed")
 		for _, nm := range c.DNSNames {
 			log.Infof("Tunnel: %s", nm)
@@ -588,11 +657,14 @@ func DoConnect() {
 		log.Infof("CreateTunnel failed, %s", err.Error())
 		return
 	}
+	x := make(chan int, 1)
+	go handleSignal(ingress, x)
 	PassTraffic(ingress, customer)
+	x <- 1
+	updateStatus("configured")
 }
 func main() {
-	log.Init("connector")	
-	
+	log.Init("connector")
 
 	if "" == os.Getenv("WORKER") {
 		log.Infof("overseer started, version %s", protocol.MeshServerVersion)
@@ -603,8 +675,15 @@ func main() {
 		for {
 			log.Infof("worker started, version %s", protocol.MeshServerVersion)
 			DoConnect()
+			if interrupted {
+				break
+			}
+			
 			log.Infof("Wait 20 sec before retrying...")
 			time.Sleep(20 * time.Second)
+			if interrupted {
+				break
+			}
 			log.Infof("Reconnecting...")
 		}
 	}

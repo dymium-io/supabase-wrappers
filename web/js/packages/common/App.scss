@@ -113,6 +113,9 @@ h5 {
 .thickblue {
   color: $thick-blue;
 }
+a {
+  color: $thick-blue;
+}
 .btn-dymium {
   background-color: $main-blue !important;  
   color: white !important;
@@ -543,4 +546,29 @@ td {
 }
 .darkred {
   color: $validation-red;
+}
+.btn-close {
+  font-size: 0.8em;
+}
+.overflow-x-scroll {
+  overflow-x: scroll;
+}
+.rbt-close-content {
+  visibility: visible;
+  font-size: 1.2em;
+  color: $thick-blue !important;
+}
+.rbt-close {
+  position: relative;
+  left: 10px !important;
+  top: -1px;
+
+  font-weight: 800;
+
+  visibility: hidden;
+}
+.rbt-aux  {
+  .rbt-close {
+  color: $main-blue !important;
+  }
 }

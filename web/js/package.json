@@ -1,12 +1,25 @@
 {
   "name": "Dymium",
   "private": true,
-  "workspaces": ["packages/*"],
-  "resolutions": {
-    "autoprefixer": "10.4.5"
-  },
+  "workspaces": ["packages/*",
+  "packages/contrib/react-bootstrap-table2-paginator",
+  "packages/contrib/react-bootstrap-table2-toolkit",
+  "packages/contrib/react-bootstrap-table-next"
+],
+"scripts": {
+  "build": "yarn install && react-scripts build "
+},
   "overrides": {
-    "autoprefixer": "10.4.5"
+    "autoprefixer": "10.4.14"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-react",
+      "@babel/preset-env"
+    ],
+    "plugins": [
+
+    ]
   }
 
 }

@@ -901,11 +901,12 @@ mysqlIterateForeignScan(ForeignScanState *node)
 			Oid			pgtype = TupleDescAttr(attinmeta->tupdesc, attnum)->atttypid;
 			int32		pgtypmod = TupleDescAttr(attinmeta->tupdesc, attnum)->atttypmod;
 
-			nulls[attnum] = festate->table->column[attid].is_null;
-			if (!festate->table->column[attid].is_null) {
-			    int *how_to_redact = festate -> how_to_redact;
-			    int isNullable = how_to_redact ? (how_to_redact[attnum] >> 2) & 0x1 : 0;
-				int act = how_to_redact ? how_to_redact[attnum] & 0x3 : 0;
+			int *how_to_redact = festate -> how_to_redact;
+			int isNullable = how_to_redact ? (how_to_redact[attnum] >> 2) & 0x1 : 0;
+			int act = how_to_redact ? how_to_redact[attnum] & 0x3 : 0;
+
+			nulls[attnum] = festate->table->column[attid].is_null || (act == 0x1 && isNullable);
+			if (!festate->table->column[attid].is_null && !nulls[attnum]) {
 				dvalues[attnum] = mysql_convert_to_pg(pgtype, pgtypmod,
 													  &festate->table->column[attid],
 													  isNullable, act, how_to_redact[attnum] >> 3);

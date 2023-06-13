@@ -1,8 +1,12 @@
 package log
 
 import (
+	"crypto/tls"
+	"github.com/apex/log/handlers/es"
 	"github.com/apex/log/handlers/text"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/json"
@@ -374,7 +378,41 @@ func Init(component string) {
 	//log.SetHandler(json.New(os.Stderr))
 	_, ok := os.LookupEnv("LOCAL_ENVIRONMENT")
 	if ok || component == "connector" { // this is a hack
-		log.SetHandler(text.New(os.Stderr))
+		searchUrl, ok := os.LookupEnv("LOCAL_SEARCH")
+		if ok && len(searchUrl) > 0 {
+			// TODO - we should decide how we are going to connect/auth users for local search
+			user, _ := os.LookupEnv("LOCAL_SEARCH_USER")
+			passwd, _ := os.LookupEnv("LOCAL_SEARCH_PASSWD")
+			pipeline, _ := os.LookupEnv("SEARCH_IN_PIPELINE")
+			esClient := es.NewClient(searchUrl)
+			esClient.SetAuthCredentials(user, passwd)
+			defaultTransport := http.DefaultTransport.(*http.Transport)
+
+			// Create new Transport that ignores self-signed SSL
+			customTransport := &http.Transport{
+				Proxy:                 defaultTransport.Proxy,
+				DialContext:           defaultTransport.DialContext,
+				MaxIdleConns:          defaultTransport.MaxIdleConns,
+				IdleConnTimeout:       defaultTransport.IdleConnTimeout,
+				ExpectContinueTimeout: defaultTransport.ExpectContinueTimeout,
+				TLSHandshakeTimeout:   defaultTransport.TLSHandshakeTimeout,
+				TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+			}
+			esClient.HTTPClient = &http.Client{
+				Timeout:   5 * time.Second,
+				Transport: customTransport,
+			}
+
+			esh := es.New(&es.Config{
+				Client:     esClient,
+				BufferSize: 1,
+				Format:     "devlogs-06-01-02",
+				Pipeline:   pipeline,
+			})
+			log.SetHandler(esh)
+		} else {
+			log.SetHandler(text.New(os.Stderr))
+		}
 	} else {
 		log.SetHandler(multi.New(
 			json.New(os.Stderr),
