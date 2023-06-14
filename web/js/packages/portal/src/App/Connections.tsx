@@ -120,7 +120,7 @@ function ConnectionForm(props) {
             <Row>
                 <Col xs="auto">
                     <Form.Group className="mb-3" controlId="dbtype" >
-                        <Form.Label >Database type:</Form.Label>
+                        <Form.Label >Data Source type:</Form.Label>
                         <Form.Control as="select" required size="sm" value={props.dbtype}
                             onChange={e => {
                                 let key = e.target.value
@@ -136,7 +136,7 @@ function ConnectionForm(props) {
                         </Form.Control>
                         <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                         <Form.Control.Feedback type="invalid" >
-                            Select DB type
+                            Select Data Source type
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Col>
@@ -257,7 +257,7 @@ function ConnectionForm(props) {
                     <>
                         <Col xs="auto">
                             <Form.Group className="mb-3" controlId="ipaddress">
-                                <Form.Label>Address</Form.Label>
+                                <Form.Label>Address:</Form.Label>
                                 <Form.Control size="sm" type="text" placeholder="DB IP address or host name"
                                     required
                                     pattern="^[a-zA-Z0-9._]+$"
@@ -272,7 +272,7 @@ function ConnectionForm(props) {
                         </Col>
                         <Col xs="auto">
                             <Form.Group className="mb-3" controlId="portnumber">
-                                <Form.Label>Port</Form.Label>
+                                <Form.Label>Port:</Form.Label>
                                 <Form.Control size="sm" type="number"
                                     required
                                     pattern=".+"
@@ -300,7 +300,7 @@ function ConnectionForm(props) {
                 </Col>
             </Row>
             {
-                props.context === "edit" &&
+                props.context === "edit" ?
                 <Row>
                     <Col>
                         <Form.Group className="mb-1" controlId="usetls">
@@ -308,7 +308,7 @@ function ConnectionForm(props) {
                             <Form.Check
                                 style={{ marginTop: '0.2em' }}
                                 type="checkbox"
-                                label="Change credentials"
+                                label="Change Data Source credentials"
                                 id="changecred"
                                 defaultChecked={props.cred}
                                 onChange={e => {
@@ -320,6 +320,16 @@ function ConnectionForm(props) {
                             />
                         </Form.Group>
                     </Col>
+                </Row> :
+                <Row>
+                    <Col className="thickblue mt-2" xs="auto" style={{fontSize: '0.9em'}}>
+                    {tooltip('Data Source credentials',
+                                <div className="d-block">
+                                    Username and password used to access the data source. We recommend to use admin-level credentials. They will be stored in Dymium customer configuration store in an encrypted form.
+                                </div>
+                                , 'auto', '', false)}
+                    </Col>
+                    <Col></Col>
                 </Row>
             }
             {
@@ -327,7 +337,7 @@ function ConnectionForm(props) {
                 <Row>
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="dbusername">
-                            <Form.Label>Username</Form.Label>
+                            <Form.Label>Username:</Form.Label>
                             <Form.Control size="sm" type="text" placeholder="DB username"
                                 required
                                 pattern=".+"
@@ -343,7 +353,7 @@ function ConnectionForm(props) {
                     </Col>
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="dbpassword">
-                            <Form.Label>Password</Form.Label>
+                            <Form.Label>Password:</Form.Label>
                             <PasswordField type="password"
                                 required
                                 placeholder="DB password"
@@ -487,7 +497,7 @@ export function AddConnection() {
     return (
         <div className=" text-left">
             {alert}
-            <h5 > Connect to New Data Source <i onClick={e => { setShowOffcanvas(!showOffcanvas) }} className="trash fa-solid fa-circle-info mr-1"></i> <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+            <h5 > Add New Data Source <i onClick={e => { setShowOffcanvas(!showOffcanvas) }} className="trash fa-solid fa-circle-info mr-1"></i> <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
             <Offcanvas modal={false} width={300} show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}>
                 <h5>Adding Data Source</h5>
                 <div className="mb-3">
