@@ -5,7 +5,7 @@ exports[`add-connection 1`] = `
   className=" text-left"
 >
   <h5>
-     Connect to New Data Source 
+     Add New Data Source 
     <i
       className="trash fa-solid fa-circle-info mr-1"
       onClick={[Function]}
@@ -136,7 +136,7 @@ exports[`add-connection 1`] = `
               className="form-label"
               htmlFor="dbtype"
             >
-              Database type:
+              Data Source type:
             </label>
             <select
               className="form-control form-control-sm"
@@ -184,7 +184,7 @@ exports[`add-connection 1`] = `
             <div
               className="invalid-feedback"
             >
-              Select DB type
+              Select Data Source type
             </div>
           </div>
         </div>
@@ -392,7 +392,7 @@ exports[`add-connection 1`] = `
               className="form-label"
               htmlFor="ipaddress"
             >
-              Address
+              Address:
             </label>
             <input
               className="form-control form-control-sm"
@@ -426,7 +426,7 @@ exports[`add-connection 1`] = `
               className="form-label"
               htmlFor="portnumber"
             >
-              Port
+              Port:
             </label>
             <input
               className="form-control form-control-sm"
@@ -540,6 +540,20 @@ exports[`add-connection 1`] = `
         className="row"
       >
         <div
+          className="thickblue mt-2 col"
+          style={
+            {
+              "fontSize": "0.9em",
+            }
+          }
+        >
+          Data Source credentials:
+        </div>
+      </div>
+      <div
+        className="row"
+      >
+        <div
           className="col-auto"
         >
           <div
@@ -549,7 +563,7 @@ exports[`add-connection 1`] = `
               className="form-label"
               htmlFor="dbusername"
             >
-              Username
+              Username:
             </label>
             <input
               className="form-control form-control-sm"
@@ -583,7 +597,7 @@ exports[`add-connection 1`] = `
               className="form-label"
               htmlFor="dbpassword"
             >
-              Password
+              Password:
             </label>
             <div
               className="w-12em input-group"
