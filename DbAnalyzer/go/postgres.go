@@ -297,35 +297,35 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				t = "bpchar"
 			}
 			sample[k] = dtk(true)
-		case "timestamp without timezone":
+		case "timestamp without time zone":
 			if d.cdPrecision != nil && *d.cdPrecision < 6 {
-				t = fmt.Sprintf("timestamp(%d) without timezone", *d.cdPrecision)
+				t = fmt.Sprintf("timestamp(%d) without time zone", *d.cdPrecision)
 			} else {
-				t = "timestamp without timezone"
+				t = "timestamp without time zone"
 			}
 			possibleActions = allowable
 			sample[k] = dtk(true)
-		case "time without timezone":
+		case "time without time zone":
 			if d.cdPrecision != nil && *d.cdPrecision < 6 {
-				t = fmt.Sprintf("time(%d) without timezone", *d.cdPrecision)
+				t = fmt.Sprintf("time(%d) without time zone", *d.cdPrecision)
 			} else {
-				t = "time without timezone"
+				t = "time without time zone"
 			}
 			possibleActions = allowable
 			sample[k] = dtk(true)
-		case "timestamp with timezone":
+		case "timestamp with time zone":
 			if d.cdPrecision != nil && *d.cdPrecision < 6 {
-				t = fmt.Sprintf("timestamp(%d) with timezone", *d.cdPrecision)
+				t = fmt.Sprintf("timestamp(%d) with time zone", *d.cdPrecision)
 			} else {
-				t = "timestamp with timezone"
+				t = "timestamp with time zone"
 			}
 			possibleActions = allowable
 			sample[k] = dtk(true)
-		case "time with timezone":
+		case "time with time zone":
 			if d.cdPrecision != nil && *d.cdPrecision < 6 {
-				t = fmt.Sprintf("time(%d) with timezone", *d.cdPrecision)
+				t = fmt.Sprintf("time(%d) with time zone", *d.cdPrecision)
 			} else {
-				t = "time with timezone"
+				t = "time with time zone"
 			}
 			possibleActions = allowable
 			sample[k] = dtk(true)
@@ -415,35 +415,35 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 				possibleActions = obfuscatable
 				t = "text[]"
 				sample[k] = dtk(true)
-			case "timestamp without timezone":
+			case "timestamp without time zone":
 				if d.edPrecision != nil && *d.edPrecision < 6 {
-					t = fmt.Sprintf("timestamp(%d) without timezone[]", *d.edPrecision)
+					t = fmt.Sprintf("timestamp(%d) without time zone[]", *d.edPrecision)
 				} else {
-					t = "timestamp without timezone[]"
+					t = "timestamp without time zone[]"
 				}
 				possibleActions = allowable
 				sample[k] = dtk(true)
-			case "time without timezone":
+			case "time without time zone":
 				if d.edPrecision != nil && *d.edPrecision < 6 {
-					t = fmt.Sprintf("time(%d) without timezone[]", *d.edPrecision)
+					t = fmt.Sprintf("time(%d) without time zone[]", *d.edPrecision)
 				} else {
-					t = "time without timezone[]"
+					t = "time without time zone[]"
 				}
 				possibleActions = allowable
 				sample[k] = dtk(true)
-			case "timestamp with timezone":
+			case "timestamp with time zone":
 				if d.edPrecision != nil && *d.edPrecision < 6 {
-					t = fmt.Sprintf("timestamp(%d) with timezone[]", *d.edPrecision)
+					t = fmt.Sprintf("timestamp(%d) with time zone[]", *d.edPrecision)
 				} else {
-					t = "timestamp with timezone[]"
+					t = "timestamp with time zone[]"
 				}
 				possibleActions = allowable
 				sample[k] = dtk(true)
-			case "time with timezone":
+			case "time with time zone":
 				if d.edPrecision != nil && *d.edPrecision < 6 {
-					t = fmt.Sprintf("time(%d) with timezone[]", *d.edPrecision)
+					t = fmt.Sprintf("time(%d) with time zone[]", *d.edPrecision)
 				} else {
-					t = "time with timezone[]"
+					t = "time with time zone[]"
 				}
 				possibleActions = allowable
 				sample[k] = dtk(true)
