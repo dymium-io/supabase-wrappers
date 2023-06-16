@@ -327,6 +327,10 @@ func GetConnectors(schema string) ([]types.Connector, error) {
 	defer cancelfunc()
 
 	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Errorf("Fatal error: %s", err.Error())
+		os.Exit(2)
+	}
 	sql := `select a.id, a.name, a.accesskey, a.accesssecret, EXTRACT(epoch from (now() - a.createdat)), COALESCE(b.use_connector, false) from ` + schema + `.connectorauth as a left join ` + schema + `.connections as b on a.id=b.connector_id`
 
 	rows, err := tx.QueryContext(ctx, sql)

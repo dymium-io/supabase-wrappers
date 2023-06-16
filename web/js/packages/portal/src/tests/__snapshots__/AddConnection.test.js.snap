@@ -540,15 +540,39 @@ exports[`add-connection 1`] = `
         className="row"
       >
         <div
-          className="thickblue mt-2 col"
+          className="thickblue mt-2 col-auto"
           style={
             {
               "fontSize": "0.9em",
             }
           }
         >
-          Data Source credentials:
+          <div
+            className=""
+          >
+            <div
+              className=" text-wrap"
+              onClick={[Function]}
+              onMouseOut={[Function]}
+              onMouseOver={[Function]}
+            >
+              Data Source
+               
+              <span
+                className="text-nowrap"
+              >
+                credentials
+                <i
+                  className="ml-1 blue fas fa-question-circle text-newinfo"
+                />
+                :
+              </span>
+            </div>
+          </div>
         </div>
+        <div
+          className="col"
+        />
       </div>
       <div
         className="row"
