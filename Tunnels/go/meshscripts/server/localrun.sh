@@ -28,7 +28,7 @@ export LOCAL_SEARCH_USER=${LOCAL_SEARCH_USER:-elastic}
 export LOCAL_SEARCH_PASSWD=${LOCAL_SEARCH_PASSWD:-admin123}
 export SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE:-jsonmessage}
 
-export LOG_LEVEL=Info
+export LOG_LEVEL=Debug
 
 
 export PORT=3009
@@ -43,11 +43,12 @@ docker run --rm  -m="0.5Gb" --cpus="0.5"  \
        -p 8080:80 \
        -e DATABASE_HOST=$DATABASE_HOST \
        -e DATABASE_PORT=$DATABASE_PORT \
+       -e DATABASE_PASSWORD=$DATABASE_PASSWORD \
        -e DATABASE_NAME=$DATABASE_NAME \
        -e DATABASE_USER=$DATABASE_USER \
        -e DATABASE_TLS=$DATABASE_TLS \
-       -e ADDRESS=localhost \
        -e PORT=3009 \
+       -e LOG_LEVEL=$LOG_LEVEL \
        -e CUSTOMER=${CUSTOMER} \
        -e CA_CERTIFICATE="$CA_CERTIFICATE" \
        -e CERTIFICATE="$CERTIFICATE" \
