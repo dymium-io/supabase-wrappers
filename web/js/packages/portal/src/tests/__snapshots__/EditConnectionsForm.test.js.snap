@@ -110,7 +110,7 @@ exports[`edit-connections-form 1`] = `
                 class="form-label"
                 for="dbtype"
               >
-                Database type:
+                Data Source type:
               </label>
               <select
                 class="form-control form-control-sm"
@@ -156,7 +156,7 @@ exports[`edit-connections-form 1`] = `
               <div
                 class="invalid-feedback"
               >
-                Select DB type
+                Select Data Source type
               </div>
             </div>
           </div>
@@ -338,7 +338,7 @@ exports[`edit-connections-form 1`] = `
                 class="form-label"
                 for="ipaddress"
               >
-                Address
+                Address:
               </label>
               <input
                 class="form-control form-control-sm"
@@ -371,7 +371,7 @@ exports[`edit-connections-form 1`] = `
                 class="form-label"
                 for="portnumber"
               >
-                Port
+                Port:
               </label>
               <input
                 class="form-control form-control-sm"
@@ -480,7 +480,7 @@ exports[`edit-connections-form 1`] = `
                   for="changecred"
                   title=""
                 >
-                  Change credentials
+                  Change Data Source credentials
                 </label>
               </div>
             </div>
