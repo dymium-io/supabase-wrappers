@@ -565,6 +565,7 @@ func UsernameFromEmail(email string) string {
 		"%", "_",
 		"&", "_",
 		"'", "_",
+		".", "_",		
 		"*", "_",
 		"+", "_",
 		"-", "_",
@@ -1119,7 +1120,10 @@ func getUserInfoFromToken(admin_domain, token, id_token string) (string, string,
 	jsonParsed, err := gabs.ParseJSON(body)
 	org_id, _ := jsonParsed.Path("org_id").Data().(string)
 	name, _ := jsonParsed.Path("name").Data().(string)
-	email, _ := jsonParsed.Path("preferred_username").Data().(string)
+	email, _ := jsonParsed.Path("email").Data().(string)
+	if email == "" {
+		email, _ = jsonParsed.Path("preferred_username").Data().(string) // fall back
+	}
 	picture, _ := jsonParsed.Path("picture").Data().(string)
 
 	var groups []string
@@ -1815,7 +1819,7 @@ func DeleteConnection(schema, id string) error {
 	var credid string
 	err = row.Scan(&credid)
 	if err != nil {
-		log.Errorf("DeleteConnection error 2: %s", err.Error())
+		log.Errorf("DeleteConnection error 2: %s, id=%s, schema %s", err.Error(), id, schema)
 		return err
 	}
 	sql = "delete from " + schema + ".passwords where id=$1;"
@@ -2090,10 +2094,10 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 
 		newtoken, autherror := refreshPortalToken(token)
 		if autherror == nil {
-			status = types.AuthStatus{"OK", "Session live", newtoken}
+			status = types.AuthStatus{Status: "OK", Errormessage: "Session live", Token: newtoken}
 		} else {
-			log.Debug("Return error, reauthenticate")
-			status = types.AuthStatus{"Error", autherror.Error(), ""}
+			log.Infof("Api /auth/refresh error: %s", autherror.Error())
+			status = types.AuthStatus{Status: "Error", Errormessage: autherror.Error(), Token: ""}
 		}
 
 		js, err := json.Marshal(status)
@@ -2141,9 +2145,9 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		id_token, ok := jsonParsed.Path("id_token").Data().(string)
 		picture, name, email, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
 
-		log.Infof("ID Tolen: %s", id_token)
-		log.Infof("Access Tolen: %s", access_token)
-		log.Infof("Groupsn: %v", groups)
+		log.Infof("ID Token: %s", id_token)
+		log.Infof("Access Token: %s", access_token)
+		log.Infof("Name: %s, email %s", name, email)
 
 		sql := fmt.Sprintf("select schema_name, admin_group from global.customers where organization=$1;")
 
