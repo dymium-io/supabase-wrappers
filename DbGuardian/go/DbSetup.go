@@ -354,14 +354,14 @@ func configureDatabase(db *sql.DB,
 						rtyp = UUID
 					case
 						strings.HasPrefix(c.Typ,"timestamp"):
-						if strings.HasSuffix(c.Typ,"with timezone") {
+						if strings.HasSuffix(c.Typ,"with timezone") || strings.HasSuffix(c.Typ,"with time zone") {
 							rtyp = TIMESTAMPZ
 						} else {
 							rtyp = TIMESTAMP
 						}
 					case
 						strings.HasPrefix(c.Typ,"time"):
-						if strings.HasSuffix(c.Typ,"with timezone") {
+						if strings.HasSuffix(c.Typ,"with timezone")  || strings.HasSuffix(c.Typ,"with time zone") {
 							rtyp = TIMEZ
 						} else {
 							rtyp = TIME
