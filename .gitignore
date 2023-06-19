@@ -8,6 +8,10 @@
 BLD/
 \#*\#
 
+GPATH
+GRTAGS
+GTAGS
+
 .DS_Store
 web/go/assets/server
 web/go/src/.vscode
