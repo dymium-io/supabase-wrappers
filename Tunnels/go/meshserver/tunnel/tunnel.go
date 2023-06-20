@@ -25,6 +25,11 @@ import (
 var psqlInfo string
 var db *sql.DB
 
+const (
+	CloseTimeout = iota
+	UpdateTimeout
+)
+
 type Virtcon struct {
 	sock   net.Conn
 	tenant string
@@ -115,6 +120,53 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 		}
 
 	}(messages, enc)
+	updates := make(chan int, 10)
+
+	// timeout for no data from the connector
+	go func(updates chan int) {
+		lasttime := time.Now()
+		for {
+			select {
+			case what := <-updates:
+				if what == CloseTimeout {
+					for range updates {
+						// Do nothing. Just clear the channel
+					}
+					log.DebugTenantf(customer, "Got update, close timeout")
+					return
+				}
+				log.DebugTenantf(customer, "Got update, reset timeout")
+				lasttime = time.Now()
+			case <-time.After(90 * time.Second):
+				if time.Since(lasttime) > 90*time.Second {
+					egress.Close()
+					for range updates {
+						// Do nothing. Just clear the channel
+					}
+					log.ErrorTenantf(customer, "Error: connection timed out")
+					return
+				}
+				log.InfoTenantf(customer, "check timeout, all good!")
+			}
+		}
+	}(updates)
+
+	go func(messages chan protocol.TransmissionUnit, enc *gob.Encoder) {
+		for {
+			tosend := <-messages
+			//displayBuff("From database: ", tosend.Data)
+			err := enc.Encode(tosend)
+			if err != nil {
+				log.ErrorTenantf(customer, "Error in Encode: %s", err.Error())
+				return
+			} /* else {
+				if len(tosend.Data) > 0 {
+					//log.Debugf("sent %d bytes to connector", len(tosend.Data))
+				}
+			} */
+		}
+
+	}(messages, enc)
 	for {
 		var buff protocol.TransmissionUnit
 		err := dec.Decode(&buff)
@@ -137,17 +189,20 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 			for i := 0; i < len(listeners); i++ {
 				listeners[i].Close()
 			}
+			updates <- CloseTimeout
 			return
 		}
 
 		switch buff.Action {
 		case protocol.Ping:
-			out := protocol.TransmissionUnit{protocol.Ping, buff.Id, []byte{}}
+			out := protocol.TransmissionUnit{Action: protocol.Ping, Id: buff.Id, Data: []byte{}}
 			//log.Debugf("Got ping, return ack %d", buff.Id)
 			messages <- out
+			updates <- UpdateTimeout
 
 		case protocol.Open:
 			log.Debugf("protocol.Open. Should not happen")
+			updates <- UpdateTimeout
 		case protocol.Close:
 			log.Debugf("protocol.Close for id=%d", buff.Id)
 			mu.RLock()
@@ -162,13 +217,14 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 			} else {
 				log.Errorf("Error finding the descriptor %d, %v", buff.Id, buff)
 			}
+			updates <- CloseTimeout
 		case protocol.Send:
 			mu.RLock()
 			conn, ok := conmap[buff.Id]
 			mu.RUnlock()
 			//displayBuff("To database: ", buff.Data)
 			log.Debugf("Conn %d, write %d bytes", buff.Id, len(buff.Data))
-
+			updates <- UpdateTimeout
 			if ok {
 				_, err = conn.sock.Write(buff.Data)
 
@@ -190,7 +246,7 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 
 	// open connection on the other side
 	log.Infof("send open to connector for %s", connectionString)
-	out := protocol.TransmissionUnit{protocol.Open, id, []byte(connectionString)}
+	out := protocol.TransmissionUnit{Action: protocol.Open, Id: id, Data: []byte(connectionString)}
 	messages <- out
 
 	for {
@@ -214,7 +270,7 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 				}
 			}
 			//egress.Close()
-			out := protocol.TransmissionUnit{protocol.Close, id, nil}
+			out := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 			messages <- out
 			return
 
@@ -224,7 +280,7 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 		}
 		log.Debugf("Conn %d, read %d bytes", id, n)
 		b := buff[:n]
-		out := protocol.TransmissionUnit{protocol.Send, id, b}
+		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
 		//write out result
 		messages <- out
 	}
@@ -292,7 +348,7 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 		listen, err := createListener(customer, tg[0], tg[1])
 		if err != nil {
 			log.ErrorTenantf(customer, "Error creating listener for %s %s, connector %s, tunnel %s; %s", tg[0], tg[1], tg[2], tg[3], err.Error())
-			e := protocol.TransmissionUnit{protocol.Error, 0, []byte("Could not create a listener, probably another connector running")}
+			e := protocol.TransmissionUnit{Action: protocol.Error, Id: 0, Data: []byte("Could not create a listener, probably another connector running")}
 			enc.Encode(e)
 			time.Sleep(2 * time.Second)
 			for _, l := range listeners {
@@ -389,7 +445,7 @@ func GetConnectors(schema string) ([]types.Connector, error) {
 					log.Errorf("GetConnectors error 2: %s", err.Error())
 					return out, err
 				}
-				t := types.Tunnel{&id, connectorname, targetaddress, targetport, &localport, &status}
+				t := types.Tunnel{Id: &id, Name: connectorname, Address: targetaddress, Port: targetport, Localport: &localport, Status: &status}
 				out[i].Tunnels = append(out[i].Tunnels, t)
 			}
 		}
