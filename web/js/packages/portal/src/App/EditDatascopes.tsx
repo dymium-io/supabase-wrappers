@@ -281,7 +281,7 @@ export default function EditDatascopes() {
                     let ob: internal.DatascopeRecord = {
                         connection: st.connection, schema: st.schema, table: st.table,
                         typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
-                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isNullable,
+                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable,
                         possibleActions: ts.possibleActions
                     }
                     retarray.push(ob)
