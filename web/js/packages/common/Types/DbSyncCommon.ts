@@ -15,6 +15,8 @@ export type Action =
   | 'confUser'
   | 'sqlTest'
 
+export const Action_as_strings = [ 'return', 'update', 'delete', 'confUser', 'sqlTest' ] as const;
+
 
 
 export class Request {

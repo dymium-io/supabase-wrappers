@@ -142,6 +142,8 @@ enumDef :: NameMappers -> T.Text -> EnumDef -> T.Text
 enumDef nameMappers mName' eDef = [untrimming|export type ${eName'} =
     | ${eFlds}
 
+  export const ${eName'}_as_strings = [ ${eFldsAsStrings} ] as const;
+
   ${humanReadable}
   |]
   where
@@ -150,6 +152,7 @@ enumDef nameMappers mName' eDef = [untrimming|export type ${eName'} =
     eName' = nm_enumNameMapper nameMappers mName' en
 
     eFlds = T.intercalate "\n| " $ jsString . fst <$> eValues eDef
+    eFldsAsStrings = T.intercalate ", " $ jsString . fst <$> eValues eDef
 
     humanReadable =
       case () of

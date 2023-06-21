@@ -12,6 +12,8 @@ export type ConnectorStatus =
   | 'provisioned'
   | 'configured'
 
+export const ConnectorStatus_as_strings = [ 'provisioned', 'configured' ] as const;
+
 export function humanReadableConnectorStatus(__a__ : ConnectorStatus) : string {
   switch(__a__) {
     case 'provisioned': return 'Provisioned';
@@ -24,6 +26,8 @@ export type TunnelStatus =
   | 'provisioned'
   | 'configured'
   | 'active'
+
+export const TunnelStatus_as_strings = [ 'provisioned', 'configured', 'active' ] as const;
 
 export function humanReadableTunnelStatus(__a__ : TunnelStatus) : string {
   switch(__a__) {

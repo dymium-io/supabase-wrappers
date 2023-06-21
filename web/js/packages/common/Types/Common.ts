@@ -15,6 +15,8 @@ export type ConnectionType =
   | 'SqlServer'
   | 'OracleDB'
 
+export const ConnectionType_as_strings = [ 'PostgreSQL', 'MySQL', 'MariaDB', 'SqlServer', 'OracleDB' ] as const;
+
 export function humanReadableConnectionType(__a__ : ConnectionType) : string {
   switch(__a__) {
     case 'PostgreSQL': return 'PostgreSQL Database';
@@ -32,6 +34,8 @@ export type DataHandling =
   | 'obfuscate'
   | 'redact'
 
+export const DataHandling_as_strings = [ 'allow', 'block', 'obfuscate', 'redact' ] as const;
+
 export function humanReadableDataHandling(__a__ : DataHandling) : string {
   switch(__a__) {
     case 'allow': return 'Allow';
@@ -46,6 +50,8 @@ export type PIIDetectionType =
   | 'comprehend'
   | 'columnregexp'
   | 'contentregexp'
+
+export const PIIDetectionType_as_strings = [ 'comprehend', 'columnregexp', 'contentregexp' ] as const;
 
 export function humanReadablePIIDetectionType(__a__ : PIIDetectionType) : string {
   switch(__a__) {

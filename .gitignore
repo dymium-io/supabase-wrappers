@@ -11,6 +11,7 @@ BLD/
 GPATH
 GRTAGS
 GTAGS
+TAGS
 
 .DS_Store
 web/go/assets/server
