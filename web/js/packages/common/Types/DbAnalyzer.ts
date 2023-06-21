@@ -13,6 +13,8 @@ export type DataType =
   | 'DatabaseInfo'
   | 'TableInfo'
 
+export const DataType_as_strings = [ 'Test', 'DatabaseInfo', 'TableInfo' ] as const;
+
 
 
 export class AnalyzerRequest {
