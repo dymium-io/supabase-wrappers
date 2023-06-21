@@ -8,6 +8,17 @@ import _ from 'lodash'
 export let dirtyFlag = false
 function doAlert(s) { console.log(s) }
 
+export type ConnectionPortsType =
+  | 'PostgreSQL_5432'
+  | 'MySQL_3306'
+  | 'MariaDB_3306'
+  | 'SqlServer_1433'
+  | 'OracleDB_1521'
+
+export const ConnectionPortsType_as_strings = [ 'PostgreSQL_5432', 'MySQL_3306', 'MariaDB_3306', 'SqlServer_1433', 'OracleDB_1521' ] as const;
+
+
+
 export type ConnectionType =
   | 'PostgreSQL'
   | 'MySQL'

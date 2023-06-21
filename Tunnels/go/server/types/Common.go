@@ -5,6 +5,15 @@ package types
 
 
 
+type ConnectionPortsType string
+const (
+  CPT_PostgreSQL_5432 ConnectionPortsType = "PostgreSQL_5432"
+  CPT_MySQL_3306 ConnectionPortsType = "MySQL_3306"
+  CPT_MariaDB_3306 ConnectionPortsType = "MariaDB_3306"
+  CPT_SqlServer_1433 ConnectionPortsType = "SqlServer_1433"
+  CPT_OracleDB_1521 ConnectionPortsType = "OracleDB_1521"
+)
+
 type ConnectionType string
 const (
   CT_PostgreSQL ConnectionType = "PostgreSQL"

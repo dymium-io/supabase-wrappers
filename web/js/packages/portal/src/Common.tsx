@@ -30,23 +30,16 @@ export function isInstaller() {
     }
     return false
 }
+export const databaseTypes = {}
+export const databasePorts = {}
 
-export const databaseTypes = {
-    PostgreSQL: "PostgreSQL",
-    MySQL: "MySQL",
-    MariaDB: "MariaDB",
-    SqlServer: "SQL Server",
-    OracleDB: "Oracle DB",
+for(let index = 0; index < types.ConnectionType_as_strings.length; index++) {
+    let key =  types.ConnectionType_as_strings[index]
+    let pp = types.ConnectionPortsType_as_strings[index]
+    let p = pp.split("_")
+    databaseTypes[key] = types.humanReadableConnectionType(key as types.ConnectionType)
+    databasePorts[key] = parseInt(p[1])
 }
-export const databasePorts = {
-    PostgreSQL: 5432,
-    MySQL: 3306,
-    MariaDB: 3306,
-    SqlServer: 1433,
-    OracleDB: 1521,
-}
-
-
 
 
 export function getDatascopes(setSpinner, setAlert, setDatascopes, onSuccess)  {

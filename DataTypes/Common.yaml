@@ -8,6 +8,13 @@ ConnectionType:
   - SqlServer  <*> Microsoft SQL Server
   - OracleDB   <*> Oracle Database
 
+ConnectionPortsType:
+  - PostgreSQL_5432
+  - MySQL_3306
+  - MariaDB_3306
+  - SqlServer_1433
+  - OracleDB_1521
+
 GroupMapping:
   - id: ?string
   - dymiumgroup: string
