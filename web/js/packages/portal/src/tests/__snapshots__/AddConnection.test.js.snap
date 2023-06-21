@@ -153,27 +153,27 @@ exports[`add-connection 1`] = `
               <option
                 value="PostgreSQL"
               >
-                PostgreSQL
+                PostgreSQL Database
               </option>
               <option
                 value="MySQL"
               >
-                MySQL
+                MySQL Database
               </option>
               <option
                 value="MariaDB"
               >
-                MariaDB
+                MariaDB Database
               </option>
               <option
                 value="SqlServer"
               >
-                SQL Server
+                Microsoft SQL Server
               </option>
               <option
                 value="OracleDB"
               >
-                Oracle DB
+                Oracle Database
               </option>
             </select>
             <div
