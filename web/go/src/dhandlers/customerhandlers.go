@@ -1442,7 +1442,7 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 	lbport, _ :=  strconv.Atoi(port) 
 
 	tunnellogin := fmt.Sprintf("%sauthorize?response_type=code&client_id=%s&redirect_uri=%s&organization=%s&scope=%s",
-		domain, clientid, redirecturl, t.Customerid,  url.QueryEscape("openid profile") )
+		domain, clientid, redirecturl, t.Customerid,  url.QueryEscape("openid profile email") )
 
 	var resp  types.CustomerIDResponse
 	

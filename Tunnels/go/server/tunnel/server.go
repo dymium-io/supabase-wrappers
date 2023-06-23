@@ -386,9 +386,13 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 					log.DebugUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Write to db error: %s", err.Error())
 					conn.sock.Close()
 				} else {
-					l := len(buff.Data)
-					bytesInLog <- l
-					conn.LogUpstream(l, false)
+					if conn == nil || conn.sock == nil {
+						log.Errorf("Error: attempt to send to a non existing socket %d, %v", buff.Id, buff)
+					} else {
+						l := len(buff.Data)
+						bytesInLog <- l
+						conn.LogUpstream(l, false)
+					}
 				}
 			} else {
 				log.Errorf("Error finding the descriptor %d, %v", buff.Id, buff)

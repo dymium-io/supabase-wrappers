@@ -16,6 +16,7 @@ LOCAL_SEARCH_PASSWD=${LOCAL_SEARCH_PASSWD:-admin123}
 SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE:-}
 
 SPOOFCORP_KEY=${SPOOFCORP_KEY:-6874AB957AA1F505EC6ACC84162B131FA5513558BB64ACEF294388AE6ECDA9C9}
+SPOOFCORPPING_KEY=${SPOOFCORPPING_KEY:-6874AB957AA1F505EC6ACC84162B131FA5513558BB64ACEF294388AE6ECDA9C9}
 
 [ -z "$DATABASE_PASSWORD" ] && {
     DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )
@@ -43,7 +44,9 @@ docker run --rm  --name db-sync.dymium.local   \
        -e AWS_SECRETS="{
                \"DATABASE_PASSWORD\": \"$DATABASE_PASSWORD\",
                \"SPOOFCORP_PASSWORD\": \"$DATABASE_PASSWORD\",
-               \"SPOOFCORP_KEY\": \"$SPOOFCORP_KEY\"
+               \"SPOOFCORPPING_PASSWORD\": \"$DATABASE_PASSWORD\",
+               \"SPOOFCORP_KEY\": \"$SPOOFCORP_KEY\",
+               \"SPOOFCORPPING_KEY\": \"$SPOOFCORPPING_KEY\"
              }"                                \
        -e GUARDIAN_CONF="{
              \"DEFAULT\": {
@@ -56,7 +59,12 @@ docker run --rm  --name db-sync.dymium.local   \
              \"spoofcorp\": {
                  \"guardian_password\": \"SPOOFCORP_PASSWORD\",
                  \"customer_aes_key\":  \"SPOOFCORP_KEY\"
+             },
+             \"spoofcorpping\": {
+                 \"guardian_password\": \"SPOOFCORPPING_PASSWORD\",
+                 \"customer_aes_key\":  \"SPOOFCORPPING_KEY\"
              }
+
 	  }"                                   \
        db-sync                                 \
        /main

@@ -1944,13 +1944,15 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id,
 		des, _ := jsonParsed.Path("error_description").Data().(string)
 
 		return "", "", []string{}, "", "", []string{}, errors.New(des)
-
 	}
-	access_token, ok := jsonParsed.Path("access_token").Data().(string)
-	id_token, ok := jsonParsed.Path("id_token").Data().(string)
+	access_token,_ := jsonParsed.Path("access_token").Data().(string)
+	id_token, _ := jsonParsed.Path("id_token").Data().(string)
 	picture, name, email, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
+	log.Infof("ID Token: %s", id_token)
+	log.Infof("Access Token: %s", access_token)
+	log.Infof("Name: %s, email %s", name, email)
 
-	sql := fmt.Sprintf("select schema_name from global.customers where organization=$1;")
+	sql := "select schema_name from global.customers where organization=$1;"
 
 	row := db.QueryRow(sql, org_id)
 	var schema string
