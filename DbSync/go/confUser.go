@@ -34,7 +34,7 @@ func confUser(
 
 	type udb struct{ u, db string }
 	ds := make([]udb, len(userCnf.Datascopes))
-	for k, _ := range userCnf.Datascopes {
+	for k := range userCnf.Datascopes {
 		ds[k] = udb{
 			u:  fmt.Sprintf(`_%x_`, md5.Sum([]byte(userCnf.Datascopes[k]+"_dymium"))),
 			db: userCnf.Datascopes[k],
@@ -51,7 +51,7 @@ func confUser(
 		} else {
 			defer db.Close()
 			userExists := false
-			if rows, err := db.Query(`select true from pg_roles where oid::regrole::text = $1`,
+			if rows, err := db.Query(`select true from pg_roles where lower(oid::regrole::text) = lower($1)`,
 				userCnf.Name); err != nil {
 				return empty, fmt.Errorf("Getting role: %v", err)
 			} else {
@@ -61,9 +61,9 @@ func confUser(
 				}
 			}
 			if rows, err := db.Query(`select r.oid::regrole::text as rolename from pg_roles r
-                                                  join  pg_auth_members m on m.roleid = oid
+                                                  join pg_auth_members m on m.roleid = oid
                                                   join pg_roles u on u.oid = m.member
-                                                  and u.oid::regrole::text = $1
+                                                  and lower(u.oid::regrole::text) = lower($1)
                                                   ORDER BY rolename`,
 				userCnf.Name); err != nil {
 				return empty, err
@@ -102,35 +102,38 @@ func confUser(
 				}
 				// log.Println("toAdd:", toAdd, "toDelete:", toDelete)
 				if !userExists {
-					_, err = db.Exec(fmt.Sprintf("CREATE USER %s WITH ENCRYPTED PASSWORD '%s'", userCnf.Name, userCnf.Password))
+					_, err = db.Exec(fmt.Sprintf("CREATE USER %s WITH ENCRYPTED PASSWORD '%s'",
+						PostgresEscape(userCnf.Name), esc(userCnf.Password)))
 					if err != nil {
 						return empty, err
 					}
-					log.Printf("CREATing USER %s", userCnf.Name)
+					log.Printf("CREATing USER %s", PostgresEscape(userCnf.Name))
 				} else {
-					_, err = db.Exec(fmt.Sprintf("ALTER USER %s WITH ENCRYPTED PASSWORD '%s'", userCnf.Name, userCnf.Password))
+					_, err = db.Exec(fmt.Sprintf("ALTER USER %s WITH ENCRYPTED PASSWORD '%s'",
+						PostgresEscape(userCnf.Name), esc(userCnf.Password)))
 					if err != nil {
 						return empty, err
 					}
-					log.Printf("ALTERing USER %s", userCnf.Name)
+					log.Printf("ALTERing USER %s", PostgresEscape(userCnf.Name))
 				}
 				for _, d := range toDelete {
-					_, err = db.Exec(fmt.Sprintf("REVOKE %s FROM %s", d, userCnf.Name))
+					_, err = db.Exec(fmt.Sprintf("REVOKE %s FROM %s", d, PostgresEscape(userCnf.Name)))
 					if err != nil {
 						return empty, err
 					}
-					log.Printf("REVOKE %s FROM %s", d, userCnf.Name)
+					log.Printf("REVOKE %s FROM %s", d, PostgresEscape(userCnf.Name))
 				}
 				for _, a := range toAdd {
-					_, err = db.Exec(fmt.Sprintf(`GRANT %s TO %s`, a.u, userCnf.Name))
+					_, err = db.Exec(fmt.Sprintf(`GRANT %s TO %s`, a.u, PostgresEscape(userCnf.Name)))
 					if err != nil {
 						return empty, err
 					}
-					_, err = db.Exec(fmt.Sprintf(`ALTER ROLE %s IN DATABASE %s SET ROLE TO %s`, userCnf.Name, a.db, a.u))
+					_, err = db.Exec(fmt.Sprintf(`ALTER ROLE %s IN DATABASE %s SET ROLE TO %s`,
+						PostgresEscape(userCnf.Name), a.db, a.u))
 					if err != nil {
 						return empty, err
 					}
-					log.Printf(`GRANT %s TO %s`, a.u, userCnf.Name)
+					log.Printf(`GRANT %s TO %s`, a.u, PostgresEscape(userCnf.Name))
 				}
 			}
 		}
