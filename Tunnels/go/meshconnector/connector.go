@@ -208,8 +208,8 @@ func pipe(conmap map[int]*Virtcon,
 	egress, err := net.Dial("tcp", token)
 
 	if err != nil {
-		log.ErrorTenantf(customer, "Error connecting to target :  %s, send close back", err.Error())
-		messages <- protocol.TransmissionUnit{protocol.Close, id, nil}
+		log.ErrorTenantf(customer, "Error connecting to target:  %s, send close back", err.Error())
+		messages <- protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 		return
 	} else {
 		log.InfoTenantf(customer, "Created connection #%d to db at %s, total #=%d", id, token, l)
@@ -223,7 +223,7 @@ func pipe(conmap map[int]*Virtcon,
 	mu.Unlock()
 	if !ok {
 		log.ErrorTenantf(customer, "Error finding the descriptor %d in pipe", id)
-		messages <- protocol.TransmissionUnit{protocol.Close, id, nil}
+		messages <- protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 		return
 	}
 	go func() {
@@ -263,14 +263,14 @@ func pipe(conmap map[int]*Virtcon,
 				//conn.sock = nil
 			}
 			egress.Close()
-			out := protocol.TransmissionUnit{protocol.Close, id, nil}
+			out := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 			messages <- out
 
 			return
 		}
 		b := buff[:n]
 
-		out := protocol.TransmissionUnit{protocol.Send, id, b}
+		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
 		//write out result
 		messages <- out
 	}
@@ -667,7 +667,7 @@ func main() {
 	log.Init("connector")
 
 	if "" == os.Getenv("WORKER") {
-		log.Infof("overseer started, version %s", protocol.MeshServerVersion)
+		log.Infof("Overseer started, version %s", protocol.MeshServerVersion)
 		x := make(chan int, 1)
 		go handleSignal(nil, x)
 		restart()
@@ -675,7 +675,7 @@ func main() {
 	} else {
 
 		for {
-			log.Infof("worker started, version %s", protocol.MeshServerVersion)
+			log.Infof("Worker started, version %s", protocol.MeshServerVersion)
 			DoConnect()
 			if interrupted {
 				log.Debug("Exiting on interrupt")
