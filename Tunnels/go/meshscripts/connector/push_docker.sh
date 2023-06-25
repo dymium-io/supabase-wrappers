@@ -11,8 +11,9 @@ then
   tag="$1"
 fi
 
-docker tag public.ecr.aws/a9d3u0m7/dymiumconnector:${tag} public.ecr.aws/a9d3u0m7/dymiumconnector:latest
+docker tag dymiumconnector:latest public.ecr.aws/a9d3u0m7/dymiumconnector:${tag}
+docker tag dymiumconnector:latest public.ecr.aws/a9d3u0m7/dymiumconnector:latest 
 aws ecr-public get-login-password --region us-east-1 --profile dymium | docker login --username AWS --password-stdin public.ecr.aws/a9d3u0m7
-docker push public.ecr.aws/a9d3u0m7/dymiumconnector:${tag}
-docker push public.ecr.aws/a9d3u0m7/dymiumconnector:latest
 
+docker push public.ecr.aws/a9d3u0m7/dymiumconnector:latest
+docker tag  public.ecr.aws/a9d3u0m7/dymiumconnector:latest public.ecr.aws/a9d3u0m7/dymiumconnector:${tag}

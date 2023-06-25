@@ -60,7 +60,6 @@ func displayBuff(what string, buff []byte) {
 	} else {
 		log.Debugf("%s buffer: %v", what, buff)
 	}
-	log.Debugf("%s ", string(buff))
 }
 */
 func initDB(host, nport, user, password, dbname, usetls string) error {
@@ -99,27 +98,22 @@ func createListener(customer, target, sport string) (*net.TCPListener, error) {
 	return listener, err
 }
 
+func printCode(code int) string {
+	switch code {
+	case 	protocol.Close: return "Close"
+	case protocol.Open: return "Open"
+	case protocol.Send: return "Send"
+	case protocol.Ping: return "Ping"
+	case protocol.Error: return "Error"
+	case protocol.Version: return "Version"
+	default: return "Unknown"
+	}
+}
 func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *gob.Encoder, dec *gob.Decoder,
 	egress net.Conn, conmap map[int]*Virtcon, counter chan int, mu *sync.RWMutex,
 	listeners []*net.TCPListener) {
 
-	// writer
-	go func(messages chan protocol.TransmissionUnit, enc *gob.Encoder) {
-		for {
-			tosend := <-messages
-			//displayBuff("From database: ", tosend.Data)
-			err := enc.Encode(tosend)
-			if err != nil {
-				log.ErrorTenantf(customer, "Error in Encode: %s", err.Error())
-				return
-			} else {
-				if len(tosend.Data) > 0 {
-					//log.Debugf("sent %d bytes to connector", len(tosend.Data))
-				}
-			}
-		}
 
-	}(messages, enc)
 	updates := make(chan int, 10)
 
 	// timeout for no data from the connector
@@ -154,7 +148,8 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 	go func(messages chan protocol.TransmissionUnit, enc *gob.Encoder) {
 		for {
 			tosend := <-messages
-			//displayBuff("From database: ", tosend.Data)
+			//displayBuff( fmt.Sprintf("Send to connection %d: ", tosend.Id), tosend.Data)
+			//log.Debugf("Id: %d, Action: %s", tosend.Id, printCode(tosend.Action))
 			err := enc.Encode(tosend)
 			if err != nil {
 				log.ErrorTenantf(customer, "Error in Encode: %s", err.Error())
@@ -207,9 +202,13 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 			log.Debugf("protocol.Close for id=%d", buff.Id)
 			mu.RLock()
 			conn, ok := conmap[buff.Id]
+			var ll int
+			if ok {
+				ll = len(conmap)-1
+			}
 			mu.RUnlock()
 			if ok {
-				log.InfoTenantf(customer, "Connection #%d closing, %d left", buff.Id, len(conmap)-1)
+				log.InfoTenantf(customer, "Connection #%d closing, %d left", buff.Id, ll)
 				conn.sock.Close()
 				mu.Lock()
 				delete(conmap, buff.Id)
@@ -245,7 +244,7 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 	conmap map[int]*Virtcon, id int, connectionString string, mu *sync.RWMutex) {
 
 	// open connection on the other side
-	log.Infof("send open to connector for %s", connectionString)
+	log.Infof("send open to id=%d for %s", id, connectionString)
 	out := protocol.TransmissionUnit{Action: protocol.Open, Id: id, Data: []byte(connectionString)}
 	messages <- out
 
@@ -277,8 +276,8 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 		}
 		if n == 0 {
 			log.Infof("Read returned 0 bytes")
-		}
-		log.Debugf("Conn %d, read %d bytes", id, n)
+		}		
+		log.Debugf("Conn %d, send %d bytes", id, n)
 		b := buff[:n]
 		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
 		//write out result
