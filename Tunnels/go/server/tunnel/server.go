@@ -14,6 +14,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
 	"dymium.com/dymium/log"
 	"dymium.com/server/gotypes"
 	"dymium.com/server/protocol"
@@ -369,7 +370,9 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 			if ok {
 				log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Connection #%d closing, %d left", buff.Id, len(conmap) - 1)
 				conn.LogUpstream(0, true)
-				conn.sock.Close()
+				if conn != nil && conn.sock != nil {
+					conn.sock.Close()
+				}
 				mu.Lock()
 				delete(conmap, buff.Id)
 				mu.Unlock()
@@ -381,7 +384,11 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 			conn, ok := conmap[buff.Id]
 			mu.RUnlock()
 			if ok {
-				_, err = conn.sock.Write(buff.Data)
+				if conn != nil && conn.sock != nil {
+					_, err = conn.sock.Write(buff.Data)
+				} else {
+					err = fmt.Errorf("Connection %d already cleared", buff.Id)
+				}
 				if err != nil {
 					log.DebugUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Write to db error: %s", err.Error())
 					conn.sock.Close()
