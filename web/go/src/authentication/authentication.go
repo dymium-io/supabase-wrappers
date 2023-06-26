@@ -579,7 +579,7 @@ func UsernameFromEmail(email string) string {
 		"~", "_")
 
 	username = replacer.Replace(username)
-
+	username = strings.ToLower(username)
 	return username
 }
 
@@ -2069,7 +2069,7 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		org := r.URL.Query().Get("organization")
 		var newquery string
 		if org == "" {
-			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&organization=%s&scope=%s&prompt=login",
+			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&organization=%s&&scope=%sprompt=login",
 				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect),
 				auth_admin_organization, url.QueryEscape("groups"))
 		} else {
