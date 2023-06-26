@@ -565,7 +565,7 @@ func UsernameFromEmail(email string) string {
 		"%", "_",
 		"&", "_",
 		"'", "_",
-		".", "_",		
+		".", "_",
 		"*", "_",
 		"+", "_",
 		"-", "_",
@@ -1945,7 +1945,7 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id,
 
 		return "", "", []string{}, "", "", []string{}, errors.New(des)
 	}
-	access_token,_ := jsonParsed.Path("access_token").Data().(string)
+	access_token, _ := jsonParsed.Path("access_token").Data().(string)
 	id_token, _ := jsonParsed.Path("id_token").Data().(string)
 	picture, name, email, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
 	log.Infof("ID Token: %s", id_token)
@@ -2069,7 +2069,7 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		org := r.URL.Query().Get("organization")
 		var newquery string
 		if org == "" {
-			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&organization=%s&&scope=%sprompt=login",
+			newquery = fmt.Sprintf("%sauthorize?%s&response_type=code&client_id=%s&redirect_uri=%s&organization=%s&scope=%s&prompt=login",
 				auth_admin_domain, r.URL.RawQuery, auth_admin_client_id, url.QueryEscape(auth_admin_redirect),
 				auth_admin_organization, url.QueryEscape("groups"))
 		} else {
