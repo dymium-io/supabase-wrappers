@@ -217,7 +217,7 @@ func sendCSR(csr []byte, token string) error {
 	return nil
 }
 
-func getTunnelInfo(customerid, portalurl string, forcenoupdate bool, forceupdate bool) (string) {
+func getTunnelInfo(customerid, portalurl string, forcenoupdate bool, forceupdate bool) string {
 
 	var outbody types.CustomerIDRequest
 	outbody.Customerid = customerid
@@ -282,6 +282,7 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool, forceupdate
 
 func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, token string, id int, mu sync.RWMutex) {
 	out := protocol.TransmissionUnit{Action: protocol.Open, Id: id, Data: []byte(token)}
+
 	mu.RLock()
 	log.Debugf("Create proxy connection %d, number of connections %d", id, len(conmap))
 	mu.RUnlock()
@@ -289,7 +290,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 	messages <- out
 
 	for {
-		buff := make([]byte, 0xffff)
+		buff := make([]byte, 4096)
 
 		n, err := ingress.Read(buff)
 		if err != nil {
@@ -300,7 +301,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 					log.Errorf("Read on loopback failed '%s'", err.Error())
 				}
 			} else {
-				log.Infof("Connection closed by client")
+				log.Infof("Connection %d closed by client", id)
 			}
 			ingress.Close()
 			back := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
@@ -366,7 +367,7 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder,
 				mu.Unlock()
 			}
 			mu.RLock()
-			log.Debugf("Closed connection %d, %d left", buff.Id, len(conmap))
+			log.Infof("Closed connection %d, %d left", buff.Id, len(conmap))
 			mu.RUnlock()
 		case protocol.Send:
 			mu.RLock()
@@ -376,7 +377,11 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder,
 				_, err := sock.Write(buff.Data)
 
 				if err != nil {
-					log.Errorf("Write to local socket error: %s, closing...", err.Error())
+					s := err.Error()
+					if strings.Contains(s, "use of closed network connection") {
+					} else {
+						log.Errorf("Write to local socket error: %s, closing...", s)
+					}
 					back := protocol.TransmissionUnit{Action: protocol.Close, Id: buff.Id, Data: nil}
 					sock.Close()
 					mu.Lock()
@@ -580,7 +585,7 @@ func printAuthenticatedFeedback(w http.ResponseWriter) {
 func checkUpdateFlags(forcenoupdate, forceupdate bool) {
 	if !forcenoupdate {
 		log.Infof("Dymium secure tunnel, version %s.%s, protocol iteration %s", MajorVersion, MinorVersion, ProtocolVersion)
-	}	
+	}
 	if forcenoupdate && forceupdate {
 		log.Errorf("Can't force update and no update!")
 		os.Exit(1)
@@ -652,7 +657,7 @@ func main() {
 
 		var claim types.Claims
 		var p jwt.Parser
-		_, _, err = p.ParseUnverified(groups.Token, &claim)  // only informational
+		_, _, err = p.ParseUnverified(groups.Token, &claim) // only informational
 		if err != nil {
 			log.Errorf("Error: token invalid, can't continue %s", err.Error())
 			os.Exit(1)
