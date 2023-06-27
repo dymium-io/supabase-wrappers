@@ -236,6 +236,7 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 			} else {
 				if ok {
 					if err == io.EOF {
+						// be silent
 					} else {
 						log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles,
 							"Db read failed '%s', id:%d", err.Error(), id)
