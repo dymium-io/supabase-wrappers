@@ -235,14 +235,17 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 				// no op
 			} else {
 				if ok {
-					log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles,
-						"Db read failed '%s', id:%d", err.Error(), id)
+					if err == io.EOF {
+					} else {
+						log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles,
+							"Db read failed '%s', id:%d", err.Error(), id)
+					}
 				} else {
 					log.Errorf("Db read failed '%s', id:%d", err.Error(), id)
 				}
 			}
 			egress.Close()
-			out := protocol.TransmissionUnit{protocol.Close, id, nil}
+			out := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 			messages <- out
 			if ok {
 				conn.LogDownstream(0, true)
@@ -259,7 +262,7 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 
 		//displayBuff("Read from db ", b)
 		//log.Printf("Send to client %d bytes, connection %d", n, id)
-		out := protocol.TransmissionUnit{protocol.Send, id, b}
+		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
 		//write out result
 		messages <- out
 	}
