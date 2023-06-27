@@ -8,13 +8,16 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
+	"math/rand"
 	"net"
+	_ "net/http"
+	_ "net/http/pprof"
 	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-	"math/rand"
+
 	"dymium.com/dymium/log"
 	"dymium.com/server/gotypes"
 	"dymium.com/server/protocol"
@@ -24,7 +27,8 @@ import (
 
 var rdb *redis.Client
 var ctx = context.Background()
-
+var iprecords []net.IP
+var resolvemutex sync.RWMutex
 type Virtcon struct {
 	sock            net.Conn
 	tenant          string
@@ -66,7 +70,6 @@ func (x *Virtcon) LogUpstream(bytes int, final bool) {
 		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "End of connection, total upstream traffic %d bytes", []string{sl}, atomic.LoadInt64(&x.totalUpstream))
 	}
 }
-
 
 var bytesInLog = make(chan int, 128)
 var bytesOutLog = make(chan int, 128)
@@ -124,27 +127,49 @@ func displayBuff(what string, buff []byte) {
 	}
 }
 func getTargetConnection(targetHost string, customer, postgresPort string) (net.Conn, error) {
-	iprecords, err := net.LookupIP(targetHost)
+	var err error
+	resolvemutex.RLock()
+	index := rand.Intn(len(iprecords))
+	target := iprecords[index].String() + ":" + postgresPort
+	resolvemutex.RUnlock()
 	if err != nil {
 		return nil, err
 	}
 
-	index := rand.Intn(len(iprecords))
-	target := iprecords[index].String() + ":" + postgresPort
 	log.Infof("For customer %s, host: %s, target: %s", customer, targetHost, target)
 	return net.Dial("tcp", target)
 }
-
+func backgroundResolve(targetHost string) {
+	for {
+		time.Sleep(2 * time.Minute)
+		addrs, _ := net.LookupIP(targetHost)
+		for _, addr := range addrs {
+			log.Debugf("Resolved %s to %s", targetHost, addr.String())
+		}
+		resolvemutex.Lock()
+		iprecords = addrs
+		resolvemutex.Unlock()
+	}
+}
 func Server(address string, port int, customer, postgressDomain, postgresPort string,
 	certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte,
 	redisAddress, redisPort, redisPassword string) {
 	var err error
 	var pkey []byte
-
+	/*
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
+*/
 	initRedis(redisAddress, redisPort, redisPassword)
 
 	go logBandwidth(customer)
 	targetHost := customer + postgressDomain
+
+	resolvemutex.Lock()
+	iprecords, _ = net.LookupIP(targetHost)
+	resolvemutex.Unlock()
+	go backgroundResolve(targetHost)
 
 	if err != nil {
 		log.Errorf("Error: %s", err.Error())
@@ -225,7 +250,7 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.TransmissionUnit, id int, token string, mu *sync.RWMutex) {
 
 	for {
-		buff := make([]byte, 0xffff)
+		buff := make([]byte, 4096)
 		n, err := egress.Read(buff)
 		mu.RLock()
 		conn, ok := conmap[id]
@@ -235,14 +260,18 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 				// no op
 			} else {
 				if ok {
-					log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles,
-						"Db read failed '%s', id:%d", err.Error(), id)
+					if err == io.EOF {
+						// be silent
+					} else {
+						log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles,
+							"Db read failed '%s', id:%d", err.Error(), id)
+					}
 				} else {
 					log.Errorf("Db read failed '%s', id:%d", err.Error(), id)
 				}
 			}
 			egress.Close()
-			out := protocol.TransmissionUnit{protocol.Close, id, nil}
+			out := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 			messages <- out
 			if ok {
 				conn.LogDownstream(0, true)
@@ -259,7 +288,7 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 
 		//displayBuff("Read from db ", b)
 		//log.Printf("Send to client %d bytes, connection %d", n, id)
-		out := protocol.TransmissionUnit{protocol.Send, id, b}
+		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
 		//write out result
 		messages <- out
 	}
@@ -363,8 +392,8 @@ func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort
 			}
 			conn.sock = egress
 			mu.Lock()
-			conmap[buff.Id] = conn		
-			howmany = len(conmap)	
+			conmap[buff.Id] = conn
+			howmany = len(conmap)
 			mu.Unlock()
 			log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Connection #%d to db created, total #=%d", buff.Id, howmany)
 
