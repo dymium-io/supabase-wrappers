@@ -21,31 +21,34 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/redis/go-redis/v9"
 )
+
 var rdb *redis.Client
 var ctx = context.Background()
+
 type Virtcon struct {
-	sock    net.Conn
-	tenant  string
-	email   string
-	session string
-	groups  []string
-	roles   []string
+	sock            net.Conn
+	tenant          string
+	email           string
+	session         string
+	groups          []string
+	roles           []string
 	accumDownstream int64
 	totalDownstream int64
-	accumUpstream int64
-	totalUpstream int64
+	accumUpstream   int64
+	totalUpstream   int64
 }
+
 func (x *Virtcon) LogDownstream(bytes int, final bool) {
 	atomic.AddInt64(&x.accumDownstream, int64(bytes))
 	atomic.AddInt64(&x.totalDownstream, int64(bytes))
 	accumDownstream := atomic.LoadInt64(&x.accumDownstream)
-	if( (accumDownstream > 10000 || final) && accumDownstream > 0) {
+	if (accumDownstream > 10000 || final) && accumDownstream > 0 {
 		sl := fmt.Sprintf("%d", x.accumDownstream)
 		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "Downstream, sent #%d bytes", []string{sl}, x.accumDownstream)
 		atomic.StoreInt64(&x.accumDownstream, 0)
 	}
-	if(final) {
-		sl := fmt.Sprintf("%d", atomic.LoadInt64(&x.totalDownstream) )
+	if final {
+		sl := fmt.Sprintf("%d", atomic.LoadInt64(&x.totalDownstream))
 		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "End of connection, total downstream traffic %d bytes", []string{sl}, atomic.LoadInt64(&x.totalDownstream))
 	}
 }
@@ -53,13 +56,13 @@ func (x *Virtcon) LogUpstream(bytes int, final bool) {
 	atomic.AddInt64(&x.accumUpstream, int64(bytes))
 	atomic.AddInt64(&x.totalUpstream, int64(bytes))
 	accumUpstream := atomic.LoadInt64(&x.accumUpstream)
-	if( (accumUpstream > 10000 || final) && accumUpstream > 0) {
+	if (accumUpstream > 10000 || final) && accumUpstream > 0 {
 		sl := fmt.Sprintf("%d", x.accumUpstream)
 		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "Upstream, sent #%d bytes", []string{sl}, x.accumUpstream)
 		atomic.StoreInt64(&x.accumUpstream, 0)
 	}
-	if(final) {
-		sl := fmt.Sprintf("%d", atomic.LoadInt64(&x.totalUpstream) )
+	if final {
+		sl := fmt.Sprintf("%d", atomic.LoadInt64(&x.totalUpstream))
 		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "End of connection, total upstream traffic %d bytes", []string{sl}, atomic.LoadInt64(&x.totalUpstream))
 	}
 }
@@ -102,9 +105,9 @@ func logBandwidth(customer string) {
 	}
 }
 
-func initRedis(redisAddress, redisPort, redisPassword string)  {
+func initRedis(redisAddress, redisPort, redisPassword string) {
 	o := &redis.Options{
-		Addr: redisAddress + ":" + redisPort,		
+		Addr: redisAddress + ":" + redisPort,
 	}
 	if redisPassword != "" {
 		o.Password = redisPassword
@@ -234,8 +237,8 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 				// no op
 			} else {
 				if ok {
-					log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, 
-							"Db read failed '%s', id:%d", err.Error(), id)
+					log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles,
+						"Db read failed '%s', id:%d", err.Error(), id)
 				} else {
 					log.Errorf("Db read failed '%s', id:%d", err.Error(), id)
 				}
@@ -251,7 +254,6 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 		b := buff[:n]
 		bytesOutLog <- n
 
-
 		if ok {
 			conn.LogDownstream(n, false)
 			//log.InfoUserArrayf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Downstream, sent #%d bytes", []string{sl}, n)
@@ -265,7 +267,7 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 	}
 }
 
-func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder, 
+func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder,
 	ingress net.Conn, conmap map[int]*Virtcon) {
 	for {
 		buff, ok := <-messages
@@ -296,7 +298,6 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 
 	messages := make(chan protocol.TransmissionUnit, 50)
 	go MultiplexWriter(messages, enc, ingress, conmap)
-	
 
 	// totalUpstream := 0
 
@@ -305,13 +306,13 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 		err := dec.Decode(&buff)
 
 		if err != nil {
-			if(err != io.EOF) {
+			if err != io.EOF {
 				log.Errorf("Customer %s, read from client failed '%s', cleanup the proxy connection!", customer, err.Error())
 			} else {
 				log.Debugf("Customer %s, EOF!", customer)
 
 			}
-				// close all outgoing connections
+			// close all outgoing connections
 			mu.Lock()
 			for key := range conmap {
 				conmap[key].sock.Close()
@@ -322,25 +323,25 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 			ingress.Close()
 			return
 		}
-	
+
 		switch buff.Action {
 		case protocol.Open:
-			
+
 			var p jwt.Parser
-			_, _, err = p.ParseUnverified(string(buff.Data), claim)  // only informational
+			_, _, err = p.ParseUnverified(string(buff.Data), claim) // only informational
 			if err != nil {
 				log.Errorf("Error: token invalid, can't continue %s", err.Error())
 				os.Exit(1)
 			}
-/*
-			jwtKey := []byte(os.Getenv("SESSION_SECRET"))
-			_, err = jwt.ParseWithClaims(string(buff.Data), claim, func(token *jwt.Token) (interface{}, error) {
-				return jwtKey, nil
-			})
-			if err != nil {
-				log.Errorf("Error parsing token %s: %s", string(buff.Data), err.Error())
-			}
-*/
+			/*
+				jwtKey := []byte(os.Getenv("SESSION_SECRET"))
+				_, err = jwt.ParseWithClaims(string(buff.Data), claim, func(token *jwt.Token) (interface{}, error) {
+					return jwtKey, nil
+				})
+				if err != nil {
+					log.Errorf("Error parsing token %s: %s", string(buff.Data), err.Error())
+				}
+			*/
 			conn := &Virtcon{}
 			conn.tenant = claim.Schema
 			conn.email = claim.Email
@@ -351,24 +352,32 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 			conn.totalDownstream = 0
 			conn.accumUpstream = 0
 			conn.totalUpstream = 0
-
-			log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Connection #%d to db created, total #=%d", buff.Id, len(conmap))
+			mu.RLock()
+			howmany := len(conmap)
+			mu.RUnlock()
+			log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Connection #%d to db creating, total existing #=%d", buff.Id, howmany)
 
 			egress, err := getTargetConnection(customer, postgresPort)
 			if err != nil {
-				log.ErrorUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles,"Error connecting to target %s", err.Error())
+				log.ErrorUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Error connecting to target %s", err.Error())
+				messages <- protocol.TransmissionUnit{Action: protocol.Close, Id: buff.Id, Data: nil}
+				return
 			}
 			conn.sock = egress
 			mu.Lock()
-			conmap[buff.Id] = conn
+			conmap[buff.Id] = conn		
+			howmany = len(conmap)	
 			mu.Unlock()
+			log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Connection #%d to db created, total #=%d", buff.Id, howmany)
+
 			go pipe(conmap, egress, messages, buff.Id, string(buff.Data), &mu)
 		case protocol.Close:
 			mu.RLock()
 			conn, ok := conmap[buff.Id]
+			howmany := len(conmap) - 1
 			mu.RUnlock()
-			if ok {
-				log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Connection #%d closing, %d left", buff.Id, len(conmap) - 1)
+			if ok && conn != nil {
+				log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Connection #%d closing, %d left", buff.Id, howmany)
 				conn.LogUpstream(0, true)
 				if conn != nil && conn.sock != nil {
 					conn.sock.Close()
@@ -377,29 +386,24 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 				delete(conmap, buff.Id)
 				mu.Unlock()
 			} else {
-				log.Errorf("Error finding the descriptor %d, %v", buff.Id, buff)
+				log.Errorf("Closing connection: error finding the descriptor %d, %v", buff.Id, buff)
 			}
 		case protocol.Send:
 			mu.RLock()
 			conn, ok := conmap[buff.Id]
 			mu.RUnlock()
-			if ok {
-				if conn != nil && conn.sock != nil {
-					_, err = conn.sock.Write(buff.Data)
-				} else {
-					err = fmt.Errorf("Connection %d already cleared", buff.Id)
-				}
-				if err != nil {
-					log.DebugUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Write to db error: %s", err.Error())
-					conn.sock.Close()
-				} else {
-					if conn == nil || conn.sock == nil {
-						log.Errorf("Error: attempt to send to a non existing socket %d, %v", buff.Id, buff)
+			if ok && conn != nil {
+				if conn.sock != nil {
+					n, err := conn.sock.Write(buff.Data)
+					if err != nil {
+						log.DebugUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Write to db error: %s", err.Error())
+						conn.sock.Close()
 					} else {
-						l := len(buff.Data)
-						bytesInLog <- l
-						conn.LogUpstream(l, false)
+						bytesInLog <- n
+						conn.LogUpstream(n, false)
 					}
+				} else {
+					log.Errorf("Error: Connection %d already cleared", buff.Id)
 				}
 			} else {
 				log.Errorf("Error finding the descriptor %d, %v", buff.Id, buff)
