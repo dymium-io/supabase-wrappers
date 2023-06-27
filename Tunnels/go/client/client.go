@@ -294,7 +294,11 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 		n, err := ingress.Read(buff)
 		if err != nil {
 			if err != io.EOF {
-				log.Errorf("Read on loopback failed '%s'", err.Error())
+				s := err.Error()
+				if strings.Contains(s, "use of closed network connection") {
+				} else {
+					log.Errorf("Read on loopback failed '%s'", err.Error())
+				}
 			} else {
 				log.Infof("Connection closed by client")
 			}
