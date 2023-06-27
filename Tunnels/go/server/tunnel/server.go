@@ -14,7 +14,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
+	"math/rand"
 	"dymium.com/dymium/log"
 	"dymium.com/server/gotypes"
 	"dymium.com/server/protocol"
@@ -67,8 +67,7 @@ func (x *Virtcon) LogUpstream(bytes int, final bool) {
 	}
 }
 
-var iprecords []net.IP
-var ipindex = 0
+
 var bytesInLog = make(chan int, 128)
 var bytesOutLog = make(chan int, 128)
 
@@ -124,12 +123,15 @@ func displayBuff(what string, buff []byte) {
 		log.Debugf("%s buffer: %v", what, buff)
 	}
 }
-func getTargetConnection(customer, postgresPort string) (net.Conn, error) {
-	index := ipindex % len(iprecords)
-	ipindex = (ipindex + 1) % len(iprecords)
+func getTargetConnection(targetHost string, customer, postgresPort string) (net.Conn, error) {
+	iprecords, err := net.LookupIP(targetHost)
+	if err != nil {
+		return nil, err
+	}
 
+	index := rand.Intn(len(iprecords))
 	target := iprecords[index].String() + ":" + postgresPort
-	log.Infof("For customer %s, target: %s", customer, target)
+	log.Infof("For customer %s, host: %s, target: %s", customer, targetHost, target)
 	return net.Dial("tcp", target)
 }
 
@@ -143,14 +145,10 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 
 	go logBandwidth(customer)
 	targetHost := customer + postgressDomain
-	iprecords, err = net.LookupIP(targetHost)
-	log.Infof("Target postgress: %s", targetHost)
+
 	if err != nil {
 		log.Errorf("Error: %s", err.Error())
 		os.Exit(1)
-	}
-	for _, ip := range iprecords {
-		log.Debugf("db endpoint: %s", ip)
 	}
 
 	v, _ := pem.Decode(keyPEMBlock)
@@ -220,7 +218,7 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 			}
 		}
 
-		go proxyConnection(ingress, customer, postgresPort)
+		go proxyConnection(targetHost, ingress, customer, postgresPort)
 	}
 }
 
@@ -288,7 +286,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder,
 	}
 }
 
-func proxyConnection(ingress net.Conn, customer, postgresPort string) {
+func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort string) {
 	var conmap = make(map[int]*Virtcon)
 	var mu sync.RWMutex
 	claim := &gotypes.Claims{}
@@ -357,7 +355,7 @@ func proxyConnection(ingress net.Conn, customer, postgresPort string) {
 			mu.RUnlock()
 			log.InfoUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Connection #%d to db creating, total existing #=%d", buff.Id, howmany)
 
-			egress, err := getTargetConnection(customer, postgresPort)
+			egress, err := getTargetConnection(targetHost, customer, postgresPort)
 			if err != nil {
 				log.ErrorUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Error connecting to target %s", err.Error())
 				messages <- protocol.TransmissionUnit{Action: protocol.Close, Id: buff.Id, Data: nil}
