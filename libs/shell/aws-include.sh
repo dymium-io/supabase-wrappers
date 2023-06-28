@@ -7,13 +7,13 @@ aws_usage() {
 		ex="$0"
 	fi
 	[ -z "$1" ] || {
-		echo "Error: $1"
+		echo -e "\033[1;31mError\033[0m: $1"
 	}
-	echo "Usage: $ex <subaccount> [region] [version]"
+	echo -e "\033[1;34mUsage\033[0m: $ex <subaccount> <tag> [region]"
 	echo "  where:"
-	echo "    subaccount is one of: dymium |production |staging |dev"
-	echo "    default AWS region is \"us-west-2\""
-	echo "    version is \"latest\" (default) or \"prod\""
+	echo -e "    \033[1msubaccount\033[0m is one of: production |stage |dev"
+	echo -e "    \033[1mtag\033[0m is something like \"dymium-1.4\" or \"latest\""
+	echo -e "    AWS \033[1mregion\033[0m is something like \"us-west-2\" or \"Oregon\" (the default)"
 	exit 255
 }
 aws_params() {
@@ -25,17 +25,12 @@ aws_params() {
 		ex="$0"
 	fi
 	case "$1" in
-	"dymium")
-		ARN="411064808315"
-		PROFILE="dymium"
-		shift
-		;;
 	"production")
 		ARN="482973908181"
 		PROFILE="dymium-prod"
 		shift
 		;;
-	"staging")
+	"stage")
 		ARN="626593984035"
 		PROFILE="dymium-stage"
 		shift
@@ -54,6 +49,23 @@ aws_params() {
 	esac
 
 	case "$1" in
+	    "") aws_usage -exe "$ex" "mandatory <tag> parameter is not defined"
+		;;
+	    "" | "Oregon" | "us-west-2")
+		aws_usage -exe "$ex" "<tag> parameter value \"$1\" does not look right"
+		;;
+	    *)
+		tag="$1"
+		shift
+		;;
+	esac
+
+	
+	case "$1" in
+	"" | "Oregon" | "us-west-2") # default
+		REGION="us-west-2"
+		shift
+		;;
 	"Ohio" | "us-east-2")
 		REGION="us-east-2"
 		shift
@@ -64,10 +76,6 @@ aws_params() {
 		;;
 	"California" | "us-west-1")
 		REGION="us-west-1"
-		shift
-		;;
-	"Oregon" | "us-west-2")
-		REGION="us-west-2"
 		shift
 		;;
 	"Africa" | "Cape Town" | "af-south-1")
@@ -166,22 +174,6 @@ aws_params() {
 		REGION="us-gov-west-1"
 		shift
 		;;
-	"")
-		REGION="us-west-2"
-		;;
-	*) aws_usage -exe "$ex" "Region $1 is not known" ;;
-	esac
-
-	case "$1" in
-	"") tag="latest" ;;
-	"latest")
-		tag="latest"
-		shift
-		;;
-	*)
-		tag="$1"
-		shift
-		;;
-	*) aws_usage -exe "$ex" "tag value \"$1\" is not supported" ;;
+	*)  aws_usage -exe "$ex" "Region $1 is not known" ;;
 	esac
 }
