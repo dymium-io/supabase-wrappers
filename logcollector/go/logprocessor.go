@@ -149,9 +149,9 @@ func ParseLogCSV(msg string) (*PostgresLogMessage, error) {
 
 // List of statements which contain passwords:
 var reStatements = []*regexp.Regexp{
-	regexp.MustCompile(`((?i)statement: CREATE\s+USER\s+MAPPING\s+FOR\s+.*\s+SERVER\s+.*\s+OPTIONS\s+\(.*password\s+['"])(\S+)((?s)['"].*\).*$)`),
-	regexp.MustCompile(`((?i)statement: CREATE\s+USER\s+.*\s+PASSWORD\s+['"])(\S+)((?s)['"].*$)`),
-	regexp.MustCompile(`((?i)statement: ALTER\s+USER\s+.*?WITH\s+.*PASSWORD\s+['"])(\S+)((?s)['"].*$)`),
+	regexp.MustCompile(`((?i)statement:[\s\r\n]+CREATE[\s\r\n]+USER[\s\r\n]+MAPPING[\s\r\n]+FOR[\s\r\n]+.*[\s\r\n]+SERVER[\s\r\n]+.*[\s\r\n]+OPTIONS[\s\r\n]+\(.*password\s+['"])(\S+)((?s)['"].*\).*$)`),
+	regexp.MustCompile(`((?i)statement:[\s\r\n]+CREATE[\s\r\n]+USER[\s\r\n]+.*[\s\r\n]+PASSWORD[\s\r\n]+['"])(\S+)((?s)['"].*$)`),
+	regexp.MustCompile(`((?i)statement:[\s\r\n]+ALTER[\s\r\n]+USER[\s\r\n]+.*?WITH[\s\r\n]+.*PASSWORD[\s\r\n]+['"])(\S+)((?s)['"].*$)`),
 }
 
 // ObfuscatePasswords replaces passwords in the message with the string "********"
