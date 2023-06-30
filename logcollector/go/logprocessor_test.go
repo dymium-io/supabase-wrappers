@@ -21,6 +21,14 @@ func TestObfuscatePasswords(t *testing.T) {
 			want: "statement: CREATE USER MAPPING FOR _3381fa486e704495c5e6e9c38aa2e5a6_ SERVER maria_server OPTIONS (username 'root', password '********')",
 		},
 		{
+			name: "Obfuscate passwords in 'CREATE USER MAPPING' statement with tabs/spaces/newlines",
+			args: args{
+				msg: "statement:\n\t\t                                      CREATE USER MAPPING FOR _f2cd3c3be7d6e548f15d02c1c1843861_\n\t\t                                      SERVER mysql_server\n\t\t                                      OPTIONS (username 'root', password '1234')",
+			},
+			want: "statement:\n\t\t                                      CREATE USER MAPPING FOR _f2cd3c3be7d6e548f15d02c1c1843861_\n\t\t                                      SERVER mysql_server\n\t\t                                      OPTIONS (username 'root', password '********')",
+		},
+
+		{
 			name: "Obfuscate passwords in 'CREATE USER SUPERUSER' statement",
 			args: args{
 				msg: "statement: CREATE USER username SUPERUSER PASSWORD 'xsdTY7MRpv*LoGmBXMez'",
