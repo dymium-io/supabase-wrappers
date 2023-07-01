@@ -6,7 +6,7 @@ import (
 
 	"fmt"
 
-	"crypto/md5"
+	"crypto/sha256"
 	b64 "encoding/base64"
 
 	"DbSync/types"
@@ -47,7 +47,7 @@ func sqlTest(
 	}
 	defer db.Close()
 
-	if _, err := db.Exec("SET SESSION AUTHORIZATION " + fmt.Sprintf("_%x_", md5.Sum([]byte(*datascope+"_dymium")))); err != nil {
+	if _, err := db.Exec("SET SESSION AUTHORIZATION " + fmt.Sprintf("_%x_", sha256.Sum224([]byte(*datascope+"_dymium")))); err != nil {
 		return nil, fmt.Errorf("session authorization failed: %v", err)
 	}
 

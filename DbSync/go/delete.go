@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq"
 
-	"crypto/md5"
+	"crypto/sha256"
 
 	"fmt"
 	"log"
@@ -16,7 +16,7 @@ func doDelete(datascope string, cnf *guardianConf) (empty struct{}, err error) {
 		sslmode_ = "require"
 	}
 
-	localUser := fmt.Sprintf(`_%x_`, md5.Sum([]byte(datascope+"_dymium")))
+	localUser := fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(datascope+"_dymium")))
 
 	connectStr := fmt.Sprintf("host=%%s port=%d dbname='%s' user=%s password='%s' sslmode=%s",
 		cnf.GuardianPort, cnf.GuardianDatabase, cnf.GuardianUser, cnf.GuardianAdminPassword, sslmode_)

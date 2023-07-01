@@ -8,7 +8,7 @@ import (
 
 	"database/sql"
 
-	"crypto/md5"
+	"crypto/sha256"
 
 	"DbSync/types"
 )
@@ -107,7 +107,7 @@ func configureDatabase(db *sql.DB,
 
 	// log.Printf("configureDatabase: datascope=%+v connections=%+v\n",datascope,connections)
 
-	localUser := fmt.Sprintf(`_%x_`, md5.Sum([]byte(datascope.Name+"_dymium")))
+	localUser := fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(datascope.Name+"_dymium")))
 
 	connectionTypes := map[types.ConnectionType]struct{}{}
 	for k := range datascope.Connections {
@@ -209,13 +209,13 @@ func configureDatabase(db *sql.DB,
 		{
 			// Don't use exec(), because sql contains password
 			sql := fmt.Sprintf(`
-                                      CREATE USER MAPPING FOR `+localUser+`
+                                      CREATE USER MAPPING FOR dymium
                                       SERVER `+c.Name+`_server
                                       OPTIONS (%s)`,
 				opts.userMapping(cred.User_name, cred.Password))
 			if _, err := tx.ExecContext(ctx, sql); err != nil {
 				errSql := fmt.Sprintf(`
-                                      CREATE USER MAPPING FOR `+localUser+`
+                                      CREATE USER MAPPING FOR dymium
                                       SERVER `+c.Name+`_server
                                       OPTIONS (%s)`,
 					opts.userMapping(cred.User_name, "******"))
@@ -284,104 +284,102 @@ func configureDatabase(db *sql.DB,
 		s := &datascope.Schemas[k]
 		for m := range s.Tables {
 			t := &s.Tables[m]
-
-			defs := []string{}
+			hiddenTblName := fmt.Sprintf("_dymium._%x_", sha256.Sum224([]byte(datascope.Name+s.Name+t.Name)))
+			hiddenTblCols, viewDef := make([]string,0,len(t.Columns)), make([]string,0,len(t.Columns))
 			for k := range t.Columns {
 				c := &t.Columns[k]
-				if c.Action != types.DH_Block {
-					ract := allow
-					rtyp := UNDEF
-					rnul := 0
-					notNull := " NOT NULL"
+				switch c.Action {
+				case types.DH_Block: continue
+				case types.DH_Redact:
+					var v string
 					if c.IsNullable {
-						notNull = ""
-						rnul = 1
+						v = "NULL"
+					} else if strings.HasSuffix(c.Typ, "[]") {
+						v = "'{}'"
+					} else {
+						switch {
+						case
+							strings.HasPrefix(c.Typ, "char"),
+							strings.HasPrefix(c.Typ, "var"),
+							c.Typ == "text",
+							c.Typ == "bpchar":
+							v = "'{}'"
+						case 
+							c.Typ == "bigint",
+							strings.HasPrefix(c.Typ, "double"),
+							strings.HasPrefix(c.Typ, "int"),
+							strings.HasPrefix(c.Typ, "numeric"),
+							c.Typ == "real",
+							c.Typ == "smallint",
+							strings.HasPrefix(c.Typ, "float"),
+							strings.HasPrefix(c.Typ, "decimal"):
+							v = "0"
+						case
+							strings.HasPrefix(c.Typ, "bool"):
+							v = "false"
+						case
+							c.Typ == "xml":
+							v = "''"
+						case
+							c.Typ == "bytea":
+							v = "E'\\x'"
+						case
+							c.Typ == "json", c.Typ == "jsonb":
+							v = "'{}'"
+						case
+							c.Typ == "uuid":
+							v = "'00000000-0000-0000-0000-000000000000'"
+						case
+							strings.HasPrefix(c.Typ,"timestamp"):
+							if strings.HasSuffix(c.Typ,"with timezone") || strings.HasSuffix(c.Typ,"with time zone") {
+								v = "'2000-01-01 00:00:00 UTC'"
+							} else {
+								v = "'0001-01-01 00:00:00'"
+							}
+						case
+							strings.HasPrefix(c.Typ,"time"):
+							if strings.HasSuffix(c.Typ,"with timezone")  || strings.HasSuffix(c.Typ,"with time zone") {
+								v = "'-infinity'"
+							} else {
+								v = "'00:00:00'"
+							}
+						case
+							c.Typ == "date":
+							v = "'0001-01-01'"
+						case
+							c.Typ == "interval":
+							v = "'0 days'"
+						}
+					viewDef = append(viewDef, "    CAST("+v+" AS "+c.Typ+") AS "+PostgresEscape(c.Name))
 					}
-					switch c.Action {
-					case types.DH_Redact:
-						ract = redact
-					case types.DH_Obfuscate:
-						ract = obfuscate
-						//case types.DH_SmartRedact":
-						//ract = smartRedact
+				case types.DH_Obfuscate:
+					v := "  "+PostgresEscape(c.Name)+" "+c.Typ+" OPTIONS( redact '0' )"
+					if !c.IsNullable {
+						v += " NOT NULL"
 					}
-					switch {
-					case
-						strings.HasPrefix(c.Typ, "char"),
-						strings.HasPrefix(c.Typ, "var"),
-						c.Typ == "text",
-						c.Typ == "bpchar":
-						rtyp = TXT
-					case
-						c.Typ == "bigint",
-						strings.HasPrefix(c.Typ, "double"),
-						strings.HasPrefix(c.Typ, "int"),
-						strings.HasPrefix(c.Typ, "numeric"),
-						c.Typ == "real",
-						c.Typ == "smallint",
-						strings.HasPrefix(c.Typ, "float"),
-						strings.HasPrefix(c.Typ, "decimal"):
-						rtyp = NUMBER
-						if ract != 0 {
-							ract = 0x1
-						}
-					case
-						strings.HasPrefix(c.Typ, "bool"):
-						rtyp = BOOLEAN
-						if ract != 0 {
-							ract = 0x1
-						}
-					case
-						c.Typ == "xml":
-						rtyp = XML
-						if ract != 0 {
-							ract = 0x1
-						}
-					case
-						c.Typ == "bytea":
-						rtyp = BINARY
-						if ract != 0 {
-							ract = 0x1
-						}
-					case
-						c.Typ == "json", c.Typ == "jsonb":
-						rtyp = JSON
-						if ract != 0 {
-							ract = 0x1
-						}
-					case
-						c.Typ == "uuid":
-						rtyp = UUID
-					case
-						strings.HasPrefix(c.Typ,"timestamp"):
-						if strings.HasSuffix(c.Typ,"with timezone") || strings.HasSuffix(c.Typ,"with time zone") {
-							rtyp = TIMESTAMPZ
-						} else {
-							rtyp = TIMESTAMP
-						}
-					case
-						strings.HasPrefix(c.Typ,"time"):
-						if strings.HasSuffix(c.Typ,"with timezone")  || strings.HasSuffix(c.Typ,"with time zone") {
-							rtyp = TIMEZ
-						} else {
-							rtyp = TIME
-						}
-					case
-						c.Typ == "date":
-						rtyp = DATE
-					case
-						strings.HasPrefix(c.Typ, "interval"):
-						rtyp = INTERVAL
+					hiddenTblCols = append(hiddenTblCols, v)
+					viewDef = append(viewDef,"    obfuscate("+PostgresEscape(c.Name)+")")
+				case types.DH_Allow:
+					v := "  "+PostgresEscape(c.Name)+" "+c.Typ+" OPTIONS( redact '0' )"
+					if !c.IsNullable {
+						v += " NOT NULL"
 					}
-					defs = append(defs, fmt.Sprintf("  %s %s OPTIONS( redact '%d' )%s",
-						PostgresEscape(c.Name), c.Typ,int(ract)|(rnul<<2)|(int(rtyp)<<3),notNull))
+					hiddenTblCols = append(hiddenTblCols, v)
+					viewDef = append(viewDef,"    "+PostgresEscape(c.Name))
 				}
 			}
-			e := "CREATE FOREIGN TABLE %s.%s (\n" + strings.Join(defs, ",\n") + "\n)\n" +
-				"  SERVER %s_server OPTIONS(%s)"
-
 			con := connections[t.Connection]
 			opts := options(con.Database_type)
+			hiddenTbl := "CREATE FOREIGN TABLE "+hiddenTblName+" (\n" +
+				strings.Join(hiddenTblCols, ",\n") +
+				")\nSERVER "+con.Name+"_server OPTIONS("+opts.table(s.Name, t.Name)+");\n"
+			view := "CREATE VIEW %s."+PostgresEscape(t.Name)+" AS\n  SELECT\n"+strings.Join(viewDef, ",\n")+
+				"\nFROM "+hiddenTblName+";\n"
+
+			if err := exec(hiddenTbl); err != nil {
+				return err
+			}
+			
 			schs := []string{con.Name + "_" + s.Name}
 			if _, ok := shortEntries[tuple{k1: s.Name, k2: t.Name}]; ok {
 				if s.Name == "public" {
@@ -391,7 +389,7 @@ func configureDatabase(db *sql.DB,
 				}
 			}
 			for _, sch := range schs {
-				if err := exec(fmt.Sprintf(e, PostgresEscape(sch), PostgresEscape(t.Name), con.Name, opts.table(s.Name, t.Name))); err != nil {
+				if err := exec(fmt.Sprintf(view, PostgresEscape(sch))); err != nil {
 					return err
 				}
 			}
