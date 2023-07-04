@@ -6,24 +6,6 @@ script_d=$PWD/$(dirname $0)
 build_d=${script_d}/BLD
 setup_d=${script_d}/../../setup
 
-instantclient_version="$(${setup_d}/oracle.sh version linux)"
-instantclients_all=($(${setup_d}/oracle.sh packages linux))
-
-declare -a instantclients
-for c in ${instantclients_all[@]}; do
-	[[ $c == *basic* ]] && {
-		instantclients+=($c)
-	}
-done
-
-for f in ${instantclients[@]}; do
-	[ -f ${setup_d}/oracle/$f ] || {
-		echo "Oracle instantclient file $f not found in ${setup_d}"
-		echo "Please use ${setup_d}/oracle.sh script to get them"
-		exit -1
-	}
-done
-
 [ -d $build_d ] && {
 	rm -rf $build_d
 }
@@ -61,12 +43,19 @@ fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw)
 		   "cd /fdw; tar czv --owner=root --group=root -f usr.tar.gz usr; rm -rf usr"
 )
 
+(
+    cd $script_d/../obfuscator
+    docker run -it --rm \
+		   -v $PWD:/obfuscator \
+		   postgres-dev \
+		   /bin/sh -c \
+		   "cd /obfuscator; cargo pgx package --out-dir . && \
+                    tar czv --owner=root --group=root -f obfuscator.tar.gz usr; rm -rf usr"
+)
+
 cd $build_d
 mv ../../foreign_data_wrappers/usr.tar.gz .
-
-for f in ${instantclients[@]}; do
-	unzip ${setup_d}/oracle/$f
-done
+mv ../../obfuscator/obfuscator.tar.gz .
 
 # build log collector
 lc_build_d=${script_d}/../../logcollector/scripts/BLD
@@ -97,32 +86,17 @@ DataGuardian=$(docker images data-guardian -q)
 [ -z "$DataGuardian" ] || docker rmi -f "$DataGuardian"
 
 cat <<EOF | docker build --platform linux/amd64 --compress --label "git.branch=$(git branch --show-current)" --label "git.commit=$(git rev-parse HEAD)" -t data-guardian -f - .
-FROM ubuntu/postgres
-
-RUN apt update &&                \
-  apt upgrade -y &&              \
-  apt install -y ca-certificates \
-    libmariadb3 libmariadb-dev   \
-    libmysqlclient21             \
-    freetds-bin                  \
-    libaio1 &&                   \
-  ln -s /usr/lib/x86_64-linux-gnu/libmysqlclient.so.21 /usr/lib/x86_64-linux-gnu/libmysqlclient.so && \
-  mkdir -p /opt/oracle
+FROM guardian-base
 
 COPY initializer /docker-entrypoint-initdb.d/initializer.sh
 RUN chmod 777 /docker-entrypoint-initdb.d/initializer.sh
 
-COPY usr.tar.gz /
+COPY usr.tar.gz obfuscator.tar.gz /
 RUN tar xzvf /usr.tar.gz && rm /usr.tar.gz
-
-COPY ${instantclient_version}/ /opt/oracle/${instantclient_version}/
-RUN echo /opt/oracle/${instantclient_version} > /etc/ld.so.conf.d/oracle-instantclient.conf && \
-    ldconfig
+RUN tar xzvf /obfuscator.tar.gz && rm /obfuscator.tar.gz
 
 # Add logcollector
 RUN addgroup nobody tty && addgroup postgres tty
-
-
 
 # forward postgres logs to docker log collector
 RUN mkdir -p /var/log/postgres && chown postgres:postgres /var/log/postgres && chmod a+rwx /var/log/postgres && \

@@ -13,6 +13,62 @@ import (
 	"initializer/types"
 )
 
+var obf_funcs func() []string
+var obf func(name string) (string,string)
+
+func init() {
+	on := func (n string) string {
+		return fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(n)))
+	}
+	type oT struct {
+		n string
+		k int
+	}
+	lst := []oT{
+		{
+			n: "obfuscate_text",
+			k: 0x226193b1,
+		},
+		{
+			n: "obfuscate_text_array",
+			k: 0xf8bfced0,
+		},
+		{
+			n: "obfuscate_uuid",
+			k: 0x4b0a02b,
+		},
+		{
+			n: "obfuscate_uuid_array",
+			k: 0xced64e86,
+		},
+	}
+	type obfT struct {
+		n string
+		k string
+	}
+	obfS := make(map[string]obfT, len(lst))
+	for _, o := range lst {
+		obfS[o.n] = obfT{
+			n: on(o.n),
+			k: fmt.Sprintf("x'%x'::int",o.k),
+		}
+	}
+	obf = func(name string) (string,string) {
+		o, ok := obfS[name]
+		if !ok {
+			panic(fmt.Sprintf("function [obf] is called with wrong argument [%s]",name))
+		}
+		return o.n, o.k
+	}
+	obf_funcs = func() []string {
+		r := make([]string, 0, len(lst))
+		for _, o := range lst {
+			r = append(r, obfS[o.n].n)
+		}
+		return r
+	}
+}
+
 func extensionName(connectionType types.ConnectionType) (string, error) {
 	switch connectionType {
 	case types.CT_PostgreSQL:
@@ -166,7 +222,7 @@ func configureDatabase(db *sql.DB,
 		if e, err := extensionName(ct); err != nil {
 			return rollback(err, "Configuring extention failed")
 		} else if err = exec("CREATE EXTENSION IF NOT EXISTS " + e + " WITH SCHEMA public"); err != nil {
-			return err
+			return rollback(err, "Configuring extention failed")
 		}
 	}
 
@@ -178,6 +234,15 @@ func configureDatabase(db *sql.DB,
 			return err
 		}
 		if err := exec("CREATE TABLE _dymium.schemas ( \"schema\" text )"); err != nil {
+			return err
+		}
+	}
+
+	if err = exec("CREATE EXTENSION IF NOT EXISTS obfuscator WITH SCHEMA _dymium"); err != nil {
+			return err
+	}
+	for _, f := range obf_funcs() {
+		if err := exec("GRANT EXECUTE ON FUNCTION _dymium."+f+" TO "+localUser); err != nil {
 			return err
 		}
 	}
@@ -197,9 +262,6 @@ func configureDatabase(db *sql.DB,
 		if err := exec(sql); err != nil {
 			return err
 		}
-		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.servers (server) VALUES ( $1 )", c.Name+"_server"); err != nil {
-			return rollback(err, "Registering server "+c.Name+"_server failed")
-		}
 		cred, ok := credentials[c.Id]
 		if !ok {
 			return rollback(fmt.Errorf("misconfiguration!"),
@@ -209,13 +271,13 @@ func configureDatabase(db *sql.DB,
 		{
 			// Don't use exec(), because sql contains password
 			sql := fmt.Sprintf(`
-                                      CREATE USER MAPPING FOR dymium
+                                      CREATE USER MAPPING FOR public
                                       SERVER `+c.Name+`_server
                                       OPTIONS (%s)`,
 				opts.userMapping(cred.User_name, cred.Password))
 			if _, err := tx.ExecContext(ctx, sql); err != nil {
 				errSql := fmt.Sprintf(`
-                                      CREATE USER MAPPING FOR dymium
+                                      CREATE USER MAPPING FOR public
                                       SERVER `+c.Name+`_server
                                       OPTIONS (%s)`,
 					opts.userMapping(cred.User_name, "******"))
@@ -254,37 +316,12 @@ func configureDatabase(db *sql.DB,
 		}
 	}
 
-	type act int
-	const (
-		allow       act = 0x0
-		redact          = 0x1
-		obfuscate       = 0x2
-		smartRedact     = 0x3
-	)
-
-	type typ int
-	const (
-		UNDEF   typ = 0x0
-		TXT         = 0x1
-		NUMBER      = 0x2
-		BOOLEAN     = 0x3
-		XML         = 0x4
-		BINARY      = 0x5
-		JSON        = 0x6
-		UUID        = 0x7
-		TIMESTAMP   = 0x8
-		TIMESTAMPZ  = 0x9
-		DATE        = 0xa
-		TIME        = 0xb
-		TIMEZ       = 0xc
-		INTERVAL    = 0xd
-	)
-
 	for k := range datascope.Schemas {
 		s := &datascope.Schemas[k]
 		for m := range s.Tables {
 			t := &s.Tables[m]
 			hiddenTblName := fmt.Sprintf("_dymium._%x_", sha256.Sum224([]byte(datascope.Name+s.Name+t.Name)))
+			// hiddenViewName := fmt.Sprintf("_dymium._%x_", sha256.Sum224([]byte(datascope.Name+s.Name+t.Name+"_VIEW")))
 			hiddenTblCols, viewDef := make([]string,0,len(t.Columns)), make([]string,0,len(t.Columns))
 			for k := range t.Columns {
 				c := &t.Columns[k]
@@ -298,6 +335,9 @@ func configureDatabase(db *sql.DB,
 						v = "'{}'"
 					} else {
 						switch {
+						case
+							c.Typ == "interval":
+							v = "'0 days'"
 						case
 							strings.HasPrefix(c.Typ, "char"),
 							strings.HasPrefix(c.Typ, "var"),
@@ -339,46 +379,85 @@ func configureDatabase(db *sql.DB,
 						case
 							strings.HasPrefix(c.Typ,"time"):
 							if strings.HasSuffix(c.Typ,"with timezone")  || strings.HasSuffix(c.Typ,"with time zone") {
-								v = "'-infinity'"
+								v = "'00:00:00 UTC'"
 							} else {
 								v = "'00:00:00'"
 							}
 						case
 							c.Typ == "date":
 							v = "'0001-01-01'"
-						case
-							c.Typ == "interval":
-							v = "'0 days'"
 						}
-					viewDef = append(viewDef, "    CAST("+v+" AS "+c.Typ+") AS "+PostgresEscape(c.Name))
+					viewDef = append(viewDef, "CAST("+v+" AS "+c.Typ+") AS "+PostgresEscape(c.Name))
 					}
-				case types.DH_Obfuscate:
-					v := "  "+PostgresEscape(c.Name)+" "+c.Typ+" OPTIONS( redact '0' )"
+				case types.DH_Obfuscate:					
+					v := PostgresEscape(c.Name)+" "+c.Typ+" OPTIONS( redact '0' )"
 					if !c.IsNullable {
 						v += " NOT NULL"
 					}
-					hiddenTblCols = append(hiddenTblCols, v)
-					viewDef = append(viewDef,"    obfuscate("+PostgresEscape(c.Name)+")")
+					hiddenTblCols = append(hiddenTblCols, "  "+v)
+					// viewDef = append(viewDef,"    obfuscate("+PostgresEscape(c.Name)+")")
+					if strings.HasSuffix(c.Typ, "[]") {
+						switch {
+						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ,"text"):
+							n, k := obf("obfuscate_text_array")
+							v = fmt.Sprintf("_dymium.%s(%s,%s,0,false) AS %s",
+								n,k,PostgresEscape(c.Name),PostgresEscape(c.Name))
+						case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
+							n, k := obf("obfuscate_text_array")
+							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
+								n,k,PostgresEscape(c.Name), PostgresEscape(c.Name))
+						case strings.HasPrefix(c.Typ, "uuid"):
+							n, k := obf("obfuscate_uuid_array")
+							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
+								n,k,PostgresEscape(c.Name), PostgresEscape(c.Name))
+						default:
+							panic(fmt.Sprintf("Unsupported obfuscation for [%s]",c.Typ))
+						}
+					} else {
+						switch {
+						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ,"text"):
+							n, k := obf("obfuscate_text")
+							v = fmt.Sprintf("_dymium.%s(%s,%s,0,false) AS %s",
+								n,k,PostgresEscape(c.Name), PostgresEscape(c.Name))
+						case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
+							n, k := obf("obfuscate_text")
+							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
+								n,k,PostgresEscape(c.Name), PostgresEscape(c.Name))
+						case strings.HasPrefix(c.Typ, "uuid"):
+							n, k := obf("obfuscate_uuid")
+							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
+								n,k,PostgresEscape(c.Name), PostgresEscape(c.Name))
+						default:
+							panic(fmt.Sprintf("Unsupported obfuscation for [%s]",c.Typ))
+						}
+					}
+					viewDef = append(viewDef,v)
 				case types.DH_Allow:
-					v := "  "+PostgresEscape(c.Name)+" "+c.Typ+" OPTIONS( redact '0' )"
+					v := PostgresEscape(c.Name)+" "+c.Typ+" OPTIONS( redact '0' )"
 					if !c.IsNullable {
 						v += " NOT NULL"
 					}
-					hiddenTblCols = append(hiddenTblCols, v)
-					viewDef = append(viewDef,"    "+PostgresEscape(c.Name))
+					hiddenTblCols = append(hiddenTblCols, "  "+v)
+					viewDef = append(viewDef,PostgresEscape(c.Name))
 				}
 			}
 			con := connections[t.Connection]
 			opts := options(con.Database_type)
 			hiddenTbl := "CREATE FOREIGN TABLE "+hiddenTblName+" (\n" +
 				strings.Join(hiddenTblCols, ",\n") +
-				")\nSERVER "+con.Name+"_server OPTIONS("+opts.table(s.Name, t.Name)+");\n"
-			view := "CREATE VIEW %s."+PostgresEscape(t.Name)+" AS\n  SELECT\n"+strings.Join(viewDef, ",\n")+
-				"\nFROM "+hiddenTblName+";\n"
-
+				"\n) SERVER "+con.Name+"_server OPTIONS("+opts.table(s.Name, t.Name)+");\n"
+			view :=
+				fmt.Sprintf("CREATE VIEW %%s.%s AS SELECT %s FROM %s;\n",
+					PostgresEscape(t.Name),
+					strings.Join(viewDef, ", "),
+					hiddenTblName)
+			
 			if err := exec(hiddenTbl); err != nil {
 				return err
 			}
+			// if err := exec(hiddenView); err != nil {
+			//	return err
+			// }
 			
 			schs := []string{con.Name + "_" + s.Name}
 			if _, ok := shortEntries[tuple{k1: s.Name, k2: t.Name}]; ok {

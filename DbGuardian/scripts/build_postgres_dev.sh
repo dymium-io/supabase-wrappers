@@ -35,15 +35,23 @@ cat <<EOF | docker build --platform linux/amd64 --compress -t postgres-dev -f - 
 FROM ubuntu:jammy
 
 
+RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 RUN apt-get update &&            \
     apt-get upgrade -y &&        \
     apt-get install -y           \
       build-essential            \
+      postgresql-14              \
       postgresql-server-dev-all  \
       libmariadb3 libmariadb-dev \
       freetds-dev                \
-      libaio1 &&                 \
-    mkdir -p /opt/oracle
+      libaio1                    \
+      curl                       \
+      libreadline-dev            \
+      flex                       \
+      bison                      \
+      pkg-config &&              \
+    mkdir -p /opt/oracle &&      \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 COPY ./ /opt/oracle/
 
@@ -51,4 +59,8 @@ RUN echo /opt/oracle/${instantclient_version} > /etc/ld.so.conf.d/oracle-instant
     ldconfig
 
 ENV ORACLE_HOME=/opt/oracle/${instantclient_version}
+
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN cargo install cargo-pgx && cargo pgx init --pg14 /usr/bin/pg_config
+
 EOF
