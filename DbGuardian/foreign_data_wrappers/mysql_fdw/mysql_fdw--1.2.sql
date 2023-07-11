@@ -1,13 +1,12 @@
 /*-------------------------------------------------------------------------
  *
- * mysql_fdw--1.1.sql
+ * mysql_fdw--1.2.sql
  * 			Foreign-data wrapper for remote MySQL servers
  *
- * Portions Copyright (c) 2012-2014, PostgreSQL Global Development Group
- * Portions Copyright (c) 2004-2023, EnterpriseDB Corporation.
+ * Portions Copyright (c) 2022-2023, EnterpriseDB Corporation.
  *
  * IDENTIFICATION
- * 			mysql_fdw--1.1.sql
+ * 			mysql_fdw--1.2.sql
  *
  *-------------------------------------------------------------------------
  */
@@ -30,3 +29,10 @@ CREATE FOREIGN DATA WRAPPER mysql_fdw
 CREATE OR REPLACE FUNCTION mysql_fdw_version()
   RETURNS pg_catalog.int4 STRICT
   AS 'MODULE_PATHNAME' LANGUAGE C;
+
+CREATE OR REPLACE FUNCTION mysql_fdw_display_pushdown_list(IN reload boolean DEFAULT false,
+  OUT object_type text,
+  OUT object_name text)
+RETURNS SETOF record
+  AS 'MODULE_PATHNAME', 'mysql_display_pushdown_list'
+LANGUAGE C PARALLEL SAFE;
