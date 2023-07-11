@@ -84,3 +84,71 @@ func TestObfuscatePasswords(t *testing.T) {
 		})
 	}
 }
+
+func Test_tagSQLStatement(t *testing.T) {
+	type args struct {
+		msg *PostgresLogMessage
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "Not select statement",
+			args: args{
+				msg: &PostgresLogMessage{User_name: "user", Message: "statement: ALTER USER edison WITH PASSWORD '=UOBAgxY9d'"},
+			},
+			want: "INT",
+		},
+		{
+			name: "Select statement from information_schema",
+			args: args{
+				msg: &PostgresLogMessage{User_name: "user", Message: "statement: select * from information_schema.tables"},
+			},
+			want: "INT",
+		},
+		{
+			name: "Select statement from _dymium schema",
+			args: args{
+				msg: &PostgresLogMessage{User_name: "user", Message: "statement: select * from _dymium.dymium"},
+			},
+			want: "INT",
+		},
+		{
+			name: "Select statement from pg_* schema",
+			args: args{
+				msg: &PostgresLogMessage{User_name: "user", Message: "statement: select * from pg_dymium"},
+			},
+			want: "INT",
+		},
+		{
+			name: "Select statement from customer schema, customer username",
+			args: args{
+				msg: &PostgresLogMessage{User_name: "user", Message: "statement: select * from fdw.customer"},
+			},
+			want: "C",
+		},
+		{
+			name: "Select statement from customer schema, dymium username",
+			args: args{
+				msg: &PostgresLogMessage{User_name: "dymium", Message: "statement: select * from fdw.customer"},
+			},
+			want: "INT",
+		},
+		{
+			name: "Select statement from customer schema, postgres username",
+			args: args{
+				msg: &PostgresLogMessage{User_name: "postgres", Message: "statement: select * from fdw.customer"},
+			},
+			want: "INT",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tagSQLStatement(tt.args.msg); got != tt.want {
+				t.Errorf("tagSQLStatement() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

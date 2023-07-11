@@ -210,6 +210,35 @@ func LogCollectorWithFields(severity string, fields aplog.Fields, session string
 	}
 }
 
+// List of INTERNAL statements:
+// statement: SELECT
+var selectStatement = regexp.MustCompile(`((?i).*:[\s\r\n]+SELECT[\s\r\n]+)`)
+
+// FROM _dymium
+var fromDymium = regexp.MustCompile(`((?i)[\s\r\n]+FROM[\s\r\n]+_dymium)`)
+
+// FROM information_schema
+var fromInfoSchema = regexp.MustCompile(`((?i)[\s\r\n]+FROM[\s\r\n]+information_schema)`)
+
+// FROM pg_*
+var fromPGSchema = regexp.MustCompile(`((?i)[\s\r\n]+FROM[\s\r\n]+pg_.*)`)
+
+func tagSQLStatement(msg *PostgresLogMessage) string {
+	// We can also add msg.Connection_from if we have a list of internal IPs
+	if msg.User_name != "postgres" && msg.User_name != "dymium" {
+		if selectStatement.MatchString(msg.Message) {
+			if !fromDymium.MatchString(msg.Message) {
+				if !fromInfoSchema.MatchString(msg.Message) {
+					if !fromPGSchema.MatchString(msg.Message) {
+						return "C"
+					}
+				}
+			}
+		}
+	}
+	return "INT"
+}
+
 func PGMsgLogCollector(msg *PostgresLogMessage) {
 	sevLevel := msg.Error_severity
 	extra := aplog.Fields{
@@ -218,6 +247,8 @@ func PGMsgLogCollector(msg *PostgresLogMessage) {
 		"component": EnvData.ComponentName,
 	}
 
+	stTag := tagSQLStatement(msg)
+	extra["stTag"] = stTag
 	data, _ := msg.JsonString() // Ignoring the error, this func must be called only when msg is wellformed
 	LogCollectorWithFields(sevLevel, extra, msg.Session_id, msg.User_name, data)
 }
