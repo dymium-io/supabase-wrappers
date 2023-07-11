@@ -4,7 +4,7 @@
  * 		Foreign-data wrapper for remote MySQL servers
  *
  * Portions Copyright (c) 2012-2014, PostgreSQL Global Development Group
- * Portions Copyright (c) 2004-2022, EnterpriseDB Corporation.
+ * Portions Copyright (c) 2004-2023, EnterpriseDB Corporation.
  *
  * IDENTIFICATION
  * 		mysql_fdw.h
@@ -327,23 +327,27 @@ extern void mysql_deparse_select_stmt_for_rel(StringInfo buf,
 extern const char *mysql_get_jointype_name(JoinType jointype);
 extern bool mysql_is_foreign_param(PlannerInfo *root, RelOptInfo *baserel,
 								   Expr *expr);
-extern Expr *mysql_find_em_expr_for_rel(EquivalenceClass *ec, RelOptInfo *rel);
-extern Expr *mysql_find_em_expr_for_input_target(PlannerInfo *root,
-												 EquivalenceClass *ec,
-												 PathTarget *target);
+extern bool mysql_is_foreign_pathkey(PlannerInfo *root, RelOptInfo *baserel,
+									 PathKey *pathkey);
+extern char *mysql_get_sortby_direction_string(EquivalenceMember *em,
+											   PathKey *pathkey);
+extern EquivalenceMember *mysql_find_em_for_rel(PlannerInfo *root,
+												EquivalenceClass *ec,
+												RelOptInfo *rel);
+extern EquivalenceMember *mysql_find_em_for_rel_target(PlannerInfo *root,
+													   EquivalenceClass *ec,
+													   RelOptInfo *rel);
+extern bool mysql_is_builtin(Oid objectId);
 #if PG_VERSION_NUM >= 140000
 extern void mysql_deparse_truncate_sql(StringInfo buf, Relation rel);
 #endif
+extern char *mysql_quote_identifier(const char *str, char quotechar);
 
 /* connection.c headers */
 MYSQL *mysql_get_connection(ForeignServer *server, UserMapping *user,
 							mysql_opt *opt);
-MYSQL *mysql_connect(mysql_opt *opt);
+MYSQL *mysql_fdw_connect(mysql_opt *opt);
 void mysql_cleanup_connection(void);
 void mysql_release_connection(MYSQL *conn);
-
-#if PG_VERSION_NUM < 110000		/* TupleDescAttr is defined from PG version 11 */
-#define TupleDescAttr(tupdesc, i) ((tupdesc)->attrs[(i)])
-#endif
 
 #endif							/* MYSQL_FDW_H */
