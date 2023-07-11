@@ -73,12 +73,6 @@ static struct TdsFdwOption valid_options[] =
 	{ "use_remote_estimate",	ForeignTableRelationId },
 	{ "local_tuple_estimate",	ForeignTableRelationId },
 	{ "column_name", 			AttributeRelationId },
-	
-	/* Dymium */
-	{"semantics", AttributeRelationId},
-	{"action", AttributeRelationId},
-	{"redact", AttributeRelationId},
-	
 	{ NULL,						InvalidOid }
 };
 
