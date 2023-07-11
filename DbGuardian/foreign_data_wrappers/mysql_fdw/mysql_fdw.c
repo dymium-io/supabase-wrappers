@@ -71,8 +71,6 @@
 #include "utils/syscache.h"
 #include "utils/typcache.h"
 
-#include "nodes/print.h"
-
 /* Declarations for dynamic loading */
 PG_MODULE_MAGIC;
 
@@ -387,7 +385,7 @@ static char *mysql_remove_quotes(char *s1);
 bool
 mysql_load_library(void)
 {
-#if defined(__APPLE__) || defined(__FreeBSD__) || 1
+#if defined(__APPLE__) || defined(__FreeBSD__)
 	/*
 	 * Mac OS/BSD does not support RTLD_DEEPBIND, but it still works without
 	 * the RTLD_DEEPBIND
@@ -675,67 +673,6 @@ mysqlBeginForeignScan(ForeignScanState *node, int eflags)
 	/* Fetch the options */
 	options = mysql_get_options(rte->relid, true);
 
-	/* Dymium */
-	festate->how_to_redact = (int*)palloc0(sizeof(int) * tupleDescriptor->natts);
-	if (fsplan->scan.scanrelid > 0)
-	{
-		/* !Dymium! */
-		for(int k = 0; k != tupleDescriptor->natts; ++k) {
-			List *options = GetForeignColumnOptions(rte->relid, TupleDescAttr(tupleDescriptor, k)->attnum);
-			ListCell *lc;
-			foreach(lc, options)
-			{
-				DefElem    *def = (DefElem *) lfirst(lc);
-
-				if (strcmp(def->defname, "redact") == 0)
-				{
-					char *redact = defGetString(def);
-					festate->how_to_redact[k] = atoi(redact);
-					break;
-				}
-			}
-		}
-	}
-	else
-	{
-		for(int k = 0; k != tupleDescriptor->natts; ++k) {
-		  Var		   *var;
-		  RangeTblEntry *rte;
-		  Oid			reltype;
-		  List *options;
-		  ListCell *lc;
-
-		  /*
-		   * If we can't identify the referenced table, do nothing.  This'll
-		   * likely lead to failure later, but perhaps we can muddle through.
-		   */
-		  var = (Var *) list_nth_node(TargetEntry, fsplan->fdw_scan_tlist,
-									  k)->expr;
-		  // printf("var[%d]:\n",k);
-		  // pprint(var);
-		  if (!IsA(var, Var) /* !Dymium: move this condition down: || var->varattno != 0 */)
-			continue;
-		  rte = list_nth(estate->es_range_table, var->varno - 1);
-		  if (rte->rtekind != RTE_RELATION)
-			continue;
-		  reltype = get_rel_type_id(rte->relid);
-		  if (!OidIsValid(reltype))
-			continue;
-
-		  options = GetForeignColumnOptions(rte->relid, var->varattno);
-		  foreach(lc, options)
-			{
-			  DefElem    *def = (DefElem *) lfirst(lc);
-			  if (strcmp(def->defname, "redact") == 0)
-				{
-				  char *redact = defGetString(def);
-				  festate->how_to_redact[k] = atoi(redact);
-				  break;
-				}
-			}
-		}
-	}
-
 	/*
 	 * Get the already connected connection, otherwise connect and get the
 	 * connection handle.
@@ -903,16 +840,10 @@ mysqlIterateForeignScan(ForeignScanState *node)
 			Oid			pgtype = TupleDescAttr(attinmeta->tupdesc, attnum)->atttypid;
 			int32		pgtypmod = TupleDescAttr(attinmeta->tupdesc, attnum)->atttypmod;
 
-			int *how_to_redact = festate -> how_to_redact;
-			int isNullable = how_to_redact ? (how_to_redact[attnum] >> 2) & 0x1 : 0;
-			int act = how_to_redact ? how_to_redact[attnum] & 0x3 : 0;
-
-			nulls[attnum] = festate->table->column[attid].is_null || (act == 0x1 && isNullable);
-			if (!festate->table->column[attid].is_null && !nulls[attnum]) {
+			nulls[attnum] = festate->table->column[attid].is_null;
+			if (!festate->table->column[attid].is_null)
 				dvalues[attnum] = mysql_convert_to_pg(pgtype, pgtypmod,
-													  &festate->table->column[attid],
-													  isNullable, act, how_to_redact[attnum] >> 3);
-			}
+													  &festate->table->column[attid]);
 
 			attid++;
 		}

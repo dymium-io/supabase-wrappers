@@ -394,7 +394,7 @@ func configureDatabase(db *sql.DB,
 						viewDef = append(viewDef, "CAST("+v+" AS "+c.Typ+") AS "+PostgresEscape(c.Name))
 					}
 				case types.DH_Obfuscate:
-					v := PostgresEscape(c.Name) + " " + c.Typ + " OPTIONS( redact '0' )"
+					v := PostgresEscape(c.Name) + " " + c.Typ
 					if !c.IsNullable {
 						v += " NOT NULL"
 					}
@@ -437,7 +437,7 @@ func configureDatabase(db *sql.DB,
 					}
 					viewDef = append(viewDef, v)
 				case types.DH_Allow:
-					v := PostgresEscape(c.Name) + " " + c.Typ + " OPTIONS( redact '0' )"
+					v := PostgresEscape(c.Name) + " " + c.Typ
 					if !c.IsNullable {
 						v += " NOT NULL"
 					}

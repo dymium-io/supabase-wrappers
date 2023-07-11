@@ -66,11 +66,6 @@ static struct MySQLFdwOption valid_options[] =
 	{"ssl_capath", ForeignServerRelationId},
 	{"ssl_cipher", ForeignServerRelationId},
 
-	/* Dymium */
-	{"semantics", AttributeRelationId},
-	{"action", AttributeRelationId},
-	{"redact", AttributeRelationId},
-
 	/* Sentinel */
 	{NULL, InvalidOid}
 };

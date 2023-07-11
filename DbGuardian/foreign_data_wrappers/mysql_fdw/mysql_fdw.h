@@ -205,9 +205,6 @@ typedef struct MySQLFdwExecState
 	/* Array for holding column values. */
 	Datum	   *wr_values;
 	bool	   *wr_nulls;
-
-	/* Dymium */
-	int        *how_to_redact;
 } MySQLFdwExecState;
 
 typedef struct MySQLFdwRelationInfo

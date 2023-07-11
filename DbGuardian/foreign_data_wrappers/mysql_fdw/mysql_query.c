@@ -55,17 +55,12 @@ static int dec_bin(int number);
 static int bin_dec(int binarynumber);
 
 
-/* Dymium */
-#define _D if(0)  
-#include "../common/obfuscate.c"
-
 /*
  * convert_mysql_to_pg:
  * 		Convert MySQL data into PostgreSQL's compatible data types
  */
 Datum
-mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column,
-					int isNullable, int act, int how_to_redact)
+mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column)
 {
 	Datum		value_datum;
 	Datum		valueDatum;
@@ -83,28 +78,6 @@ mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column,
 	typeinput = ((Form_pg_type) GETSTRUCT(tuple))->typinput;
 	ReleaseSysCache(tuple);
 
-	/* Dymium */
-#define obf(valstr) do {												\
-	if(act != 0) {														\
-	  switch(how_to_redact) {											\
-	  case 0x0: if(act == 1) redact_something(valstr,-1); else obfuscate(valstr,-1); break; \
-	  case 0x1: if(act == 1) redact_text(valstr,-1); else obfuscate(valstr,-1); break; \
-	  case 0x2: if(act == 1) redact_number(valstr,-1); else obfuscate(valstr,-1); break; \
-	  case 0x3: redact_bool(valstr,-1); break;							\
-	  case 0x4: redact_xml(valstr,-1); break;							\
-	  case 0x5: redact_bytea(valstr,-1); break;							\
-	  case 0x6: redact_json(valstr,-1); break;							\
-	  case 0x7: if(act == 1) redact_uuid(valstr,-1); else obfuscate_uuid(valstr,-1); break; \
-	  case 0x8: strcpy(valstr, "1970-01-01 00:00:00"); break;			\
-	  case 0x9: strcpy(valstr, "1970-01-01 00:00:00+00"); break;		\
-	  case 0xa: strcpy(valstr, "1970-01-01"); break;					\
-	  case 0xb: strcpy(valstr, "00:00:00"); break;						\
-	  case 0xc: strcpy(valstr, "00:00:00+00"); break;					\
-	  case 0xd: strcpy(valstr, "00:00:00"); break;						\
-	  }																	\
-	}																	\
-} while(0)
-		
 	switch (pgtyp)
 	{
 		/*
@@ -128,19 +101,13 @@ mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column,
 		 * string.
 		 */
 		case BYTEAOID:
-		  if (act == 0x0) {
 			result = (bytea *) palloc(column->length + VARHDRSZ);
 			memcpy(VARDATA(result), VARDATA(column->value), column->length);
 			SET_VARSIZE(result, column->length + VARHDRSZ);
 			return PointerGetDatum(result);
-		  } else {
-			bytea *result = palloc(VARHDRSZ);
-			SET_VARSIZE(result, VARHDRSZ);
-			return PointerGetDatum(result);
-		  }
+
 		case BITOID:
 			sprintf(str, "%d", dec_bin(*((int *) column->value)));
-			obf((char*)str);
 			valueDatum = CStringGetDatum((char *) str);
 			break;
 
@@ -148,13 +115,11 @@ mysql_convert_to_pg(Oid pgtyp, int pgtypmod, mysql_column *column,
 			text_result = (char *) palloc(column->length + 1);
 			memcpy(text_result, (char *) column->value, column->length);
 			text_result[column->length] = '\0';
-			obf((char*)text_result);
 			valueDatum = CStringGetDatum((char *) text_result);
 			break;
 
 		default:
-		  obf((char*)column->value);
-		  valueDatum = CStringGetDatum((char *) column->value);
+			valueDatum = CStringGetDatum((char *) column->value);
 	}
 
 	value_datum = OidFunctionCall3(typeinput, valueDatum,
