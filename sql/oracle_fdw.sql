@@ -8,7 +8,7 @@ SET client_min_messages = WARNING;
 CREATE EXTENSION oracle_fdw;
 
 -- TWO_TASK or ORACLE_HOME and ORACLE_SID must be set in the server's environment for this to work
-CREATE SERVER oracle FOREIGN DATA WRAPPER oracle_fdw OPTIONS (dbserver '', isolation_level 'read_committed', nchar 'true');
+CREATE SERVER oracle FOREIGN DATA WRAPPER oracle_fdw OPTIONS (dbserver '', isolation_level 'read_committed', nchar 'true', set_timezone 'true');
 
 CREATE USER MAPPING FOR CURRENT_ROLE SERVER oracle OPTIONS (user 'SCOTT', password 'tiger');
 
@@ -108,9 +108,9 @@ SELECT oracle_execute(
           'oracle',
           E'INSERT INTO scott.typetest2 (id, ts1, ts2, ts3) VALUES (\n'
           '   1,\n'
-          '   ''2022-08-01 00:00:00 AD'',\n'
-          '   ''2022-08-01 00:00:00 AD'',\n'
-          '   ''2022-08-01 00:00:00 AD''\n'
+          '   FROM_TZ(CAST (''2002-08-01 00:00:00 AD'' AS timestamp), ''UTC''),\n'
+          '   FROM_TZ(CAST (''2002-08-01 00:00:00 AD'' AS timestamp), ''UTC''),\n'
+          '   FROM_TZ(CAST (''2002-08-01 00:00:00 AD'' AS timestamp), ''UTC'')\n'
           ')'
        );
 
@@ -135,7 +135,7 @@ CREATE FOREIGN TABLE typetest1 (
    ts  timestamp with time zone,
    ids interval,
    iym interval
-) SERVER oracle OPTIONS (table 'TYPETEST1');
+) SERVER oracle OPTIONS (table 'TYPETEST1', prefetch '2', lob_prefetch '5000');
 ALTER FOREIGN TABLE typetest1 DROP q;
 
 -- a table that is missing some fields
@@ -261,7 +261,7 @@ INSERT INTO typetest1 (id, c, nc, vc, nvc, lc, r, u, lb, lr, b, num, fl, db, d, 
  */
 
 -- simple SELECT
-SELECT id, c, nc, vc, nvc, length(lc), r, u, length(lb), length(lr), b, num, fl, db, d, ts, ids, iym, x FROM longy ORDER BY id;
+SELECT id, c, nc, vc, nvc, lc, r, u, lb, lr, b, num, fl, db, d, ts, ids, iym, x FROM longy ORDER BY id;
 -- mass UPDATE
 WITH upd (id, c, lb, d, ts) AS
    (UPDATE longy SET c = substr(c, 1, 9) || 'u',
@@ -420,13 +420,16 @@ $$BEGIN
    IF TG_OP IN ('INSERT', 'UPDATE') THEN
       RAISE WARNING 'trigger % % NEW row: id = %, c = %', TG_WHEN, TG_OP, NEW.id, NEW.c;
    END IF;
+
+   NEW.c := 'modified';
+
    RETURN NEW;
 END;$$;
 
 -- test BEFORE trigger
 CREATE TRIGGER shorttrig BEFORE UPDATE ON shorty FOR EACH ROW EXECUTE PROCEDURE shorttrig();
 BEGIN;
-UPDATE shorty SET id = id + 1 WHERE id = 4;
+UPDATE shorty SET id = id + 1 WHERE id = 4 RETURNING c;
 ROLLBACK;
 
 -- test AFTER trigger
@@ -520,6 +523,8 @@ SELECT 12 - count(*) FROM typetest1 LIMIT 1;
 -- no LIMIT push-down if there is a local WHERE condition
 EXPLAIN (COSTS OFF) SELECT id FROM typetest1 WHERE vc < 'u' LIMIT 1;
 SELECT id FROM typetest1 WHERE vc < 'u' LIMIT 1;
+-- no LIMIT pushdown with FOR SHARE/UPDATE
+EXPLAIN (COSTS OFF) SELECT id FROM typetest1 ORDER BY id LIMIT 1 FOR UPDATE;
 
 /* test ANALYZE */
 
@@ -557,20 +562,35 @@ SELECT id FROM f_typetest1() ORDER BY id;
 RESET SESSION AUTHORIZATION;
 DROP ROLE duff;
 
+/* test "current_timestamp" and "current_date" pushdown */
+
+EXPLAIN (COSTS off)
+SELECT id FROM typetest1 WHERE ts = current_timestamp;
+SELECT id FROM typetest1 WHERE ts = current_timestamp;
+EXPLAIN (COSTS off)
+SELECT id FROM typetest1 WHERE d = current_date;
+SELECT id FROM typetest1 WHERE d = current_date;
+
 /* test TIMESTAMP WITH LOCAL TIME ZONE */
+
 INSERT INTO typetest2 (id, ts1, ts2, ts3) VALUES (
    2,
    '2020-12-31 00:00:00 UTC',
    '2020-12-31 00:00:00',
    '2020-12-31'
 );
-SELECT * FROM typetest2;
-SET timezone = 'Asia/Kolkata';
+SELECT * FROM typetest2 ORDER BY id;
+-- we need to re-establish the connection after changing "timezone"
+SELECT oracle_close_connections();
+BEGIN;
+SET LOCAL timezone = 'Asia/Kolkata';
 INSERT INTO typetest2 (id, ts1, ts2, ts3) VALUES (
    3,
    '2020-12-31 00:00:00 UTC',
    '2020-12-31 00:00:00',
    '2020-12-31'
 );
-SELECT * FROM typetest2;
-RESET timezone;
+SELECT * FROM typetest2 ORDER BY id;
+COMMIT;
+-- we need to re-establish the connection after changing "timezone"
+SELECT oracle_close_connections();
