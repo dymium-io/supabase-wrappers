@@ -31,6 +31,7 @@
 #include "optimizer/appendinfo.h"
 #include "optimizer/clauses.h"
 #include "optimizer/cost.h"
+#include "optimizer/inherit.h"
 #include "optimizer/optimizer.h"
 #include "optimizer/pathnode.h"
 #include "optimizer/paths.h"
@@ -49,7 +50,6 @@
 #include "utils/rel.h"
 #include "utils/sampling.h"
 #include "utils/selfuncs.h"
-#include "nodes/print.h"
 
 PG_MODULE_MAGIC;
 
@@ -173,7 +173,6 @@ typedef struct PgFdwScanState
 	MemoryContext temp_cxt;		/* context for per-tuple temporary data */
 
 	int			fetch_size;		/* number of tuples per fetch */
-	int         *how_to_redact; /* !Dymium addition! */
 } PgFdwScanState;
 
 /*
@@ -514,8 +513,7 @@ static HeapTuple make_tuple_from_result_row(PGresult *res,
 											AttInMetadata *attinmeta,
 											List *retrieved_attrs,
 											ForeignScanState *fsstate,
-											MemoryContext temp_context,
-											int *how_to_redact);
+											MemoryContext temp_context);
 static void conversion_error_callback(void *arg);
 static bool foreign_join_ok(PlannerInfo *root, RelOptInfo *joinrel,
 							JoinType jointype, RelOptInfo *outerrel, RelOptInfo *innerrel,
@@ -1437,7 +1435,7 @@ postgresGetForeignPlan(PlannerInfo *root,
  * Construct a tuple descriptor for the scan tuples handled by a foreign join.
  */
 static TupleDesc
-get_tupdesc_for_join_scan_tuples(ForeignScanState *node, int **how_to_redact /* !Dymium */)
+get_tupdesc_for_join_scan_tuples(ForeignScanState *node)
 {
 	ForeignScan *fsplan = (ForeignScan *) node->ss.ps.plan;
 	EState	   *estate = node->ss.ps.state;
@@ -1453,9 +1451,6 @@ get_tupdesc_for_join_scan_tuples(ForeignScanState *node, int **how_to_redact /* 
 	 * we can convert them to a composite type the local server knows.
 	 */
 	tupdesc = CreateTupleDescCopy(node->ss.ss_ScanTupleSlot->tts_tupleDescriptor);
-
-	*how_to_redact = (int*)palloc0(sizeof(int) * tupdesc->natts);
-
 	for (int i = 0; i < tupdesc->natts; i++)
 	{
 		Form_pg_attribute att = TupleDescAttr(tupdesc, i);
@@ -1463,8 +1458,9 @@ get_tupdesc_for_join_scan_tuples(ForeignScanState *node, int **how_to_redact /* 
 		RangeTblEntry *rte;
 		Oid			reltype;
 
-		List *options;
-		ListCell *lc;
+		/* Nothing to do if it's not a generic RECORD attribute */
+		if (att->atttypid != RECORDOID || att->atttypmod >= 0)
+			continue;
 
 		/*
 		 * If we can't identify the referenced table, do nothing.  This'll
@@ -1472,7 +1468,7 @@ get_tupdesc_for_join_scan_tuples(ForeignScanState *node, int **how_to_redact /* 
 		 */
 		var = (Var *) list_nth_node(TargetEntry, fsplan->fdw_scan_tlist,
 									i)->expr;
-		if (!IsA(var, Var) /* !Dymium: move this condition down: || var->varattno != 0 */)
+		if (!IsA(var, Var) || var->varattno != 0)
 			continue;
 		rte = list_nth(estate->es_range_table, var->varno - 1);
 		if (rte->rtekind != RTE_RELATION)
@@ -1480,29 +1476,6 @@ get_tupdesc_for_join_scan_tuples(ForeignScanState *node, int **how_to_redact /* 
 		reltype = get_rel_type_id(rte->relid);
 		if (!OidIsValid(reltype))
 			continue;
-
-
-		/* !Dymium: find how_to_redact */
-		options = GetForeignColumnOptions(rte->relid, var->varattno);
-		foreach(lc, options)
-		  {
-			DefElem    *def = (DefElem *) lfirst(lc);
-			if (strcmp(def->defname, "redact") == 0)
-			  {
-				char *redact = defGetString(def);
-				(*how_to_redact)[i] = atoi(redact);
-				break;
-			  }
-		  }
-
-		/* !Dymium: move these conditions here */
-		/* Nothing to do if it's not a generic RECORD attribute */
-		if (att->atttypid != RECORDOID || att->atttypmod >= 0)
-			continue;
-
-		if (var->varattno != 0)
-		  continue;
-
 		att->atttypid = reltype;
 		/* shouldn't need to change anything else */
 	}
@@ -1532,17 +1505,12 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 	if (eflags & EXEC_FLAG_EXPLAIN_ONLY)
 		return;
 
-	// Dymium
-	// puts("===== FSPLAN START =====");
-	// pprint(fsplan);
-	// puts("===== FSPLAN END =====");
-	
 	/*
 	 * We'll save private state in node->fdw_state.
 	 */
 	fsstate = (PgFdwScanState *) palloc0(sizeof(PgFdwScanState));
 	node->fdw_state = (void *) fsstate;
-	
+
 	/*
 	 * Identify which user to do the remote access as.  This should match what
 	 * ExecCheckRTEPerms() does.  In case of a join or aggregate, use the
@@ -1573,7 +1541,6 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 	/* Get private info created by planner functions. */
 	fsstate->query = strVal(list_nth(fsplan->fdw_private,
 									 FdwScanPrivateSelectSql));
-	// puts(fsstate->query);
 	fsstate->retrieved_attrs = (List *) list_nth(fsplan->fdw_private,
 												 FdwScanPrivateRetrievedAttrs);
 	fsstate->fetch_size = intVal(list_nth(fsplan->fdw_private,
@@ -1591,36 +1558,15 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 	 * Get info we'll need for converting data fetched from the foreign server
 	 * into local representation and error reporting during that process.
 	 */
-	/* Dymium */
-	/* TBD: what should happen in JOIN case? */
 	if (fsplan->scan.scanrelid > 0)
 	{
-		Oid	 relid;
 		fsstate->rel = node->ss.ss_currentRelation;
 		fsstate->tupdesc = RelationGetDescr(fsstate->rel);
-		fsstate->how_to_redact = (int*)palloc0(sizeof(int) * fsstate->tupdesc->natts);
-		/* !Dymium! */
-		relid = RelationGetRelid(fsstate->rel);
-		for(int k = 0; k != fsstate->tupdesc->natts; ++k) {
-			List *options = GetForeignColumnOptions(relid, TupleDescAttr(fsstate->tupdesc, k)->attnum);
-			ListCell *lc;
-			foreach(lc, options)
-			{
-				DefElem    *def = (DefElem *) lfirst(lc);
-
-				if (strcmp(def->defname, "redact") == 0)
-				{
-					char *redact = defGetString(def);
-					fsstate->how_to_redact[k] = atoi(redact);
-					break;
-				}
-			}
-		}
 	}
 	else
 	{
 		fsstate->rel = NULL;
-		fsstate->tupdesc = get_tupdesc_for_join_scan_tuples(node, &fsstate->how_to_redact);
+		fsstate->tupdesc = get_tupdesc_for_join_scan_tuples(node);
 	}
 
 	fsstate->attinmeta = TupleDescGetAttInMetadata(fsstate->tupdesc);
@@ -1640,7 +1586,6 @@ postgresBeginForeignScan(ForeignScanState *node, int eflags)
 
 	/* Set the async-capable flag */
 	fsstate->async_capable = node->ss.ps.async_capable;
-
 }
 
 /*
@@ -1869,7 +1814,8 @@ postgresPlanForeignModify(PlannerInfo *root,
 	else if (operation == CMD_UPDATE)
 	{
 		int			col;
-		Bitmapset  *allUpdatedCols = bms_union(rte->updatedCols, rte->extraUpdatedCols);
+		RelOptInfo *rel = find_base_rel(root, resultRelation);
+		Bitmapset  *allUpdatedCols = get_rel_all_updated_cols(root, rel);
 
 		col = -1;
 		while ((col = bms_next_member(allUpdatedCols, col)) >= 0)
@@ -2099,8 +2045,9 @@ postgresGetForeignModifyBatchSize(ResultRelInfo *resultRelInfo)
 		batch_size = get_batch_size_option(resultRelInfo->ri_RelationDesc);
 
 	/*
-	 * Disable batching when we have to use RETURNING or there are any
-	 * BEFORE/AFTER ROW INSERT triggers on the foreign table.
+	 * Disable batching when we have to use RETURNING, there are any
+	 * BEFORE/AFTER ROW INSERT triggers on the foreign table, or there are any
+	 * WITH CHECK OPTION constraints from parent views.
 	 *
 	 * When there are any BEFORE ROW INSERT triggers on the table, we can't
 	 * support it, because such triggers might query the table we're inserting
@@ -2108,6 +2055,7 @@ postgresGetForeignModifyBatchSize(ResultRelInfo *resultRelInfo)
 	 * and prepared for insertion are not there.
 	 */
 	if (resultRelInfo->ri_projectReturning != NULL ||
+		resultRelInfo->ri_WithCheckOptions != NIL ||
 		(resultRelInfo->ri_TrigDesc &&
 		 (resultRelInfo->ri_TrigDesc->trig_insert_before_row ||
 		  resultRelInfo->ri_TrigDesc->trig_insert_after_row)))
@@ -2758,11 +2706,8 @@ postgresBeginDirectModify(ForeignScanState *node, int eflags)
 	{
 		TupleDesc	tupdesc;
 
-		if (fsplan->scan.scanrelid == 0) {
-		  /* !Dymium: not used */
-		  int *how_to_redact;
-		  tupdesc = get_tupdesc_for_join_scan_tuples(node, &how_to_redact);
-		}
+		if (fsplan->scan.scanrelid == 0)
+			tupdesc = get_tupdesc_for_join_scan_tuples(node);
 		else
 			tupdesc = RelationGetDescr(dmstate->rel);
 
@@ -3900,8 +3845,7 @@ fetch_more_data(ForeignScanState *node)
 										   fsstate->attinmeta,
 										   fsstate->retrieved_attrs,
 										   node,
-										   fsstate->temp_cxt,
-										   fsstate->how_to_redact);
+										   fsstate->temp_cxt);
 		}
 
 		/* Update fetch_ct_2 */
@@ -3958,6 +3902,14 @@ set_transmission_modes(void)
 		(void) set_config_option("extra_float_digits", "3",
 								 PGC_USERSET, PGC_S_SESSION,
 								 GUC_ACTION_SAVE, true, 0, false);
+
+	/*
+	 * In addition force restrictive search_path, in case there are any
+	 * regproc or similar constants to be printed.
+	 */
+	(void) set_config_option("search_path", "pg_catalog",
+							 PGC_USERSET, PGC_S_SESSION,
+							 GUC_ACTION_SAVE, true, 0, false);
 
 	return nestlevel;
 }
@@ -4388,8 +4340,7 @@ store_returning_result(PgFdwModifyState *fmstate,
 											fmstate->attinmeta,
 											fmstate->retrieved_attrs,
 											NULL,
-											fmstate->temp_cxt,
-											NULL);
+											fmstate->temp_cxt);
 
 		/*
 		 * The returning slot will not necessarily be suitable to store
@@ -4683,8 +4634,7 @@ get_returning_data(ForeignScanState *node)
 												dmstate->attinmeta,
 												dmstate->retrieved_attrs,
 												node,
-												dmstate->temp_cxt,
-												NULL);
+												dmstate->temp_cxt);
 			ExecStoreHeapTuple(newtup, slot, false);
 		}
 		PG_CATCH();
@@ -5264,8 +5214,7 @@ analyze_row_processor(PGresult *res, int row, PgFdwAnalyzeState *astate)
 													   astate->attinmeta,
 													   astate->retrieved_attrs,
 													   NULL,
-													   astate->temp_cxt,
-													   NULL);
+													   astate->temp_cxt);
 
 		MemoryContextSwitchTo(oldcontext);
 	}
@@ -5848,6 +5797,55 @@ add_paths_with_pathkeys_for_rel(PlannerInfo *root, RelOptInfo *rel,
 	ListCell   *lc;
 
 	useful_pathkeys_list = get_useful_pathkeys_for_relation(root, rel);
+
+	/*
+	 * Before creating sorted paths, arrange for the passed-in EPQ path, if
+	 * any, to return columns needed by the parent ForeignScan node so that
+	 * they will propagate up through Sort nodes injected below, if necessary.
+	 */
+	if (epq_path != NULL && useful_pathkeys_list != NIL)
+	{
+		PgFdwRelationInfo *fpinfo = (PgFdwRelationInfo *) rel->fdw_private;
+		PathTarget *target = copy_pathtarget(epq_path->pathtarget);
+
+		/* Include columns required for evaluating PHVs in the tlist. */
+		add_new_columns_to_pathtarget(target,
+									  pull_var_clause((Node *) target->exprs,
+													  PVC_RECURSE_PLACEHOLDERS));
+
+		/* Include columns required for evaluating the local conditions. */
+		foreach(lc, fpinfo->local_conds)
+		{
+			RestrictInfo *rinfo = lfirst_node(RestrictInfo, lc);
+
+			add_new_columns_to_pathtarget(target,
+										  pull_var_clause((Node *) rinfo->clause,
+														  PVC_RECURSE_PLACEHOLDERS));
+		}
+
+		/*
+		 * If we have added any new columns, adjust the tlist of the EPQ path.
+		 *
+		 * Note: the plan created using this path will only be used to execute
+		 * EPQ checks, where accuracy of the plan cost and width estimates
+		 * would not be important, so we do not do set_pathtarget_cost_width()
+		 * for the new pathtarget here.  See also postgresGetForeignPlan().
+		 */
+		if (list_length(target->exprs) > list_length(epq_path->pathtarget->exprs))
+		{
+			/* The EPQ path is a join path, so it is projection-capable. */
+			Assert(is_projection_capable_path(epq_path));
+
+			/*
+			 * Use create_projection_path() here, so as to avoid modifying it
+			 * in place.
+			 */
+			epq_path = (Path *) create_projection_path(root,
+													   rel,
+													   epq_path,
+													   target);
+		}
+	}
 
 	/* Create one path for each set of pathkeys we found above. */
 	foreach(lc, useful_pathkeys_list)
@@ -7137,7 +7135,7 @@ fetch_more_data_begin(AsyncRequest *areq)
 	snprintf(sql, sizeof(sql), "FETCH %d FROM c%u",
 			 fsstate->fetch_size, fsstate->cursor_number);
 
-	if (PQsendQuery(fsstate->conn, sql) < 0)
+	if (!PQsendQuery(fsstate->conn, sql))
 		pgfdw_report_error(ERROR, NULL, fsstate->conn, false, fsstate->query);
 
 	/* Remember that the request is in process */
@@ -7214,10 +7212,6 @@ complete_pending_request(AsyncRequest *areq)
  * if we're processing a remote join, while fsstate is NULL in a non-query
  * context such as ANALYZE, or if we're processing a non-scan query node.
  */
-
-#define _D if(0)  
-#include "../common/obfuscate.c"
-
 static HeapTuple
 make_tuple_from_result_row(PGresult *res,
 						   int row,
@@ -7225,8 +7219,7 @@ make_tuple_from_result_row(PGresult *res,
 						   AttInMetadata *attinmeta,
 						   List *retrieved_attrs,
 						   ForeignScanState *fsstate,
-						   MemoryContext temp_context,
-						   int *how_to_redact)
+						   MemoryContext temp_context)
 {
 	HeapTuple	tuple;
 	TupleDesc	tupdesc;
@@ -7285,34 +7278,11 @@ make_tuple_from_result_row(PGresult *res,
 		int			i = lfirst_int(lc);
 		char	   *valstr;
 
-		int isNullable = how_to_redact ? (how_to_redact[i-1] >> 2) & 0x1 : 0;
-		int act = how_to_redact ? how_to_redact[i-1] & 0x3 : 0;
-
-                /* fetch next column's textual value */
-		if (PQgetisnull(res, row, j) || (act == 1 && isNullable))
-		  valstr = NULL;
-		else {
-		  valstr = PQgetvalue(res, row, j);
-		  // !Dymium!
-		  if(act != 0) {
-		    switch(how_to_redact[i-1] >> 3) {
-		    case 0x0: if(act == 1) redact_something(valstr, -1); else obfuscate(valstr, -1); break;
-		    case 0x1: if(act == 1) redact_text(valstr, -1); else obfuscate(valstr, -1); break;
-		    case 0x2: if(act == 1) redact_number(valstr, -1); else obfuscate(valstr, -1); break;
-		    case 0x3: redact_bool(valstr, -1); break;
-		    case 0x4: redact_xml(valstr, -1); break;
-		    case 0x5: redact_bytea(valstr, -1); break;
-		    case 0x6: redact_json(valstr, -1); break;
-		    case 0x7: if(act == 1) redact_uuid(valstr, -1); else obfuscate_uuid(valstr, -1); break;
-			case 0x8: valstr = "1970-01-01 00:00:00"; break;
-			case 0x9: valstr = "1970-01-01 00:00:00+00"; break;
-			case 0xa: valstr = "1970-01-01"; break;			  
-			case 0xb: valstr = "00:00:00"; break;
-			case 0xc: valstr = "00:00:00+00"; break;
-			case 0xd: valstr = "00:00:00"; break;
-		    }
-		  }
-		}
+		/* fetch next column's textual value */
+		if (PQgetisnull(res, row, j))
+			valstr = NULL;
+		else
+			valstr = PQgetvalue(res, row, j);
 
 		/*
 		 * convert value to internal representation
