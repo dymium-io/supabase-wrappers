@@ -1,3 +1,47 @@
+Version 2.6.0
+
+  Bugfixes:
+  - Inserting CLOBs with the server option "nchar" on can lead to the error
+    "ORA-24806: LOB form mismatch".
+    Report and patch by "jopoly".
+  - Don't push down LIMIT with FOR SHARE or FOR UPDATE.  That caused the error
+    ORA-02014: cannot select FOR UPDATE from view with DISTINCT, GROUP BY, etc.
+    Reported by Marti Raudsepp.
+  - Fix BEFORE UPDATE triggers.
+    If a BEFORE UPDATE trigger modified a column that was not updated, the
+    changed column was not propagated to Oracle.
+    Report and diagnosis by "jopoly".
+  - Don't free() strings in the environment.
+    This could lead to crashes and unpredictable behavior.
+  - Conversions from TIMESTAMP WITH LOCAL TIME ZONE to "timestamp without time
+    zone" were incorrect.  To fix, set the Oracle session time zone from the
+    PostgreSQL parameter "timezone".  Since not all time zones are accepted by
+    all Oracle servers, this must be explicitly enabled by setting the
+    "set_timezone" option on the foreign server.
+    Thanks to Sébastien Caunes for help with this.
+  - Make auto_explain work with oracle_fdw.  This used to cause an error:
+    oracleQueryPlan internal error: statement handle is not NULL
+    Report by "Jaisus" and Sébastien Caunes.  Sébastien provided the essential
+    clue that the problem is related to auto_explain.
+  - Fix "OCI-22061: invalid format text" errors when inserting some numbers
+    with scientific notation into a foreign table.
+    Report and analysis by "liubeck".
+
+  Enhancements:
+  - Skip Oracle savepoint management if the foreign server option
+    "isolation_level" is set to "read_only" or if we are inside a read-only
+    PostgreSQL transaction.  This saves some round trips and avoids Oracle
+    errors that might be thrown when entering a PL/pgSQL exception handler.
+    Per suggestion from "math-g".
+  - Use explicit bulk fetching into arrays rather than OCI prefetching for
+    Oracle SELECT statements.  This greatly improves performance for LOB
+    and LONG columns, since OCI prefetching didn't work if these data types.
+    The limitation still applies for SDO_GEOMETRY columns.  A new option
+    "lob_prefetch" is used to configure how much of the LOBs is fetched
+    with the rows to reduce the number of round trips.  This enhancement
+    was generously sponsored by Mipih (https://www.mipih.fr/).
+    Thanks for Philippe Florent for help and testing!
+
 Version 2.5.0, released 2022-10-28
 
   Bugfixes:
@@ -30,7 +74,7 @@ Version 2.4.0, released 2021-09-24
     introduced in 2.3.0.
     We don't want that by default, since it causes a noticable performance
     hit and makes UPDATEs with long strings fail with ORA-01461.
-    Problem reports by "threenotrump", "CHunter" and Phil Florent.
+    Problem reports by "threenotrump", "CHunter" and Philippe Florent.
   - Push down LIMIT clauses if possible.
     These are pushed down as FETCH FIRST n ROWS ONLY from Oracle 12.2 on.
     Based on a patch by Gilles Darold, per request from Ilia Sazonov.
@@ -38,7 +82,7 @@ Version 2.4.0, released 2021-09-24
   Bugfixes:
   - Fix a performance regression introduced in 2.3.0 by the fix for NCHAR
     and NVARCHAR2 columns.
-    Reported by Phil Florent.
+    Reported by Philippe Florent.
   - Fix a crash with type coerced array parameters.
     This can make queries fail with a WHERE condition like
        WHERE varcharcol = ANY ($1);

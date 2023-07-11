@@ -63,6 +63,7 @@
 #include "optimizer/tlist.h"
 #include "parser/parse_relation.h"
 #include "parser/parsetree.h"
+#include "pgtime.h"
 #include "port.h"
 #include "storage/ipc.h"
 #include "storage/lock.h"
@@ -157,7 +158,7 @@ PG_MODULE_MAGIC;
 static bool dml_in_transaction = false;
 
 /*
- * PostGIS geometry type, set upon library initialization.
+ * PostGIS geometry type, set in initializePostGIS().
  */
 static Oid GEOMETRYOID = InvalidOid;
 static bool geometry_is_setup = false;
@@ -187,15 +188,13 @@ struct OracleFdwOption
 #define OPT_STRIP_ZEROS "strip_zeros"
 #define OPT_SAMPLE "sample_percent"
 #define OPT_PREFETCH "prefetch"
-
-/* Dymium */
-#define OPT_DYMIUM_SEMANTICS "semantics"
-#define OPT_DYMIUM_ACTION "action"
-#define OPT_DYMIUM_REDACT "redact"
+#define OPT_LOB_PREFETCH "lob_prefetch"
+#define OPT_SET_TIMEZONE "set_timezone"
 
 #define DEFAULT_ISOLATION_LEVEL ORA_TRANS_SERIALIZABLE
 #define DEFAULT_MAX_LONG 32767
-#define DEFAULT_PREFETCH 200
+#define DEFAULT_PREFETCH 50
+#define DEFAULT_LOB_PREFETCH 1048576
 
 /*
  * Options for case folding for names in IMPORT FOREIGN TABLE.
@@ -219,13 +218,10 @@ static struct OracleFdwOption valid_options[] = {
 	{OPT_READONLY, ForeignTableRelationId, false},
 	{OPT_SAMPLE, ForeignTableRelationId, false},
 	{OPT_PREFETCH, ForeignTableRelationId, false},
+	{OPT_LOB_PREFETCH, ForeignTableRelationId, false},
 	{OPT_KEY, AttributeRelationId, false},
 	{OPT_STRIP_ZEROS, AttributeRelationId, false},
-
-	/* Dymium */
-	{OPT_DYMIUM_SEMANTICS, AttributeRelationId, false},
-	{OPT_DYMIUM_ACTION, AttributeRelationId, false},
-	{OPT_DYMIUM_REDACT, AttributeRelationId, false}
+	{OPT_SET_TIMEZONE, ForeignServerRelationId, false}
 };
 
 #define option_count (sizeof(valid_options)/sizeof(struct OracleFdwOption))
@@ -252,6 +248,7 @@ struct OracleFdwState {
 	char *user;                    /* Oracle username */
 	char *password;                /* Oracle password */
 	char *nls_lang;                /* Oracle locale information */
+	char *timezone;                /* session time zone */
 	bool have_nchar;               /* needs support for national character conversion */
 	oracleSession *session;        /* encapsulates the active Oracle session */
 	char *query;                   /* query we issue against Oracle */
@@ -260,10 +257,11 @@ struct OracleFdwState {
 	struct oraTable *oraTable;     /* description of the remote Oracle table */
 	Cost startup_cost;             /* cost estimate, only needed for planning */
 	Cost total_cost;               /* cost estimate, only needed for planning */
+	unsigned int prefetch;         /* number of rows to prefetch */
+	unsigned int lob_prefetch;     /* number of LOB bytes to prefetch */
 	unsigned long rowcount;        /* rows already read from Oracle */
 	int columnindex;               /* currently processed column for error context */
 	MemoryContext temp_cxt;        /* short-lived memory for data modification */
-	unsigned int prefetch;         /* number of rows to prefetch */
 	char *order_clause;            /* for ORDER BY pushdown */
 	List *usable_pathkeys;         /* for ORDER BY pushdown */
 	char *where_clause;            /* deparsed where clause */
@@ -357,7 +355,7 @@ static List *oracleImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid server
  */
 static struct OracleFdwState *getFdwState(Oid foreigntableid, double *sample_percent, Oid userid);
 static void oracleGetOptions(Oid foreigntableid, Oid userid, List **options);
-static char *createQuery(struct OracleFdwState *fdwState, RelOptInfo *foreignrel, bool modify, List *query_pathkeys);
+static char *createQuery(struct OracleFdwState *fdwState, RelOptInfo *foreignrel, bool for_update, List *query_pathkeys);
 static void deparseFromExprForRel(struct OracleFdwState *fdwState, StringInfo buf, RelOptInfo *joinrel, List **params_list);
 #ifdef JOIN_API
 static void appendConditions(List *exprs, StringInfo buf, RelOptInfo *joinrel, List **params_list);
@@ -375,13 +373,12 @@ static void getUsedColumns(Expr *expr, struct oraTable *oraTable, int foreignrel
 static void checkDataType(oraType oratype, int scale, Oid pgtype, const char *tablename, const char *colname);
 static char *deparseWhereConditions(struct OracleFdwState *fdwState, RelOptInfo *baserel, List **local_conds, List **remote_conds);
 static char *guessNlsLang(char *nls_lang);
+static char *getTimezone(void);
 static oracleSession *oracleConnectServer(Name srvname);
 static List *serializePlanData(struct OracleFdwState *fdwState);
 static Const *serializeString(const char *s);
-static Const *serializeLong(long i);
 static struct OracleFdwState *deserializePlanData(List *list);
 static char *deserializeString(Const *constant);
-static long deserializeLong(Const *constant);
 static bool optionIsTrue(const char *value);
 static char *deparseDate(Datum datum);
 static char *deparseTimestamp(Datum datum, bool hasTimezone);
@@ -395,7 +392,7 @@ static void transactionCallback(XactEvent event, void *arg);
 static void exitHook(int code, Datum arg);
 static void oracleDie(SIGNAL_ARGS);
 static char *setSelectParameters(struct paramDesc *paramList, ExprContext *econtext);
-static void convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool trunc_lob);
+static void convertTuple(struct OracleFdwState *fdw_state, unsigned int index, Datum *values, bool *nulls, bool trunc_lob);
 static void errorContextCallback(void *arg);
 static bool hasTrigger(Relation rel, CmdType cmdtype);
 static void buildInsertQuery(StringInfo sql, struct OracleFdwState *fdwState);
@@ -534,6 +531,7 @@ oracle_fdw_validator(PG_FUNCTION_ARGS)
 				|| strcmp(def->defname, OPT_KEY) == 0
 				|| strcmp(def->defname, OPT_STRIP_ZEROS) == 0
 				|| strcmp(def->defname, OPT_NCHAR) == 0
+				|| strcmp(def->defname, OPT_SET_TIMEZONE) == 0
 			)
 		{
 			char *val = strVal(def->arg);
@@ -612,11 +610,27 @@ oracle_fdw_validator(PG_FUNCTION_ARGS)
 
 			errno = 0;
 			prefetch = strtol(val, &endptr, 0);
-			if (val[0] == '\0' || *endptr != '\0' || errno != 0 || prefetch < 0 || prefetch > 10240 )
+			if (val[0] == '\0' || *endptr != '\0' || errno != 0 || prefetch < 1 || prefetch > 1000 )
 				ereport(ERROR,
 						(errcode(ERRCODE_FDW_INVALID_ATTRIBUTE_VALUE),
 						errmsg("invalid value for option \"%s\"", def->defname),
-						errhint("Valid values in this context are integers between 0 and 10240.")));
+						errhint("Valid values in this context are integers between 0 and 1000.")));
+		}
+
+		/* check valid values for "lob_prefetch" */
+		if (strcmp(def->defname, OPT_LOB_PREFETCH) == 0)
+		{
+			char *val = strVal(def->arg);
+			char *endptr;
+			long lob_prefetch;
+
+			errno = 0;
+			lob_prefetch = strtol(val, &endptr, 0);
+			if (val[0] == '\0' || *endptr != '\0' || errno != 0 || lob_prefetch < 0 || lob_prefetch > 536870912 )
+				ereport(ERROR,
+						(errcode(ERRCODE_FDW_INVALID_ATTRIBUTE_VALUE),
+						errmsg("invalid value for option \"%s\"", def->defname),
+						errhint("Valid values in this context are integers between 0 and 536870912.")));
 		}
 	}
 
@@ -781,6 +795,17 @@ oracleGetForeignRelSize(PlannerInfo *root, RelOptInfo *baserel, Oid foreigntable
 	double ntuples = -1;
 	bool order_by_local;
 	RangeTblEntry *rte = planner_rt_fetch(baserel->relid, root);
+	Oid check_user;
+
+	/*
+	 * Get the user whose user mapping should be used (if invalid, the current
+	 * user is used).
+	 */
+#if PG_VERSION_NUM < 160000
+	check_user = rte->checkAsUser;
+#else
+	check_user = getRTEPermissionInfo(root->parse->rteperminfos, rte)->checkAsUser;
+#endif  /* PG_VERSION_NUM < 160000 */
 
 	elog(DEBUG1, "oracle_fdw: plan foreign table scan");
 
@@ -789,7 +814,7 @@ oracleGetForeignRelSize(PlannerInfo *root, RelOptInfo *baserel, Oid foreigntable
 	 * To match what ExecCheckRTEPerms does, pass the user whose user mapping
 	 * should be used (if invalid, the current user is used).
 	 */
-	fdwState = getFdwState(foreigntableid, NULL, rte->checkAsUser);
+	fdwState = getFdwState(foreigntableid, NULL, check_user);
 
 	/*
 	 * Store the table OID in each table column.
@@ -1304,10 +1329,11 @@ oracleBeginForeignScan(ForeignScanState *node, int eflags)
 	/* connect to Oracle database */
 	fdw_state->session = oracleGetSession(
 			fdw_state->dbserver,
-			fdw_state->isolation_level,
+			(XactReadOnly ? ORA_TRANS_READ_ONLY : fdw_state->isolation_level),
 			fdw_state->user,
 			fdw_state->password,
 			fdw_state->nls_lang,
+			fdw_state->timezone,
 			(int)fdw_state->have_nchar,
 			fdw_state->oraTable->pgname,
 			GetCurrentTransactionNestLevel()
@@ -1332,17 +1358,10 @@ oracleIterateForeignScan(ForeignScanState *node)
 {
 	TupleTableSlot *slot = node->ss.ss_ScanTupleSlot;
 	ExprContext *econtext = node->ss.ps.ps_ExprContext;
-	int have_result;
+	unsigned int index;
 	struct OracleFdwState *fdw_state = (struct OracleFdwState *)node->fdw_state;
 
-	if (oracleIsStatementOpen(fdw_state->session))
-	{
-		elog(DEBUG3, "oracle_fdw: get next row in foreign table scan");
-
-		/* fetch the next result row */
-		have_result = oracleFetchNext(fdw_state->session);
-	}
-	else
+	if (!oracleIsStatementOpen(fdw_state->session))
 	{
 		/* fill the parameter list with the actual values */
 		char *paramInfo = setSelectParameters(fdw_state->paramList, econtext);
@@ -1350,20 +1369,27 @@ oracleIterateForeignScan(ForeignScanState *node)
 		/* execute the Oracle statement and fetch the first row */
 		elog(DEBUG1, "oracle_fdw: execute query in foreign table scan %s", paramInfo);
 
-		oraclePrepareQuery(fdw_state->session, fdw_state->query, fdw_state->oraTable, fdw_state->prefetch);
-		have_result = oracleExecuteQuery(fdw_state->session, fdw_state->oraTable, fdw_state->paramList);
+		oraclePrepareQuery(fdw_state->session, fdw_state->query, fdw_state->oraTable,
+			fdw_state->prefetch, fdw_state->lob_prefetch);
+		(void)oracleExecuteQuery(fdw_state->session, fdw_state->oraTable,
+			fdw_state->paramList, fdw_state->prefetch);
 	}
+
+	elog(DEBUG3, "oracle_fdw: get next row in foreign table scan");
+
+	/* fetch the next result row */
+	index = oracleFetchNext(fdw_state->session, fdw_state->prefetch);
 
 	/* initialize virtual tuple */
 	ExecClearTuple(slot);
 
-	if (have_result)
+	if (index > 0)
 	{
 		/* increase row count */
 		++fdw_state->rowcount;
 
 		/* convert result to arrays of values and null indicators */
-		convertTuple(fdw_state, slot->tts_values, slot->tts_isnull, false);
+		convertTuple(fdw_state, index, slot->tts_values, slot->tts_isnull, false);
 
 		/* store the virtual tuple */
 		ExecStoreVirtualTuple(slot);
@@ -1527,8 +1553,27 @@ oraclePlanForeignModify(PlannerInfo *root, ModifyTable *plan, Index resultRelati
 	bool has_trigger = false, firstcol;
 	char paramName[10];
 	TupleDesc tupdesc;
-	Bitmapset *tmpset;
-	AttrNumber col;
+	Bitmapset *updated_cols;
+	Oid check_user;
+
+	/*
+	 * Get the updated columns and the user for permission checks.
+	 * We put that here at the beginning, since the way to do that changed
+	 * considerably over the different PostgreSQL versions.
+	 */
+#if PG_VERSION_NUM >= 160000
+	RTEPermissionInfo *perminfo = getRTEPermissionInfo(root->parse->rteperminfos, rte);
+
+	check_user = perminfo->checkAsUser;
+	updated_cols = perminfo->updatedCols;
+#else
+	check_user = rte->checkAsUser;
+#if PG_VERSION_NUM >= 90500
+	updated_cols = rte->updatedCols;
+#else
+	updated_cols = bms_copy(rte->modifiedCols);
+#endif  /* PG_VERSION_NUM >= 90500 */
+#endif  /* PG_VERSION_NUM >= 160000 */
 
 #if PG_VERSION_NUM >= 90500
 	/* we don't support INSERT ... ON CONFLICT */
@@ -1542,19 +1587,15 @@ oraclePlanForeignModify(PlannerInfo *root, ModifyTable *plan, Index resultRelati
 	if (resultRelation < root->simple_rel_array_size
 			&& root->simple_rel_array[resultRelation] != NULL
 			&& root->simple_rel_array[resultRelation]->fdw_private != NULL)
-	{
 		/* if yes, copy the foreign table information from the associated RelOptInfo */
 		fdwState = copyPlanData((struct OracleFdwState *)(root->simple_rel_array[resultRelation]->fdw_private));
-	}
 	else
-	{
 		/*
 		 * If no, we have to construct the foreign table data ourselves.
 		 * To match what ExecCheckRTEPerms does, pass the user whose user mapping
 		 * should be used (if invalid, the current user is used).
 		 */
-		fdwState = getFdwState(rte->relid, NULL, rte->checkAsUser);
-	}
+		fdwState = getFdwState(rte->relid, NULL, check_user);
 
 	initStringInfo(&sql);
 
@@ -1564,60 +1605,64 @@ oraclePlanForeignModify(PlannerInfo *root, ModifyTable *plan, Index resultRelati
 	 */
 	rel = table_open(rte->relid, NoLock);
 
-	/* figure out which attributes are affected and if there is a trigger */
-	switch (operation)
+	/*
+	 * In an INSERT, we transmit all columns that are defined in the foreign
+	 * table.  In an UPDATE, if there are BEFORE ROW UPDATE triggers on the
+	 * foreign table, we transmit all columns like INSERT; else we transmit
+	 * only columns that were explicitly targets of the UPDATE, so as to avoid
+	 * unnecessary data transmission.  (We can't do that for INSERT since we
+	 * would miss sending default values for columns not listed in the source
+	 * statement, and for UPDATE if there are BEFORE ROW UPDATE triggers since
+	 * those triggers might change values for non-target columns, in which
+	 * case we would miss sending changed values for those columns.)
+	 * In addition, set "has_trigger" if there is an AFTER trigger.
+	 */
+	if (operation == CMD_INSERT ||
+		(operation == CMD_UPDATE &&
+		 rel->trigdesc &&
+		 rel->trigdesc->trig_update_before_row))
 	{
-		case CMD_INSERT:
-			/*
-			 * In an INSERT, we transmit all columns that are defined in the foreign
-			 * table.  In an UPDATE, we transmit only columns that were explicitly
-			 * targets of the UPDATE, so as to avoid unnecessary data transmission.
-			 * (We can't do that for INSERT since we would miss sending default values
-			 * for columns not listed in the source statement.)
-			 */
+		tupdesc = RelationGetDescr(rel);
 
-			tupdesc = RelationGetDescr(rel);
+		for (attnum = 1; attnum <= tupdesc->natts; attnum++)
+		{
+			Form_pg_attribute attr = TupleDescAttr(tupdesc, attnum - 1);
 
-			for (attnum = 1; attnum <= tupdesc->natts; attnum++)
-			{
-				Form_pg_attribute attr = TupleDescAttr(tupdesc, attnum - 1);
+			if (!attr->attisdropped)
+				targetAttrs = lappend_int(targetAttrs, attnum);
+		}
 
-				if (!attr->attisdropped)
-					targetAttrs = lappend_int(targetAttrs, attnum);
-			}
-
-			/* is there a row level AFTER trigger? */
-			has_trigger = hasTrigger(rel, CMD_INSERT);
-
-			break;
-		case CMD_UPDATE:
-#if PG_VERSION_NUM >= 90500
-			tmpset = bms_copy(rte->updatedCols);
-#else
-			tmpset = bms_copy(rte->modifiedCols);
-#endif  /* PG_VERSION_NUM */
-
-			while ((col = bms_first_member(tmpset)) >= 0)
-			{
-				col += FirstLowInvalidHeapAttributeNumber;
-				if (col <= InvalidAttrNumber)  /* shouldn't happen */
-					elog(ERROR, "system-column update is not supported");
-				targetAttrs = lappend_int(targetAttrs, col);
-			}
-
-			/* is there a row level AFTER trigger? */
-			has_trigger = hasTrigger(rel, CMD_UPDATE);
-
-			break;
-		case CMD_DELETE:
-
-			/* is there a row level AFTER trigger? */
-			has_trigger = hasTrigger(rel, CMD_DELETE);
-
-			break;
-		default:
-			elog(ERROR, "unexpected operation: %d", (int) operation);
+		/* is there a row level AFTER trigger? */
+		has_trigger = hasTrigger(rel, CMD_INSERT);
 	}
+	else if (operation == CMD_UPDATE)
+	{
+		AttrNumber col;
+#if PG_VERSION_NUM >= 90500
+		int col_idx = -1;
+		while ((col_idx = bms_next_member(updated_cols, col_idx)) >= 0)
+		{
+			col = col_idx + FirstLowInvalidHeapAttributeNumber;
+#else
+		while ((col = bms_first_member(updated_cols)) >= 0)
+		{
+			col += FirstLowInvalidHeapAttributeNumber;
+#endif  /* PG_VERSION_NUM >= 90500 */
+			if (col <= InvalidAttrNumber)  /* shouldn't happen */
+				elog(ERROR, "system-column update is not supported");
+			targetAttrs = lappend_int(targetAttrs, col);
+		}
+
+		/* is there a row level AFTER trigger? */
+		has_trigger = hasTrigger(rel, CMD_UPDATE);
+	}
+	else if (operation == CMD_DELETE)
+	{
+		/* is there a row level AFTER trigger? */
+		has_trigger = hasTrigger(rel, CMD_DELETE);
+	}
+	else
+		elog(ERROR, "unexpected operation: %d", (int) operation);
 
 	table_close(rel, NoLock);
 
@@ -1771,12 +1816,13 @@ oracleBeginForeignModify(ModifyTableState *mtstate, ResultRelInfo *rinfo, List *
 			fdw_state->user,
 			fdw_state->password,
 			fdw_state->nls_lang,
+			fdw_state->timezone,
 			(int)fdw_state->have_nchar,
 			fdw_state->oraTable->pgname,
 			GetCurrentTransactionNestLevel()
 		);
 
-	oraclePrepareQuery(fdw_state->session, fdw_state->query, fdw_state->oraTable, 0);
+	oraclePrepareQuery(fdw_state->session, fdw_state->query, fdw_state->oraTable, 1, fdw_state->lob_prefetch);
 
 	/* get the type output functions for the parameters */
 	output_funcs = (regproc *)palloc0(fdw_state->oraTable->ncols * sizeof(regproc *));
@@ -1822,12 +1868,15 @@ void oracleBeginForeignInsert(ModifyTableState *mtstate, ResultRelInfo *rinfo)
 	Relation rel = rinfo->ri_RelationDesc;
 	EState *estate = mtstate->ps.state;
 	struct OracleFdwState *fdw_state;
+#if PG_VERSION_NUM < 160000
 	Index resultRelation;
 	RangeTblEntry *rte;
+#endif  /* PG_VERSION_NUM < 160000 */
 	StringInfoData buf;
 	struct paramDesc *param;
 	HeapTuple tuple;
 	int i;
+	Oid check_user;
 
 	elog(DEBUG3, "oracle_fdw: execute foreign table COPY on %d", RelationGetRelid(rel));
 
@@ -1851,6 +1900,7 @@ void oracleBeginForeignInsert(ModifyTableState *mtstate, ResultRelInfo *rinfo)
 				(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
 				 errmsg("cannot route tuples into foreign table to be updated")));
 
+#if PG_VERSION_NUM < 160000
 	/*
 	 * If the foreign table is a partition that doesn't have a corresponding
 	 * RTE entry, we need to create a new RTE describing the foreign table,
@@ -1868,21 +1918,26 @@ void oracleBeginForeignInsert(ModifyTableState *mtstate, ResultRelInfo *rinfo)
 	rte = list_nth(estate->es_range_table, resultRelation - 1);
 #else
 	rte = exec_rt_fetch(resultRelation, estate);
-#endif  /* PG_VERSION_NUM */
+#endif  /* PG_VERSION_NUM < 120000 */
 
 	/*
-	 * To match what ExecCheckRTEPerms does, pass the user whose user mapping
-	 * should be used (if invalid, the current user is used).
+	 * Get the user whose user mapping should be used (if invalid, the current
+	 * user is used).
 	 */
-	fdw_state = getFdwState(RelationGetRelid(rel), NULL, rte->checkAsUser);
+	check_user = rte->checkAsUser;
+#else  /* PG_VERSION_NUM >= 160000 */
+	check_user = ExecGetResultRelCheckAsUser(rinfo, estate);
+#endif  /* PG_VERSION_NUM < 160000 */
+
+	fdw_state = getFdwState(RelationGetRelid(rel), NULL, check_user);
 
 	/* not using "deserializePlanData", we have to initialize these ourselves */
 	for (i=0; i<fdw_state->oraTable->ncols; ++i)
 	{
-		fdw_state->oraTable->cols[i]->val = (char *)palloc(fdw_state->oraTable->cols[i]->val_size + 1);
-		fdw_state->oraTable->cols[i]->val_len = 0;
+		fdw_state->oraTable->cols[i]->val = (char *)palloc(fdw_state->oraTable->cols[i]->val_size);
+		fdw_state->oraTable->cols[i]->val_len = (uint16 *)palloc(sizeof(uint16));
 		fdw_state->oraTable->cols[i]->val_len4 = 0;
-		fdw_state->oraTable->cols[i]->val_null = 1;
+		fdw_state->oraTable->cols[i]->val_null = (int16 *)palloc(sizeof(int16));
 	}
 	fdw_state->rowcount = 0;
 
@@ -1892,6 +1947,7 @@ void oracleBeginForeignInsert(ModifyTableState *mtstate, ResultRelInfo *rinfo)
 			fdw_state->user,
 			fdw_state->password,
 			fdw_state->nls_lang,
+			fdw_state->timezone,
 			(int)fdw_state->have_nchar,
 			fdw_state->oraTable->pgname,
 			GetCurrentTransactionNestLevel()
@@ -1947,7 +2003,7 @@ void oracleBeginForeignInsert(ModifyTableState *mtstate, ResultRelInfo *rinfo)
 		ReleaseSysCache(tuple);
 	}
 
-	oraclePrepareQuery(fdw_state->session, fdw_state->query, fdw_state->oraTable, 0);
+	oraclePrepareQuery(fdw_state->session, fdw_state->query, fdw_state->oraTable, 1, fdw_state->lob_prefetch);
 
 	/* create a memory context for short-lived memory */
 	fdw_state->temp_cxt = AllocSetContextCreate(estate->es_query_cxt,
@@ -1971,7 +2027,7 @@ oracleEndForeignInsert(EState *estate, ResultRelInfo *rinfo)
 	pfree(fdw_state->session);
 	fdw_state->session = NULL;
 }
-#endif  /*PG_VERSION_NUM */
+#endif  /* PG_VERSION_NUM >= 110000 */
 
 /*
  * oracleExecForeignInsert
@@ -1982,7 +2038,7 @@ TupleTableSlot *
 oracleExecForeignInsert(EState *estate, ResultRelInfo *rinfo, TupleTableSlot *slot, TupleTableSlot *planSlot)
 {
 	struct OracleFdwState *fdw_state = (struct OracleFdwState *)rinfo->ri_FdwState;
-	int rows;
+	unsigned int rows;
 	MemoryContext oldcontext;
 
 	elog(DEBUG3, "oracle_fdw: execute foreign table insert on %d", RelationGetRelid(rinfo->ri_RelationDesc));
@@ -1996,7 +2052,7 @@ oracleExecForeignInsert(EState *estate, ResultRelInfo *rinfo, TupleTableSlot *sl
 	setModifyParameters(fdw_state->paramList, slot, planSlot, fdw_state->oraTable, fdw_state->session);
 
 	/* execute the INSERT statement and store RETURNING values in oraTable's columns */
-	rows = oracleExecuteQuery(fdw_state->session, fdw_state->oraTable, fdw_state->paramList);
+	rows = oracleExecuteQuery(fdw_state->session, fdw_state->oraTable, fdw_state->paramList, 1);
 
 	if (rows > 1)
 		ereport(ERROR,
@@ -2013,7 +2069,7 @@ oracleExecForeignInsert(EState *estate, ResultRelInfo *rinfo, TupleTableSlot *sl
 		++fdw_state->rowcount;
 
 		/* convert result for RETURNING to arrays of values and null indicators */
-		convertTuple(fdw_state, slot->tts_values, slot->tts_isnull, false);
+		convertTuple(fdw_state, 1, slot->tts_values, slot->tts_isnull, false);
 
 		/* store the virtual tuple */
 		ExecStoreVirtualTuple(slot);
@@ -2031,7 +2087,7 @@ TupleTableSlot *
 oracleExecForeignUpdate(EState *estate, ResultRelInfo *rinfo, TupleTableSlot *slot, TupleTableSlot *planSlot)
 {
 	struct OracleFdwState *fdw_state = (struct OracleFdwState *)rinfo->ri_FdwState;
-	int rows;
+	unsigned int rows;
 	MemoryContext oldcontext;
 
 	elog(DEBUG3, "oracle_fdw: execute foreign table update on %d", RelationGetRelid(rinfo->ri_RelationDesc));
@@ -2045,7 +2101,7 @@ oracleExecForeignUpdate(EState *estate, ResultRelInfo *rinfo, TupleTableSlot *sl
 	setModifyParameters(fdw_state->paramList, slot, planSlot, fdw_state->oraTable, fdw_state->session);
 
 	/* execute the UPDATE statement and store RETURNING values in oraTable's columns */
-	rows = oracleExecuteQuery(fdw_state->session, fdw_state->oraTable, fdw_state->paramList);
+	rows = oracleExecuteQuery(fdw_state->session, fdw_state->oraTable, fdw_state->paramList, 1);
 
 	if (rows > 1)
 		ereport(ERROR,
@@ -2063,7 +2119,7 @@ oracleExecForeignUpdate(EState *estate, ResultRelInfo *rinfo, TupleTableSlot *sl
 		++fdw_state->rowcount;
 
 		/* convert result for RETURNING to arrays of values and null indicators */
-		convertTuple(fdw_state, slot->tts_values, slot->tts_isnull, false);
+		convertTuple(fdw_state, 1, slot->tts_values, slot->tts_isnull, false);
 
 		/* store the virtual tuple */
 		ExecStoreVirtualTuple(slot);
@@ -2095,7 +2151,7 @@ oracleExecForeignDelete(EState *estate, ResultRelInfo *rinfo, TupleTableSlot *sl
 	setModifyParameters(fdw_state->paramList, slot, planSlot, fdw_state->oraTable, fdw_state->session);
 
 	/* execute the DELETE statement and store RETURNING values in oraTable's columns */
-	rows = oracleExecuteQuery(fdw_state->session, fdw_state->oraTable, fdw_state->paramList);
+	rows = oracleExecuteQuery(fdw_state->session, fdw_state->oraTable, fdw_state->paramList, 1);
 
 	if (rows > 1)
 		ereport(ERROR,
@@ -2113,7 +2169,7 @@ oracleExecForeignDelete(EState *estate, ResultRelInfo *rinfo, TupleTableSlot *sl
 		++fdw_state->rowcount;
 
 		/* convert result for RETURNING to arrays of values and null indicators */
-		convertTuple(fdw_state, slot->tts_values, slot->tts_isnull, false);
+		convertTuple(fdw_state, 1, slot->tts_values, slot->tts_isnull, false);
 
 		/* store the virtual tuple */
 		ExecStoreVirtualTuple(slot);
@@ -2189,8 +2245,9 @@ oracleImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 	UserMapping *mapping;
 	ForeignDataWrapper *wrapper;
 	char *tabname, *colname, oldtabname[129] = { '\0' }, *foldedname;
-	char *nls_lang = NULL, *user = NULL, *password = NULL, *dbserver = NULL;
-	char *dblink = NULL, *max_long = NULL, *sample_percent = NULL, *prefetch = NULL;
+	char *nls_lang = NULL, *user = NULL, *password = NULL,
+		 *dbserver = NULL, *dblink = NULL, *max_long = NULL,
+		 *sample_percent = NULL, *prefetch = NULL, *lob_prefetch = NULL;
 	oraType type;
 	int charlen, typeprec, typescale, nullable, key, rc;
 	List *options, *result = NIL;
@@ -2198,7 +2255,7 @@ oracleImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 	oracleSession *session;
 	fold_t foldcase = CASE_SMART;
 	StringInfoData buf;
-	bool readonly = false, firstcol = true;
+	bool readonly = false, firstcol = true, set_timezone = false;
 	int collation = DEFAULT_COLLATION_OID;
 	oraIsoLevel isolation_level_val = DEFAULT_ISOLATION_LEVEL;
 	bool have_nchar = false;
@@ -2350,19 +2407,49 @@ oracleImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 			prefetch = strVal(def->arg);
 			errno = 0;
 			prefetch_val = strtol(prefetch, &endptr, 0);
-			if (prefetch[0] == '\0' || *endptr != '\0' || errno != 0 || prefetch_val < 0 || prefetch_val > 10240 )
+			if (prefetch[0] == '\0' || *endptr != '\0' || errno != 0 || prefetch_val < 1 || prefetch_val > 1000 )
 				ereport(ERROR,
 						(errcode(ERRCODE_FDW_INVALID_ATTRIBUTE_VALUE),
 						errmsg("invalid value for option \"%s\"", def->defname),
-						errhint("Valid values in this context are integers between 0 and 10240.")));
+						errhint("Valid values in this context are integers between 0 and 1000.")));
+		}
+		else if (strcmp(def->defname, OPT_LOB_PREFETCH) == 0)
+		{
+			char *endptr;
+			long lob_prefetch_val;
+
+			lob_prefetch = strVal(def->arg);
+			errno = 0;
+			lob_prefetch_val = strtol(lob_prefetch, &endptr, 0);
+			if (lob_prefetch[0] == '\0' || *endptr != '\0' || errno != 0 || lob_prefetch_val < 0 || lob_prefetch_val > 536870912 )
+				ereport(ERROR,
+						(errcode(ERRCODE_FDW_INVALID_ATTRIBUTE_VALUE),
+						errmsg("invalid value for option \"%s\"", def->defname),
+						errhint("Valid values in this context are integers between 0 and 536870912.")));
+		}
+		else if (strcmp(def->defname, OPT_SET_TIMEZONE) == 0)
+		{
+			char *s = strVal(def->arg);
+			if (pg_strcasecmp(s, "on") == 0
+					|| pg_strcasecmp(s, "yes") == 0
+					|| pg_strcasecmp(s, "true") == 0)
+				set_timezone = true;
+			else if (pg_strcasecmp(s, "off") == 0
+					|| pg_strcasecmp(s, "no") == 0
+					|| pg_strcasecmp(s, "false") == 0)
+				set_timezone = false;
+			else
+				ereport(ERROR,
+						(errcode(ERRCODE_FDW_INVALID_ATTRIBUTE_VALUE),
+						errmsg("invalid value for option \"%s\"", def->defname)));
 		}
 		else
 			ereport(ERROR,
 					(errcode(ERRCODE_FDW_INVALID_OPTION_NAME),
 					errmsg("invalid option \"%s\"", def->defname),
-					errhint("Valid options in this context are: %s, %s, %s, %s, %s, %s",
+					errhint("Valid options in this context are: %s, %s, %s, %s, %s, %s, %s, %s",
 						"case, collation", OPT_READONLY, OPT_DBLINK,
-						OPT_MAX_LONG, OPT_SAMPLE, OPT_PREFETCH)));
+						OPT_MAX_LONG, OPT_SAMPLE, OPT_PREFETCH, OPT_LOB_PREFETCH, OPT_SET_TIMEZONE)));
 	}
 
 	elog(DEBUG1, "oracle_fdw: import schema \"%s\" from foreign server \"%s\"", stmt->remote_schema, server->servername);
@@ -2377,6 +2464,7 @@ oracleImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 		user,
 		password,
 		nls_lang,
+		NULL,  /* don't need time zone */
 		(int)have_nchar,
 		NULL,
 		1
@@ -2414,6 +2502,10 @@ oracleImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 				appendStringInfo(&buf, ", sample_percent '%s'", sample_percent);
 			if (prefetch)
 				appendStringInfo(&buf, ", prefetch '%s'", prefetch);
+			if (lob_prefetch)
+				appendStringInfo(&buf, ", lob_prefetch '%s'", lob_prefetch);
+			if (set_timezone)
+				appendStringInfo(&buf, ", set_timezone 'true'");
 			appendStringInfo(&buf, ")");
 
 			result = lappend(result, pstrdup(buf.data));
@@ -2550,7 +2642,6 @@ oracleImportForeignSchema(ImportForeignSchemaStmt *stmt, Oid serverOid)
 }
 #endif  /* IMPORT_API */
 
-static StringInfo getColumnNames(Oid);
 /*
  * getFdwState
  * 		Construct an OracleFdwState from the options of the foreign table.
@@ -2570,8 +2661,10 @@ struct OracleFdwState
 	ListCell *cell;
 	char *isolationlevel = NULL;
 	char *dblink = NULL, *schema = NULL, *table = NULL, *maxlong = NULL,
-		 *sample = NULL, *fetch = NULL, *nchar = NULL;
+		 *sample = NULL, *fetch = NULL, *lob_prefetch = NULL, *nchar = NULL,
+		 *set_timezone = NULL;
 	long max_long;
+	int has_geometry = 0;
 
 	/*
 	 * Get all relevant options from the foreign table, the user mapping,
@@ -2603,8 +2696,12 @@ struct OracleFdwState
 			sample = strVal(def->arg);
 		if (strcmp(def->defname, OPT_PREFETCH) == 0)
 			fetch = strVal(def->arg);
+		if (strcmp(def->defname, OPT_LOB_PREFETCH) == 0)
+			lob_prefetch = strVal(def->arg);
 		if (strcmp(def->defname, OPT_NCHAR) == 0)
 			nchar = strVal(def->arg);
+		if (strcmp(def->defname, OPT_SET_TIMEZONE) == 0)
+			set_timezone = strVal(def->arg);
 	}
 
 	/* set isolation_level (or use default) */
@@ -2634,6 +2731,23 @@ struct OracleFdwState
 	else
 		fdwState->prefetch = (unsigned int)strtoul(fetch, NULL, 0);
 
+	/* the limit for "prefetch" used to be higher than 1000 */
+	if (fdwState->prefetch > 1000)
+	{
+		fdwState->prefetch = 1000;
+
+		ereport(WARNING,
+				(errcode(ERRCODE_WARNING),
+				errmsg("option \"%s\" for foreign table \"%s\" reduced to 1000",
+					   OPT_PREFETCH, pgtablename)));
+	}
+
+	/* convert "lob_prefetch" to number (or use default) */
+	if (lob_prefetch == NULL)
+		fdwState->lob_prefetch = DEFAULT_LOB_PREFETCH;
+	else
+		fdwState->lob_prefetch = (unsigned int)strtoul(lob_prefetch, NULL, 0);
+
 	/* convert "nchar" option to boolean (or use "false") */
 	if (nchar != NULL
 		&& (pg_strcasecmp(nchar, "on") == 0
@@ -2642,6 +2756,15 @@ struct OracleFdwState
 		fdwState->have_nchar = true;
 	else
 		fdwState->have_nchar = false;
+
+	/* check if we should set the Oacle time zone */
+	if (set_timezone != NULL
+		&& (pg_strcasecmp(set_timezone, "on") == 0
+			|| pg_strcasecmp(set_timezone, "yes") == 0
+			|| pg_strcasecmp(set_timezone, "true") == 0))
+		fdwState->timezone = getTimezone();
+	else
+		fdwState->timezone = NULL;
 
 	/* check if options are ok */
 	if (table == NULL)
@@ -2655,23 +2778,22 @@ struct OracleFdwState
 	/* connect to Oracle database */
 	fdwState->session = oracleGetSession(
 		fdwState->dbserver,
-		fdwState->isolation_level,
+		(XactReadOnly ? ORA_TRANS_READ_ONLY : fdwState->isolation_level),
 		fdwState->user,
 		fdwState->password,
 		fdwState->nls_lang,
+		fdwState->timezone,
 		(int)fdwState->have_nchar,
 		pgtablename,
 		GetCurrentTransactionNestLevel()
 	);
 
-	{
-	  /* get list of postgresql column names */
-	  StringInfo columnNames = getColumnNames(foreigntableid);
+	/* get remote table description */
+	fdwState->oraTable = oracleDescribe(fdwState->session, dblink, schema, table, pgtablename, max_long, &has_geometry);
 
-	  /* get remote table description */
-	  fdwState->oraTable = oracleDescribe(fdwState->session, dblink, schema, table, pgtablename, max_long,
-										  columnNames->data);
-	}
+	/* don't try array prefetching with geometries */
+	if (has_geometry)
+		fdwState->prefetch = 1;
 
 	/* add PostgreSQL data to table description */
 	getColumnData(foreigntableid, fdwState->oraTable);
@@ -2769,50 +2891,11 @@ getColumnData(Oid foreigntableid, struct oraTable *oraTable)
 			}
 			else if (strcmp(def->defname, OPT_STRIP_ZEROS) == 0 && optionIsTrue(strVal(def->arg)))
 				oraTable->cols[index-1]->strip_zeros = 1;
-			else if (strcmp(def->defname, OPT_DYMIUM_REDACT) == 0)
-			    oraTable->cols[index-1]->how_to_redact = atoi(strVal(def->arg));
 		}
 	}
 
 	table_close(rel, NoLock);
 }
-
-/*
- * getColumnNames
- * 		Get PostgreSQL column name
- */
-static
-StringInfo getColumnNames(Oid foreigntableid)
-{
-	Relation rel;
-	TupleDesc tupdesc;
-	int i;
-
-	StringInfo columnNames = makeStringInfo();
-
-	rel = table_open(foreigntableid, NoLock);
-	tupdesc = rel->rd_att;
-
-	/* loop through foreign table columns */
-	for (i=0; i<tupdesc->natts; ++i)
-	{
-		Form_pg_attribute att_tuple = TupleDescAttr(tupdesc, i);
-
-		/* ignore dropped columns */
-		if (att_tuple->attisdropped)
-			continue;
-
-		if (i != 0) {
-		  appendStringInfoString(columnNames, ", ");
-		}
-		appendStringInfoString(columnNames, NameStr(att_tuple->attname));
-	}
-
-	table_close(rel, NoLock);
-
-	return columnNames;
-}
-
 
 /*
  * createQuery
@@ -2825,7 +2908,7 @@ StringInfo getColumnNames(Oid foreigntableid)
  *		As a side effect for base relations, we also mark the used columns in oraTable.
  */
 char
-*createQuery(struct OracleFdwState *fdwState, RelOptInfo *foreignrel, bool modify, List *query_pathkeys)
+*createQuery(struct OracleFdwState *fdwState, RelOptInfo *foreignrel, bool for_update, List *query_pathkeys)
 {
 	ListCell *cell;
 	bool in_quote = false;
@@ -2919,11 +3002,11 @@ char
 		appendStringInfo(&query, " ORDER BY%s", fdwState->order_clause);
 
 	/* append FETCH FIRST n ROWS ONLY if the LIMIT can be pushed down */
-	if (fdwState->limit_clause)
+	if (fdwState->limit_clause && !for_update)
 		appendStringInfo(&query, " %s", fdwState->limit_clause);
 
 	/* append FOR UPDATE if if the scan is for a modification */
-	if (modify)
+	if (for_update)
 		appendStringInfo(&query, " FOR UPDATE");
 
 	/* get a copy of the where clause without single quoted string literals */
@@ -3306,12 +3389,19 @@ foreign_join_ok(PlannerInfo *root, RelOptInfo *joinrel, JoinType jointype,
 	else
 		fdwState->prefetch = fdwState_i->prefetch;
 
+	/* set LOB prefetch size to maximum of the joining sides */
+	if (fdwState_o->lob_prefetch < fdwState_i->lob_prefetch)
+		fdwState->lob_prefetch = fdwState_i->lob_prefetch;
+	else
+		fdwState->lob_prefetch = fdwState_o->lob_prefetch;
+
 	/* copy outerrel's infomation to fdwstate */
 	fdwState->dbserver = fdwState_o->dbserver;
 	fdwState->isolation_level = fdwState_o->isolation_level;
 	fdwState->user     = fdwState_o->user;
 	fdwState->password = fdwState_o->password;
 	fdwState->nls_lang = fdwState_o->nls_lang;
+	fdwState->timezone = fdwState_o->timezone;
 	fdwState->have_nchar = fdwState_o->have_nchar;
 
 	foreach(lc, pull_var_clause((Node *)joinrel->reltarget->exprs, PVC_RECURSE_PLACEHOLDERS))
@@ -3506,6 +3596,7 @@ acquireSampleRowsFunc(Relation relation, int elevel, HeapTuple *rows, int targro
 	bool *nulls = (bool *)palloc(tupDesc->natts * sizeof(bool));
 	double rstate, rowstoskip = -1, sample_percent;
 	MemoryContext old_cxt, tmp_cxt;
+	unsigned int index;
 
 	elog(DEBUG1, "oracle_fdw: analyze foreign table %d", RelationGetRelid(relation));
 
@@ -3526,6 +3617,8 @@ acquireSampleRowsFunc(Relation relation, int elevel, HeapTuple *rows, int targro
 	fdw_state = getFdwState(RelationGetRelid(relation), &sample_percent, InvalidOid);
 	fdw_state->paramList = NULL;
 	fdw_state->rowcount = 0;
+	/* we don't have to prefetch more than that much from a LOB */
+	fdw_state->lob_prefetch = WIDTH_THRESHOLD;
 
 	/* construct query */
 	initStringInfo(&query);
@@ -3548,10 +3641,10 @@ acquireSampleRowsFunc(Relation relation, int elevel, HeapTuple *rows, int targro
 			fdw_state->oraTable->cols[i]->used = 1;
 
 			/* allocate memory for return value */
-			fdw_state->oraTable->cols[i]->val = (char *)palloc(fdw_state->oraTable->cols[i]->val_size);
-			fdw_state->oraTable->cols[i]->val_len = 0;
+			fdw_state->oraTable->cols[i]->val = (char *)palloc(fdw_state->oraTable->cols[i]->val_size * fdw_state->prefetch);
+			fdw_state->oraTable->cols[i]->val_len = (uint16 *)palloc(sizeof(uint16) * fdw_state->prefetch);
 			fdw_state->oraTable->cols[i]->val_len4 = 0;
-			fdw_state->oraTable->cols[i]->val_null = 1;
+			fdw_state->oraTable->cols[i]->val_null = (int16 *)palloc(sizeof(int16) * fdw_state->prefetch);
 
 			if (first_column)
 				first_column = false;
@@ -3589,11 +3682,12 @@ acquireSampleRowsFunc(Relation relation, int elevel, HeapTuple *rows, int targro
 				fdw_state->oraTable->cols[i]->pgname
 			);
 
+	/* execute the query */
+	oraclePrepareQuery(fdw_state->session, fdw_state->query, fdw_state->oraTable, fdw_state->prefetch, fdw_state->lob_prefetch);
+	(void)oracleExecuteQuery(fdw_state->session, fdw_state->oraTable, fdw_state->paramList, fdw_state->prefetch);
+
 	/* loop through query results */
-	while(oracleIsStatementOpen(fdw_state->session)
-			? oracleFetchNext(fdw_state->session)
-			: (oraclePrepareQuery(fdw_state->session, fdw_state->query, fdw_state->oraTable, fdw_state->prefetch),
-				oracleExecuteQuery(fdw_state->session, fdw_state->oraTable, fdw_state->paramList)))
+	while((index = oracleFetchNext(fdw_state->session, fdw_state->prefetch)) > 0)
 	{
 		/* allow user to interrupt ANALYZE */
 		vacuum_delay_point();
@@ -3606,7 +3700,7 @@ acquireSampleRowsFunc(Relation relation, int elevel, HeapTuple *rows, int targro
 
 			/* use a temporary memory context during convertTuple */
 			old_cxt = MemoryContextSwitchTo(tmp_cxt);
-			convertTuple(fdw_state, values, nulls, true);
+			convertTuple(fdw_state, index, values, nulls, true);
 			MemoryContextSwitchTo(old_cxt);
 
 			rows[collected_rows++] = heap_form_tuple(tupDesc, values, nulls);
@@ -3629,7 +3723,7 @@ acquireSampleRowsFunc(Relation relation, int elevel, HeapTuple *rows, int targro
 
 				/* use a temporary memory context during convertTuple */
 				old_cxt = MemoryContextSwitchTo(tmp_cxt);
-				convertTuple(fdw_state, values, nulls, true);
+				convertTuple(fdw_state, index, values, nulls, true);
 				MemoryContextSwitchTo(old_cxt);
 
 				rows[k] = heap_form_tuple(tupDesc, values, nulls);
@@ -3637,6 +3731,8 @@ acquireSampleRowsFunc(Relation relation, int elevel, HeapTuple *rows, int targro
 			}
 		}
 	}
+
+	oracleCloseStatement(fdw_state->session);
 
 	MemoryContextDelete(tmp_cxt);
 
@@ -3710,7 +3806,7 @@ deparseExpr(oracleSession *session, RelOptInfo *foreignrel, Expr *expr, const st
 	ArrayCoerceExpr *arraycoerce;
 #if PG_VERSION_NUM >= 100000
 	SQLValueFunction *sqlvalfunc;
-#endif
+#endif  /* PG_VERSION_NUM */
 	regproc typoutput;
 	HeapTuple tuple;
 	ListCell *cell;
@@ -4536,11 +4632,25 @@ deparseExpr(oracleSession *session, RelOptInfo *foreignrel, Expr *expr, const st
 				pfree(left);
 				pfree(right);
 			}
-			else if (strcmp(opername, "now") == 0 || strcmp(opername, "transaction_timestamp") == 0)
+			else if (strcmp(opername, "now") == 0
+				|| strcmp(opername, "current_timestamp") == 0
+				|| strcmp(opername, "transaction_timestamp") == 0)
 			{
 				/* special case: current timestamp */
 				initStringInfo(&result);
 				appendStringInfo(&result, "(CAST (:now AS TIMESTAMP WITH TIME ZONE))");
+			}
+			else if (strcmp(opername, "current_date") == 0)
+			{
+				/* special case: current_date */
+				initStringInfo(&result);
+				appendStringInfo(&result, "TRUNC(CAST (CAST(:now AS TIMESTAMP WITH TIME ZONE) AS DATE))");
+			}
+			else if (strcmp(opername, "localtimestamp") == 0)
+			{
+				/* special case: localtimestamp */
+				initStringInfo(&result);
+				appendStringInfo(&result, "(CAST (CAST (:now AS TIMESTAMP WITH TIME ZONE) AS TIMESTAMP))");
 			}
 			else
 			{
@@ -4554,6 +4664,11 @@ deparseExpr(oracleSession *session, RelOptInfo *foreignrel, Expr *expr, const st
 		case T_CoerceViaIO:
 			/*
 			 * We will only handle casts of 'now'.
+			 *
+			 * This is how "current_timestamp", "current_date" and
+			 * "localtimestamp" were represented before PostgreSQL v10.
+			 * I am not sure whether this code path can be reached in later
+			 * versions, but it doesn't hurt to leave the code for now.
 			 */
 			coerce = (CoerceViaIO *)expr;
 
@@ -4622,7 +4737,7 @@ deparseExpr(oracleSession *session, RelOptInfo *foreignrel, Expr *expr, const st
 			}
 
 			break;
-#endif
+#endif  /* PG_VERSION_NUM >= 100000 */
 		default:
 			/* we cannot translate this to Oracle */
 			return NULL;
@@ -4978,7 +5093,7 @@ getUsedColumns(Expr *expr, struct oraTable *oraTable, int foreignrelid)
 #if PG_VERSION_NUM >= 100000
 		case T_SQLValueFunction:
 			break;  /* contains no column references */
-#endif
+#endif  /* PG_VERSION_NUM */
 		default:
 			/*
 			 * We must be able to handle all node types that can
@@ -5243,6 +5358,22 @@ char
 	return buf.data;
 }
 
+/*
+ * getTimeZone
+ * 		session time zone in the format ORA_SDTZ=...
+ */
+char *
+getTimezone()
+{
+	StringInfoData buf;
+
+	initStringInfo(&buf);
+	appendStringInfo(&buf, "ORA_SDTZ=%s", pg_get_timezone_name(session_timezone));
+
+	elog(DEBUG1, "oracle_fdw: set %s", buf.data);
+	return buf.data;
+}
+
 oracleSession *
 oracleConnectServer(Name srvname)
 {
@@ -5254,7 +5385,7 @@ oracleConnectServer(Name srvname)
 	ForeignDataWrapper *wrapper;
 	List *options;
 	ListCell *cell;
-	char *nls_lang = NULL, *user = NULL, *password = NULL, *dbserver = NULL;
+	char *nls_lang = NULL, *timezone = NULL, *user = NULL, *password = NULL, *dbserver = NULL;
 	oraIsoLevel isolation_level = DEFAULT_ISOLATION_LEVEL;
 	bool have_nchar = false;
 
@@ -5307,6 +5438,15 @@ oracleConnectServer(Name srvname)
 				|| pg_strcasecmp(nchar, "true") == 0))
 			have_nchar = true;
 		}
+		if (strcmp(def->defname, OPT_SET_TIMEZONE) == 0)
+		{
+			char *settz = strVal(def->arg);
+
+			if ((pg_strcasecmp(settz, "on") == 0
+				|| pg_strcasecmp(settz, "yes") == 0
+				|| pg_strcasecmp(settz, "true") == 0))
+			timezone = getTimezone();
+		}
 	}
 
 	/* guess a good NLS_LANG environment setting */
@@ -5319,6 +5459,7 @@ oracleConnectServer(Name srvname)
 		user,
 		password,
 		nls_lang,
+		timezone,
 		(int)have_nchar,
 		NULL,
 		1
@@ -5354,10 +5495,14 @@ List
 	result = lappend(result, serializeString(fdwState->password));
 	/* nls_lang */
 	result = lappend(result, serializeString(fdwState->nls_lang));
+	/* timezone */
+	result = lappend(result, serializeString(fdwState->timezone));
 	/* query */
 	result = lappend(result, serializeString(fdwState->query));
 	/* Oracle prefetch count */
 	result = lappend(result, serializeInt((int)fdwState->prefetch));
+	/* Oracle LOB prefetch size */
+	result = lappend(result, serializeInt((int)fdwState->lob_prefetch));
 	/* Oracle table name */
 	result = lappend(result, serializeString(fdwState->oraTable->name));
 	/* PostgreSQL table name */
@@ -5379,9 +5524,7 @@ List
 		result = lappend(result, serializeInt(fdwState->oraTable->cols[i]->used));
 		result = lappend(result, serializeInt(fdwState->oraTable->cols[i]->strip_zeros));
 		result = lappend(result, serializeInt(fdwState->oraTable->cols[i]->pkey));
-		result = lappend(result, serializeLong(fdwState->oraTable->cols[i]->val_size));
-		/* Dymium */
-		result = lappend(result, serializeInt(fdwState->oraTable->cols[i]->how_to_redact));
+		result = lappend(result, serializeInt(fdwState->oraTable->cols[i]->val_size));
 		/* don't serialize val, val_len, val_len4, val_null and varno */
 	}
 
@@ -5419,26 +5562,6 @@ Const
 		return makeNullConst(TEXTOID, -1, InvalidOid);
 	else
 		return makeConst(TEXTOID, -1, InvalidOid, -1, PointerGetDatum(cstring_to_text(s)), false, false);
-}
-
-/*
- * serializeLong
- * 		Create a Const that contains the long integer.
- */
-
-Const
-*serializeLong(long i)
-{
-	if (sizeof(long) <= 4)
-		return makeConst(INT4OID, -1, InvalidOid, 4, Int32GetDatum((int32)i), false, true);
-	else
-		return makeConst(INT4OID, -1, InvalidOid, 8, Int64GetDatum((int64)i), false,
-#ifdef USE_FLOAT8_BYVAL
-					true
-#else
-					false
-#endif  /* USE_FLOAT8_BYVAL */
-				);
 }
 
 /*
@@ -5492,12 +5615,20 @@ struct OracleFdwState
 	state->nls_lang = deserializeString(lfirst(cell));
 	cell = list_next(list, cell);
 
+	/* timezone */
+	state->timezone = deserializeString(lfirst(cell));
+	cell = list_next(list, cell);
+
 	/* query */
 	state->query = deserializeString(lfirst(cell));
 	cell = list_next(list, cell);
 
 	/* Oracle prefetch count */
 	state->prefetch = (unsigned int)DatumGetInt32(((Const *)lfirst(cell))->constvalue);
+	cell = list_next(list, cell);
+
+	/* Oracle LOB prefetch size */
+	state->lob_prefetch = (unsigned int)DatumGetInt32(((Const *)lfirst(cell))->constvalue);
 	cell = list_next(list, cell);
 
 	/* table data */
@@ -5536,18 +5667,16 @@ struct OracleFdwState
 		cell = list_next(list, cell);
 		state->oraTable->cols[i]->pkey = (int)DatumGetInt32(((Const *)lfirst(cell))->constvalue);
 		cell = list_next(list, cell);
-		state->oraTable->cols[i]->val_size = deserializeLong(lfirst(cell));
+		state->oraTable->cols[i]->val_size = DatumGetInt32(((Const *)lfirst(cell))->constvalue);
 		cell = list_next(list, cell);
-		
-		/* Dymium */
-		state->oraTable->cols[i]->how_to_redact = (int)DatumGetInt32(((Const *)lfirst(cell))->constvalue);
-		cell = list_next(list, cell);
-		
-		/* allocate memory for the result value */
-		state->oraTable->cols[i]->val = (char *)palloc(state->oraTable->cols[i]->val_size + 1);
-		state->oraTable->cols[i]->val_len = 0;
+		/*
+		 * Allocate memory for the result value.
+		 * Multiply the space to allocate with the prefetch count.
+		 */
+		state->oraTable->cols[i]->val = (char *)palloc(state->oraTable->cols[i]->val_size * state->prefetch);
+		state->oraTable->cols[i]->val_len = (uint16 *)palloc(sizeof(uint16) * state->prefetch);
 		state->oraTable->cols[i]->val_len4 = 0;
-		state->oraTable->cols[i]->val_null = 1;
+		state->oraTable->cols[i]->val_null = (int16 *)palloc(sizeof(int16) * state->prefetch);
 	}
 
 	/* length of parameter list */
@@ -5592,20 +5721,6 @@ char
 		return NULL;
 	else
 		return text_to_cstring(DatumGetTextP(constant->constvalue));
-}
-
-/*
- * deserializeLong
- * 		Extracts a long integer from a Const.
- */
-
-long
-deserializeLong(Const *constant)
-{
-	if (sizeof(long) <= 4)
-		return (long)DatumGetInt32(constant->constvalue);
-	else
-		return (long)DatumGetInt64(constant->constvalue);
 }
 
 /*
@@ -5787,6 +5902,10 @@ struct OracleFdwState
 	copy->user = pstrdup(orig->user);
 	copy->password = pstrdup(orig->password);
 	copy->nls_lang = pstrdup(orig->nls_lang);
+	if (orig->timezone == NULL)
+		copy->timezone = NULL;
+	else
+		copy->timezone = pstrdup(orig->timezone);
 	copy->session = NULL;
 	copy->query = NULL;
 	copy->paramList = NULL;
@@ -5812,13 +5931,12 @@ struct OracleFdwState
 		copy->oraTable->cols[i]->used = 0;
 		copy->oraTable->cols[i]->strip_zeros = orig->oraTable->cols[i]->strip_zeros;
 		copy->oraTable->cols[i]->pkey = orig->oraTable->cols[i]->pkey;
+		/* these are not needed for planning */
 		copy->oraTable->cols[i]->val = NULL;
 		copy->oraTable->cols[i]->val_size = orig->oraTable->cols[i]->val_size;
-		copy->oraTable->cols[i]->val_len = 0;
+		copy->oraTable->cols[i]->val_len = NULL;
 		copy->oraTable->cols[i]->val_len4 = 0;
-		copy->oraTable->cols[i]->val_null = 0;
-		/* Dymium */
-		copy->oraTable->cols[i]->how_to_redact = orig->oraTable->cols[i]->how_to_redact;
+		copy->oraTable->cols[i]->val_null = NULL;
 	}
 	copy->startup_cost = 0.0;
 	copy->total_cost = 0.0;
@@ -5826,6 +5944,8 @@ struct OracleFdwState
 	copy->columnindex = 0;
 	copy->temp_cxt = NULL;
 	copy->order_clause = NULL;
+	copy->prefetch = orig->prefetch;
+	copy->lob_prefetch = orig->lob_prefetch;
 
 	return copy;
 }
@@ -5859,8 +5979,6 @@ addParam(struct paramDesc **paramList, char *name, Oid pgtype, oraType oratype, 
 	{
 		case ORA_TYPE_NUMBER:
 		case ORA_TYPE_FLOAT:
-		case ORA_TYPE_BINARYFLOAT:
-		case ORA_TYPE_BINARYDOUBLE:
 			param->bindType = BIND_NUMBER;
 			break;
 		case ORA_TYPE_LONG:
@@ -6452,17 +6570,16 @@ setSelectParameters(struct paramDesc *paramList, ExprContext *econtext)
  * convertTuple
  * 		Convert a result row from Oracle stored in oraTable
  * 		into arrays of values and null indicators.
+ * 		"index" is the (1 based) index into the array of results.
  * 		If trunc_lob it true, truncate LOBs to WIDTH_THRESHOLD+1 bytes.
  */
-#define _D if(0)  
-#include "../common/obfuscate.c"
-
 void
-convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool trunc_lob)
+convertTuple(struct OracleFdwState *fdw_state, unsigned int index, Datum *values, bool *nulls, bool trunc_lob)
 {
-	char *value = NULL;
+	char *value = NULL, *oraval;
 	long value_len = 0;
-	int j, index = -1;
+	int j, i = -1;
+	unsigned short oralen;
 	ErrorContextCallback errcb;
 	Oid pgtype;
 
@@ -6473,19 +6590,16 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 	/* assign result values */
 	for (j=0; j<fdw_state->oraTable->npgcols; ++j)
 	{
-
-	    int how_to_redact, isNullable, act;
-		  
 		/* for dropped columns, insert a NULL */
-		if ((index + 1 < fdw_state->oraTable->ncols)
-				&& (fdw_state->oraTable->cols[index + 1]->pgattnum > j + 1))
+		if ((i + 1 < fdw_state->oraTable->ncols)
+				&& (fdw_state->oraTable->cols[i + 1]->pgattnum > j + 1))
 		{
 			nulls[j] = true;
 			values[j] = PointerGetDatum(NULL);
 			continue;
 		}
 		else
-			++index;
+			++i;
 
 		/*
 		 * Columns exceeding the length of the Oracle table will be NULL,
@@ -6493,62 +6607,44 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 		 * Geometry columns are NULL if the value is NULL,
 		 * for all other types use the NULL indicator.
 		 */
-		if (index >= fdw_state->oraTable->ncols
-			|| fdw_state->oraTable->cols[index]->used == 0
-			|| (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_GEOMETRY
-				&& ((ora_geometry *)fdw_state->oraTable->cols[index]->val)->geometry == NULL)
-			|| fdw_state->oraTable->cols[index]->val_null == -1)
+		if (i >= fdw_state->oraTable->ncols
+			|| fdw_state->oraTable->cols[i]->used == 0
+			|| (fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_GEOMETRY
+				&& ((ora_geometry *)fdw_state->oraTable->cols[i]->val)->geometry == NULL)
+			|| fdw_state->oraTable->cols[i]->val_null[index-1] == -1)
 		{
 			nulls[j] = true;
 			values[j] = PointerGetDatum(NULL);
 			continue;
 		}
 
-	    how_to_redact = fdw_state->oraTable->cols[index]->how_to_redact;
-		isNullable = (how_to_redact >> 2) & 0x1;
-		act = how_to_redact & 0x3;
-		
-		if (act == 1 && isNullable) {
-			nulls[j]  = true;
-			values[j] = PointerGetDatum(NULL);
-			continue;		  
-		}
-		
 		/* from here on, we can assume columns to be NOT NULL */
 		nulls[j] = false;
-		pgtype = fdw_state->oraTable->cols[index]->pgtype;
+		pgtype = fdw_state->oraTable->cols[i]->pgtype;
+
+		/* calculate the offset into the arays in "val" and "val_len" */
+		oraval = fdw_state->oraTable->cols[i]->val +
+			(index - 1) * fdw_state->oraTable->cols[i]->val_size;
+		oralen = (fdw_state->oraTable->cols[i]->val_len)[index - 1];
 
 		/* get the data and its length */
-		if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_BLOB
-				|| fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_BFILE)
+		if (fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_BLOB
+				|| fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_BFILE
+				|| fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_CLOB)
 		{
 			/* for LOBs, get the actual LOB contents (palloc'ed), truncated if desired */
 			oracleGetLob(fdw_state->session,
-				(void *)fdw_state->oraTable->cols[index]->val, fdw_state->oraTable->cols[index]->oratype,
+				(void *)oraval, fdw_state->oraTable->cols[i]->oratype,
 				&value, &value_len, trunc_lob ? (WIDTH_THRESHOLD+1) : 0);
-			if(act == 1) {
-			  redact_bytea(value, value_len);
-			}
 		}
-		else if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_CLOB)
+		else if (fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_GEOMETRY)
 		{
-			oracleGetLob(fdw_state->session,
-				(void *)fdw_state->oraTable->cols[index]->val, fdw_state->oraTable->cols[index]->oratype,
-				&value, &value_len, trunc_lob ? (WIDTH_THRESHOLD+1) : 0);
-			if(act == 1) {
-			  redact_text(value, value_len);
-			} else if(act == 2 || act == 3) {
-			  obfuscate(value, value_len);
-			}
-		}
-		else if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_GEOMETRY)
-		{
-			ora_geometry *geom = (ora_geometry *)fdw_state->oraTable->cols[index]->val;
+			ora_geometry *geom = (ora_geometry *)fdw_state->oraTable->cols[i]->val;
 
 			/* install error context callback */
 			errcb.previous = error_context_stack;
 			error_context_stack = &errcb;
-			fdw_state->columnindex = index;
+			fdw_state->columnindex = i;
 
 			value_len = oracleGetEWKBLen(fdw_state->session, geom);
 
@@ -6557,39 +6653,21 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 
 			value = NULL;  /* we will fetch that later to avoid unnecessary copying */
 		}
-		else if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_LONGRAW)
+		else if (fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_LONG
+				|| fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_LONGRAW)
 		{
 			/* for LONG and LONG RAW, the first 4 bytes contain the length */
-			value_len = *((int32 *)fdw_state->oraTable->cols[index]->val);
+			value_len = *((int32 *)oraval);
 			/* the rest is the actual data */
-			value = fdw_state->oraTable->cols[index]->val + 4;
+			value = oraval + 4;
 			/* terminating zero byte (needed for LONGs) */
 			value[value_len] = '\0';
-			if(act == 1) {
-			  redact_bytea(value, value_len);
-			}
-		}
-		else if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_LONG)
-		{
-			/* for LONG and LONG RAW, the first 4 bytes contain the length */
-			value_len = *((int32 *)fdw_state->oraTable->cols[index]->val);
-			/* the rest is the actual data */
-			value = fdw_state->oraTable->cols[index]->val + 4;
-			/* terminating zero byte (needed for LONGs) */
-			value[value_len] = '\0';
-			if(act == 1) {
-			  redact_text(value, value_len);
-			} else if(act == 2 || act == 3) {
-			  obfuscate(value, value_len);
-			}
 		}
 		else
 		{
-			char *oraval = fdw_state->oraTable->cols[index]->val;
-
 			/* special handling for NUMBER's "infinity tilde" */
-			if ((fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_FLOAT
-					|| fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_NUMBER)
+			if ((fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_FLOAT
+					|| fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_NUMBER)
 				&& (oraval[0] == '~' || (oraval[0] == '-' && oraval[1] == '~')))
 			{
 				/* "numeric" does not know infinity, so map to NaN */
@@ -6601,83 +6679,19 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 
 			/* for other data types, oraTable contains the results */
 			value = oraval;
-			value_len = fdw_state->oraTable->cols[index]->val_len;
-			if(act != 0) {
-			  switch(how_to_redact >> 3) {
-			  case 0x0:
-				if(act == 1)
-				  value_len = redact_something(value, value_len);
-				else
-				  value_len = obfuscate(value, value_len);
-				break;
-			  case 0x1:
-				if(act == 1)
-				  value_len = redact_text(value, value_len);
-				else value_len = obfuscate(value, value_len);
-				break;
-			  case 0x2:
-				if(act == 1)
-				  value_len = redact_number(value, value_len);
-				else
-				  value_len = obfuscate(value, value_len);
-				break;
-			  case 0x3:
-				value_len = redact_bool(value, value_len);
-				break;
-			  case 0x4:
-				value_len = redact_xml(value, value_len);
-				break;
-			  case 0x5:
-				value_len = redact_bytea(value, value_len);
-				break;
-			  case 0x6:
-				value_len = redact_json(value, value_len);
-				break;
-			  case 0x7:
-				if(act == 1) {
-				  value_len = redact_uuid(value, value_len);
-				} else {
-				  value_len = obfuscate_uuid(value, value_len);
-				}
-				break;
-			  case 0x8:
-				value = "1970-01-01 00:00:00";
-				value_len = strlen(value);
-				break;
-			  case 0x9:
-				value = "1970-01-01 00:00:00+00";
-				value_len = strlen(value);
-				break;
-			  case 0xa:
-				value = "1970-01-01";
-				value_len = strlen(value);
-				break;
-			  case 0xb:
-				value = "00:00:00";
-				value_len = strlen(value);
-				break;
-			  case 0xc:
-				value = "00:00:00+00";
-				value_len = strlen(value);
-				break;
-			  case 0xd:
-				value = "00:00:00";
-				value_len = strlen(value);
-				break;
-			  }
-			}
+			value_len = oralen;
 		}
 
 		/* fill the TupleSlot with the data (after conversion if necessary) */
-		if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_GEOMETRY)
+		if (fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_GEOMETRY)
 		{
-			ora_geometry *geom = (ora_geometry *)fdw_state->oraTable->cols[index]->val;
+			ora_geometry *geom = (ora_geometry *)fdw_state->oraTable->cols[i]->val;
 			struct varlena *result = NULL;
 
 			/* install error context callback */
 			errcb.previous = error_context_stack;
 			error_context_stack = &errcb;
-			fdw_state->columnindex = index;
+			fdw_state->columnindex = i;
 
 			result = (bytea *)palloc(value_len + VARHDRSZ);
 			oracleFillEWKB(fdw_state->session, geom, value_len, VARDATA(result));
@@ -6713,7 +6727,7 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 			 * In Oracle they are rendered like this: "-01 12:00:00.000000"
 			 * They have to be changed to "-01 -12:00:00.000000" for PostgreSQL.
 			 */
-			if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_INTERVALD2S
+			if (fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_INTERVALD2S
 				&& value[0] == '-')
 			{
 				char *newval = palloc(strlen(value) + 2);
@@ -6743,12 +6757,12 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 			/* install error context callback */
 			errcb.previous = error_context_stack;
 			error_context_stack = &errcb;
-			fdw_state->columnindex = index;
+			fdw_state->columnindex = i;
 
 			if (pgtype == BPCHAROID || pgtype == VARCHAROID || pgtype == TEXTOID)
 			{
 				/* optionally strip zero bytes from string types */
-				if (fdw_state->oraTable->cols[index]->strip_zeros)
+				if (fdw_state->oraTable->cols[i]->strip_zeros)
 				{
 					char *from_p, *to_p = value;
 					long new_length = value_len;
@@ -6780,7 +6794,7 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 					values[j] = OidFunctionCall3(typinput,
 						dat,
 						ObjectIdGetDatum(InvalidOid),
-						Int32GetDatum(fdw_state->oraTable->cols[index]->pgtypmod));
+						Int32GetDatum(fdw_state->oraTable->cols[i]->pgtypmod));
 					break;
 				default:
 					/* the others don't */
@@ -6792,9 +6806,9 @@ convertTuple(struct OracleFdwState *fdw_state, Datum *values, bool *nulls, bool 
 		}
 
 		/* free the data buffer for LOBs */
-		if (fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_BLOB
-				|| fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_BFILE
-				|| fdw_state->oraTable->cols[index]->oratype == ORA_TYPE_CLOB)
+		if (fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_BLOB
+				|| fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_BFILE
+				|| fdw_state->oraTable->cols[i]->oratype == ORA_TYPE_CLOB)
 			pfree(value);
 	}
 }
