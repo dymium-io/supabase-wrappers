@@ -129,11 +129,11 @@ func confUser(
 						return empty, err
 					}
 					/*
-					_, err = db.Exec(fmt.Sprintf(`ALTER ROLE %s IN DATABASE %s SET ROLE TO %s`,
-						PostgresEscape(userCnf.Name), a.db, a.u))
-					if err != nil {
-						return empty, err
-					}
+						_, err = db.Exec(fmt.Sprintf(`ALTER ROLE %s IN DATABASE %s SET ROLE TO %s`,
+							PostgresEscape(userCnf.Name), a.db, a.u))
+						if err != nil {
+							return empty, err
+						}
 					*/
 					log.Printf(`GRANT %s TO %s`, a.u, PostgresEscape(userCnf.Name))
 				}

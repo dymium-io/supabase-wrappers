@@ -56,7 +56,7 @@ func doUpdate(
 						return empty, fmt.Errorf("%s connection: Can not create role %s: %v", a, localUser, err)
 					}
 					sql = fmt.Sprintf("GRANT CONNECT ON DATABASE %s TO %s", datascope.Name, localUser)
-					log.Println(sql)					
+					log.Println(sql)
 					if _, err = db.Exec(sql); err != nil {
 						return empty, fmt.Errorf("%s connection: Can not grant connect on %s to %s: %v",
 							a, datascope.Name, localUser, err)

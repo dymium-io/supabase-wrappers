@@ -14,10 +14,10 @@ import (
 )
 
 var obf_funcs func() []string
-var obf func(name string) (string,string)
+var obf func(name string) (string, string)
 
 func init() {
-	on := func (n string) string {
+	on := func(n string) string {
 		return fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(n)))
 	}
 	type oT struct {
@@ -50,13 +50,13 @@ func init() {
 	for _, o := range lst {
 		obfS[o.n] = obfT{
 			n: on(o.n),
-			k: fmt.Sprintf("x'%x'::int",o.k),
+			k: fmt.Sprintf("x'%x'::int", o.k),
 		}
 	}
-	obf = func(name string) (string,string) {
+	obf = func(name string) (string, string) {
 		o, ok := obfS[name]
 		if !ok {
-			panic(fmt.Sprintf("function [obf] is called with wrong argument [%s]",name))
+			panic(fmt.Sprintf("function [obf] is called with wrong argument [%s]", name))
 		}
 		return o.n, o.k
 	}
@@ -222,7 +222,7 @@ func configureDatabase(db *sql.DB,
 		if e, err := extensionName(ct); err != nil {
 			return rollback(err, "Configuring extention failed")
 		} else if err = exec("CREATE EXTENSION IF NOT EXISTS " + e + " WITH SCHEMA public"); err != nil {
-			return rollback(err, "Configuring extention failed")
+			return err
 		}
 	}
 
@@ -239,10 +239,10 @@ func configureDatabase(db *sql.DB,
 	}
 
 	if err = exec("CREATE EXTENSION IF NOT EXISTS obfuscator WITH SCHEMA _dymium"); err != nil {
-			return err
+		return err
 	}
 	for _, f := range obf_funcs() {
-		if err := exec("GRANT EXECUTE ON FUNCTION _dymium."+f+" TO "+localUser); err != nil {
+		if err := exec("GRANT EXECUTE ON FUNCTION _dymium." + f + " TO " + localUser); err != nil {
 			return err
 		}
 	}
@@ -261,6 +261,9 @@ func configureDatabase(db *sql.DB,
 			opts.server(c.Address, c.Port, c.Dbname) + `)`
 		if err := exec(sql); err != nil {
 			return err
+		}
+		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.servers (server) VALUES ( $1 )", c.Name+"_server"); err != nil {
+			return rollback(err, "Registering server "+c.Name+"_server failed")
 		}
 		cred, ok := credentials[c.Id]
 		if !ok {
@@ -322,11 +325,12 @@ func configureDatabase(db *sql.DB,
 			t := &s.Tables[m]
 			hiddenTblName := fmt.Sprintf("_dymium._%x_", sha256.Sum224([]byte(datascope.Name+s.Name+t.Name)))
 			// hiddenViewName := fmt.Sprintf("_dymium._%x_", sha256.Sum224([]byte(datascope.Name+s.Name+t.Name+"_VIEW")))
-			hiddenTblCols, viewDef := make([]string,0,len(t.Columns)), make([]string,0,len(t.Columns))
+			hiddenTblCols, viewDef := make([]string, 0, len(t.Columns)), make([]string, 0, len(t.Columns))
 			for k := range t.Columns {
 				c := &t.Columns[k]
 				switch c.Action {
-				case types.DH_Block: continue
+				case types.DH_Block:
+					continue
 				case types.DH_Redact:
 					var v string
 					if c.IsNullable {
@@ -344,7 +348,7 @@ func configureDatabase(db *sql.DB,
 							c.Typ == "text",
 							c.Typ == "bpchar":
 							v = "'{}'"
-						case 
+						case
 							c.Typ == "bigint",
 							strings.HasPrefix(c.Typ, "double"),
 							strings.HasPrefix(c.Typ, "int"),
@@ -370,15 +374,15 @@ func configureDatabase(db *sql.DB,
 							c.Typ == "uuid":
 							v = "'00000000-0000-0000-0000-000000000000'"
 						case
-							strings.HasPrefix(c.Typ,"timestamp"):
-							if strings.HasSuffix(c.Typ,"with timezone") || strings.HasSuffix(c.Typ,"with time zone") {
+							strings.HasPrefix(c.Typ, "timestamp"):
+							if strings.HasSuffix(c.Typ, "with timezone") || strings.HasSuffix(c.Typ, "with time zone") {
 								v = "'2000-01-01 00:00:00 UTC'"
 							} else {
 								v = "'0001-01-01 00:00:00'"
 							}
 						case
-							strings.HasPrefix(c.Typ,"time"):
-							if strings.HasSuffix(c.Typ,"with timezone")  || strings.HasSuffix(c.Typ,"with time zone") {
+							strings.HasPrefix(c.Typ, "time"):
+							if strings.HasSuffix(c.Typ, "with timezone") || strings.HasSuffix(c.Typ, "with time zone") {
 								v = "'00:00:00 UTC'"
 							} else {
 								v = "'00:00:00'"
@@ -387,10 +391,10 @@ func configureDatabase(db *sql.DB,
 							c.Typ == "date":
 							v = "'0001-01-01'"
 						}
-					viewDef = append(viewDef, "CAST("+v+" AS "+c.Typ+") AS "+PostgresEscape(c.Name))
+						viewDef = append(viewDef, "CAST("+v+" AS "+c.Typ+") AS "+PostgresEscape(c.Name))
 					}
-				case types.DH_Obfuscate:					
-					v := PostgresEscape(c.Name)+" "+c.Typ+" OPTIONS( redact '0' )"
+				case types.DH_Obfuscate:
+					v := PostgresEscape(c.Name) + " " + c.Typ + " OPTIONS( redact '0' )"
 					if !c.IsNullable {
 						v += " NOT NULL"
 					}
@@ -398,67 +402,67 @@ func configureDatabase(db *sql.DB,
 					// viewDef = append(viewDef,"    obfuscate("+PostgresEscape(c.Name)+")")
 					if strings.HasSuffix(c.Typ, "[]") {
 						switch {
-						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ,"text"):
+						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
 							n, k := obf("obfuscate_text_array")
 							v = fmt.Sprintf("_dymium.%s(%s,%s,0,false) AS %s",
-								n,k,PostgresEscape(c.Name),PostgresEscape(c.Name))
+								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
 						case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
 							n, k := obf("obfuscate_text_array")
 							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
-								n,k,PostgresEscape(c.Name), PostgresEscape(c.Name))
+								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
 						case strings.HasPrefix(c.Typ, "uuid"):
 							n, k := obf("obfuscate_uuid_array")
 							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
-								n,k,PostgresEscape(c.Name), PostgresEscape(c.Name))
+								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
 						default:
-							panic(fmt.Sprintf("Unsupported obfuscation for [%s]",c.Typ))
+							panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
 						}
 					} else {
 						switch {
-						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ,"text"):
+						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
 							n, k := obf("obfuscate_text")
 							v = fmt.Sprintf("_dymium.%s(%s,%s,0,false) AS %s",
-								n,k,PostgresEscape(c.Name), PostgresEscape(c.Name))
+								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
 						case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
 							n, k := obf("obfuscate_text")
 							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
-								n,k,PostgresEscape(c.Name), PostgresEscape(c.Name))
+								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
 						case strings.HasPrefix(c.Typ, "uuid"):
 							n, k := obf("obfuscate_uuid")
 							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
-								n,k,PostgresEscape(c.Name), PostgresEscape(c.Name))
+								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
 						default:
-							panic(fmt.Sprintf("Unsupported obfuscation for [%s]",c.Typ))
+							panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
 						}
 					}
-					viewDef = append(viewDef,v)
+					viewDef = append(viewDef, v)
 				case types.DH_Allow:
-					v := PostgresEscape(c.Name)+" "+c.Typ+" OPTIONS( redact '0' )"
+					v := PostgresEscape(c.Name) + " " + c.Typ + " OPTIONS( redact '0' )"
 					if !c.IsNullable {
 						v += " NOT NULL"
 					}
 					hiddenTblCols = append(hiddenTblCols, "  "+v)
-					viewDef = append(viewDef,PostgresEscape(c.Name))
+					viewDef = append(viewDef, PostgresEscape(c.Name))
 				}
 			}
 			con := connections[t.Connection]
 			opts := options(con.Database_type)
-			hiddenTbl := "CREATE FOREIGN TABLE "+hiddenTblName+" (\n" +
+			hiddenTbl := "CREATE FOREIGN TABLE " + hiddenTblName + " (\n" +
 				strings.Join(hiddenTblCols, ",\n") +
-				"\n) SERVER "+con.Name+"_server OPTIONS("+opts.table(s.Name, t.Name)+");\n"
+				"\n) SERVER " + con.Name + "_server OPTIONS(" + opts.table(s.Name, t.Name) + ");\n"
 			view :=
 				fmt.Sprintf("CREATE VIEW %%s.%s AS SELECT %s FROM %s;\n",
 					PostgresEscape(t.Name),
 					strings.Join(viewDef, ", "),
 					hiddenTblName)
-			
+
 			if err := exec(hiddenTbl); err != nil {
 				return err
 			}
 			// if err := exec(hiddenView); err != nil {
 			//	return err
 			// }
-			
+
 			schs := []string{con.Name + "_" + s.Name}
 			if _, ok := shortEntries[tuple{k1: s.Name, k2: t.Name}]; ok {
 				if s.Name == "public" {
