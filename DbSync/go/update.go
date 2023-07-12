@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 
-	"crypto/md5"
+	"crypto/sha256"
 
 	"DbSync/types"
 )
@@ -26,7 +26,7 @@ func doUpdate(
 	connectStr := fmt.Sprintf("host=%%s port=%d dbname='%%s' user=%s password='%s' sslmode=%s",
 		cnf.GuardianPort, cnf.GuardianUser, cnf.GuardianAdminPassword, sslmode_)
 
-	localUser := fmt.Sprintf(`_%x_`, md5.Sum([]byte(datascope.Name+"_dymium")))
+	localUser := fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(datascope.Name+"_dymium")))
 
 	for _, a := range cnf.GuardianAddress {
 		if db, err := sql.Open("postgres", fmt.Sprintf(connectStr, a, esc(cnf.GuardianDatabase))); err != nil {
@@ -56,7 +56,7 @@ func doUpdate(
 						return empty, fmt.Errorf("%s connection: Can not create role %s: %v", a, localUser, err)
 					}
 					sql = fmt.Sprintf("GRANT CONNECT ON DATABASE %s TO %s", datascope.Name, localUser)
-					log.Println(sql)					
+					log.Println(sql)
 					if _, err = db.Exec(sql); err != nil {
 						return empty, fmt.Errorf("%s connection: Can not grant connect on %s to %s: %v",
 							a, datascope.Name, localUser, err)

@@ -196,6 +196,28 @@ Foreign server options
   (or 16383 if you have MAX_STRING_SIZE = EXTENDED).
   This error seems to be an Oracle bug.
 
+- **set_timezone** (boolean, optional, defaults to `off`)
+
+  Setting this option to `on` sets the Oracle session time zone to the current
+  value of the PostgreSQL parameter `timezone` when the connection to Oracle
+  is made.  This is only useful if you plan to use Oracle columns of type
+  TIMESTAMP WITH LOCAL TIME ZONE and want to translate them to `timestamp
+  without time zone` in PostgreSQL.
+
+  Note that if you change `timezone` after the Oracle connection has been
+  established, oracle_fdw won't change the Oracle session time zone.  You can
+  call `oracle_close_connections()` in that case, so that a new connection is
+  opened the next time you access a foreign table.
+
+  If Oracle does not recognize the time zone, connections will fail with an
+  error like
+
+      ORA-01882: timezone region not found
+
+  In that case, either use a different `timezone` or leave the option set `off`
+  and set the environment variable ORA_SDTZ to an appropriate value in the
+  environment of the PostgreSQL server.
+
 User mapping options
 --------------------
 
@@ -269,19 +291,26 @@ Foreign table options
   ANALYZE will fail with ORA-00933 for tables defined with Oracle queries and
   may fail with ORA-01446 for tables defined with complex Oracle views.
 
-- **prefetch** (optional, defaults to "200")
+- **prefetch** (optional, defaults to "50")
 
   Sets the number of rows that will be fetched with a single round-trip between
-  PostgreSQL and Oracle during a foreign table scan.  This is implemented using
-  Oracle row prefetching.  The value must be between 0 and 10240, where a value
-  of zero disables prefetching.
+  PostgreSQL and Oracle during a foreign table scan.  The value must be between
+  1 and 1000.
 
   Higher values can speed up performance, but will use more memory on the
   PostgreSQL server.
 
-  Note that due to an Oracle limitation, row prefetching won't work if the
-  Oracle query involves a BLOB, CLOB or BFILE column.  As a consequence, queries
-  on such columns on a foreign table will perform badly if you fetch many rows.
+  Note that there is no prefetching if the Oracle table contains columns of
+  the type `MDSYS.SDO_GEOMETRY`.
+
+- **lob_prefetch** (optional, defaults to "1048576")
+
+  Sets the number of bytes that are prefetched for BLOB, CLOB and BFILE values.
+  LOBs that exceed that size will require additional round trips between
+  PostgreSQL and Oracle, so setting this value bigger than the size of your
+  typical LOB will be good for performance.  Choosing bigger values for this
+  option can allocate more memory on the server side, but will boost performance
+  for large LOBs.
 
 Column options
 --------------
@@ -396,6 +425,9 @@ maximum length of the VARCHAR2 data type (4000 or 32767, depending on the
 
 NCLOB is currently not supported because Oracle cannot automatically convert
 it to the client encoding.
+
+If you want to convert TIMESTAMP WITH LOCAL TIME ZONE to `timestamp`, consider
+setting the `set_timezone` option on the foreign server.
 
 If you need conversions exceeding the above, define an appropriate view in
 Oracle or PostgreSQL.
@@ -586,6 +618,18 @@ following:
     See the [Options](#3-options) section for details.
 
   - **prefetch**: sets the **prefetch** option on all imported tables
+
+    See the [Options](#3-options) section for details.
+
+  - **lob_prefetch**: sets the **lob_prefetch** option on all imported tables
+
+    See the [Options](#3-options) section for details.
+
+  - **nchar**: sets the **nchar** option on all imported tables
+
+    See the [Options](#3-options) section for details.
+
+  - **set_timezone**: sets the **set_timezone** option on all imported tables
 
     See the [Options](#3-options) section for details.
 
@@ -782,9 +826,9 @@ oracle_fdw sets the MODULE of the Oracle session to `postgres` and the
 ACTION to the backend process number.  This can help identifying the Oracle
 session and allows you to trace it with DBMS_MONITOR.SERV_MOD_ACT_TRACE_ENABLE.
 
-oracle_fdw uses Oracle's result prefetching to avoid unnecessary client-server
-round-trips.  The prefetch row count can be configured with the **prefetch**
-table option and is set to 200 by default.
+oracle_fdw uses Oracle's array interface to avoid unnecessary client-server
+round-trips.  The batch size can be configured with the **prefetch** table
+option and is set to 50 by default.
 
 Rather than using a PLAN_TABLE to explain an Oracle query (which would require
 such a table to be created in the Oracle database), oracle_fdw uses execution
@@ -961,3 +1005,6 @@ If you have a problem or question or any kind of feedback, the preferred
 option is to open an issue on GitHub:  
 https://github.com/laurenz/oracle_fdw/issues  
 This requires a GitHub account.
+
+Commercial support is available from
+[CYBERTEC PostgreSQL International GmbH][https://www.cybertec-postgresql.com].

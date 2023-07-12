@@ -7,7 +7,7 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq"
 
-	"crypto/md5"
+	"crypto/sha256"
 
 	"fmt"
 	"log"
@@ -90,7 +90,7 @@ func createDatabases(datascopes []types.Scope) error {
 		}
 		log.Println(sql)
 
-		localUser := fmt.Sprintf(`_%x_`, md5.Sum([]byte(datascopes[k].Name+"_dymium")))
+		localUser := fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(datascopes[k].Name+"_dymium")))
 
 		sql = fmt.Sprintf("CREATE ROLE %s", localUser)
 		if _, err = db.Exec(sql); err != nil {

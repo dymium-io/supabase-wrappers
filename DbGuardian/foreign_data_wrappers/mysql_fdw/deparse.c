@@ -4,7 +4,7 @@
  * 		Query deparser for mysql_fdw
  *
  * Portions Copyright (c) 2012-2014, PostgreSQL Global Development Group
- * Portions Copyright (c) 2004-2022, EnterpriseDB Corporation.
+ * Portions Copyright (c) 2004-2023, EnterpriseDB Corporation.
  *
  * IDENTIFICATION
  * 		deparse.c
@@ -26,6 +26,7 @@
 #include "commands/defrem.h"
 #include "datatype/timestamp.h"
 #include "mysql_fdw.h"
+#include "mysql_pushability.h"
 #include "nodes/nodeFuncs.h"
 #include "nodes/plannodes.h"
 #include "optimizer/clauses.h"
@@ -44,8 +45,6 @@
 #include "utils/timestamp.h"
 #include "utils/typcache.h"
 
-
-static char *mysql_quote_identifier(const char *str, char quotechar);
 
 /*
  * Global context for foreign_expr_walker's search of an expression tree.
@@ -95,7 +94,7 @@ typedef struct deparse_expr_cxt
 								 * a base relation. */
 	StringInfo	buf;			/* output buffer to append to */
 	List	  **params_list;	/* exprs that will become remote Params */
-	bool		is_not_distinct_op;	/* True in case of IS NOT DISTINCT clause */
+	bool		is_not_distinct_op; /* True in case of IS NOT DISTINCT clause */
 } deparse_expr_cxt;
 
 #define REL_ALIAS_PREFIX	"r"
@@ -128,8 +127,6 @@ static void mysql_deparse_relabel_type(RelabelType *node,
 									   deparse_expr_cxt *context);
 static void mysql_deparse_bool_expr(BoolExpr *node, deparse_expr_cxt *context);
 static void mysql_deparse_null_test(NullTest *node, deparse_expr_cxt *context);
-static void mysql_deparse_array_expr(ArrayExpr *node,
-									 deparse_expr_cxt *context);
 static void mysql_print_remote_param(int paramindex, Oid paramtype,
 									 int32 paramtypmod,
 									 deparse_expr_cxt *context);
@@ -161,6 +158,9 @@ static Node *mysql_deparse_sort_group_clause(Index ref, List *tlist,
 static void mysql_append_orderby_clause(List *pathkeys, bool has_final_sort,
 										deparse_expr_cxt *context);
 static void mysql_append_limit_clause(deparse_expr_cxt *context);
+static void mysql_append_orderby_suffix(Expr *em_expr, const char *sortby_dir,
+										Oid sortcoltype, bool nulls_first,
+										deparse_expr_cxt *context);
 
 /*
  * Functions to construct string representation of a specific types.
@@ -214,7 +214,7 @@ mysql_deparse_relation(StringInfo buf, Relation rel)
 					 mysql_quote_identifier(relname, '`'));
 }
 
-static char *
+char *
 mysql_quote_identifier(const char *str, char quotechar)
 {
 	char	   *result = palloc(strlen(str) * 2 + 3);
@@ -457,7 +457,7 @@ mysql_deparse_insert(StringInfo buf, PlannerInfo *root, Index rtindex,
 	TupleDesc	tupdesc = RelationGetDescr(rel);
 #endif
 
-	appendStringInfo(buf, "INSERT %sINTO ", doNothing ? "IGNORE ": "");
+	appendStringInfo(buf, "INSERT %sINTO ", doNothing ? "IGNORE " : "");
 	mysql_deparse_relation(buf, rel);
 
 	if (targetAttrs)
@@ -602,11 +602,7 @@ mysql_deparse_column_ref(StringInfo buf, int varno, int varattno,
 	 * option, use attribute name.
 	 */
 	if (colname == NULL)
-#if PG_VERSION_NUM >= 110000
 		colname = get_attname(rte->relid, varattno, false);
-#else
-		colname = get_relid_attribute_name(rte->relid, varattno);
-#endif
 
 	if (qualify_col)
 		ADD_REL_QUALIFIER(buf, varno);
@@ -725,9 +721,6 @@ deparseExpr(Expr *node, deparse_expr_cxt *context)
 			break;
 		case T_NullTest:
 			mysql_deparse_null_test((NullTest *) node, context);
-			break;
-		case T_ArrayExpr:
-			mysql_deparse_array_expr((ArrayExpr *) node, context);
 			break;
 		case T_Aggref:
 			mysql_deparse_aggref((Aggref *) node, context);
@@ -1450,27 +1443,6 @@ mysql_deparse_null_test(NullTest *node, deparse_expr_cxt *context)
 }
 
 /*
- * Deparse ARRAY[...] construct.
- */
-static void
-mysql_deparse_array_expr(ArrayExpr *node, deparse_expr_cxt *context)
-{
-	StringInfo	buf = context->buf;
-	bool		first = true;
-	ListCell   *lc;
-
-	appendStringInfoString(buf, "ARRAY[");
-	foreach(lc, node->elements)
-	{
-		if (!first)
-			appendStringInfoString(buf, ", ");
-		deparseExpr(lfirst(lc), context);
-		first = false;
-	}
-	appendStringInfoChar(buf, ']');
-}
-
-/*
  * Print the representation of a parameter to be sent to the remote side.
  *
  * Note: we always label the Param's type explicitly rather than relying on
@@ -1514,8 +1486,8 @@ mysql_print_remote_placeholder(Oid paramtype, int32 paramtypmod,
  * be known to the remote server, if it's of an older version.  But keeping
  * track of that would be a huge exercise.
  */
-static bool
-is_builtin(Oid oid)
+bool
+mysql_is_builtin(Oid oid)
 {
 #if PG_VERSION_NUM >= 150000
 	return (oid < FirstGenbkiObjectId);
@@ -1670,16 +1642,7 @@ foreign_expr_walker(Node *node, foreign_glob_cxt *glob_cxt,
 			{
 				FuncExpr   *fe = (FuncExpr *) node;
 
-				/* Should not be in the join clauses of the Join-pushdown */
-				if (glob_cxt->is_remote_cond)
-					return false;
-
-				/*
-				 * If function used by the expression is not built-in, it
-				 * can't be sent to remote because it might have incompatible
-				 * semantics on remote side.
-				 */
-				if (!is_builtin(fe->funcid))
+				if (!mysql_check_remote_pushability(fe->funcid))
 					return false;
 
 				/*
@@ -1719,32 +1682,8 @@ foreign_expr_walker(Node *node, foreign_glob_cxt *glob_cxt,
 		case T_DistinctExpr:	/* struct-equivalent to OpExpr */
 			{
 				OpExpr	   *oe = (OpExpr *) node;
-				const char *operatorName = get_opname(oe->opno);
 
-				/*
-				 * Join-pushdown allows only a few operators to be pushed
-				 * down.
-				 */
-				if (glob_cxt->is_remote_cond &&
-					(!(strcmp(operatorName, "<") == 0 ||
-					   strcmp(operatorName, ">") == 0 ||
-					   strcmp(operatorName, "<=") == 0 ||
-					   strcmp(operatorName, ">=") == 0 ||
-					   strcmp(operatorName, "<>") == 0 ||
-					   strcmp(operatorName, "=") == 0 ||
-					   strcmp(operatorName, "+") == 0 ||
-					   strcmp(operatorName, "-") == 0 ||
-					   strcmp(operatorName, "*") == 0 ||
-					   strcmp(operatorName, "%") == 0 ||
-					   strcmp(operatorName, "/") == 0)))
-					return false;
-
-				/*
-				 * Similarly, only built-in operators can be sent to remote.
-				 * (If the operator is, surely its underlying function is
-				 * too.)
-				 */
-				if (!is_builtin(oe->opno))
+				if (!mysql_check_remote_pushability(oe->opno))
 					return false;
 
 				/*
@@ -1779,14 +1718,7 @@ foreign_expr_walker(Node *node, foreign_glob_cxt *glob_cxt,
 			{
 				ScalarArrayOpExpr *oe = (ScalarArrayOpExpr *) node;
 
-				/* Should not be in the join clauses of the Join-pushdown */
-				if (glob_cxt->is_remote_cond)
-					return false;
-
-				/*
-				 * Again, only built-in operators can be sent to remote.
-				 */
-				if (!is_builtin(oe->opno))
+				if (!mysql_check_remote_pushability(oe->opno))
 					return false;
 
 				/*
@@ -1868,35 +1800,6 @@ foreign_expr_walker(Node *node, foreign_glob_cxt *glob_cxt,
 				state = FDW_COLLATE_NONE;
 			}
 			break;
-		case T_ArrayExpr:
-			{
-				ArrayExpr  *a = (ArrayExpr *) node;
-
-				/* Should not be in the join clauses of the Join-pushdown */
-				if (glob_cxt->is_remote_cond)
-					return false;
-
-				/*
-				 * Recurse to input subexpressions.
-				 */
-				if (!foreign_expr_walker((Node *) a->elements,
-										 glob_cxt, &inner_cxt))
-					return false;
-
-				/*
-				 * ArrayExpr must not introduce a collation not derived from
-				 * an input foreign Var.
-				 */
-				collation = a->array_collid;
-				if (collation == InvalidOid)
-					state = FDW_COLLATE_NONE;
-				else if (inner_cxt.state == FDW_COLLATE_SAFE &&
-						 collation == inner_cxt.collation)
-					state = FDW_COLLATE_SAFE;
-				else
-					state = FDW_COLLATE_UNSAFE;
-			}
-			break;
 		case T_List:
 			{
 				List	   *l = (List *) node;
@@ -1927,7 +1830,6 @@ foreign_expr_walker(Node *node, foreign_glob_cxt *glob_cxt,
 			{
 				Aggref	   *agg = (Aggref *) node;
 				ListCell   *lc;
-				const char *func_name = get_func_name(agg->aggfnoid);
 
 				/* Not safe to pushdown when not in grouping context */
 				if (!IS_UPPER_REL(glob_cxt->foreignrel))
@@ -1937,15 +1839,7 @@ foreign_expr_walker(Node *node, foreign_glob_cxt *glob_cxt,
 				if (agg->aggsplit != AGGSPLIT_SIMPLE)
 					return false;
 
-				/* As usual, it must be shippable. */
-				if (!is_builtin(agg->aggfnoid))
-					return false;
-
-				if (!(strcmp(func_name, "min") == 0 ||
-					  strcmp(func_name, "max") == 0 ||
-					  strcmp(func_name, "sum") == 0 ||
-					  strcmp(func_name, "avg") == 0 ||
-					  strcmp(func_name, "count") == 0))
+				if (!mysql_check_remote_pushability(agg->aggfnoid))
 					return false;
 
 				/*
@@ -2022,7 +1916,7 @@ foreign_expr_walker(Node *node, foreign_glob_cxt *glob_cxt,
 	 * If result type of given expression is not built-in, it can't be sent to
 	 * remote because it might have incompatible semantics on remote side.
 	 */
-	if (check_type && !is_builtin(exprType(node)))
+	if (check_type && !mysql_is_builtin(exprType(node)))
 		return false;
 
 	/*
@@ -2501,9 +2395,13 @@ mysql_is_foreign_param(PlannerInfo *root,
 
 /*
  * mysql_append_orderby_clause
- * 		Deparse ORDER BY clause according to the given pathkeys for given
- * 		base relation. From given pathkeys expressions belonging entirely
- * 		to the given base relation are obtained and deparsed.
+ *		Deparse ORDER BY clause defined by the given pathkeys.
+ *
+ * The clause should use Vars from context->scanrel if !has_final_sort, or from
+ * context->foreignrel's targetlist if has_final_sort.
+ *
+ * We find a suitable pathkey expression (some earlier step should have
+ * verified that there is one) and deparse it.
  */
 void
 mysql_append_orderby_clause(List *pathkeys, bool has_final_sort,
@@ -2511,14 +2409,15 @@ mysql_append_orderby_clause(List *pathkeys, bool has_final_sort,
 {
 	ListCell   *lcell;
 	char	   *delim = " ";
-	RelOptInfo *baserel = context->scanrel;
 	StringInfo	buf = context->buf;
 
 	appendStringInfo(buf, " ORDER BY");
 	foreach(lcell, pathkeys)
 	{
 		PathKey    *pathkey = lfirst(lcell);
+		EquivalenceMember *em;
 		Expr	   *em_expr;
+		char	   *sortby_dir = NULL;
 
 		if (has_final_sort)
 		{
@@ -2526,32 +2425,32 @@ mysql_append_orderby_clause(List *pathkeys, bool has_final_sort,
 			 * By construction, context->foreignrel is the input relation to
 			 * the final sort.
 			 */
-			em_expr = mysql_find_em_expr_for_input_target(context->root,
-														  pathkey->pk_eclass,
-														  context->foreignrel->reltarget);
+			em = mysql_find_em_for_rel_target(context->root,
+											  pathkey->pk_eclass,
+											  context->foreignrel);
 		}
 		else
-			em_expr = mysql_find_em_expr_for_rel(pathkey->pk_eclass, baserel);
+			em = mysql_find_em_for_rel(context->root,
+									   pathkey->pk_eclass,
+									   context->scanrel);
 
-		Assert(em_expr != NULL);
+		/*
+		 * We don't expect any error here; it would mean that shippability
+		 * wasn't verified earlier.  For the same reason, we don't recheck
+		 * shippability of the sort operator.
+		 */
+		if (em == NULL)
+			elog(ERROR, "could not find pathkey item to sort");
+
+		em_expr = em->em_expr;
+
+		sortby_dir = mysql_get_sortby_direction_string(em, pathkey);
 
 		appendStringInfoString(buf, delim);
-		deparseExpr(em_expr, context);
 
-		if (pathkey->pk_nulls_first)\
-			appendStringInfoString(buf, " IS NOT NULL");
-		else
-			appendStringInfoString(buf, " IS NULL");
-
-		/* Add delimiter */
-		appendStringInfoString(buf, ", ");
-
-		deparseExpr(em_expr, context);
-
-		if (pathkey->pk_strategy == BTLessStrategyNumber)
-			appendStringInfoString(buf, " ASC");
-		else
-			appendStringInfoString(buf, " DESC");
+		mysql_append_orderby_suffix(em_expr, sortby_dir,
+									exprType((Node *) em_expr),
+									pathkey->pk_nulls_first, context);
 
 		delim = ", ";
 	}
@@ -2569,7 +2468,7 @@ mysql_append_limit_clause(deparse_expr_cxt *context)
 
 	if (root->parse->limitCount)
 	{
-		Const      *c = (Const *)  root->parse->limitOffset;
+		Const	   *c = (Const *) root->parse->limitOffset;
 
 		appendStringInfoString(buf, " LIMIT ");
 		deparseExpr((Expr *) root->parse->limitCount, context);
@@ -2595,3 +2494,64 @@ mysql_deparse_truncate_sql(StringInfo buf, Relation rel)
 	mysql_deparse_relation(buf, rel);
 }
 #endif
+
+/*
+ * mysql_append_orderby_suffix
+ * 		Append the ASC/DESC and NULLS FIRST/LAST parts of an ORDER BY clause.
+ */
+static void
+mysql_append_orderby_suffix(Expr *em_expr, const char *sortby_dir,
+							Oid sortcoltype, bool nulls_first,
+							deparse_expr_cxt *context)
+{
+	StringInfo	buf = context->buf;
+
+	Assert(sortby_dir != NULL);
+
+	deparseExpr(em_expr, context);
+
+	/*
+	 * Since MySQL doesn't have NULLS FIRST/LAST clause, we use IS NOT NULL or
+	 * IS NULL instead.
+	 */
+	if (nulls_first)
+		appendStringInfoString(buf, " IS NOT NULL");
+	else
+		appendStringInfoString(buf, " IS NULL");
+
+	/* Add delimiter */
+	appendStringInfoString(buf, ", ");
+
+	deparseExpr(em_expr, context);
+
+	/* Add the ASC/DESC */
+	appendStringInfo(buf, " %s", sortby_dir);
+}
+
+/*
+ * mysql_is_foreign_pathkey
+ *		Returns true if it's safe to push down the sort expression described by
+ *		'pathkey' to the foreign server.
+ */
+bool
+mysql_is_foreign_pathkey(PlannerInfo *root, RelOptInfo *baserel,
+						 PathKey *pathkey)
+{
+	EquivalenceMember *em = NULL;
+	EquivalenceClass *pathkey_ec = pathkey->pk_eclass;
+
+	/*
+	 * mysql_is_foreign_expr would detect volatile expressions as well, but
+	 * checking ec_has_volatile here saves some cycles.
+	 */
+	if (pathkey_ec->ec_has_volatile)
+		return false;
+
+	/* can push if a suitable EC member exists */
+	em = mysql_find_em_for_rel(root, pathkey_ec, baserel);
+
+	if (mysql_get_sortby_direction_string(em, pathkey) == NULL)
+		return false;
+
+	return true;
+}

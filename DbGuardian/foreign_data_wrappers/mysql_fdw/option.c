@@ -4,7 +4,7 @@
  * 		FDW option handling for mysql_fdw
  *
  * Portions Copyright (c) 2012-2014, PostgreSQL Global Development Group
- * Portions Copyright (c) 2004-2022, EnterpriseDB Corporation.
+ * Portions Copyright (c) 2004-2023, EnterpriseDB Corporation.
  *
  * IDENTIFICATION
  * 		option.c
@@ -65,11 +65,6 @@ static struct MySQLFdwOption valid_options[] =
 	{"ssl_ca", ForeignServerRelationId},
 	{"ssl_capath", ForeignServerRelationId},
 	{"ssl_cipher", ForeignServerRelationId},
-
-	/* Dymium */
-	{"semantics", AttributeRelationId},
-	{"action", AttributeRelationId},
-	{"redact", AttributeRelationId},
 
 	/* Sentinel */
 	{NULL, InvalidOid}

@@ -8,7 +8,7 @@ import (
 	"log"
 	"sort"
 
-	"crypto/md5"
+	"crypto/sha256"
 
 	"DbSync/types"
 )
@@ -36,7 +36,7 @@ func confUser(
 	ds := make([]udb, len(userCnf.Datascopes))
 	for k := range userCnf.Datascopes {
 		ds[k] = udb{
-			u:  fmt.Sprintf(`_%x_`, md5.Sum([]byte(userCnf.Datascopes[k]+"_dymium"))),
+			u:  fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(userCnf.Datascopes[k]+"_dymium"))),
 			db: userCnf.Datascopes[k],
 		}
 	}
@@ -128,11 +128,13 @@ func confUser(
 					if err != nil {
 						return empty, err
 					}
-					_, err = db.Exec(fmt.Sprintf(`ALTER ROLE %s IN DATABASE %s SET ROLE TO %s`,
-						PostgresEscape(userCnf.Name), a.db, a.u))
-					if err != nil {
-						return empty, err
-					}
+					/*
+						_, err = db.Exec(fmt.Sprintf(`ALTER ROLE %s IN DATABASE %s SET ROLE TO %s`,
+							PostgresEscape(userCnf.Name), a.db, a.u))
+						if err != nil {
+							return empty, err
+						}
+					*/
 					log.Printf(`GRANT %s TO %s`, a.u, PostgresEscape(userCnf.Name))
 				}
 			}

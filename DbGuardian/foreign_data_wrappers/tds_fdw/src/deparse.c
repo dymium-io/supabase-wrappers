@@ -661,10 +661,15 @@ foreign_expr_walker(Node *node,
 	return true;
 }
 
-#if (PG_VERSION_NUM >= 90600)
+#if (PG_VERSION_NUM >= 150000)
 bool is_builtin(Oid objectId)
 {
-	return (objectId < FirstBootstrapObjectId);
+        return (objectId < FirstUnpinnedObjectId);
+}
+#elif (PG_VERSION_NUM >= 90600)
+bool is_builtin(Oid objectId)
+{
+        return (objectId < FirstBootstrapObjectId);
 }
 #endif
 
@@ -704,20 +709,13 @@ static char* postgresql_type_to_tds_type(const char* postgresql_type)
 		|| strcmp(postgresql_type, "timestamp with time zone") == 0
 		|| strcmp(postgresql_type, "timestamp without time zone") == 0)
 	{
-		const char* tds_type_local = "datetime2";
-		size_t len = strlen(tds_type_local);
-		
-		tds_type = palloc(len);
-		strncpy(tds_type, tds_type_local, len);
+		tds_type = psprintf("%s", "datetime2");
 	}
 	
 	/* if no mapping defined, just copy postgresql type */
 	else
 	{
-		size_t len = strlen(postgresql_type);
-		
-		tds_type = palloc(len);
-		strncpy(tds_type, postgresql_type, len);
+		tds_type = psprintf("%s", postgresql_type);
 	}
 	
 	return tds_type;
