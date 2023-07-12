@@ -332,12 +332,12 @@ func configureDatabase(db *sql.DB,
 				case types.DH_Block:
 					continue
 				case types.DH_Redact:
-					var v string
 					if c.IsNullable {
-						v = "NULL"
+						viewDef = append(viewDef, "CAST(NULL AS "+c.Typ+") AS "+PostgresEscape(c.Name))
 					} else if strings.HasSuffix(c.Typ, "[]") {
-						v = "'{}'"
+						viewDef = append(viewDef, "CAST('{}' AS "+c.Typ+") AS "+PostgresEscape(c.Name))
 					} else {
+						var v string
 						switch {
 						case
 							c.Typ == "interval":
