@@ -13,9 +13,15 @@ pg_test = []
 
 [dependencies]
 pgx = "^0.7.0"
-aes = "^0.8.0"
 lazy_static = "^1.4.0"
+aes = "*"
 typenum = "^1.16.0"
+rand = "*"
+bloom = "*"
+once_cell = "*"
+regex = "*"
+heapless = "*"
+itertools = "*"
 
 [dev-dependencies]
 pgx-tests = "=0.7.4"
