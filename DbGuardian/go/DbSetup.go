@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"database/sql"
@@ -16,57 +17,71 @@ import (
 var obf_funcs func() []string
 var obf func(name string) (string, string)
 
+var redact_value func(t string) string
+
+func gen_redact_value_func() {
+	redactDefs := []string{`^interval                                 => '0 days'`,
+		`^(char|var|text|bpchar)                                  => ''`,
+		`^(bigint|int|smallint|double|float|real|decimal|numeric) => 0`,
+		//
+		`^bool                                                    => false`,
+		`^xml                                                     => ''`,
+		`bytea                                                    => E'\x'`,
+		//
+		`^jsonb?                                                  => '{}'`,
+		`^uuid                                                    => '00000000-0000-0000-0000-000000000000'`,
+		//
+		`^timestamp.*with +time *zone                             => '2000-01-01 00:00:00 UTC'`,
+		`^timestamp                                               => '0001-01-01 00:00:00'`,
+		//
+		`^time.*with +time *zone                                  => '00:00:00 UTC'`,
+		`^time                                                    => '00:00:00'`,
+		//
+		`^date                                                    => '0001-01-01'`,
+		`^money                                                   => 0`,
+		//
+		`^point                                                   => '(0,0)'`,
+		`^line                                                    => '(0,0,0)'`,
+		//
+		`^(lseg|box|path)                                         => '((0,0), (1,1))'`,
+		`^polygon                                                 => '((0,0), (0,1), (1,0))'`,
+		//
+		`^circle                                                  => '<(0,0), 1>'`,
+		`^(inet|cidr)                                             => '0.0.0.0/0'`,
+		//
+		`^macaddr8                                                => '00:00:00:00:00:00:00:00'`,
+		`^macaddr                                                 => '00:00:00:00:00:00'`,
+		//
+		`^bit                                                     => B'0'`,
+	}
+	spl := regexp.MustCompile(` *=> *`)
+	type regexpMap struct {
+		r *regexp.Regexp
+		t string
+	}
+	redacts := make([]regexpMap, 0, len(redactDefs))
+	for _, r := range redactDefs {
+		ri := spl.Split(r, 2)
+		redacts = append(redacts,
+			regexpMap{
+				r: regexp.MustCompile(`(?i:` + ri[0] + `)`),
+				t: string(ri[1]),
+			})
+	}
+	redact_value = func(t string) string {
+		for _, ri := range redacts {
+			if ri.r.MatchString(t) {
+				return ri.t
+			}
+		}
+		return `''`
+	}
+}
+
 func init() {
-	on := func(n string) string {
-		return fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(n)))
-	}
-	type oT struct {
-		n string
-		k int
-	}
-	lst := []oT{
-		{
-			n: "obfuscate_text",
-			k: 0x226193b1,
-		},
-		{
-			n: "obfuscate_text_array",
-			k: 0xf8bfced0,
-		},
-		{
-			n: "obfuscate_uuid",
-			k: 0x4b0a02b,
-		},
-		{
-			n: "obfuscate_uuid_array",
-			k: 0xced64e86,
-		},
-	}
-	type obfT struct {
-		n string
-		k string
-	}
-	obfS := make(map[string]obfT, len(lst))
-	for _, o := range lst {
-		obfS[o.n] = obfT{
-			n: on(o.n),
-			k: fmt.Sprintf("x'%x'::int", o.k),
-		}
-	}
-	obf = func(name string) (string, string) {
-		o, ok := obfS[name]
-		if !ok {
-			panic(fmt.Sprintf("function [obf] is called with wrong argument [%s]", name))
-		}
-		return o.n, o.k
-	}
-	obf_funcs = func() []string {
-		r := make([]string, 0, len(lst))
-		for _, o := range lst {
-			r = append(r, obfS[o.n].n)
-		}
-		return r
-	}
+	gen_obf_func()
+	gen_redact_value_func()
+
 }
 
 func extensionName(connectionType types.ConnectionType) (string, error) {
@@ -328,78 +343,29 @@ func configureDatabase(db *sql.DB,
 			hiddenTblCols, viewDef := make([]string, 0, len(t.Columns)), make([]string, 0, len(t.Columns))
 			for k := range t.Columns {
 				c := &t.Columns[k]
+				{
+					t := c.Typ
+					if c.Semantics == "UNSUPPORTED" {
+						t = "bytea"
+					}
+					v := PostgresEscape(c.Name) + " " + t
+					if !c.IsNullable {
+						v += " NOT NULL"
+					}
+					hiddenTblCols = append(hiddenTblCols, "  "+v)
+				}
 				switch c.Action {
 				case types.DH_Block:
-					continue
 				case types.DH_Redact:
 					if c.IsNullable {
 						viewDef = append(viewDef, "CAST(NULL AS "+c.Typ+") AS "+PostgresEscape(c.Name))
 					} else if strings.HasSuffix(c.Typ, "[]") {
 						viewDef = append(viewDef, "CAST('{}' AS "+c.Typ+") AS "+PostgresEscape(c.Name))
 					} else {
-						var v string
-						switch {
-						case
-							c.Typ == "interval":
-							v = "'0 days'"
-						case
-							strings.HasPrefix(c.Typ, "char"),
-							strings.HasPrefix(c.Typ, "var"),
-							c.Typ == "text",
-							c.Typ == "bpchar":
-							v = "'{}'"
-						case
-							c.Typ == "bigint",
-							strings.HasPrefix(c.Typ, "double"),
-							strings.HasPrefix(c.Typ, "int"),
-							strings.HasPrefix(c.Typ, "numeric"),
-							c.Typ == "real",
-							c.Typ == "smallint",
-							strings.HasPrefix(c.Typ, "float"),
-							strings.HasPrefix(c.Typ, "decimal"):
-							v = "0"
-						case
-							strings.HasPrefix(c.Typ, "bool"):
-							v = "false"
-						case
-							c.Typ == "xml":
-							v = "''"
-						case
-							c.Typ == "bytea":
-							v = "E'\\x'"
-						case
-							c.Typ == "json", c.Typ == "jsonb":
-							v = "'{}'"
-						case
-							c.Typ == "uuid":
-							v = "'00000000-0000-0000-0000-000000000000'"
-						case
-							strings.HasPrefix(c.Typ, "timestamp"):
-							if strings.HasSuffix(c.Typ, "with timezone") || strings.HasSuffix(c.Typ, "with time zone") {
-								v = "'2000-01-01 00:00:00 UTC'"
-							} else {
-								v = "'0001-01-01 00:00:00'"
-							}
-						case
-							strings.HasPrefix(c.Typ, "time"):
-							if strings.HasSuffix(c.Typ, "with timezone") || strings.HasSuffix(c.Typ, "with time zone") {
-								v = "'00:00:00 UTC'"
-							} else {
-								v = "'00:00:00'"
-							}
-						case
-							c.Typ == "date":
-							v = "'0001-01-01'"
-						}
-						viewDef = append(viewDef, "CAST("+v+" AS "+c.Typ+") AS "+PostgresEscape(c.Name))
+						viewDef = append(viewDef, "CAST("+redact_value(c.Typ)+" AS "+c.Typ+") AS "+PostgresEscape(c.Name))
 					}
 				case types.DH_Obfuscate:
-					v := PostgresEscape(c.Name) + " " + c.Typ
-					if !c.IsNullable {
-						v += " NOT NULL"
-					}
-					hiddenTblCols = append(hiddenTblCols, "  "+v)
-					// viewDef = append(viewDef,"    obfuscate("+PostgresEscape(c.Name)+")")
+					var v string
 					if strings.HasSuffix(c.Typ, "[]") {
 						switch {
 						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
@@ -437,11 +403,6 @@ func configureDatabase(db *sql.DB,
 					}
 					viewDef = append(viewDef, v)
 				case types.DH_Allow:
-					v := PostgresEscape(c.Name) + " " + c.Typ
-					if !c.IsNullable {
-						v += " NOT NULL"
-					}
-					hiddenTblCols = append(hiddenTblCols, "  "+v)
 					viewDef = append(viewDef, PostgresEscape(c.Name))
 				}
 			}
@@ -498,4 +459,57 @@ func esc(str string) string {
 		buf.WriteRune(char)
 	}
 	return buf.String()
+}
+
+func gen_obf_func() {
+	on := func(n string) string {
+		return fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(n)))
+	}
+	type oT struct {
+		n string
+		k int
+	}
+	lst := []oT{
+		{
+			n: "obfuscate_text",
+			k: 0x226193b1,
+		},
+		{
+			n: "obfuscate_text_array",
+			k: 0xf8bfced0,
+		},
+		{
+			n: "obfuscate_uuid",
+			k: 0x4b0a02b,
+		},
+		{
+			n: "obfuscate_uuid_array",
+			k: 0xced64e86,
+		},
+	}
+	type obfT struct {
+		n string
+		k string
+	}
+	obfS := make(map[string]obfT, len(lst))
+	for _, o := range lst {
+		obfS[o.n] = obfT{
+			n: on(o.n),
+			k: fmt.Sprintf("x'%x'::int", o.k),
+		}
+	}
+	obf = func(name string) (string, string) {
+		o, ok := obfS[name]
+		if !ok {
+			panic(fmt.Sprintf("function [obf] is called with wrong argument [%s]", name))
+		}
+		return o.n, o.k
+	}
+	obf_funcs = func() []string {
+		r := make([]string, 0, len(lst))
+		for _, o := range lst {
+			r = append(r, obfS[o.n].n)
+		}
+		return r
+	}
 }
