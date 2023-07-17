@@ -378,7 +378,7 @@ func configureDatabase(db *sql.DB,
 								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
 						case strings.HasPrefix(c.Typ, "uuid"):
 							n, k := obf("obfuscate_uuid_array")
-							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
+							v = fmt.Sprintf("_dymium.%s(%s,%s) AS %s",
 								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
 						default:
 							panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
@@ -395,7 +395,7 @@ func configureDatabase(db *sql.DB,
 								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
 						case strings.HasPrefix(c.Typ, "uuid"):
 							n, k := obf("obfuscate_uuid")
-							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
+							v = fmt.Sprintf("_dymium.%s(%s,%s) AS %s",
 								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
 						default:
 							panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
