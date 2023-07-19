@@ -1,9 +1,11 @@
 package main
 
 import (
+	"dymium.com/dymium/log"
+
 	"context"
 	"fmt"
-	"log"
+	//"log"
 	"regexp"
 	"strings"
 
@@ -94,6 +96,8 @@ func extensionName(connectionType types.ConnectionType) (string, error) {
 		return "tds_fdw", nil
 	case types.CT_OracleDB:
 		return "oracle_fdw", nil
+	case types.CT_DB2:
+		return "db2_fdw", nil
 	}
 	return "", fmt.Errorf("Extension %v is not supported yet", connectionType)
 }
@@ -166,6 +170,21 @@ func options(connectionType types.ConnectionType) iOptions {
 					esc(remoteSchema), esc(remoteTable))
 			},
 		}
+	case types.CT_DB2:
+		return iOptions{
+			server: func(host string, port int, dbname string) string {
+				return fmt.Sprintf("dbserver 'Driver={Db2};HOSTNAME=%s;PORT=%d;DATABASE=%s;'",
+					esc(host), port, strings.ToUpper(dbname))
+			},
+			userMapping: func(user, password string) string {
+				return fmt.Sprintf("user '%s', password '%s'",
+					esc(user), esc(password))
+			},
+			table: func(remoteSchema, remoteTable string) string {
+				return fmt.Sprintf("schema '%s', table '%s'",
+					esc(remoteSchema), esc(remoteTable))
+			},
+		}
 	}
 	panic("impossible")
 }
@@ -176,7 +195,7 @@ func configureDatabase(db *sql.DB,
 	credentials map[string]types.Credential,
 	createDymiumTables bool) error {
 
-	// log.Printf("configureDatabase: datascope=%+v connections=%+v\n",datascope,connections)
+	log.Infof("configureDatabase: datascope=%+v connections=%+v\n", datascope, connections)
 
 	localUser := fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(datascope.Name+"_dymium")))
 
@@ -226,7 +245,7 @@ func configureDatabase(db *sql.DB,
 	}
 
 	exec := func(sql string) error {
-		log.Println(sql)
+		log.Infof("exec: %s\n", sql)
 		if _, err := tx.ExecContext(ctx, sql); err != nil {
 			return rollback(err, "["+sql+"] failed")
 		}

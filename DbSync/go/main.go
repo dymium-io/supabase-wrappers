@@ -1,6 +1,8 @@
 package main
 
 import (
+	"dymium.com/dymium/log"
+
 	"github.com/aws/aws-lambda-go/lambda"
 
 	"database/sql"
@@ -369,5 +371,6 @@ func AESdecrypt(ciphertext []byte, keyhex string) ([]byte, error) {
 }
 
 func main() {
+	log.Init("DbSync")
 	lambda.Start(LambdaHandler)
 }

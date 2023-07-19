@@ -94,6 +94,9 @@ func extensionName(connectionType types.ConnectionType) (string, error) {
 		return "tds_fdw", nil
 	case types.CT_OracleDB:
 		return "oracle_fdw", nil
+	case types.CT_DB2:
+		return "db2_fdw", nil
+
 	}
 	return "", fmt.Errorf("Extension %v is not supported yet", connectionType)
 }
@@ -166,6 +169,22 @@ func options(connectionType types.ConnectionType) iOptions {
 					esc(remoteSchema), esc(remoteTable))
 			},
 		}
+	case types.CT_DB2:
+		return iOptions{
+			server: func(host string, port int, dbname string) string {
+				return fmt.Sprintf("dbserver 'Driver={Db2};Hostname=%s;Port=%d;Protocol=TCPIP;Database=%s;'",
+					esc(host), port, strings.ToUpper(dbname))
+			},
+			userMapping: func(user, password string) string {
+				return fmt.Sprintf("user '%s', password '%s'",
+					esc(user), esc(password))
+			},
+			table: func(remoteSchema, remoteTable string) string {
+				return fmt.Sprintf("schema '%s', table '%s'",
+					esc(remoteSchema), esc(remoteTable))
+			},
+		}
+
 	}
 	panic("impossible")
 }

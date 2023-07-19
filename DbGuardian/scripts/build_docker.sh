@@ -24,7 +24,7 @@ retval=$?
 	exit $retval
 }
 
-fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw)
+fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)
 (
 	cd $script_d/../foreign_data_wrappers
 	for f in ${fdws[@]}; do

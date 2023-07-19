@@ -1,6 +1,7 @@
 package main
 
 import (
+	"dymium.com/dymium/log"
 	"github.com/aws/aws-lambda-go/lambda"
 
 	"DbAnalyzer/types"
@@ -20,6 +21,8 @@ func dbAnalyzer(dt types.ConnectionType) DA {
 		da = &SqlServer{}
 	case types.CT_OracleDB:
 		da = &OracleDB{}
+	case types.CT_DB2:
+		da = &DB2{}
 	}
 	return da
 }
@@ -40,6 +43,7 @@ func init() {
 }
 
 func main() {
+	log.Init("DbAnalyzer")
 	lambda.Start(LambdaHandler)
 }
 

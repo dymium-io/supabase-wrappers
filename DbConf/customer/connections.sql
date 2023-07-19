@@ -66,3 +66,9 @@ ALTER TABLE connections ADD CONSTRAINT tunnelid_fk FOREIGN KEY (tunnel_id) REFER
 -- description: "Fix address length",
 -- requires: ["customer/connections-ftkeys"];
 ALTER TABLE connections ALTER COLUMN address TYPE varchar (253);
+
+-- #!migration
+-- name: "customer/connections-source-type-add-DB2",
+-- description: "Add DB2 to source_type ENUM",
+-- requires: ["customer/connections-source-type"];
+ALTER TYPE source_type ADD VALUE 'DB2';

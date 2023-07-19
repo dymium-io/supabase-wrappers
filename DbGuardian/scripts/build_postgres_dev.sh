@@ -28,6 +28,10 @@ for f in ${instantclients[@]}; do
 	unzip ${setup_d}/oracle/$f
 done
 
+#DB2 libs
+cp ${setup_d}/db2/v11.5.8_linuxx64_rtcl.tar.gz ${build_d}
+unzip ${setup_d}/db2/db2_home.zip
+
 PostgresDev=$(docker images postgres-dev -q)
 [ -z "$PostgresDev" ] || docker rmi -f "$PostgresDev"
 
@@ -42,7 +46,10 @@ RUN apt-get update &&            \
       build-essential            \
       postgresql-14              \
       postgresql-server-dev-all  \
+      unixodbc unixodbc-dev      \
+      odbc-postgresql            \
       libmariadb3 libmariadb-dev \
+      freetds-bin                \
       freetds-dev                \
       libaio1                    \
       curl                       \
@@ -59,6 +66,37 @@ RUN echo /opt/oracle/${instantclient_version} > /etc/ld.so.conf.d/oracle-instant
     ldconfig
 
 ENV ORACLE_HOME=/opt/oracle/${instantclient_version}
+
+RUN mkdir -p /var/lib/postgresql/db2rtcl
+COPY v11.5.8_linuxx64_rtcl.tar.gz /var/lib/postgresql/db2rtcl
+RUN (cd /var/lib/postgresql/db2rtcl; tar xvf v11.5.8_linuxx64_rtcl.tar.gz)
+
+USER postgres
+WORKDIR /var/lib/postgresql
+RUN (cd /var/lib/postgresql/db2rtcl/rtcl;   ./db2_install -y -f sysreq)
+
+USER root
+WORKDIR /
+RUN rm -rf /var/lib/postgresql/db2rtcl/rtcl
+
+ENV CLASSPATH="/var/lib/postgresql/sqllib/java/db2java.zip:/var/lib/postgresql/sqllib/function:/var/lib/postgresql/sqllib/java/db2jcc_license_cu.jar:/var/lib/postgresql/sqllib/tools/clpplus.jar:/var/lib/postgresql/sqllib/tools/jline-0.9.93.jar:/var/lib/postgresql/sqllib/java/db2jcc4.jar:/var/lib/postgresql/sqllib/java/db2jcc_license_cisuz.jar:."
+ENV DB2DIR="/var/lib/postgresql/sqllib"
+ENV DB2INSTANCE="postgres"
+ENV DB2LIB="/var/lib/postgresql/sqllib/lib"
+#ENV DB2_HOME="/var/lib/postgresql/sqllib"
+ENV DB2_NET_CLIENT_PATH=""
+ENV IBM_DB_DIR="/var/lib/postgresql/sqllib"
+ENV IBM_DB_HOME="/var/lib/postgresql/sqllib"
+ENV IBM_DB_INCLUDE="/var/lib/postgresql/sqllib/include"
+ENV IBM_DB_LIB="/var/lib/postgresql/sqllib/lib"
+ENV INSTHOME="/var/lib/postgresql"
+ENV INST_DIR="/var/lib/postgresql/sqllib"
+ENV LD_LIBRARY_PATH="/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib64:/var/lib/postgresql/sqllib/lib64/gskit:/var/lib/postgresql/sqllib/lib32"
+#ENV PATH="/usr/local/bin:/usr/bin:/bin:/var/lib/postgresql/sqllib/bin:/var/lib/postgresql/sqllib/adm:/var/lib/postgresql/sqllib/misc:/var/lib/postgresql/sqllib/pd:/var/lib/postgresql/sqllib/gskit/bin"
+
+COPY ./db2_home /opt/ibm/db2/V11.5
+ENV DB2_HOME=/opt/ibm/db2/V11.5
+
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 RUN cargo install cargo-pgx && cargo pgx init --pg14 /usr/bin/pg_config

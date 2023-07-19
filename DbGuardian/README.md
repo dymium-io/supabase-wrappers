@@ -17,3 +17,8 @@ and then:
 > git subtree add --prefix DbGuardian/foreign_data_wrappers/oracle_fdw oracle_fdw master --squash
 and then:
 > git subtree pull --prefix DbGuardian/foreign_data_wrappers/oracle_fdw oracle_fdw master --squash 
+
+> git remote add -f db2_fdw https://github.com/wolfgangbrandl/db2_fdw.git
+> git subtree add --prefix DbGuardian/foreign_data_wrappers/db2_fdw db2_fdw master --squash
+and then:
+> git subtree pull --prefix DbGuardian/foreign_data_wrappers/db2_fdw db2_fdw master --squash 
