@@ -36,6 +36,7 @@ cp ${setup_d}/db2/v11.5.4_linuxx64_odbc_cli.tar.gz ${build_d}
 echo Building DbAnalyzer...
 docker run -it --rm \
                    -v ${script_d}/../../:/src \
+                   -v ${script_d}/.go/:/go/ \
                    db-dev \
                    /bin/sh -c \
 		"cd /src/DbAnalyzer/go; GOOS=linux GOARCH=amd64 \

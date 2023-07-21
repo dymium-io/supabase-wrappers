@@ -21,7 +21,8 @@ var redact_value func(t string) string
 
 func gen_redact_value_func() {
 	redactDefs := []string{`^interval                                 => '0 days'`,
-		`^(char|var|text|bpchar)                                  => ''`,
+		`^(char|var|bpchar).*\((1|2)\)                            => ''`,
+		`^(char|var|text|bpchar)                                  => 'xxx'`,
 		`^(bigint|int|smallint|double|float|real|decimal|numeric) => 0`,
 		//
 		`^bool                                                    => false`,
