@@ -159,7 +159,7 @@ func options(connectionType types.ConnectionType) iOptions {
 		return iOptions{
 			server: func(host string, port int, dbname string) string {
 				return fmt.Sprintf("dbserver '//%s:%d/%s'",
-					host, port, strings.ToUpper(dbname))
+					esc(host), port, strings.ToUpper(dbname))
 			},
 			userMapping: func(user, password string) string {
 				return fmt.Sprintf("user '%s', password '%s'",
@@ -174,7 +174,7 @@ func options(connectionType types.ConnectionType) iOptions {
 		return iOptions{
 			server: func(host string, port int, dbname string) string {
 				return fmt.Sprintf("dbserver 'Driver={Db2};Hostname=%s;Port=%d;Protocol=TCPIP;Database=%s;'",
-					host, port, strings.ToUpper(dbname))
+					esc(host), port, strings.ToUpper(dbname))
 			},
 			userMapping: func(user, password string) string {
 				return fmt.Sprintf("user '%s', password '%s'",
