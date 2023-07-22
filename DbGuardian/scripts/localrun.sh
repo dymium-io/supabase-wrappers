@@ -23,7 +23,7 @@ SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE:-jsonmessage}
 }
 
 set -x
-docker run --rm --name ${CUSTOMER}.guardian.local \
+docker run --rm --name ${CUSTOMER}.guardian.local --add-host=host.docker.internal:host-gateway \
 	--network dymium \
 	-p ${PORT}:5432 \
 	-e PLAIN_OUTPUT="$PLAIN_OUTPUT" \
