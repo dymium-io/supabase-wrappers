@@ -49,7 +49,7 @@ fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)
 		   -v $PWD:/obfuscator \
 		   postgres-dev \
 		   /bin/sh -c \
-		   "cd /obfuscator; ( cargo pgx package --out-dir .  2>&1 | grep -v jemalloc ) && \
+		   "cd /obfuscator; ( cargo pgx package --out-dir .  2>&1 | sed -u '/jemalloc/d' ) && \
                     tar czv --owner=root --group=root -f obfuscator.tar.gz usr; rm -rf usr"
 )
 

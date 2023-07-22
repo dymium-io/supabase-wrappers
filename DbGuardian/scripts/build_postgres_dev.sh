@@ -99,6 +99,7 @@ ENV DB2_HOME=/opt/ibm/db2/V11.5
 
 
 ENV PATH="/root/.cargo/bin:${PATH}"
-RUN cargo install cargo-pgx && cargo pgx init --pg14 /usr/bin/pg_config
+RUN cargo install cargo-pgx 2>&1 | sed -u '/jemalloc/d'
+RUN cargo pgx init --pg14 /usr/bin/pg_config 2>&1 | sed -u '/jemalloc/d'
 
 EOF

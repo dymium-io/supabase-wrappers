@@ -34,13 +34,19 @@ unzip ${setup_d}/db2/db2_home.zip
 cp ${setup_d}/db2/v11.5.4_linuxx64_odbc_cli.tar.gz ${build_d}
 
 echo Building DbAnalyzer...
+/usr/bin/tar czf DbAnalyzer.tgz -C ../../.. DbAnalyzer/go
+/usr/bin/tar czf libs.tgz -C ../../.. libs/go
 docker run -it --rm \
-                   -v ${script_d}/../../:/src \
-                   -v ${script_d}/.go/:/go/ \
-                   db-dev \
-                   /bin/sh -c \
-		"cd /src/DbAnalyzer/go; GOOS=linux GOARCH=amd64 \
-                  go build -buildvcs=false -a -ldflags '-w ' -o ../scripts/BLD/main"
+                   -v ./:/src      \
+                   -v $script_d/.go/:/go/ \
+                   db-dev          \
+                   /bin/sh -c      \
+		   "cd /src && \
+                    tar --warning=no-unknown-keyword -xf DbAnalyzer.tgz && \
+                    tar --warning=no-unknown-keyword -xf libs.tgz && \
+                    cd DbAnalyzer/go && \
+                    GOOS=linux GOARCH=amd64 \
+                    go build -buildvcs=false -a -ldflags '-w ' -o /src/main"
 
 retval=$?
 [ $retval -ne 0 ] && {
@@ -71,9 +77,6 @@ RUN echo /opt/oracle/${instantclient_version} > /etc/ld.so.conf.d/oracle-instant
 
 ENV ORACLE_HOME=/opt/oracle/${instantclient_version}
 
-#RUN yum -y install tar
-#RUN yum -y install gzip
-
 RUN mkdir /db2_cli_odbc_driver
 COPY ./v11.5.4_linuxx64_odbc_cli.tar.gz /db2_cli_odbc_driver
 RUN cd /db2_cli_odbc_driver && tar xvf v11.5.4_linuxx64_odbc_cli.tar.gz
@@ -85,11 +88,9 @@ ENV LD_LIBRARY_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:/opt/ibm/db2/V1
 ENV LIBPATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:$LIBPATH"
 ENV PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/include:$PATH"
 
-#RUN yum -y install unixODBC  libxml2
-#RUN yum -y install freetds
-#RUN yum -y install postgresql
-RUN apt-get update && apt-get install -y unixodbc unixodbc-dev libxml2
-
+RUN apt-get --allow-releaseinfo-change update && \
+    apt-get update && \
+    apt-get install -y unixodbc unixodbc-dev libxml2
 
 ADD https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie /usr/bin/aws-lambda-rie
 RUN chmod 755 /usr/bin/aws-lambda-rie /entry.sh /main
