@@ -278,8 +278,7 @@ func (da DB2) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Tabl
 			t = "bytea"
 			sample[k] = dtk(false)
 		case "xml":
-			//t = "xml"
-			t = "text"
+			t = "xml"
 			possibleActions = blocked
 			sem = utils.Unsupported
 			sample[k] = dtk(false, sem)
