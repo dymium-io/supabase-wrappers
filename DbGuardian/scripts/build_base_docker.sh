@@ -43,7 +43,7 @@ done
 
 #DB2 libs
 cp ${setup_d}/db2/v11.5.8_linuxx64_rtcl.tar.gz .
-cp ${setup_d}/db2/odbcinst.ini .
+#cp ${setup_d}/db2/odbcinst.ini .
 cp ${setup_d}/db2/v11.5.4_linuxx64_odbc_cli.tar.gz .
 
 
@@ -60,8 +60,6 @@ RUN apt update &&                \
     libmariadb3 libmariadb-dev   \
     libmysqlclient21             \
     freetds-bin                  \
-    unixodbc unixodbc-dev        \
-    odbc-postgresql              \
     ksh unzip                    \
     libaio1 &&                   \
   ln -s /usr/lib/x86_64-linux-gnu/libmysqlclient.so.21 /usr/lib/x86_64-linux-gnu/libmysqlclient.so && \

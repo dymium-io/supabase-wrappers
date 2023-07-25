@@ -30,6 +30,7 @@ done
 
 #DB2 libs
 unzip ${setup_d}/db2/db2_home.zip
+#cp db2_home ${build_d}
 cp ${setup_d}/db2/v11.5.4_linuxx64_odbc_cli.tar.gz ${build_d}
 
 DbDev=$(docker images db-dev -q)
@@ -69,10 +70,16 @@ RUN mkdir /db2_cli_odbc_driver
 COPY ./v11.5.4_linuxx64_odbc_cli.tar.gz /db2_cli_odbc_driver
 RUN cd /db2_cli_odbc_driver && tar xvf v11.5.4_linuxx64_odbc_cli.tar.gz
 
+COPY ./db2_home/include /db2_cli_odbc_driver/odbc_cli/clidriver/include
 
 ENV DB2_CLI_DRIVER_INSTALL_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver"
 ENV LD_LIBRARY_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:/opt/ibm/db2/V11.5/lib64:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 ENV LIBPATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:$LIBPATH"
+ENV IBM_DB_HOME="/db2_cli_odbc_driver/odbc_cli/clidriver"
+ENV CGO_CFLAGS="-I/db2_cli_odbc_driver/odbc_cli/clidriver/include"
+ENV CGO_LDFLAGS="-L/db2_cli_odbc_driver/odbc_cli/clidriver/lib"
+
+
 #ENV PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/include:$PATH"
 
 

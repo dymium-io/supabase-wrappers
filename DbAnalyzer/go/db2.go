@@ -6,8 +6,8 @@ import (
 	"DbAnalyzer/utils"
 	"dymium.com/dymium/log"
 	"fmt"
-	_ "github.com/alexbrainman/odbc"
-	//_ "github.com/ibmdb/go_ibm_db"
+	//_ "github.com/alexbrainman/odbc"
+	_ "github.com/ibmdb/go_ibm_db"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -26,20 +26,20 @@ func (da *DB2) Close() {
 }
 
 func (da *DB2) Connect(c *types.ConnectionParams) error {
-	db2conn := fmt.Sprintf("HOSTNAME=%s;PORT=%d;DATABASE=%s;UID=%s;PWD=%s;PROTOCOL=TCPIP;Driver=libdb2.so",
+	db2conn := fmt.Sprintf("HOSTNAME=%s;PORT=%d;DATABASE=%s;UID=%s;PWD=%s;PROTOCOL=TCPIP;Driver=/var/lib/postgresql/sqllib/lib64/libdb2o.so",
 		c.Address, c.Port, c.Database, c.User, c.Password)
 
 	if c.Tls {
 		//TODO: DB2 SSL-based auth, we might have to use a connection string with additional parameters: SSLClientKeystoredb and SSLClientKeystash
 		db2conn = fmt.Sprintf("%s;Security=SSL", db2conn)
 	}
-	db, err := sqlx.Open("odbc", db2conn)
+	db, err := sqlx.Open("go_ibm_db", db2conn)
 	if err != nil {
-		log.Errorf("cannot connect to ODBC driver, error: [%+v]", err)
+		log.Errorf("cannot connect to go_ibm_db driver, error: [%+v]", err)
 		return err
 	}
 	if err := db.Ping(); err != nil {
-		log.Errorf("cannot ping ODBC driver, error: [%+v]", err)
+		log.Errorf("cannot ping go_ibm_db driver, error: [%+v]", err)
 		return err
 	}
 

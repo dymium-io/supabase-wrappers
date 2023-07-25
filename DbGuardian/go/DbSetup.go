@@ -173,7 +173,7 @@ func options(connectionType types.ConnectionType) iOptions {
 	case types.CT_DB2:
 		return iOptions{
 			server: func(host string, port int, dbname string) string {
-				return fmt.Sprintf("dbserver 'Driver={Db2};Hostname=%s;Port=%d;Protocol=TCPIP;Database=%s;'",
+				return fmt.Sprintf("dbserver 'Driver=/var/lib/postgresql/sqllib/lib64/libdb2o.so;Hostname=%s;Port=%d;Protocol=TCPIP;Database=%s;'",
 					esc(host), port, strings.ToUpper(dbname))
 			},
 			userMapping: func(user, password string) string {

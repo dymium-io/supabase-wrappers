@@ -5,10 +5,10 @@ go 1.20
 require (
 	aws v0.0.0-00010101000000-000000000000
 	dymium.com/dymium/log v0.0.0-00010101000000-000000000000
-	github.com/alexbrainman/odbc v0.0.0-20211220213544-9c9a2e61c5e2
 	github.com/aws/aws-lambda-go v1.41.0
 	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/go-sql-driver/mysql v1.7.1
+	github.com/ibmdb/go_ibm_db v0.4.4
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.9
 	github.com/sijms/go-ora/v2 v2.7.5
@@ -26,7 +26,6 @@ require (
 	github.com/smartystreets/go-aws-auth v0.0.0-20180515143844-0c1422d1fdb9 // indirect
 	github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
 	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
 )
 
 replace aws => ../../libs/go/aws

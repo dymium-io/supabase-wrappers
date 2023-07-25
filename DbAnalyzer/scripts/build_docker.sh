@@ -44,7 +44,7 @@ docker run -it --rm \
 		   "cd /src && \
                     tar --warning=no-unknown-keyword -xf DbAnalyzer.tgz && \
                     tar --warning=no-unknown-keyword -xf libs.tgz && \
-                    cd DbAnalyzer/go && \
+                    cd DbAnalyzer/go &&\
                     GOOS=linux GOARCH=amd64 \
                     go build -buildvcs=false -a -ldflags '-w ' -o /src/main"
 
