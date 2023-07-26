@@ -5,7 +5,6 @@ import (
 
 	"context"
 	"fmt"
-	//"log"
 	"regexp"
 	"strings"
 
@@ -99,6 +98,7 @@ func extensionName(connectionType types.ConnectionType) (string, error) {
 		return "oracle_fdw", nil
 	case types.CT_DB2:
 		return "db2_fdw", nil
+
 	}
 	return "", fmt.Errorf("Extension %v is not supported yet", connectionType)
 }
@@ -174,7 +174,7 @@ func options(connectionType types.ConnectionType) iOptions {
 	case types.CT_DB2:
 		return iOptions{
 			server: func(host string, port int, dbname string) string {
-				return fmt.Sprintf("dbserver 'Driver=/var/lib/postgresql/sqllib/lib64/libdb2o.so;HOSTNAME=%s;PORT=%d;DATABASE=%s;'",
+				return fmt.Sprintf("dbserver 'Driver=/var/lib/postgresql/sqllib/lib64/libdb2o.so;Hostname=%s;Port=%d;Protocol=TCPIP;Database=%s;'",
 					esc(host), port, strings.ToUpper(dbname))
 			},
 			userMapping: func(user, password string) string {
@@ -186,6 +186,7 @@ func options(connectionType types.ConnectionType) iOptions {
 					esc(remoteSchema), esc(remoteTable))
 			},
 		}
+
 	}
 	panic("impossible")
 }
@@ -246,7 +247,7 @@ func configureDatabase(db *sql.DB,
 	}
 
 	exec := func(sql string) error {
-		log.Infof("exec: %s\n", sql)
+		log.Infof(sql)
 		if _, err := tx.ExecContext(ctx, sql); err != nil {
 			return rollback(err, "["+sql+"] failed")
 		}

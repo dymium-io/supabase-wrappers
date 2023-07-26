@@ -64,8 +64,7 @@ DbAnalyzer=$(docker images db-analyzer -q)
 
 
 cat <<EOF | docker build --platform linux/amd64 --compress --label "git.branch=$(git branch --show-current)" --label "git.commit=$(git rev-parse HEAD)" -t db-analyzer -f - .
-#FROM public.ecr.aws/lambda/provided:al2
-FROM debian:buster
+FROM public.ecr.aws/lambda/provided:al2
 
 COPY main entry.sh /
 
@@ -77,20 +76,15 @@ RUN echo /opt/oracle/${instantclient_version} > /etc/ld.so.conf.d/oracle-instant
 
 ENV ORACLE_HOME=/opt/oracle/${instantclient_version}
 
+RUN yum install -y tar gzip pam && \
+    yum clean all
+
 RUN mkdir /db2_cli_odbc_driver
 COPY ./v11.5.4_linuxx64_odbc_cli.tar.gz /db2_cli_odbc_driver
 RUN cd /db2_cli_odbc_driver && tar xvf v11.5.4_linuxx64_odbc_cli.tar.gz
 
-COPY ./db2_home /opt/ibm/db2/V11.5
-ENV DB2_HOME=/opt/ibm/db2/V11.5
-ENV DB2_CLI_DRIVER_INSTALL_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver"
-ENV LD_LIBRARY_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:/opt/ibm/db2/V11.5/lib64:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+ENV LD_LIBRARY_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 ENV LIBPATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:$LIBPATH"
-ENV PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/include:$PATH"
-
-RUN apt-get --allow-releaseinfo-change update && \
-    apt-get update && \
-    apt-get install -y unixodbc unixodbc-dev libxml2
 
 ADD https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie /usr/bin/aws-lambda-rie
 RUN chmod 755 /usr/bin/aws-lambda-rie /entry.sh /main

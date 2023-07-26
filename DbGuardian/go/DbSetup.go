@@ -1,9 +1,10 @@
 package main
 
 import (
+	"dymium.com/dymium/log"
+
 	"context"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -196,7 +197,7 @@ func configureDatabase(db *sql.DB,
 	credentials map[string]types.Credential,
 	createDymiumTables bool) error {
 
-	// log.Printf("configureDatabase: datascope=%+v connections=%+v\n",datascope,connections)
+	log.Infof("configureDatabase: datascope=%+v connections=%+v\n", datascope, connections)
 
 	localUser := fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(datascope.Name+"_dymium")))
 
@@ -246,7 +247,7 @@ func configureDatabase(db *sql.DB,
 	}
 
 	exec := func(sql string) error {
-		log.Println(sql)
+		log.Infof(sql)
 		if _, err := tx.ExecContext(ctx, sql); err != nil {
 			return rollback(err, "["+sql+"] failed")
 		}
