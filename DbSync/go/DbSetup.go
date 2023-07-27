@@ -197,7 +197,8 @@ func configureDatabase(db *sql.DB,
 	credentials map[string]types.Credential,
 	createDymiumTables bool) error {
 
-	log.Infof("configureDatabase: datascope=%+v connections=%+v\n", datascope, connections)
+	log.Infof("configureDatabase: datascope=%+v\n", datascope)
+	log.Infof("configureDatabase: connections=%+v\n", connections)
 
 	localUser := fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(datascope.Name+"_dymium")))
 
@@ -359,6 +360,7 @@ func configureDatabase(db *sql.DB,
 		s := &datascope.Schemas[k]
 		for m := range s.Tables {
 			t := &s.Tables[m]
+			con := connections[t.Connection]
 			hiddenTblName := fmt.Sprintf("_dymium._%x_", sha256.Sum224([]byte(datascope.Name+s.Name+t.Name)))
 			// hiddenViewName := fmt.Sprintf("_dymium._%x_", sha256.Sum224([]byte(datascope.Name+s.Name+t.Name+"_VIEW")))
 			hiddenTblCols, viewDef := make([]string, 0, len(t.Columns)), make([]string, 0, len(t.Columns))
@@ -369,7 +371,8 @@ func configureDatabase(db *sql.DB,
 					if c.Semantics == "UNSUPPORTED" {
 						t = "bytea"
 					}
-					v := PostgresEscape(c.Name) + " " + t
+
+					v := SqlEscape(c.Name, con.Database_type) + " " + t
 					if !c.IsNullable {
 						v += " NOT NULL"
 					}
@@ -379,11 +382,11 @@ func configureDatabase(db *sql.DB,
 				case types.DH_Block:
 				case types.DH_Redact:
 					if c.IsNullable {
-						viewDef = append(viewDef, "CAST(NULL AS "+c.Typ+") AS "+PostgresEscape(c.Name))
+						viewDef = append(viewDef, "CAST(NULL AS "+c.Typ+") AS "+SqlEscape(c.Name, con.Database_type))
 					} else if strings.HasSuffix(c.Typ, "[]") {
-						viewDef = append(viewDef, "CAST('{}' AS "+c.Typ+") AS "+PostgresEscape(c.Name))
+						viewDef = append(viewDef, "CAST('{}' AS "+c.Typ+") AS "+SqlEscape(c.Name, con.Database_type))
 					} else {
-						viewDef = append(viewDef, "CAST("+redact_value(c.Typ)+" AS "+c.Typ+") AS "+PostgresEscape(c.Name))
+						viewDef = append(viewDef, "CAST("+redact_value(c.Typ)+" AS "+c.Typ+") AS "+SqlEscape(c.Name, con.Database_type))
 					}
 				case types.DH_Obfuscate:
 					var v string
@@ -392,15 +395,15 @@ func configureDatabase(db *sql.DB,
 						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
 							n, k := obf("obfuscate_text_array")
 							v = fmt.Sprintf("_dymium.%s(%s,%s,0,false) AS %s",
-								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
+								n, k, SqlEscape(c.Name, con.Database_type), SqlEscape(c.Name, con.Database_type))
 						case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
 							n, k := obf("obfuscate_text_array")
 							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
-								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
+								n, k, SqlEscape(c.Name, con.Database_type), SqlEscape(c.Name, con.Database_type))
 						case strings.HasPrefix(c.Typ, "uuid"):
 							n, k := obf("obfuscate_uuid_array")
 							v = fmt.Sprintf("_dymium.%s(%s,%s) AS %s",
-								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
+								n, k, SqlEscape(c.Name, con.Database_type), SqlEscape(c.Name, con.Database_type))
 						default:
 							panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
 						}
@@ -409,32 +412,32 @@ func configureDatabase(db *sql.DB,
 						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
 							n, k := obf("obfuscate_text")
 							v = fmt.Sprintf("_dymium.%s(%s,%s,0,false) AS %s",
-								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
+								n, k, SqlEscape(c.Name, con.Database_type), SqlEscape(c.Name, con.Database_type))
 						case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
 							n, k := obf("obfuscate_text")
 							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
-								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
+								n, k, SqlEscape(c.Name, con.Database_type), SqlEscape(c.Name, con.Database_type))
 						case strings.HasPrefix(c.Typ, "uuid"):
 							n, k := obf("obfuscate_uuid")
 							v = fmt.Sprintf("_dymium.%s(%s,%s) AS %s",
-								n, k, PostgresEscape(c.Name), PostgresEscape(c.Name))
+								n, k, SqlEscape(c.Name, con.Database_type), SqlEscape(c.Name, con.Database_type))
 						default:
 							panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
 						}
 					}
 					viewDef = append(viewDef, v)
 				case types.DH_Allow:
-					viewDef = append(viewDef, PostgresEscape(c.Name))
+					viewDef = append(viewDef, SqlEscape(c.Name, con.Database_type))
 				}
 			}
-			con := connections[t.Connection]
+			//con := connections[t.Connection]
 			opts := options(con.Database_type)
 			hiddenTbl := "CREATE FOREIGN TABLE " + hiddenTblName + " (\n" +
 				strings.Join(hiddenTblCols, ",\n") +
 				"\n) SERVER " + con.Name + "_server OPTIONS(" + opts.table(s.Name, t.Name) + ");\n"
 			view :=
 				fmt.Sprintf("CREATE VIEW %%s.%s AS SELECT %s FROM %s;\n",
-					PostgresEscape(t.Name),
+					SqlEscape(t.Name, con.Database_type),
 					strings.Join(viewDef, ", "),
 					hiddenTblName)
 
