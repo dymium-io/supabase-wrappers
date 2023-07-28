@@ -437,7 +437,7 @@ func configureDatabase(db *sql.DB,
 				"\n) SERVER " + con.Name + "_server OPTIONS(" + opts.table(s.Name, t.Name) + ");\n"
 			view :=
 				fmt.Sprintf("CREATE VIEW %%s.%s AS SELECT %s FROM %s;\n",
-					SqlEscape(t.Name, con.Database_type),
+					SqlEscape(t.Name, "postgres"),
 					strings.Join(viewDef, ", "),
 					hiddenTblName)
 
