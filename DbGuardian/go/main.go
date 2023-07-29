@@ -9,21 +9,24 @@ import (
 
 	"crypto/sha256"
 
+	"dymium.com/dymium/log"
 	"fmt"
-	"log"
 
 	"aws"
 	"initializer/types"
 )
 
 func main() {
+	log.Init("DbGuardian")
 	customerData, err := getCustomerData()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
+		panic(err.Error())
 	}
 
 	if err = createDatabases(customerData.Datascopes); err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
+		panic(err.Error())
 	}
 
 	connections := map[string]types.Connection{}
@@ -41,17 +44,20 @@ func main() {
 	var user string
 	if user = os.Getenv("DATABASE_USER"); user == "" {
 		log.Fatal("Env var [DATABASE_USER] not defined")
+		panic("Env var [DATABASE_USER] not defined")
 	}
 
 	for k := range customerData.Datascopes {
 		datascope := &customerData.Datascopes[k]
 		if db, err := sql.Open("postgres", fmt.Sprintf("host=/var/run/postgresql dbname='%s' user='%s' sslmode=disable",
 			esc(datascope.Name), esc(user))); err != nil {
-			log.Fatal("sql.Open(...,%s,%s): %v", datascope.Name, user, err)
+			log.Fatal(fmt.Sprintf("sql.Open(...,%s,%s): %v", datascope.Name, user, err))
+			panic(fmt.Sprintf("sql.Open(...,%s,%s): %v", datascope.Name, user, err))
 		} else {
 			defer db.Close()
 			if err = configureDatabase(db, datascope, connections, credentials, true); err != nil {
-				log.Fatal(err)
+				log.Fatal(err.Error())
+				panic(err.Error())
 			}
 		}
 	}
@@ -82,13 +88,13 @@ func createDatabases(datascopes []types.Scope) error {
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
-		log.Println(sql)
+		log.Infof(sql)
 
 		sql = fmt.Sprintf("REVOKE CONNECT ON DATABASE %s FROM PUBLIC", datascopes[k].Name)
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
-		log.Println(sql)
+		log.Info(sql)
 
 		localUser := fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(datascopes[k].Name+"_dymium")))
 
@@ -96,13 +102,13 @@ func createDatabases(datascopes []types.Scope) error {
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
-		log.Println(sql)
+		log.Info(sql)
 
 		sql = fmt.Sprintf("GRANT CONNECT ON DATABASE %s TO %s", datascopes[k].Name, localUser)
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
-		log.Println(sql)
+		log.Info(sql)
 	}
 
 	return nil
