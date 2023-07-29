@@ -1,7 +1,9 @@
 package main
 
 import (
+	"DbSync/types"
 	"regexp"
+	"strings"
 )
 
 var kw, valid *regexp.Regexp
@@ -14,6 +16,22 @@ func init() {
 func PostgresEscape(tok string) string {
 	if valid.MatchString(tok) {
 		if kw.MatchString(tok) {
+			return `"` + tok + `"`
+		} else {
+			return tok
+		}
+	} else {
+		return `"` + tok + `"`
+	}
+}
+
+func SqlEscape(tok string, connectionType types.ConnectionType) string {
+	if valid.MatchString(tok) {
+		uptok := strings.ToLower(tok)
+		if connectionType != "postgres" {
+			uptok = strings.ToUpper(tok)
+		}
+		if kw.MatchString(tok) || uptok != tok {
 			return `"` + tok + `"`
 		} else {
 			return tok

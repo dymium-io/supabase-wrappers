@@ -42,6 +42,7 @@ func main() {
 	var user string
 	if user = os.Getenv("DATABASE_USER"); user == "" {
 		log.Fatal("Env var [DATABASE_USER] not defined")
+		panic("Env var [DATABASE_USER] not defined")
 	}
 
 	for k := range customerData.Datascopes {

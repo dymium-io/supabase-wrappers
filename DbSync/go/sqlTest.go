@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	_ "github.com/lib/pq"
+	"strings"
 
 	"fmt"
 
@@ -53,8 +54,8 @@ func sqlTest(
 
 	var rows *sql.Rows
 	sql := fmt.Sprintf(`select * from %s.%s limit 20`,
-		PostgresEscape(sqlTest.Database+"_"+sqlTest.Schema),
-		PostgresEscape(sqlTest.Table))
+		PostgresEscape(strings.ToLower(sqlTest.Database+"_"+sqlTest.Schema)),
+		SqlEscape(sqlTest.Table, "postgres"))
 	if rows, err = db.Query(sql); err != nil {
 		return nil, fmt.Errorf("Query [%s] failed: %v", sql, err)
 	}

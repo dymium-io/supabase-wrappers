@@ -336,7 +336,7 @@ func (da DB2) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Tabl
 }
 
 func (da *DB2) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
-
+	log.Infof("Resolving references for table %s.%s", tip.Schema, tip.Table)
 	rows, err := da.db.Query(`SELECT
                     rfc.CONSTNAME as constraintName,
                     kcu.COLNAME as columnName,
@@ -403,12 +403,13 @@ func (da *DB2) getSample(schema, table string, sample []detect.Sample) error {
 				colNames.WriteString(", ")
 			}
 			//colNames.WriteString("[" + sample[k].Name + "]")
-			colNames.WriteString(sample[k].Name)
+			colNames.WriteString("\"" + sample[k].Name + "\"")
 		}
 	}
 
 	//SELECT %s from "%s"."%s" tablesample bernoulli (%d)
 	sql := fmt.Sprintf(`SELECT %s FROM "%s"."%s" ORDER BY RAND() LIMIT %d`, colNames.String(), schema, table, detect.SampleSize)
+	log.Infof("sql: %s", sql)
 	r, err := da.db.Query(sql)
 	if err != nil {
 		log.Errorf("error: %v", err)
