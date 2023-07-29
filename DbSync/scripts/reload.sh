@@ -11,7 +11,7 @@ aws_params "$@"
 set -x
 aws lambda update-function-code \
     --function-name ${FUNCTION_NAME} \
-    --image-uri ${ARN}.dkr.ecr.${REGION}.amazonaws.com/${REPO}:latest \
+    --image-uri ${ARN}.dkr.ecr.${REGION}.amazonaws.com/${REPO}:${tag} \
     --publish \
     --profile ${PROFILE} \
     --region ${REGION}
