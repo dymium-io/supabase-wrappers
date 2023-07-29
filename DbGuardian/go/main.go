@@ -21,12 +21,10 @@ func main() {
 	customerData, err := getCustomerData()
 	if err != nil {
 		log.Fatal(err.Error())
-		panic(err.Error())
 	}
 
 	if err = createDatabases(customerData.Datascopes); err != nil {
 		log.Fatal(err.Error())
-		panic(err.Error())
 	}
 
 	connections := map[string]types.Connection{}
@@ -52,12 +50,10 @@ func main() {
 		if db, err := sql.Open("postgres", fmt.Sprintf("host=/var/run/postgresql dbname='%s' user='%s' sslmode=disable",
 			esc(datascope.Name), esc(user))); err != nil {
 			log.Fatal(fmt.Sprintf("sql.Open(...,%s,%s): %v", datascope.Name, user, err))
-			panic(fmt.Sprintf("sql.Open(...,%s,%s): %v", datascope.Name, user, err))
 		} else {
 			defer db.Close()
 			if err = configureDatabase(db, datascope, connections, credentials, true); err != nil {
 				log.Fatal(err.Error())
-				panic(err.Error())
 			}
 		}
 	}
