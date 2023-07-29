@@ -327,16 +327,16 @@ func configureDatabase(db *sql.DB,
 	}
 
 	for k := range shortSchemas {
-		if err := exec("CREATE SCHEMA IF NOT EXISTS " + strings.ToLower(k)); err != nil {
+		if err := exec("CREATE SCHEMA IF NOT EXISTS " + PostgresEscape(strings.ToLower(k))); err != nil {
 			return err
 		}
-		if err := exec("GRANT USAGE ON SCHEMA " + strings.ToLower(k) + " TO " + localUser); err != nil {
+		if err := exec("GRANT USAGE ON SCHEMA " + PostgresEscape(strings.ToLower(k)) + " TO " + localUser); err != nil {
 			return err
 		}
-		if err := exec("ALTER DEFAULT PRIVILEGES IN SCHEMA " + strings.ToLower(k) + " GRANT SELECT ON TABLES TO " + localUser); err != nil {
+		if err := exec("ALTER DEFAULT PRIVILEGES IN SCHEMA " + PostgresEscape(strings.ToLower(k)) + " GRANT SELECT ON TABLES TO " + localUser); err != nil {
 			return err
 		}
-		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", strings.ToLower(k)); err != nil {
+		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", PostgresEscape(strings.ToLower(k))); err != nil {
 			return rollback(err, "Registering schema "+strings.ToLower(k)+"_server failed")
 		}
 	}
@@ -457,7 +457,7 @@ func configureDatabase(db *sql.DB,
 				}
 			}
 			for _, sch := range schs {
-				if err := exec(fmt.Sprintf(view, PostgresEscape(sch))); err != nil {
+				if err := exec(fmt.Sprintf(view, PostgresEscape(strings.ToLower(sch)))); err != nil {
 					return err
 				}
 			}
