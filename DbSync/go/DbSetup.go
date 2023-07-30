@@ -372,7 +372,7 @@ func configureDatabase(db *sql.DB,
 						t = "bytea"
 					}
 
-					v := SqlEscape(c.Name, con.Database_type) + " " + t
+					v := `"` + c.Name + `" ` + t
 					if !c.IsNullable {
 						v += " NOT NULL"
 					}
@@ -394,16 +394,16 @@ func configureDatabase(db *sql.DB,
 						switch {
 						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
 							n, k := obf("obfuscate_text_array")
-							v = fmt.Sprintf("_dymium.%s(%s,%s,0,false) AS %s",
-								n, k, SqlEscape(c.Name, con.Database_type), SqlEscape(c.Name, con.Database_type))
+							v = fmt.Sprintf(`_dymium.%s(%s,"%s",0,false) AS %s`,
+								n, k, c.Name, SqlEscape(c.Name, con.Database_type))
 						case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
 							n, k := obf("obfuscate_text_array")
-							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
-								n, k, SqlEscape(c.Name, con.Database_type), SqlEscape(c.Name, con.Database_type))
+							v = fmt.Sprintf(`_dymium.%s(%s,"%s",0,true) AS %s`,
+								n, k, c.Name, SqlEscape(c.Name, con.Database_type))
 						case strings.HasPrefix(c.Typ, "uuid"):
 							n, k := obf("obfuscate_uuid_array")
-							v = fmt.Sprintf("_dymium.%s(%s,%s) AS %s",
-								n, k, SqlEscape(c.Name, con.Database_type), SqlEscape(c.Name, con.Database_type))
+							v = fmt.Sprintf(`_dymium.%s(%s,"%s") AS %s`,
+								n, k, c.Name, SqlEscape(c.Name, con.Database_type))
 						default:
 							panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
 						}
@@ -411,23 +411,23 @@ func configureDatabase(db *sql.DB,
 						switch {
 						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
 							n, k := obf("obfuscate_text")
-							v = fmt.Sprintf("_dymium.%s(%s,%s,0,false) AS %s",
-								n, k, SqlEscape(c.Name, con.Database_type), SqlEscape(c.Name, con.Database_type))
+							v = fmt.Sprintf(`_dymium.%s(%s,"%s",0,false) AS %s`,
+								n, k, c.Name, SqlEscape(c.Name, con.Database_type))
 						case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
 							n, k := obf("obfuscate_text")
-							v = fmt.Sprintf("_dymium.%s(%s,%s,0,true) AS %s",
-								n, k, SqlEscape(c.Name, con.Database_type), SqlEscape(c.Name, con.Database_type))
+							v = fmt.Sprintf(`_dymium.%s(%s,"%s",0,true) AS %s`,
+								n, k, c.Name, SqlEscape(c.Name, con.Database_type))
 						case strings.HasPrefix(c.Typ, "uuid"):
 							n, k := obf("obfuscate_uuid")
-							v = fmt.Sprintf("_dymium.%s(%s,%s) AS %s",
-								n, k, SqlEscape(c.Name, con.Database_type), SqlEscape(c.Name, con.Database_type))
+							v = fmt.Sprintf(`_dymium.%s(%s,"%s") AS %s`,
+								n, k, c.Name, SqlEscape(c.Name, con.Database_type))
 						default:
 							panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
 						}
 					}
 					viewDef = append(viewDef, v)
 				case types.DH_Allow:
-					viewDef = append(viewDef, SqlEscape(c.Name, con.Database_type))
+					viewDef = append(viewDef, `"`+c.Name+`" AS `+SqlEscape(c.Name, con.Database_type))
 				}
 			}
 			//con := connections[t.Connection]
@@ -437,16 +437,13 @@ func configureDatabase(db *sql.DB,
 				"\n) SERVER " + con.Name + "_server OPTIONS(" + opts.table(s.Name, t.Name) + ");\n"
 			view :=
 				fmt.Sprintf("CREATE VIEW %%s.%s AS SELECT %s FROM %s;\n",
-					SqlEscape(t.Name, "postgres"),
+					PostgresEscape(t.Name),
 					strings.Join(viewDef, ", "),
 					hiddenTblName)
 
 			if err := exec(hiddenTbl); err != nil {
 				return err
 			}
-			// if err := exec(hiddenView); err != nil {
-			//	return err
-			// }
 
 			schs := []string{con.Name + "_" + s.Name}
 			if _, ok := shortEntries[tuple{k1: s.Name, k2: t.Name}]; ok {
