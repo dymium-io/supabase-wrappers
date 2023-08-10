@@ -58,7 +58,26 @@ func (da *OracleDB) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 		da.db.Query(`SELECT OWNER, TABLE_NAME
                              FROM ALL_TABLES
                              WHERE TABLESPACE_NAME NOT IN ('SYSTEM', 'SYSAUX', 'UNDOTBS1', 'TEMP')
-                             ORDER BY OWNER, TABLE_NAME`)
+                            UNION ALL
+							SELECT
+    							OWNER,
+    							VIEW_NAME AS TABLE_NAME
+							FROM
+    							ALL_VIEWS
+							WHERE
+        						OWNER NOT IN (
+			                    	'SYS', 'SYSTEM', 'CTXSYS', 'DBSNMP', 'DIP', 'AUDSYS',
+           			           		'EXFSYS', 'MDSYS', 'MGMT_VIEW', 'OLAPSYS', 'DVSYS',
+                      				'OWBSYS', 'ORDPLUGINS', 'ORDSYS', 'OUTLN', 'ORDDATA',
+                      				'SI_INFORMTN_SCHEMA', 'SYSMAN', 'TSMSYS', 'LBACSYS',
+                      				'WK_TEST', 'WKSYS', 'WMSYS', 'XDB', 'APEX_PUBLIC_USER',
+                      				'GSMADMIN_INTERNAL', 'GSMCATUSER', 'GSMUSER', 'SPATIAL_CSW_ADMIN_USR'
+        						)
+  								AND
+    								VIEW_NAME NOT LIKE 'BIN$%'
+  								AND
+        							VIEW_NAME NOT LIKE 'AQ$%'
+							ORDER BY OWNER, TABLE_NAME`)
 
 	if err != nil {
 		return nil, err
@@ -103,26 +122,29 @@ func (da *OracleDB) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 				})
 		}
 	}
-
 	return &database, nil
 }
 
 func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
 
 	stmt, err :=
-		da.db.Prepare(`SELECT COLUMN_ID,
-                                    COLUMN_NAME,
-                                    DATA_TYPE,
-                                    DATA_LENGTH,
-                                    CHAR_LENGTH,
-                                    DATA_PRECISION,
-                                    DATA_SCALE,
-                                    NULLABLE,
-                                    DEFAULT_LENGTH,
-                                    DATA_DEFAULT
-                             FROM ALL_TAB_COLS
-                             WHERE OWNER = :1 AND TABLE_NAME = :2
-                             ORDER BY COLUMN_ID`)
+		da.db.Prepare(`SELECT 
+    							COLUMN_ID,
+    							COLUMN_NAME,
+    							DATA_TYPE,
+    							DECODE(DATA_TYPE, 'VARCHAR2', CHAR_LENGTH, 'CHAR', CHAR_LENGTH, DATA_LENGTH) AS DATA_LENGTH, -- Use CHAR_LENGTH for VARCHAR2 and CHAR types
+    							CHAR_LENGTH,
+    							DATA_PRECISION,
+    							DATA_SCALE,
+    							NULLABLE,
+								DEFAULT_LENGTH,
+    							DATA_DEFAULT
+							FROM 
+    							ALL_TAB_COLUMNS
+							WHERE 
+    							OWNER = :1 AND TABLE_NAME = :2
+							ORDER BY COLUMN_ID`)
+
 	if err != nil {
 		return nil, err
 	}
@@ -440,22 +462,14 @@ func (da *OracleDB) getSample(schema, table string, sample []detect.Sample) erro
 
 	nColumns := len(sample)
 
-	var percent float32
-	{
-		r := da.db.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM "%s"."%s"`, schema, table))
-		var count int
-		r.Scan(&count)
-		if count > 0 {
-			percent = float32(detect.SampleSize) / float32(count) * 100.0
-			if percent >= 100 {
-				percent = 99.9999
-			}
-		} else {
-			for _, s := range sample {
-				s.Data = make([]*string, 0)
-			}
-			return nil
+	r := da.db.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM "%s"."%s"`, schema, table))
+	var count int
+	r.Scan(&count)
+	if count <= 0 {
+		for _, s := range sample {
+			s.Data = make([]*string, 0)
 		}
+		return nil
 	}
 
 	for _, s := range sample {
@@ -487,18 +501,17 @@ func (da *OracleDB) getSample(schema, table string, sample []detect.Sample) erro
 		}
 	}
 
-	sql := fmt.Sprintf(`SELECT %s from "%s"."%s" SAMPLE(%f)`, colNames.String(), schema, table, percent)
-	r, err := da.db.Query(sql)
+	sql := fmt.Sprintf(`SELECT %s from "%s"."%s" WHERE ROWNUM <= %d ORDER BY DBMS_RANDOM.VALUE`, colNames.String(), schema, table, detect.SampleSize)
+	rows, err := da.db.Query(sql)
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer rows.Close()
 
-	for r.Next() {
-		if err := r.Scan(i...); err != nil {
+	for rows.Next() {
+		if err := rows.Scan(i...); err != nil {
 			return err
 		}
-
 		for k := range sample {
 			if sample[k].IsSamplable {
 				if sample[k].IsNullable {
