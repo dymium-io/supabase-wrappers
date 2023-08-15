@@ -307,6 +307,9 @@ SELECT
 				Semantics:   s,
 			}
 		}
+		if strings.HasSuffix(d.cTyp, "[]") {
+			d.cTyp = "ARRAY"
+		}
 		switch d.cTyp {
 		case "boolean",
 			"smallint", "integer", "bigint", "int", "int2", "int4", "int8",
@@ -329,6 +332,10 @@ SELECT
 			sample[k] = dtk(true)
 		case "bigserial":
 			t = "bigint"
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "tsvector":
+			t = "tsvector"
 			possibleActions = allowable
 			sample[k] = dtk(true)
 		case "bit", "bit varying":
