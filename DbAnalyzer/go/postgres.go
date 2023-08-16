@@ -106,15 +106,15 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 
 	rows, err :=
 		da.db.Query(`WITH base AS (
-    SELECT 
+    SELECT
         attr.attnum AS ordinal_position,
         attr.attname AS column_name,
         typ.typtypmod,
         typ.typtype,
-        CASE 
+        CASE
             WHEN typ.typtype = 'd' THEN typ.typbasetype
             ELSE attr.atttypid
-        END AS base_atttypid,
+            END AS base_atttypid,
         attr.attnotnull,
         attr.atttypmod,
         pg_get_expr(def.adbin, def.adrelid) AS column_default,
@@ -123,114 +123,120 @@ func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
         elemtyp.oid AS elem_type_oid,
         cls.relname AS table_name,
         nsp.nspname AS schema_name
-    FROM 
+    FROM
         pg_attribute attr
-    LEFT JOIN 
-        pg_attrdef def ON attr.attrelid = def.adrelid AND attr.attnum = def.adnum
-    INNER JOIN 
-        pg_class cls ON attr.attrelid = cls.oid AND cls.relkind IN ('r', 'm', 'v')
-    INNER JOIN 
-        pg_type typ ON attr.atttypid = typ.oid
-    LEFT JOIN 
-        pg_type elemtyp ON elemtyp.oid = typ.typelem
-    INNER JOIN 
-        pg_namespace nsp ON cls.relnamespace = nsp.oid
-    WHERE 
-        nsp.nspname = $1
-        AND cls.relname = $2
-        AND attr.attnum > 0 
-        AND NOT attr.attisdropped
+            LEFT JOIN pg_attrdef def ON attr.attrelid = def.adrelid AND attr.attnum = def.adnum
+            INNER JOIN pg_class cls ON attr.attrelid = cls.oid AND cls.relkind IN ('r', 'm', 'v')
+            INNER JOIN pg_type typ ON attr.atttypid = typ.oid
+            LEFT JOIN pg_type elemtyp ON elemtyp.oid = typ.typelem
+            INNER JOIN pg_namespace nsp ON cls.relnamespace = nsp.oid
+    WHERE
+            nsp.nspname = $1
+      AND cls.relname = $2
+      AND attr.attnum > 0
+      AND NOT attr.attisdropped
 )
-SELECT 
+SELECT
     ordinal_position,
     column_name,
     pg_catalog.format_type(base_atttypid, NULL) AS data_type,
-    CASE 
-        WHEN typtype IN ('b', 'd') AND base_atttypid = ANY('{char,varchar,text}'::regtype[]) AND atttypmod > 0 THEN atttypmod - 4 
-        ELSE NULL 
-    END AS character_maximum_length,
-    CASE 
+    CASE
+        WHEN typtype IN ('b', 'd') AND base_atttypid = ANY('{char,varchar,text}'::regtype[]) AND atttypmod > 0 THEN atttypmod - 4
+        ELSE NULL
+        END AS character_maximum_length,
+    CASE
         WHEN typtype IN ('b', 'd') AND base_atttypid = ANY('{numeric,decimal}'::regtype[]) AND atttypmod <> -1 THEN (atttypmod - 4) >> 16
-        ELSE NULL 
-    END AS numeric_precision,
-    CASE 
+        ELSE NULL
+        END AS numeric_precision,
+    CASE
         WHEN typtype IN ('b', 'd') AND base_atttypid = ANY('{numeric,decimal}'::regtype[]) AND atttypmod <> -1 THEN (atttypmod - 4) & 65535
-        ELSE NULL 
-    END AS numeric_scale,
-	CASE 
-    	WHEN typtype IN ('b', 'd') AND base_atttypid = ANY('{timestamp,timestamptz}'::regtype[]) AND atttypmod <> -1 THEN (atttypmod - 4)
-    	ELSE NULL 
-	END AS datetime_precision,
+        ELSE NULL
+        END AS numeric_scale,
+    CASE
+        WHEN typtype IN ('b', 'd') AND base_atttypid = ANY('{timestamp,timestamptz}'::regtype[]) AND atttypmod <> -1 THEN (atttypmod - 4)
+        ELSE NULL
+        END AS datetime_precision,
     CASE
         WHEN typtype IN ('b', 'd') AND base_atttypid = 'interval'::regtype THEN
-            CASE 
+            CASE
                 WHEN (atttypmod - 4) & 65535 <> 0 THEN (atttypmod - 4) & 65535
                 ELSE NULL
-            END
-        ELSE NULL 
-    END AS interval_precision,
+                END
+        ELSE NULL
+        END AS interval_precision,
     CASE
         WHEN typtype IN ('b', 'd') AND base_atttypid = 'interval'::regtype THEN
-            CASE 
+            CASE
                 WHEN (atttypmod - 4) >> 16 & 65535 = 0 THEN 'YEAR'
                 WHEN (atttypmod - 4) >> 16 & 65535 = 1 THEN 'MONTH'
                 WHEN (atttypmod - 4) >> 16 & 65535 = 2 THEN 'DAY'
                 WHEN (atttypmod - 4) >> 16 & 65535 = 3 THEN 'HOUR'
                 WHEN (atttypmod - 4) >> 16 & 65535 = 4 THEN 'MINUTE'
                 WHEN (atttypmod - 4) >> 16 & 65535 = 5 THEN 'SECOND'
-                ELSE 'YEAR TO MONTH' 
-            END
-        ELSE NULL 
-    END AS interval_type,
+                ELSE 'YEAR TO MONTH'
+                END
+        ELSE NULL
+        END AS interval_type,
     pg_catalog.format_type(elem_type_oid, elem_typtypmod) AS elem_data_type,
-    -- Element type attributes here...
-    CASE 
-        WHEN elem_typtype IN ('b', 'd') AND elem_type_oid = ANY('{char,varchar,text}'::regtype[]) AND elem_typtypmod > 0 THEN elem_typtypmod - 4 
-        ELSE NULL 
-    END AS elem_character_maximum_length,
-    CASE 
-        WHEN elem_typtype IN ('b', 'd') AND elem_type_oid = ANY('{numeric,decimal}'::regtype[]) AND elem_typtypmod <> -1 THEN (elem_typtypmod - 4) >> 16
-        ELSE NULL 
-    END AS elem_numeric_precision,
-    CASE 
-        WHEN elem_typtype IN ('b', 'd') AND elem_type_oid = ANY('{numeric,decimal}'::regtype[]) AND elem_typtypmod <> -1 THEN (elem_typtypmod - 4) & 65535
-        ELSE NULL 
-    END AS elem_numeric_scale,
-	CASE 
-    	WHEN elem_typtype IN ('b', 'd') AND elem_type_oid = ANY('{timestamp,timestamptz}'::regtype[]) AND elem_typtypmod <> -1 THEN (elem_typtypmod - 4)
-    	ELSE NULL 
-	END AS elem_datetime_precision,
+    CASE
+        WHEN elem_typtype IN ('b', 'd') AND elem_type_oid = ANY('{char,varchar,text}'::regtype[]) AND elem_typtypmod > 0 THEN elem_typtypmod - 4
+        ELSE NULL
+        END AS elem_character_maximum_length,
+    COALESCE(
+            CASE
+                WHEN base_atttypid = ANY('{numeric[],decimal[]}'::regtype[])
+                    THEN (atttypmod - 4) >> 16
+                END,
+            CASE
+                WHEN elem_type_oid = ANY('{numeric,decimal}'::regtype[]) AND typtype = 'a'
+                    THEN (elem_typtypmod - 4) >> 16
+                END
+        ) AS elem_numeric_precision,
+    COALESCE(
+            CASE
+                WHEN base_atttypid = ANY('{numeric[],decimal[]}'::regtype[])
+                    THEN (atttypmod - 4) & 65535
+                END,
+            CASE
+                WHEN elem_type_oid = ANY('{numeric,decimal}'::regtype[]) AND typtype = 'a'
+                    THEN (elem_typtypmod - 4) & 65535
+                END
+        ) AS elem_numeric_scale,
+    CASE
+        WHEN elem_typtype IN ('b', 'd') AND elem_type_oid = ANY('{timestamp,timestamptz}'::regtype[]) AND elem_typtypmod <> -1 THEN (elem_typtypmod - 4)
+        ELSE NULL
+        END AS elem_datetime_precision,
     -- For interval type, precision and type for element are assumed to be the same as the base type. Adjust if needed.
-	CASE
-    	WHEN elem_typtype IN ('b', 'd') AND elem_type_oid = 'interval'::regtype THEN
-        	CASE 
-            	WHEN (elem_typtypmod - 4) & 65535 <> 0 THEN (elem_typtypmod - 4) & 65535
-            	ELSE NULL
-        	END
-    	ELSE NULL 
-	END AS elem_interval_precision,
-	CASE
-    	WHEN elem_typtype IN ('b', 'd') AND elem_type_oid = 'interval'::regtype THEN
-        	CASE 
-            	WHEN (elem_typtypmod - 4) >> 16 & 65535 = 0 THEN 'YEAR'
-            	WHEN (elem_typtypmod - 4) >> 16 & 65535 = 1 THEN 'MONTH'
-            	WHEN (elem_typtypmod - 4) >> 16 & 65535 = 2 THEN 'DAY'
-            	WHEN (elem_typtypmod - 4) >> 16 & 65535 = 3 THEN 'HOUR'
-            	WHEN (elem_typtypmod - 4) >> 16 & 65535 = 4 THEN 'MINUTE'
-            	WHEN (elem_typtypmod - 4) >> 16 & 65535 = 5 THEN 'SECOND'
-            	ELSE 'YEAR TO MONTH' 
-        	END
-    	ELSE NULL 
-	END AS elem_interval_type,
-    	CASE 
-        	WHEN attnotnull THEN 'NO' 
-        	ELSE 'YES' 
-    	END AS is_nullable,
+    CASE
+        WHEN elem_typtype IN ('b', 'd') AND elem_type_oid = 'interval'::regtype THEN
+            CASE
+                WHEN (elem_typtypmod - 4) & 65535 <> 0 THEN (elem_typtypmod - 4) & 65535
+                ELSE NULL
+                END
+        ELSE NULL
+        END AS elem_interval_precision,
+    CASE
+        WHEN elem_typtype IN ('b', 'd') AND elem_type_oid = 'interval'::regtype THEN
+            CASE
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 0 THEN 'YEAR'
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 1 THEN 'MONTH'
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 2 THEN 'DAY'
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 3 THEN 'HOUR'
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 4 THEN 'MINUTE'
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 5 THEN 'SECOND'
+                ELSE 'YEAR TO MONTH'
+                END
+        ELSE NULL
+        END AS elem_interval_type,
+    CASE
+        WHEN attnotnull THEN 'NO'
+        ELSE 'YES'
+        END AS is_nullable,
     column_default
-	FROM 
-    	base
-	ORDER BY 
-    	ordinal_position;
+FROM
+    base
+ORDER BY
+    ordinal_position;
 `, tip.Schema, tip.Table)
 	if err != nil {
 		return nil, err
@@ -480,7 +486,7 @@ SELECT
 			case "numeric":
 				possibleActions = allowable
 				if d.ePrecision != nil {
-					if d.cScale != nil {
+					if d.eScale != nil {
 						t = fmt.Sprintf("numeric(%d,%d)[]", *d.ePrecision, *d.eScale)
 					} else {
 						t = fmt.Sprintf("numeric(%d)[]", *d.ePrecision)
