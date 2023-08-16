@@ -334,10 +334,6 @@ SELECT
 			t = "bigint"
 			possibleActions = allowable
 			sample[k] = dtk(true)
-		case "tsvector":
-			t = "tsvector"
-			possibleActions = allowable
-			sample[k] = dtk(true)
 		case "bit", "bit varying":
 			if d.cPrecision != nil && *d.cPrecision > 0 {
 				t = fmt.Sprintf("%s(%d)", d.cTyp, *d.cPrecision)
