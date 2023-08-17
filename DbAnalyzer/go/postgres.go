@@ -156,12 +156,9 @@ SELECT
         WHEN typtype IN ('b', 'd') AND base_atttypid = ANY('{timestamp,timestamptz}'::regtype[]) AND atttypmod <> -1 THEN (atttypmod - 4)
         ELSE NULL
         END AS datetime_precision,
+    -- Handling for interval data type
     CASE
-        WHEN typtype IN ('b', 'd') AND base_atttypid = 'interval'::regtype THEN
-            CASE
-                WHEN (atttypmod - 4) & 65535 <> 0 THEN (atttypmod - 4) & 65535
-                ELSE NULL
-                END
+        WHEN typtype IN ('b', 'd') AND base_atttypid = 'interval'::regtype THEN (atttypmod - 4) & 65535
         ELSE NULL
         END AS interval_precision,
     CASE
@@ -173,7 +170,14 @@ SELECT
                 WHEN (atttypmod - 4) >> 16 & 65535 = 3 THEN 'HOUR'
                 WHEN (atttypmod - 4) >> 16 & 65535 = 4 THEN 'MINUTE'
                 WHEN (atttypmod - 4) >> 16 & 65535 = 5 THEN 'SECOND'
-                ELSE 'YEAR TO MONTH'
+                WHEN (atttypmod - 4) >> 16 & 65535 = 6 THEN 'YEAR TO MONTH'
+                WHEN (atttypmod - 4) >> 16 & 65535 = 7 THEN 'DAY TO HOUR'
+                WHEN (atttypmod - 4) >> 16 & 65535 = 8 THEN 'DAY TO MINUTE'
+                WHEN (atttypmod - 4) >> 16 & 65535 = 9 THEN 'DAY TO SECOND'
+                WHEN (atttypmod - 4) >> 16 & 65535 = 10 THEN 'HOUR TO MINUTE'
+                WHEN (atttypmod - 4) >> 16 & 65535 = 11 THEN 'HOUR TO SECOND'
+                WHEN (atttypmod - 4) >> 16 & 65535 = 12 THEN 'MINUTE TO SECOND'
+                ELSE NULL
                 END
         ELSE NULL
         END AS interval_type,
@@ -224,7 +228,14 @@ SELECT
                 WHEN (elem_typtypmod - 4) >> 16 & 65535 = 3 THEN 'HOUR'
                 WHEN (elem_typtypmod - 4) >> 16 & 65535 = 4 THEN 'MINUTE'
                 WHEN (elem_typtypmod - 4) >> 16 & 65535 = 5 THEN 'SECOND'
-                ELSE 'YEAR TO MONTH'
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 6 THEN 'YEAR TO MONTH'
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 7 THEN 'DAY TO HOUR'
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 8 THEN 'DAY TO MINUTE'
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 9 THEN 'DAY TO SECOND'
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 10 THEN 'HOUR TO MINUTE'
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 11 THEN 'HOUR TO SECOND'
+                WHEN (elem_typtypmod - 4) >> 16 & 65535 = 12 THEN 'MINUTE TO SECOND'
+                ELSE NULL
                 END
         ELSE NULL
         END AS elem_interval_type,
