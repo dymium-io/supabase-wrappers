@@ -239,7 +239,13 @@ SELECT
                 END
         ELSE NULL
         END AS elem_interval_type,
-    CASE
+   CASE
+        WHEN base_atttypid = ANY('{bit,bit varying}'::regtype[]) THEN
+            substring(pg_catalog.format_type(base_atttypid, atttypmod) from '\((\d+)\)')
+        ELSE
+            NULL
+        END AS bit_length,
+     CASE
         WHEN attnotnull THEN 'NO'
         ELSE 'YES'
         END AS is_nullable,
@@ -273,6 +279,7 @@ ORDER BY
 		eCharMaxLen, ePrecision, eScale *int
 		edPrecision, eiPrecision        *int
 		eIntervalType                   *string
+		cBitLength                      *int
 	}
 
 	descr := []*data{}
@@ -285,7 +292,7 @@ ORDER BY
 			&d.cdPrecision, &d.ciPrecision, &d.cIntervalType,
 			&d.eTyp, &d.eCharMaxLen, &d.ePrecision, &d.eScale,
 			&d.edPrecision, &d.eiPrecision, &d.eIntervalType,
-			&isNullable_, &d.dflt)
+			&d.cBitLength, &isNullable_, &d.dflt)
 		if err != nil {
 			return nil, err
 		}
@@ -352,8 +359,8 @@ ORDER BY
 			possibleActions = allowable
 			sample[k] = dtk(true)
 		case "bit", "bit varying":
-			if d.cPrecision != nil && *d.cPrecision > 0 {
-				t = fmt.Sprintf("%s(%d)", d.cTyp, *d.cPrecision)
+			if d.cBitLength != nil && *d.cBitLength > 0 {
+				t = fmt.Sprintf("%s(%d)", d.cTyp, *d.cBitLength)
 			} else {
 				t = d.cTyp
 			}
@@ -486,14 +493,18 @@ ORDER BY
 				t = *d.eTyp + "[]"
 				possibleActions = allowable
 				sample[k] = dtk(true)
-			case "bit", "bit varying":
+			case "bit", "bit varying", "\"bit\"", "\"bit varying\"":
+				eTyp := strings.Trim(*d.eTyp, "\"")
 				if d.ePrecision != nil && *d.ePrecision > 0 {
-					t = fmt.Sprintf("%s(%d)[]", *d.eTyp, *d.ePrecision)
+					t = fmt.Sprintf("%s(%d)[]", eTyp, *d.ePrecision)
 				} else {
-					t = *d.eTyp + "[]"
+					t = eTyp + "[]"
 				}
-				possibleActions = allowable
-				sample[k] = dtk(false)
+				// Currently we don't support bit(x)[] - need to figure out how to
+				// resolve the x in the array
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
 			case "numeric":
 				possibleActions = allowable
 				if d.ePrecision != nil {
