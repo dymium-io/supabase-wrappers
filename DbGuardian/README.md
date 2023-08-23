@@ -22,3 +22,8 @@ and then:
 > git subtree add --prefix DbGuardian/foreign_data_wrappers/db2_fdw db2_fdw master --squash
 and then:
 > git subtree pull --prefix DbGuardian/foreign_data_wrappers/db2_fdw db2_fdw master --squash 
+
+> git remote add -f mongo_fdw https://github.com/EnterpriseDB/mongo_fdw.git
+> git subtree add --prefix DbGuardian/foreign_data_wrappers/mongo_fdw mongo_fdw master --squash
+and then:
+> git subtree pull --prefix DbGuardian/foreign_data_wrappers/mongo_fdw mongo_fdw master --squash 
