@@ -52,7 +52,7 @@ RUN apt-get update &&            \
       freetds-bin                \
       freetds-dev                \
       libaio1                    \
-      curl                       \
+      curl wget cmake            \
       libreadline-dev            \
       flex                       \
       bison                      \
