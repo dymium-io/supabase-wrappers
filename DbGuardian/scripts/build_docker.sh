@@ -42,6 +42,23 @@ fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)
 		   /bin/sh -c \
 		   "cd /fdw; tar czv --owner=root --group=root -f usr.tar.gz usr; rm -rf usr"
 )
+(
+	cd $script_d/../foreign_data_wrappers/mongo_fdw
+	    docker run -it --rm \
+		   -v $PWD:/fdw \
+		   -e MONGO_FDW_SOURCE_DIR=/fdw \
+		   -e MONGOC_INSTALL_DIR=/fdw/mongo-c-driver \
+		   -e JSONC_INSTALL_DIR=/fdw/json-c \
+		   postgres-dev \
+		   /bin/sh -c \
+		   "cd /fdw; (./autogen.sh --with-master) && \
+		                (export PKG_CONFIG_PATH=$MONGO_FDW_SOURCE_DIR/mongo-c-driver/src/libmongoc/src:$MONGO_FDW_SOURCE_DIR/mongo-c-driver/src/libbson/src && \
+		                export LD_LIBRARY_PATH=mongo-c-driver/lib/:$LD_LIBRARY_PATH && \
+                    make USE_PGXS=true && \
+                    DESTDIR=. make USE_PGXS=true install) && \
+                    tar czv --owner=root --group=root -f mongo.tar.gz usr; rm -rf usr && \
+                    mkdir -p usr/local/libmongo; cp json-c/lib/* usr/local/libmongo; cp mongo-c-driver/lib/* usr/local/libmongo; tar czv --owner=root --group=root -f mongo-lib.tar.gz usr; rm -rf lib"
+)
 
 (
     cd $script_d/../obfuscator
@@ -56,6 +73,8 @@ fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)
 cd $build_d
 mv ../../foreign_data_wrappers/usr.tar.gz .
 mv ../../obfuscator/obfuscator.tar.gz .
+mv ../../foreign_data_wrappers/mongo_fdw/mongo.tar.gz .
+mv ../../foreign_data_wrappers/mongo_fdw/mongo-lib.tar.gz .
 
 # build log collector
 lc_build_d=${script_d}/../../logcollector/scripts/BLD
@@ -91,9 +110,11 @@ FROM guardian-base
 COPY initializer /docker-entrypoint-initdb.d/initializer.sh
 RUN chmod 777 /docker-entrypoint-initdb.d/initializer.sh
 
-COPY usr.tar.gz obfuscator.tar.gz /
+COPY usr.tar.gz obfuscator.tar.gz mongo.tar.gz mongo-lib.tar.gz /
 RUN tar xzvf /usr.tar.gz && rm /usr.tar.gz
 RUN tar xzvf /obfuscator.tar.gz && rm /obfuscator.tar.gz
+RUN tar xzvf /mongo.tar.gz && rm /mongo.tar.gz
+RUN tar xzvf /mongo-lib.tar.gz && rm /mongo-lib.tar.gz
 
 # Add logcollector
 RUN addgroup nobody tty && addgroup postgres tty
@@ -110,6 +131,8 @@ RUN chmod a+x /usr/local/bin/logcollector
 
 COPY ./startup.sh /usr/local/bin/startup.sh
 RUN chmod a+x /usr/local/bin/startup.sh
+
+ENV LD_LIBRARY_PATH="/usr/local/libmongo:/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib64:/var/lib/postgresql/sqllib/lib64/gskit:/var/lib/postgresql/sqllib/lib32"
 
 ENTRYPOINT ["/usr/local/bin/startup.sh"]
 
