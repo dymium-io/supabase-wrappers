@@ -27,7 +27,8 @@ func SqlEscape(tok string, connectionType types.ConnectionType) string {
 	if connectionType == types.CT_PostgreSQL {
 		v = validPostgres
 	}
-	if v.MatchString(tok) && !kw.MatchString(tok) {
+	// Always escape in case of MongoDB
+	if connectionType != types.CT_MongoDB && v.MatchString(tok) && !kw.MatchString(tok) {
 		return tok
 	} else {
 		return `"` + tok + `"`

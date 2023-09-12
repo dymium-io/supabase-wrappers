@@ -52,47 +52,41 @@ func (cl *MongoClient) Connect(c *types.ConnectionParams) error {
 
 func (cl *MongoClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 
+	isSystem := false
+	switch dbName {
+	case "admin", "config", "local":
+		isSystem = true
+	default:
+		isSystem = false
+	}
+
 	database := types.DatabaseInfoData{
 		DbName:  dbName,
 		Schemas: []types.Schema{},
 	}
+	// MongoDB does not have schemas, so we will use the database name as the schema name
+	// and the collection name as the table name
+	curSchema := 0
+	database.Schemas = append(database.Schemas, types.Schema{
+		Name:     dbName,
+		IsSystem: isSystem,
+		Tables:   []types.Table{},
+	})
 
-	databaseNames, err := cl.mcl.ListDatabaseNames(context.TODO(), bson.D{})
+	db := cl.mcl.Database(dbName)
+	collectionNames, err := db.ListCollectionNames(context.TODO(), bson.D{})
 	if err != nil {
-		log.Errorf("cannot fetch database list, error: [%+v]", err)
+		log.Errorf("cannot fetch collection list for %s, error: [%+v]", dbName, err)
 		return nil, err
 	}
-	for _, dbName := range databaseNames {
-		isSystem := false
-		switch dbName {
-		case "admin", "config", "local":
-			isSystem = true
-		default:
-			isSystem = false
-		}
-		log.Infof("dbName: [%s], isSystem: [%v]", dbName, isSystem)
 
-		db := cl.mcl.Database(dbName)
-		collectionNames, err := db.ListCollectionNames(context.TODO(), bson.D{})
-		if err != nil {
-			log.Errorf("cannot fetch collection list for %s, error: [%+v]", dbName, err)
-			return nil, err
-		}
-
-		for _, collectionName := range collectionNames {
-			log.Infof("collectionName: [%s]", collectionName)
-			isSystemCollection := strings.HasPrefix(collectionName, "system.")
-			database.Schemas = append(database.Schemas, types.Schema{
-				Name:     dbName,
-				IsSystem: isSystem,
-				Tables: []types.Table{
-					{
-						Name:     collectionName,
-						IsSystem: isSystemCollection,
-					},
-				},
+	for _, collectionName := range collectionNames {
+		isSystemCollection := strings.HasPrefix(collectionName, "system.")
+		database.Schemas[curSchema].Tables = append(database.Schemas[curSchema].Tables,
+			types.Table{
+				Name:     collectionName,
+				IsSystem: isSystemCollection,
 			})
-		}
 	}
 
 	return &database, nil
@@ -118,7 +112,7 @@ func getDocSchema(colmap *map[string]*cTypeData, prefix string, doc bson.M) erro
 			// only _id cannot be nullable
 			d.isNullable = false
 		}
-		k = "'" + k + "'"
+
 		if prefix != "" {
 			k = prefix + "." + k
 		}
@@ -224,6 +218,10 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 		}
 
 		switch strings.ToLower(d.cTyp) {
+		case "primitive.objectid":
+			t = "name"
+			possibleActions = allowable
+			sample[k] = dtk(true)
 		case "int32":
 			t = "integer"
 			possibleActions = allowable
@@ -244,7 +242,7 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 			t = "boolean"
 			possibleActions = allowable
 		case "primitive.datetime":
-			t = "time with time zone"
+			t = "timestamp"
 			possibleActions = allowable
 			sample[k] = dtk(true)
 		case "bson.m", "primitive.m":
@@ -273,7 +271,7 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 				t = "boolean[]"
 				possibleActions = allowable
 			case "primitive.datetime":
-				t = "time with time zone[]"
+				t = "timestamp[]"
 				possibleActions = allowable
 				sample[k] = dtk(true)
 			case "bson.m", "primitive.m":
