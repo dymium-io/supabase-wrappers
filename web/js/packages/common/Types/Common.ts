@@ -15,8 +15,9 @@ export type ConnectionPortsType =
   | 'SqlServer_1433'
   | 'OracleDB_1521'
   | 'DB2_50000'
+  | 'MongoDB_27017'
 
-export const ConnectionPortsType_as_strings = [ 'PostgreSQL_5432', 'MySQL_3306', 'MariaDB_3306', 'SqlServer_1433', 'OracleDB_1521', 'DB2_50000' ] as const;
+export const ConnectionPortsType_as_strings = [ 'PostgreSQL_5432', 'MySQL_3306', 'MariaDB_3306', 'SqlServer_1433', 'OracleDB_1521', 'DB2_50000', 'MongoDB_27017' ] as const;
 
 
 
@@ -27,8 +28,9 @@ export type ConnectionType =
   | 'SqlServer'
   | 'OracleDB'
   | 'DB2'
+  | 'MongoDB'
 
-export const ConnectionType_as_strings = [ 'PostgreSQL', 'MySQL', 'MariaDB', 'SqlServer', 'OracleDB', 'DB2' ] as const;
+export const ConnectionType_as_strings = [ 'PostgreSQL', 'MySQL', 'MariaDB', 'SqlServer', 'OracleDB', 'DB2', 'MongoDB' ] as const;
 
 export function humanReadableConnectionType(__a__ : ConnectionType) : string {
   switch(__a__) {
@@ -38,6 +40,7 @@ export function humanReadableConnectionType(__a__ : ConnectionType) : string {
     case 'SqlServer': return 'Microsoft SQL Server';
     case 'OracleDB': return 'Oracle Database';
     case 'DB2': return 'IBM DB2 Database';
+    case 'MongoDB': return 'MongoDB Database';
   }
   return '';
 }

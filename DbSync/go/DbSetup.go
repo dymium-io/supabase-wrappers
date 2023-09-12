@@ -98,7 +98,8 @@ func extensionName(connectionType types.ConnectionType) (string, error) {
 		return "oracle_fdw", nil
 	case types.CT_DB2:
 		return "db2_fdw", nil
-
+	case types.CT_MongoDB:
+		return "mongo_fdw", nil
 	}
 	return "", fmt.Errorf("Extension %v is not supported yet", connectionType)
 }
@@ -183,6 +184,22 @@ func options(connectionType types.ConnectionType) iOptions {
 			},
 			table: func(remoteSchema, remoteTable string) string {
 				return fmt.Sprintf("schema '%s', table '%s'",
+					esc(remoteSchema), esc(remoteTable))
+			},
+		}
+	case types.CT_MongoDB:
+		return iOptions{
+			// TODO: add support for configurable authentication_database
+			server: func(host string, port int, dbname string) string {
+				return fmt.Sprintf("address '%s', port '%d', authentication_database 'admin'",
+					esc(host), port)
+			},
+			userMapping: func(user, password string) string {
+				return fmt.Sprintf("username '%s', password '%s'",
+					esc(user), esc(password))
+			},
+			table: func(remoteSchema, remoteTable string) string {
+				return fmt.Sprintf("database '%s', collection '%s'",
 					esc(remoteSchema), esc(remoteTable))
 			},
 		}
@@ -431,10 +448,18 @@ func configureDatabase(db *sql.DB,
 				}
 			}
 			//con := connections[t.Connection]
+			var schemaname string
+			if con.Database_type == types.CT_MongoDB {
+				// in case of MongoDB, schemaname is dbname
+				schemaname = con.Dbname
+			} else {
+				schemaname = s.Name
+			}
 			opts := options(con.Database_type)
+
 			hiddenTbl := "CREATE FOREIGN TABLE " + hiddenTblName + " (\n" +
 				strings.Join(hiddenTblCols, ",\n") +
-				"\n) SERVER " + con.Name + "_server OPTIONS(" + opts.table(s.Name, t.Name) + ");\n"
+				"\n) SERVER " + con.Name + "_server OPTIONS(" + opts.table(schemaname, t.Name) + ");\n"
 			view :=
 				fmt.Sprintf("CREATE VIEW %%s.%s AS SELECT %s FROM %s;\n",
 					PostgresEscape(t.Name),

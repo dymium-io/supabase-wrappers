@@ -8,6 +8,7 @@ ConnectionType:
   - SqlServer  <*> Microsoft SQL Server
   - OracleDB   <*> Oracle Database
   - DB2        <*> IBM DB2 Database
+  - MongoDB    <*> MongoDB Database
 
 ConnectionPortsType:
   - PostgreSQL_5432
@@ -16,6 +17,7 @@ ConnectionPortsType:
   - SqlServer_1433
   - OracleDB_1521
   - DB2_50000
+  - MongoDB_27017
 
 GroupMapping:
   - id: ?string

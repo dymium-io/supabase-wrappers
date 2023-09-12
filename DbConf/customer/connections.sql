@@ -72,3 +72,9 @@ ALTER TABLE connections ALTER COLUMN address TYPE varchar (253);
 -- description: "Add DB2 to source_type ENUM",
 -- requires: ["customer/connections-source-type"];
 ALTER TYPE source_type ADD VALUE 'DB2';
+
+-- #!migration
+-- name: "customer/connections-source-type-add-MongoDB",
+-- description: "Add MongoDB to source_type ENUM",
+-- requires: ["customer/connections-source-type"];
+ALTER TYPE source_type ADD VALUE 'MongoDB';

@@ -23,6 +23,8 @@ func dbAnalyzer(dt types.ConnectionType) DA {
 		da = &OracleDB{}
 	case types.CT_DB2:
 		da = &DB2{}
+	case types.CT_MongoDB:
+		da = &MongoClient{}
 	}
 	return da
 }
