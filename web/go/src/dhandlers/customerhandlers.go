@@ -1,37 +1,37 @@
-//
 // Copyright (c) 2022 Dymium, Inc. All rights reserved.
 // written by igor@dymium.io
-//
 package dhandlers
 
 import (
+	"crypto/rand"
+	"crypto/x509"
 	"dymium.com/dymium/authentication"
 	"dymium.com/dymium/common"
-	"dymium.com/dymium/types"
 	"dymium.com/dymium/log"
-	_"github.com/gorilla/mux"
-	"golang.org/x/net/context"
-	"github.com/Jeffail/gabs"	
-	"github.com/gorilla/mux"
-	"encoding/json"
-	"io/ioutil"
-	"net/url"
-	"crypto/rand"
-	"math/big"
-	"time"
-	"errors"
-	"crypto/x509"
-	"encoding/pem"	
-	"io"
-	"net/http"
-	"strconv"
-	"os"
-	"strings"
-	"path"
-	"fmt"
+	"dymium.com/dymium/types"
 	"dymium.com/server/protocol"
+	"encoding/json"
+	"encoding/pem"
+	"errors"
+	"fmt"
+	"github.com/Jeffail/gabs"
+	"github.com/gorilla/mux"
+	_ "github.com/gorilla/mux"
+	"golang.org/x/net/context"
+	"io"
+	"io/ioutil"
+	"math/big"
+	"net/http"
+	"net/url"
+	"os"
+	"path"
+	"strconv"
+	"strings"
+	"time"
 )
+
 type contextKey int
+
 const authenticatedSchemaKey contextKey = 0
 const authenticatedEmailKey contextKey = 1
 const authenticatedGroupsKey contextKey = 2
@@ -39,7 +39,7 @@ const authenticatedOrgKey contextKey = 3
 const authenticatedRolesKey contextKey = 4
 const authenticatedSessionKey contextKey = 5
 
-const GRACE = 300  // +- seconds for the cert to be valid. 5 min is a little bit generous
+const GRACE = 300 // +- seconds for the cert to be valid. 5 min is a little bit generous
 
 func AuthMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +49,7 @@ func AuthMiddleware(h http.Handler) http.Handler {
 			rr := "Auth Error: absent token"
 			log.Errorf(rr)
 			http.Error(w, rr, http.StatusForbidden)
-			return			
+			return
 		}
 		schema, roles, groups, email, orgid, session, error := authentication.GetSchemaRolesFromToken(token)
 
@@ -73,7 +73,7 @@ func AuthMiddleware(h http.Handler) http.Handler {
 
 			status := types.OperationStatus{"AuthError", "Role is not authorized for this resource"}
 			js, err := json.Marshal(status)
-		
+
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -81,7 +81,7 @@ func AuthMiddleware(h http.Handler) http.Handler {
 			common.CommonNocacheHeaders(w, r)
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(js)
-			return			
+			return
 		}
 		h.ServeHTTP(w, rWithSchema)
 	})
@@ -107,21 +107,21 @@ func QueryTable(w http.ResponseWriter, r *http.Request) {
 
 	log.Infof("ID: %s", t.ConnectionId)
 	// get the connection details
-	conn, use_connector, err := authentication.GetConnection(schema, t.ConnectionId)
-	if(err != nil) {
+	conn, _, err := authentication.GetConnection(schema, t.ConnectionId)
+	if err != nil {
 		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryTable Error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	} else {
 		log.InfoUserf(schema, sessions, email, groups, roles, "Api QueryTable %s, success", conn.Database)
 	}
-	
-	arr, err :=  authentication.GetPolicies(schema) 
-	if(err != nil) {
+
+	arr, err := authentication.GetPolicies(schema)
+	if err != nil {
 		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryTable, GetPolicy Error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}	
+	}
 	// now get the PIIDetectors
 	var policy types.DataPolicy
 	err = json.Unmarshal(arr, &policy)
@@ -137,34 +137,30 @@ func QueryTable(w http.ResponseWriter, r *http.Request) {
 	invokebody, err := authentication.Invoke("DbAnalyzer", nil, bconn)
 	if err != nil {
 		log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryTable Error: %s", err.Error())
-		if use_connector {
-			status = types.ConnectionDetailResponse{"Error", "Unable to establish connection. Check if the connector is running, and configured properly", nil}
-		} else {
-			status = types.ConnectionDetailResponse{"Error", "Unable to establish connection to the data source", nil}
-		}
+		rr := fmt.Sprintf("Unable to retrieve information from the data source. %s", err.Error())
+		status = types.ConnectionDetailResponse{"Error", rr, nil}
 
-		
 	} else {
 		jsonParsed, err := gabs.ParseJSON(invokebody)
-		if(err != nil) {
+		if err != nil {
 			log.ErrorUserf(schema, sessions, email, groups, roles, "Api QueryTable Error parsing output: %s", err.Error())
 		}
 		value, ok := jsonParsed.Path("Errormessage").Data().(string)
-		if(ok) {
+		if ok {
 			rr := fmt.Sprintf("Api Error in QueryTable Invoke return: %s", value)
 			status = types.ConnectionDetailResponse{"Error", rr, nil}
-		
+
 		} else {
 			t := types.AnalyzerResponse{}
 			err := json.Unmarshal(invokebody, &t)
-			if(err != nil) {
-				status =  types.ConnectionDetailResponse{"Error", err.Error(), nil}
+			if err != nil {
+				status = types.ConnectionDetailResponse{"Error", err.Error(), nil}
 			} else {
-				status =  types.ConnectionDetailResponse{"OK", "", &t}
+				status = types.ConnectionDetailResponse{"OK", "", &t}
 			}
 		}
 	}
-	
+
 	js, err := json.Marshal(status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -195,12 +191,12 @@ func QueryConnection(w http.ResponseWriter, r *http.Request) {
 	}
 	// get the connection details
 	conn, use_connector, err := authentication.GetConnection(schema, t.ConnectionId)
-	if(err != nil) {
+	if err != nil {
 		log.ErrorUserf(schema, sessions, email, groups, roles, "Api Error: %s", err.Error())
 	} else {
 		log.InfoUserf(schema, sessions, email, groups, roles, "Api QueryConnection %s, success", conn.Database)
 	}
-	
+
 	arequest := types.AnalyzerRequest{Dtype: types.DT_DatabaseInfo, Connection: conn}
 	bconn, err := json.Marshal(arequest)
 
@@ -212,28 +208,28 @@ func QueryConnection(w http.ResponseWriter, r *http.Request) {
 		} else {
 			status = types.ConnectionDetailResponse{"Error", "Unable to establish connection to the data source", nil}
 		}
-		
+
 	} else {
 		jsonParsed, err := gabs.ParseJSON(invokebody)
-		if(err != nil) {
+		if err != nil {
 			log.ErrorUserf(schema, sessions, email, groups, roles, "Api DbAnalyzer Error parsing output: %s", err.Error())
 		}
 		value, ok := jsonParsed.Path("Errormessage").Data().(string)
-		if(ok) {
+		if ok {
 			rr := fmt.Sprintf("Api Error in DbAnalyzer Invoke return: %s", value)
 			status = types.ConnectionDetailResponse{"Error", rr, nil}
-		
+
 		} else {
 			t := types.AnalyzerResponse{}
 			err := json.Unmarshal(invokebody, &t)
-			if(err != nil) {
-				status =  types.ConnectionDetailResponse{"Error", err.Error(), nil}
+			if err != nil {
+				status = types.ConnectionDetailResponse{"Error", err.Error(), nil}
 			} else {
-				status =  types.ConnectionDetailResponse{"OK", "", &t}
+				status = types.ConnectionDetailResponse{"OK", "", &t}
 			}
 		}
 	}
-	
+
 	js, err := json.Marshal(status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -257,31 +253,31 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 	t := types.Datascope{}
 	err := json.Unmarshal(body, &t)
 	if err != nil {
-		log.ErrorUserf(schema, session, email, groups, roles, "Api SaveDatascope, error %s", err.Error() )
+		log.ErrorUserf(schema, session, email, groups, roles, "Api SaveDatascope, error %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	error := authentication.SaveDatascope(schema, t)
 	var status types.OperationStatus
-	if(error == nil) {
+	if error == nil {
 		status = types.OperationStatus{"OK", "Ghost Database created"}
-		log.InfoUserf(schema, session, email, groups, roles, "Api SaveDatascope(%s), success", t.Name )
+		log.InfoUserf(schema, session, email, groups, roles, "Api SaveDatascope(%s), success", t.Name)
 
 	} else {
 		status = types.OperationStatus{"Error", error.Error()}
-		log.ErrorUserf(schema, session, email, groups, roles, "Api SaveDatascope, error %s", error.Error() )
+		log.ErrorUserf(schema, session, email, groups, roles, "Api SaveDatascope, error %s", error.Error())
 
 		js, err := json.Marshal(status)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	
+
 		common.CommonNocacheHeaders(w, r)
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(js)			
-		return	
+		w.Write(js)
+		return
 	}
 
 	var rq types.Request
@@ -301,21 +297,21 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Header().Set("Cache-Control", common.Nocache)
-		w.Header().Set("Content-Type", "application/json")		
-		w.Write(js)		
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
 		return
 	}
 
 	jsonParsed, err := gabs.ParseJSON(invokebody)
-	if(err != nil) {
+	if err != nil {
 		log.Errorf("Api SaveDatascope, DbSync Error parsing output: %s", err.Error())
 	}
 	value, ok := jsonParsed.Path("Errormessage").Data().(string)
-	if(ok) {
+	if ok {
 		rr := fmt.Sprintf("Api SaveDatascope, Error in Invoke return: %s", value)
 		status = types.OperationStatus{"Error", rr}
 		log.Errorf("Api %s", rr)
-	} 
+	}
 
 	js, err := json.Marshal(status)
 	if err != nil {
@@ -325,7 +321,7 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)		
+	w.Write(js)
 }
 
 func GetUsage(w http.ResponseWriter, r *http.Request) {
@@ -338,7 +334,7 @@ func GetUsage(w http.ResponseWriter, r *http.Request) {
 	_, _ = ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 
-	bytesin, bytesout,logins,tunnels, err := authentication.GetBytes(schema)
+	bytesin, bytesout, logins, tunnels, err := authentication.GetBytes(schema)
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetUsage, GetBytes error: %s", err.Error())
 		//http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -347,10 +343,10 @@ func GetUsage(w http.ResponseWriter, r *http.Request) {
 
 	var t types.Usage
 
-	t.Bytesin = strconv.FormatInt(bytesin, 10) 
-	t.Bytesout = strconv.FormatInt(bytesout, 10) 
+	t.Bytesin = strconv.FormatInt(bytesin, 10)
+	t.Bytesout = strconv.FormatInt(bytesout, 10)
 	t.Logins = logins //
-	t.Tunnels = tunnels 
+	t.Tunnels = tunnels
 
 	connections, datascopes, blocked, obfuscated, redacted, connectors, ctunnels, err := authentication.GetRestrictions(schema)
 	if err != nil {
@@ -362,7 +358,7 @@ func GetUsage(w http.ResponseWriter, r *http.Request) {
 	t.Connections = connections
 	t.Datascopes = datascopes
 	t.Blocked = blocked
-	t.Obfuscated = obfuscated 
+	t.Obfuscated = obfuscated
 	t.Redacted = redacted
 	t.Connectors = connectors
 	t.Connectortunnels = ctunnels
@@ -373,10 +369,10 @@ func GetUsage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	log.InfoUserf(schema, session, email, groups, roles, "Api GetUsage, success" )
+	log.InfoUserf(schema, session, email, groups, roles, "Api GetUsage, success")
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)	
+	w.Write(js)
 }
 
 func GetSelect(w http.ResponseWriter, r *http.Request) {
@@ -393,7 +389,7 @@ func GetSelect(w http.ResponseWriter, r *http.Request) {
 
 	err := json.Unmarshal(body, &t)
 	if err != nil {
-		log.ErrorUserf(schema, session, email, groups, roles, "Api GetSelect, error %s", err.Error() )
+		log.ErrorUserf(schema, session, email, groups, roles, "Api GetSelect, error %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -401,7 +397,7 @@ func GetSelect(w http.ResponseWriter, r *http.Request) {
 	ds, err := authentication.GetSelect(schema, &t)
 
 	if err != nil {
-		log.ErrorUserf(schema, session, email, groups, roles, "Api GetSelect, error %s", err.Error() )
+		log.ErrorUserf(schema, session, email, groups, roles, "Api GetSelect, error %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -409,11 +405,11 @@ func GetSelect(w http.ResponseWriter, r *http.Request) {
 	js, err := json.Marshal(ds)
 
 	if err != nil {
-		log.ErrorUserf(schema, session, email, groups, roles, "Api GetSelect, error %s", err.Error() )
+		log.ErrorUserf(schema, session, email, groups, roles, "Api GetSelect, error %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}	
-	log.InfoUserf(schema, session, email, groups, roles, "Api GetSelect, success" )
+	}
+	log.InfoUserf(schema, session, email, groups, roles, "Api GetSelect, success")
 
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -442,11 +438,11 @@ func GetDatascapeTables(w http.ResponseWriter, r *http.Request) {
 	var status types.DatascopeTables
 	ds, err := authentication.GetDatascopeTables(schema, t.Id)
 
-	if(err != nil) {
+	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetDatascapeTables, error: %s", err.Error())
-		status = types.DatascopeTables{"Error", err.Error(), nil} 
+		status = types.DatascopeTables{"Error", err.Error(), nil}
 	} else {
-		status = types.DatascopeTables{"OK", "", ds} 
+		status = types.DatascopeTables{"OK", "", ds}
 	}
 	js, err := json.Marshal(status)
 
@@ -454,9 +450,9 @@ func GetDatascapeTables(w http.ResponseWriter, r *http.Request) {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetDatascapeTables, error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}	
+	}
 	var outs []string
-	for i:=0; i < len(ds); i++  {
+	for i := 0; i < len(ds); i++ {
 		outs = append(outs, ds[i].Table)
 	}
 	log.InfoUserArrayf(schema, session, email, groups, roles, "Api GetDatascapeTables, success", outs)
@@ -485,12 +481,12 @@ func GetDatascopeDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	var status types.DatascopeInfoStatus
 	ds, err := authentication.GetDatascope(schema, t.Id)
-	if(err != nil) {
+	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetDatascopeDetails %s, Error: %s", ds.Name, err.Error())
-		status = types.DatascopeInfoStatus{"Error", err.Error(), nil} 
+		status = types.DatascopeInfoStatus{"Error", err.Error(), nil}
 	} else {
 		log.InfoUserf(schema, session, email, groups, roles, "Api GetDatascopeDetails %s, success", ds.Name)
-		status = types.DatascopeInfoStatus{"OK", "", &ds} 
+		status = types.DatascopeInfoStatus{"OK", "", &ds}
 	}
 	js, err := json.Marshal(status)
 
@@ -498,7 +494,7 @@ func GetDatascopeDetails(w http.ResponseWriter, r *http.Request) {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetDatascopeDetails %s, Error: %s", ds.Name, err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}	
+	}
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
@@ -517,32 +513,32 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 
 	var t types.ConnectionRecord
 	err := json.Unmarshal(body, &t)
-	if(err != nil) {
-		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, marshaling error %ss", err.Error()  )
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, marshaling error %ss", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if t.Usesconnector {
-		t.Address, t.Port, err = authentication.GetConnectorAddress(schema,  t.Tunnelid)
+		t.Address, t.Port, err = authentication.GetConnectorAddress(schema, t.Tunnelid)
 	}
-	if err == nil {		
+	if err == nil {
 		conn, use_connector, err := authentication.GetConnection(schema, *t.Id)
-		if(err != nil) {
-			log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, error %s, Id %s", err.Error(), *t.Id )
+		if err != nil {
+			log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, error %s, Id %s", err.Error(), *t.Id)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	
+
 		conn.Typ = types.ConnectionType(t.Dbtype)
 		conn.Address = t.Address
 		conn.Port = t.Port
 		conn.Database = t.Dbname
-		conn.Tls = t.UseTLS 
-	
-		if(t.Username != nil && t.Password != nil) {
-			conn.User = *t.Username 
+		conn.Tls = t.UseTLS
+
+		if t.Username != nil && t.Password != nil {
+			conn.User = *t.Username
 			conn.Password = *t.Password
-		} 
+		}
 		arequest := types.AnalyzerRequest{Dtype: types.DT_Test, Connection: conn}
 
 		bconn, err := json.Marshal(arequest)
@@ -556,14 +552,14 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 				rr = "Unable to establish connection to the data source"
 			}
 			http.Error(w, rr, http.StatusInternalServerError)
-			return			
+			return
 		} else {
 			jsonParsed, err := gabs.ParseJSON(invokebody)
-			if(err != nil) {
+			if err != nil {
 				log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, DbAnalyzer error parsing output: %s", err.Error())
 			}
 			value, ok := jsonParsed.Path("Errormessage").Data().(string)
-			if(ok) {
+			if ok {
 				rr := fmt.Sprintf("UpdateConnection, Error in Invoke return: %s", value)
 				log.ErrorUserf(schema, session, email, groups, roles, "Api %s", rr)
 				http.Error(w, rr, http.StatusInternalServerError)
@@ -574,7 +570,7 @@ func UpdateConnection(w http.ResponseWriter, r *http.Request) {
 
 	error := authentication.UpdateConnection(schema, t)
 
-	if(error != nil) {
+	if error != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateConnection, error: %s", error.Error())
 		http.Error(w, error.Error(), http.StatusInternalServerError)
 		return
@@ -615,7 +611,7 @@ func DeleteMapping(w http.ResponseWriter, r *http.Request) {
 	error := authentication.DeleteMapping(schema, t.Id)
 
 	var status types.OperationStatus
-	if(error != nil) {
+	if error != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteMapping, error: %s", error.Error())
 		status = types.OperationStatus{"Error", error.Error()}
 	} else {
@@ -627,7 +623,7 @@ func DeleteMapping(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if(error == nil) {
+	if error == nil {
 		log.InfoUserf(schema, session, email, groups, roles, "Api DeleteMapping, success")
 	}
 	common.CommonNocacheHeaders(w, r)
@@ -654,7 +650,7 @@ func UpdateMapping(w http.ResponseWriter, r *http.Request) {
 
 	error, admincount := authentication.UpdateMapping(schema, *t.Id, t.Dymiumgroup, t.Directorygroup, t.Comments, t.Adminaccess)
 	var status types.GroupStatus
-	if(error == nil) {
+	if error == nil {
 		status = types.GroupStatus{"OK", "Mapping updated", admincount}
 	} else {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateMapping, error: %s", error.Error())
@@ -666,9 +662,9 @@ func UpdateMapping(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if(error == nil) {
+	if error == nil {
 		log.InfoUserf(schema, session, email, groups, roles, "Api UpdateMapping, success")
-	}	
+	}
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
@@ -693,7 +689,7 @@ func CreateMapping(w http.ResponseWriter, r *http.Request) {
 
 	error := authentication.CreateNewMapping(schema, t.Dymiumgroup, t.Directorygroup, t.Comments, t.Adminaccess)
 	var status types.OperationStatus
-	if(error == nil) {
+	if error == nil {
 		status = types.OperationStatus{"OK", "Mapping created"}
 	} else {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api CreateMapping, error: %s", error.Error())
@@ -705,7 +701,7 @@ func CreateMapping(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if(error == nil) {
+	if error == nil {
 		log.InfoUserf(schema, session, email, groups, roles, "Api CreateMapping %s to %s, success", t.Directorygroup, t.Dymiumgroup)
 	}
 	common.CommonNocacheHeaders(w, r)
@@ -730,16 +726,16 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, error := authentication.CreateNewConnection(schema,  t)
+	id, error := authentication.CreateNewConnection(schema, t)
 	var status types.OperationStatus
-	if(error == nil) {
+	if error == nil {
 		status = types.OperationStatus{"OK", "Connection created"}
 	} else {
 		status = types.OperationStatus{"Error", error.Error()}
 		log.ErrorUserf(schema, session, email, groups, roles, "Error: %s", error.Error())
 	}
 
-	if(error == nil) {
+	if error == nil {
 		// get the connection details
 		conn, use_connector, err := authentication.GetConnection(schema, id)
 
@@ -760,28 +756,28 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 				}
 			} else {
 				jsonParsed, err := gabs.ParseJSON(invokebody)
-				if(err != nil) {
+				if err != nil {
 					log.ErrorUserf(schema, session, email, groups, roles, "Api DbAnalyzer Error parsing output: %s", err.Error())
 				}
 				value, ok := jsonParsed.Path("Errormessage").Data().(string)
-				if(ok) {
+				if ok {
 					rr := fmt.Sprintf("Error in Invoke return: %s", value)
 					status = types.OperationStatus{"Error", rr}
 					log.ErrorUserf(schema, session, email, groups, roles, "Api GetConnection error %s", rr)
-				} 
+				}
 			}
 		} else {
 			log.ErrorUserf(schema, session, email, groups, roles, "Api Error in GetConnection to %s: %s", conn.Database, err.Error())
 		}
 	}
-	if(status.Status == "Error") {
+	if status.Status == "Error" {
 		authentication.DeleteConnection(schema, id)
 		log.ErrorUserf(schema, session, email, groups, roles, "Api Roll back connection creation")
 	}
 
 	js, err := json.Marshal(status)
 	if err != nil {
-		log.ErrorUserf(schema, session, email, groups, roles, "Api GetConnection Marshal error %s", 
+		log.ErrorUserf(schema, session, email, groups, roles, "Api GetConnection Marshal error %s",
 			err.Error())
 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -805,7 +801,7 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 	t := types.Datascope{}
 	err := json.Unmarshal(body, &t)
 	if err != nil {
-		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateDatascope, unmarshaling error: %s", err.Error() )
+		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateDatascope, unmarshaling error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -820,14 +816,14 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		common.CommonNocacheHeaders(w, r)
-		w.Header().Set("Content-Type", "application/json")		
-		w.Write(js)		
-		return		
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+		return
 	}
 
 	var rq types.Request
 	rq.Action = types.A_Update
-	if( len(t.Records) == 0) {
+	if len(t.Records) == 0 {
 		rq.Action = types.A_Delete
 	}
 
@@ -846,17 +842,17 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		common.CommonNocacheHeaders(w, r)
-		w.Header().Set("Content-Type", "application/json")		
-		w.Write(js)		
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
 		return
-	} 
+	}
 
 	jsonParsed, err := gabs.ParseJSON(invokebody)
-	if(err != nil) {
+	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateDatascope, DbSync Error parsing output: %s", err.Error())
 	}
 	value, ok := jsonParsed.Path("Errormessage").Data().(string)
-	if(ok) {
+	if ok {
 		rr := fmt.Sprintf("Error in Invoke return: %s", value)
 		status = types.OperationStatus{"Error", rr}
 		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateDatascope, %s", rr)
@@ -872,7 +868,7 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 	}
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)		
+	w.Write(js)
 }
 
 func DeleteDatascope(w http.ResponseWriter, r *http.Request) {
@@ -889,7 +885,7 @@ func DeleteDatascope(w http.ResponseWriter, r *http.Request) {
 	t := types.DatascopeIdName{}
 	err := json.Unmarshal(body, &t)
 	if err != nil {
-		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteDatascope, unmarshaling error: %s", err.Error() )
+		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteDatascope, unmarshaling error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -901,7 +897,7 @@ func DeleteDatascope(w http.ResponseWriter, r *http.Request) {
 	rq.Datascope = &t.Name
 	snc, err := json.Marshal(rq)
 	if err != nil {
-		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteDatascope, marshaling error: %s", err.Error() )
+		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteDatascope, marshaling error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -917,20 +913,20 @@ func DeleteDatascope(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		common.CommonNocacheHeaders(w, r)
-		w.Header().Set("Content-Type", "application/json")		
-		w.Write(js)		
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
 		return
-	} 
+	}
 
 	jsonParsed, err := gabs.ParseJSON(invokebody)
-	if(err != nil) {
+	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteDatascope, DbSync Error parsing output: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	value, ok := jsonParsed.Path("Errormessage").Data().(string)
 	var js []byte
-	if(ok) {
+	if ok {
 		rr := fmt.Sprintf("Error in Invoke return: %s", value)
 		status = types.OperationStatus{"Error", rr}
 		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteDatascope, %s", rr)
@@ -952,7 +948,7 @@ func DeleteDatascope(w http.ResponseWriter, r *http.Request) {
 	log.InfoUserf(schema, session, email, groups, roles, "Api DeleteDatascope(%s), success", t.Name)
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)		
+	w.Write(js)
 }
 
 func SaveGroups(w http.ResponseWriter, r *http.Request) {
@@ -976,14 +972,14 @@ func SaveGroups(w http.ResponseWriter, r *http.Request) {
 
 	error := authentication.UpdateGroupAssignment(schema, t)
 
-	var status  types.OperationStatus
+	var status types.OperationStatus
 	if error == nil {
 		status = types.OperationStatus{"OK", "Groups Updated"}
 	} else {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api SaveGroups, error: %s", error.Error())
 		status = types.OperationStatus{"Error", err.Error()}
 	}
-	
+
 	js, err := json.Marshal(status)
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api SaveGroups, error: %s", err.Error())
@@ -994,7 +990,7 @@ func SaveGroups(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < len(t.Groups); i++ {
 		out = append(out, t.Groups[i].Name)
 	}
-	if(error == nil) {
+	if error == nil {
 		log.InfoUserArrayf(schema, session, email, groups, roles, "Api SaveGroups for Datascope %s, success", out, t.Name)
 	}
 	common.CommonNocacheHeaders(w, r)
@@ -1022,12 +1018,12 @@ func DeleteConnection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	conn, _, err := authentication.GetConnection(schema, t.Id)
-	if(err != nil) {
+	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api Error in DeleteConnection: %s", err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)		
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	err = authentication.DeleteConnection(schema, t.Id)
-	var status  types.OperationStatus
+	var status types.OperationStatus
 	if err == nil {
 		status = types.OperationStatus{"OK", "Connection deleted"}
 		log.InfoUserf(schema, session, email, groups, roles, "Api DeleteConnection %s success", conn.Database)
@@ -1036,7 +1032,7 @@ func DeleteConnection(w http.ResponseWriter, r *http.Request) {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api DeleteConnection, error: %s", err.Error())
 		status = types.OperationStatus{"Error", err.Error()}
 	}
-	
+
 	js, err := json.Marshal(status)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1059,7 +1055,7 @@ func SavePolicies(w http.ResponseWriter, r *http.Request) {
 
 	err := authentication.SavePolicies(schema, body)
 
-	var status  types.OperationStatus
+	var status types.OperationStatus
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api SavePolicies, error: %s", err.Error())
 		status = types.OperationStatus{"Error", err.Error()}
@@ -1073,7 +1069,7 @@ func SavePolicies(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-		
+
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
@@ -1086,7 +1082,7 @@ func GetPolicies(w http.ResponseWriter, r *http.Request) {
 	groups := r.Context().Value(authenticatedGroupsKey).([]string)
 	roles := r.Context().Value(authenticatedRolesKey).([]string)
 	session := r.Context().Value(authenticatedSessionKey).(string)
-	
+
 	js, err := authentication.GetPolicies(schema)
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetPolicies, error: %s", err.Error())
@@ -1113,7 +1109,7 @@ func GetDatascopesForTestSQL(w http.ResponseWriter, r *http.Request) {
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
-	if(error != nil) {
+	if error != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api Error in GetDatascopes: %s", error.Error())
 
 		status := types.DatascopesStatus{"Error", error.Error(), []types.DatascopeIdName{}}
@@ -1127,8 +1123,8 @@ func GetDatascopesForTestSQL(w http.ResponseWriter, r *http.Request) {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api Error in GetDatascopes: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	} 
-	var out []string 
+	}
+	var out []string
 	for i := 0; i < len(datascopes); i++ {
 		out = append(out, datascopes[i].Name)
 	}
@@ -1147,7 +1143,7 @@ func GetDatascopes(w http.ResponseWriter, r *http.Request) {
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 
-	if(error != nil) {
+	if error != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api Error in GetDatascopes: %s", error.Error())
 
 		status := types.DatascopesStatus{"Error", error.Error(), []types.DatascopeIdName{}}
@@ -1161,8 +1157,8 @@ func GetDatascopes(w http.ResponseWriter, r *http.Request) {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api Error in GetDatascopes: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	} 
-	var out []string 
+	}
+	var out []string
 	for i := 0; i < len(datascopes); i++ {
 		out = append(out, datascopes[i].Name)
 	}
@@ -1180,10 +1176,10 @@ func GetMappings(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	mappings, error := authentication.GetMappings(schema)
-	if(error != nil) {
+	if error != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetMappings, error: %s", error.Error())
 
-		var status  types.GroupMappingStatus
+		var status types.GroupMappingStatus
 		status = types.GroupMappingStatus{"Error", error.Error(), []types.GroupMapping{}}
 		js, _ := json.Marshal(status)
 		w.Write(js)
@@ -1198,7 +1194,7 @@ func GetMappings(w http.ResponseWriter, r *http.Request) {
 	}
 	var out []string
 	for i := 0; i < len(mappings); i++ {
-		s := fmt.Sprintf("%s to %s, ",  mappings[i].Directorygroup, mappings[i].Dymiumgroup)
+		s := fmt.Sprintf("%s to %s, ", mappings[i].Directorygroup, mappings[i].Dymiumgroup)
 		out = append(out, s)
 	}
 	log.InfoUserf(schema, session, email, groups, roles, "Api GetMappings, success")
@@ -1214,11 +1210,11 @@ func GetGroupsForDatascopes(w http.ResponseWriter, r *http.Request) {
 
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	mappings, error := authentication.GetGroupAssignments(schema)
-	if(error != nil) {
+	if error != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetGroupsForDatascopes, error: %s", error.Error())
-		var status  types.OperationStatus
+		var status types.OperationStatus
 		status = types.OperationStatus{"Error", error.Error()}
 		js, _ := json.Marshal(status)
 		w.Write(js)
@@ -1232,7 +1228,7 @@ func GetGroupsForDatascopes(w http.ResponseWriter, r *http.Request) {
 	}
 	var out []string
 	for i := 0; i < len(mappings); i++ {
-		s := fmt.Sprintf("%s available to %s, ",  mappings[i].Name, mappings[i].Groupname)
+		s := fmt.Sprintf("%s available to %s, ", mappings[i].Name, mappings[i].Groupname)
 		out = append(out, s)
 	}
 
@@ -1241,7 +1237,7 @@ func GetGroupsForDatascopes(w http.ResponseWriter, r *http.Request) {
 }
 func FakeLogin(w http.ResponseWriter, r *http.Request) {
 
-	if(r.Host != "portal.dymium.local" || r.Host != os.Getenv("CUSTOMER_HOST")) {
+	if r.Host != "portal.dymium.local" || r.Host != os.Getenv("CUSTOMER_HOST") {
 		log.Errorf("Error: FakeLogin on non-local host requested")
 		http.Error(w, "Fake login forbidden", http.StatusInternalServerError)
 		return
@@ -1290,7 +1286,7 @@ func GetLogout(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			log.InfoUserf(schema, session, email, groups, roles, "Api GetLogout, success")
 		} else {
-			log.Infof("Api GetLogout, session expired")			
+			log.Infof("Api GetLogout, session expired")
 		}
 
 	} else {
@@ -1321,10 +1317,10 @@ func AuthByCode(w http.ResponseWriter, r *http.Request) {
 	clientsecret := os.Getenv("AUTH0_PORTAL_CLIENT_SECRET")
 	redirecturl := os.Getenv("AUTH0_PORTAL_CLI_REDIRECT_URL")
 
-	token, name, groups, schema, email, roles, err :=  authentication.GetTunnelToken(t.Code, domain, clientid, clientsecret, redirecturl) 
+	token, name, groups, schema, email, roles, err := authentication.GetTunnelToken(t.Code, domain, clientid, clientsecret, redirecturl)
 	var ret types.AuthorizationCodeResponse
 	ret.Token = token
-	ret.Groups = groups 
+	ret.Groups = groups
 	ret.Name = name
 
 	session, _ := authentication.GetSessionFromToken(token)
@@ -1380,11 +1376,10 @@ func RegenerateDatascopePassword(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-
 func DownloadUpdate(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	os, _ := vars["os"]
-	arch, _ := vars["arch"]	
+	arch, _ := vars["arch"]
 
 	fil := fmt.Sprintf("./customer/update/%s/%s/tunnel", os, arch)
 	log.Info("Api DownloadUpdate called")
@@ -1394,7 +1389,7 @@ func DownloadUpdate(w http.ResponseWriter, r *http.Request) {
 func DownloadConnectorUpdate(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	os := vars["os"]
-	arch := vars["arch"]	
+	arch := vars["arch"]
 
 	fil := fmt.Sprintf("./customer/connector/%s/%s/meshconnector", os, arch)
 	log.Infof("Api DownloadConnectorUpdate called for %s", fil)
@@ -1418,7 +1413,7 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 	redirecturl := os.Getenv("AUTH0_PORTAL_CLI_REDIRECT_URL")
 
 	var schema string
-	if( strings.HasPrefix(t.Customerid, "org_") ) {
+	if strings.HasPrefix(t.Customerid, "org_") {
 		schema, err = authentication.GetSchemaFromClientId(t.Customerid)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1431,21 +1426,21 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// flip
-		schema,t.Customerid  = t.Customerid, schema
+		schema, t.Customerid = t.Customerid, schema
 	}
-	
+
 	lbaddress := schema + os.Getenv("LB_DOMAIN")
 	port := os.Getenv("LB_PORT")
-	if(port == "") {
+	if port == "" {
 		port = "443"
 	}
-	lbport, _ :=  strconv.Atoi(port) 
+	lbport, _ := strconv.Atoi(port)
 
 	tunnellogin := fmt.Sprintf("%sauthorize?response_type=code&client_id=%s&redirect_uri=%s&organization=%s&scope=%s&prompt=login",
-		domain, clientid, redirecturl, t.Customerid,  url.QueryEscape("openid profile email") )
+		domain, clientid, redirecturl, t.Customerid, url.QueryEscape("openid profile email"))
 
-	var resp  types.CustomerIDResponse
-	
+	var resp types.CustomerIDResponse
+
 	resp.LoginURL = tunnellogin
 	resp.Lbaddress = lbaddress
 	resp.Lbport = lbport
@@ -1454,10 +1449,8 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 	resp.ClientMajorVersion = os.Getenv("MAJOR_VERSION")
 	resp.ClientMinorVersion = os.Getenv("MINOR_VERSION")
 
-
 	js, err := json.Marshal(resp)
 
-	
 	if err != nil {
 		log.Debugf("QueryTunnel error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1469,6 +1462,7 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 
 }
+
 // convert DER to PEM format
 func pemCert(derBytes []byte) []byte {
 	pemBlock := &pem.Block{
@@ -1496,51 +1490,51 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetClientCertificate, error unmarshaling cert: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-    
-	pemBlock, _ := pem.Decode( []byte(t.Csr) )
-    if pemBlock == nil {
+
+	pemBlock, _ := pem.Decode([]byte(t.Csr))
+	if pemBlock == nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetClientCertificate, pem.Decode failed")
 		http.Error(w, "pem.Decode failed", http.StatusInternalServerError)
-		return		
-    }
+		return
+	}
 
-	clientCSR, err := x509.ParseCertificateRequest(pemBlock.Bytes) 
-    if err = clientCSR.CheckSignature(); err != nil {
+	clientCSR, err := x509.ParseCertificateRequest(pemBlock.Bytes)
+	if err = clientCSR.CheckSignature(); err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetClientCertificate, error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return 
-    }
+		return
+	}
 
 	// create client certificate template
-    clientCRTTemplate := x509.Certificate{
-        Signature:          clientCSR.Signature,
-        SignatureAlgorithm: clientCSR.SignatureAlgorithm,
+	clientCRTTemplate := x509.Certificate{
+		Signature:          clientCSR.Signature,
+		SignatureAlgorithm: clientCSR.SignatureAlgorithm,
 
-        PublicKeyAlgorithm: clientCSR.PublicKeyAlgorithm,
-        PublicKey:          clientCSR.PublicKey,
+		PublicKeyAlgorithm: clientCSR.PublicKeyAlgorithm,
+		PublicKey:          clientCSR.PublicKey,
 
-        SerialNumber: big.NewInt(2),
-        Issuer:       authentication.CaCert.Subject,
-        Subject:      clientCSR.Subject,
-        NotBefore:    time.Now().Add(-GRACE * time.Second), // grace time
-        NotAfter:     time.Now().Add(GRACE * time.Second), // REMOVE ME extra 0
-        KeyUsage:     x509.KeyUsageDigitalSignature,
-        ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
-		DNSNames: clientCSR.DNSNames,
-    }
+		SerialNumber: big.NewInt(2),
+		Issuer:       authentication.CaCert.Subject,
+		Subject:      clientCSR.Subject,
+		NotBefore:    time.Now().Add(-GRACE * time.Second), // grace time
+		NotAfter:     time.Now().Add(GRACE * time.Second),  // REMOVE ME extra 0
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		DNSNames:     clientCSR.DNSNames,
+	}
 
-    // create client certificate from template and CA public key
-    clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, authentication.CaCert, 
+	// create client certificate from template and CA public key
+	clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, authentication.CaCert,
 		clientCSR.PublicKey, authentication.CaKey)
-	
-    if err != nil {
+
+	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetClientCertificate, error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-    }
+	}
 
-    out := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: clientCRTRaw})
+	out := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: clientCRTRaw})
 
-	var certout types.CSRResponse 
+	var certout types.CSRResponse
 	certout.Certificate = string(out)
 	certout.Version = protocol.MeshServerVersion
 	js, err := json.Marshal(certout)
@@ -1580,59 +1574,58 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 	}
 	//fmt.Printf("schema: %s, key: %s, secret %s\n", schema, key, secret)
 
-
-	pemBlock, _ := pem.Decode( []byte(t.Csr) )
-    if pemBlock == nil {
+	pemBlock, _ := pem.Decode([]byte(t.Csr))
+	if pemBlock == nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, pem.Decode failed")
 		http.Error(w, "Certificate Request has invalid encoding", http.StatusInternalServerError)
-		return		
-    }
+		return
+	}
 
-	clientCSR, err := x509.ParseCertificateRequest(pemBlock.Bytes) 
-    if err = clientCSR.CheckSignature(); err != nil {
+	clientCSR, err := x509.ParseCertificateRequest(pemBlock.Bytes)
+	if err = clientCSR.CheckSignature(); err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
 		http.Error(w, "Certificate Request has invalid format", http.StatusInternalServerError)
-		return 
-    }
+		return
+	}
 
 	targets, err := authentication.GetTargets(clientCSR.Subject.CommonName, key, secret)
-    if err != nil {
+	if err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
 		http.Error(w, "Dymium failed to get targets", http.StatusInternalServerError)
 		return
-    }
+	}
 
 	// create client certificate template
-    clientCRTTemplate := x509.Certificate{
-        Signature:          clientCSR.Signature,
-        SignatureAlgorithm: clientCSR.SignatureAlgorithm,
+	clientCRTTemplate := x509.Certificate{
+		Signature:          clientCSR.Signature,
+		SignatureAlgorithm: clientCSR.SignatureAlgorithm,
 
-        PublicKeyAlgorithm: clientCSR.PublicKeyAlgorithm,
-        PublicKey:          clientCSR.PublicKey,
+		PublicKeyAlgorithm: clientCSR.PublicKeyAlgorithm,
+		PublicKey:          clientCSR.PublicKey,
 
-        SerialNumber: big.NewInt(2),
-        Issuer:       authentication.CaCert.Subject,
-        Subject:      clientCSR.Subject,
-        NotBefore:    time.Now().Add(-GRACE * time.Second), // grace time
-        NotAfter:     time.Now().Add(GRACE * time.Second), // DELETE ME
-        KeyUsage:     x509.KeyUsageDigitalSignature,
-        ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
-		DNSNames: 		targets,
-    }
+		SerialNumber: big.NewInt(2),
+		Issuer:       authentication.CaCert.Subject,
+		Subject:      clientCSR.Subject,
+		NotBefore:    time.Now().Add(-GRACE * time.Second), // grace time
+		NotAfter:     time.Now().Add(GRACE * time.Second),  // DELETE ME
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		DNSNames:     targets,
+	}
 
-    // create client certificate from template and CA public key
-    clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, authentication.CaCert, 
+	// create client certificate from template and CA public key
+	clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, authentication.CaCert,
 		clientCSR.PublicKey, authentication.CaKey)
-	
-    if err != nil {
+
+	if err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
 		http.Error(w, "Dymium failed to create a client cert", http.StatusInternalServerError)
 		return
-    }
+	}
 
-    out := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: clientCRTRaw})
+	out := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: clientCRTRaw})
 
-	var certout types.CSRResponse 
+	var certout types.CSRResponse
 	certout.Certificate = string(out)
 	certout.Version = protocol.MeshServerVersion
 	js, err := json.Marshal(certout)
@@ -1676,9 +1669,8 @@ func SetConnectorStatus(w http.ResponseWriter, r *http.Request) {
 	log.Info("Api SetConnectorStatus, success")
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write( []byte("status updated"))
+	w.Write([]byte("status updated"))
 }
-
 
 func GetConnections(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
@@ -1691,9 +1683,9 @@ func GetConnections(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	connections, error := authentication.GetConnections(schema)
-	if(error != nil) {
+	if error != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api Error in GetConnections: %s", error.Error())
-		var status  types.OperationStatus
+		var status types.OperationStatus
 		status = types.OperationStatus{"Error", error.Error()}
 		js, _ := json.Marshal(status)
 		w.Write(js)
@@ -1722,25 +1714,25 @@ func DatascopeHelp(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	token, _ := vars["token"]
 	sport, _ := vars["port"]
-	
+
 	newtoken, error := authentication.CheckAndRefreshToken(token, sport)
 	nonce, _ := authentication.GenerateRandomString(32)
 	common.CommonNocacheNocspHeaders(w, r)
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("x-content-type-options", "nosniff")
 	w.Header().Set("strict-transport-security", "max-age=31536000")
-	w.Header().Set("X-Frame-Options", "sameorigin")	
+	w.Header().Set("X-Frame-Options", "sameorigin")
 	w.Header().Set("Content-Security-Policy", "script-src 'nonce-"+nonce+"'")
-	if(error != nil) {
+	if error != nil {
 		http.Error(w, error.Error(), http.StatusNotFound)
 		return
 	}
 
 	js := []byte(`<html>
 	<head>
-	<script nonce="`+nonce+`">
+	<script nonce="` + nonce + `">
 	 !function() {
-		sessionStorage.setItem("Session", "`+newtoken+`")
+		sessionStorage.setItem("Session", "` + newtoken + `")
 		window.location.href = "/app/access?key=datascopes"
 	 }()
 	</script>
@@ -1751,7 +1743,7 @@ func DatascopeHelp(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 func GetImages(w http.ResponseWriter, r *http.Request) {
-	filename := path.Join(authentication.FilesystemRoot, "./customer/" + r.URL.Path)
+	filename := path.Join(authentication.FilesystemRoot, "./customer/"+r.URL.Path)
 
 	if _, err := os.Stat(filename); errors.Is(err, os.ErrNotExist) {
 		// file does not exist
@@ -1763,7 +1755,7 @@ func GetImages(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// file exists
 		if strings.HasPrefix(r.URL.Path, "/static") || strings.HasSuffix(r.URL.Path, ".png") || strings.HasSuffix(r.URL.Path, "*.gif") ||
-			strings.HasSuffix(r.URL.Path, ".jpg") || strings.HasSuffix(r.URL.Path, ".svg") || 
+			strings.HasSuffix(r.URL.Path, ".jpg") || strings.HasSuffix(r.URL.Path, ".svg") ||
 			strings.HasSuffix(r.URL.Path, ".tgz") || strings.HasSuffix(r.URL.Path, ".zip") {
 
 			w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
@@ -1816,11 +1808,11 @@ func CreateNewConnector(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	status := types.AuthStatus{"OK", "Connector "+t.Name+" provisioned!", id}
+	status := types.AuthStatus{"OK", "Connector " + t.Name + " provisioned!", id}
 	js, err := json.Marshal(status)
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(js))	
+	w.Write([]byte(js))
 }
 
 func GetConnectors(w http.ResponseWriter, r *http.Request) {
@@ -1831,12 +1823,12 @@ func GetConnectors(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}	
+	}
 	js, err := json.Marshal(conns)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return		
+		return
 	}
 	if len(conns) == 0 {
 		js = []byte("[]")
@@ -1844,7 +1836,7 @@ func GetConnectors(w http.ResponseWriter, r *http.Request) {
 
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(js))		
+	w.Write([]byte(js))
 }
 
 func UpdateConnector(w http.ResponseWriter, r *http.Request) {
@@ -1868,12 +1860,12 @@ func UpdateConnector(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}	
-	status := types.OperationStatus{"OK", "Connector "+t.Name+" updated!"}
+	}
+	status := types.OperationStatus{"OK", "Connector " + t.Name + " updated!"}
 	js, err := json.Marshal(status)
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(js))		
+	w.Write([]byte(js))
 }
 
 func DeleteConnector(w http.ResponseWriter, r *http.Request) {
@@ -1902,5 +1894,5 @@ func DeleteConnector(w http.ResponseWriter, r *http.Request) {
 	js, err := json.Marshal(status)
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(js))		
+	w.Write([]byte(js))
 }
