@@ -44,16 +44,15 @@ fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)
 )
 (
 	cd $script_d/../foreign_data_wrappers/mongo_fdw
-	    docker run -it --rm \
+  docker run -it --rm \
 		   -v $PWD:/fdw \
 		   -e MONGO_FDW_SOURCE_DIR=/fdw \
 		   -e MONGOC_INSTALL_DIR=/fdw/mongo-c-driver \
 		   -e JSONC_INSTALL_DIR=/fdw/json-c \
+		   -e PKG_CONFIG_PATH=/fdw/mongo-c-driver/src/libmongoc/src:/fdw/mongo-c-driver/src/libbson/src \
 		   postgres-dev \
 		   /bin/bash -c \
 		   "cd /fdw; (./autogen.sh --with-master; \
-		                export PKG_CONFIG_PATH=$MONGO_FDW_SOURCE_DIR/mongo-c-driver/src/libmongoc/src:$MONGO_FDW_SOURCE_DIR/mongo-c-driver/src/libbson/src;  \
-		                export LD_LIBRARY_PATH=$MONGO_FDW_SOURCE_DIR/mongo-c-driver/lib/:$LD_LIBRARY_PATH; \
                     make USE_PGXS=true; \
                     DESTDIR=. make USE_PGXS=true install) && \
                     tar czv --owner=root --group=root -f mongo.tar.gz usr; rm -rf usr && \
