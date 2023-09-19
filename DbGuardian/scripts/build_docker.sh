@@ -51,10 +51,10 @@ fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)
 		   -e JSONC_INSTALL_DIR=/fdw/json-c \
 		   postgres-dev \
 		   /bin/bash -c \
-		   "cd /fdw; (./autogen.sh --with-master) && \
-		                (export PKG_CONFIG_PATH=$MONGO_FDW_SOURCE_DIR/mongo-c-driver/src/libmongoc/src:$MONGO_FDW_SOURCE_DIR/mongo-c-driver/src/libbson/src && \
-		                export LD_LIBRARY_PATH=mongo-c-driver/lib/:$LD_LIBRARY_PATH && \
-                    make USE_PGXS=true && \
+		   "cd /fdw; (./autogen.sh --with-master; \
+		                export PKG_CONFIG_PATH=$MONGO_FDW_SOURCE_DIR/mongo-c-driver/src/libmongoc/src:$MONGO_FDW_SOURCE_DIR/mongo-c-driver/src/libbson/src;  \
+		                export LD_LIBRARY_PATH=$MONGO_FDW_SOURCE_DIR/mongo-c-driver/lib/:$LD_LIBRARY_PATH; \
+                    make USE_PGXS=true; \
                     DESTDIR=. make USE_PGXS=true install) && \
                     tar czv --owner=root --group=root -f mongo.tar.gz usr; rm -rf usr && \
                     mkdir -p usr/local/libmongo; cp json-c/lib/* usr/local/libmongo; cp mongo-c-driver/lib/* usr/local/libmongo; tar czv --owner=root --group=root -f mongo-lib.tar.gz usr; rm -rf lib"

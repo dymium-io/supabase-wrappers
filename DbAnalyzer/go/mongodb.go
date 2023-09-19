@@ -6,6 +6,7 @@ import (
 	"DbAnalyzer/utils"
 	"context"
 	"dymium.com/dymium/log"
+	"errors"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -200,6 +201,11 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 	allowable := &[]types.DataHandling{types.DH_Block, types.DH_Redact, types.DH_Allow}
 	blocked := &[]types.DataHandling{types.DH_Block}
 
+	if len(descr) == 0 {
+		log.Errorf("cannot fetch collection schema - collection is empty, DB: %s, Collection: %s", tip.Schema, tip.Table)
+		return nil, errors.New("cannot fetch collection schema - collection is empty")
+	}
+
 	for k, d := range descr {
 		var possibleActions *[]types.DataHandling
 		var t string
@@ -246,7 +252,7 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 			possibleActions = allowable
 			sample[k] = dtk(true)
 		case "bson.m", "primitive.m":
-			possibleActions = obfuscatable
+			possibleActions = allowable
 			t = "json"
 			sample[k] = dtk(true)
 		case "array", "primitive.a":
@@ -275,7 +281,7 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 				possibleActions = allowable
 				sample[k] = dtk(true)
 			case "bson.m", "primitive.m":
-				possibleActions = obfuscatable
+				possibleActions = allowable
 				t = "json[]"
 				sample[k] = dtk(true)
 			default:
