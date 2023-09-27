@@ -147,6 +147,9 @@ RUN chmod a+x /usr/local/bin/startup.sh
 
 ENV LD_LIBRARY_PATH="/usr/local/libmongo:/lib64:/usr/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib64:/var/lib/postgresql/sqllib/lib64/gskit:/var/lib/postgresql/sqllib/lib32"
 
+RUN echo "en_US.UTF-8 UTF-8"> /etc/locale.gen
+RUN locale-gen
+
 ENTRYPOINT ["/usr/local/bin/startup.sh"]
 
 EOF
