@@ -26,7 +26,7 @@ exports[`add-datascope 1`] = `
         >
            
           <h5>
-            Register table
+            Link table
              
           </h5>
         </div>
@@ -300,7 +300,9 @@ exports[`add-datascope 1`] = `
                         type="radio"
                       />
                     </td>
-                    <td>
+                    <td
+                      className="overflow-x-scroll"
+                    >
                       test1
                     </td>
                     <td>
@@ -357,7 +359,9 @@ exports[`add-datascope 1`] = `
                         type="radio"
                       />
                     </td>
-                    <td>
+                    <td
+                      className="overflow-x-scroll"
+                    >
                       test2
                     </td>
                     <td>

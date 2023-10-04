@@ -353,7 +353,7 @@ exports[`edit-connections-form 1`] = `
               <input
                 class="form-control form-control-sm"
                 id="ipaddress"
-                pattern="^[a-zA-Z0-9._]+$"
+                pattern="^[a-zA-Z0-9._-]+$"
                 placeholder="DB IP address or host name"
                 required=""
                 type="text"
