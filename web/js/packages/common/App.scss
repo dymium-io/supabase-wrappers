@@ -11,6 +11,7 @@ $breakdown-width:900px;
 
 body, #root  {
   height: 100vh;
+  scrollbar-width: thin;
 }
 
 #anicanvas {
@@ -434,11 +435,6 @@ pre {
   box-shadow: 0 0 1px rgba(255, 255, 255, .5);
   background: $main-blue;
 }
-td {
-  ::-webkit-scrollbar {
-    display: none;
-  }
-}
 
 .btn-test {
   background-color: #B8DAEE !important;  
@@ -551,5 +547,13 @@ td {
   font-size: 0.8em;
 }
 .overflow-x-scroll {
+  display: block;
   overflow-x: scroll;
+  white-space: nowrap;
+  ::-webkit-scrollbar {
+    -webkit-appearance: none;
+    height: 3px;
+    width: 3px;
+  }
+  scrollbar-width: thin;
 }

@@ -147,6 +147,16 @@ exports[`edit-connections-form 1`] = `
                 >
                   Oracle Database
                 </option>
+                <option
+                  value="DB2"
+                >
+                  IBM DB2 Database
+                </option>
+                <option
+                  value="MongoDB"
+                >
+                  MongoDB Database
+                </option>
               </select>
               <div
                 class="valid-feedback"
