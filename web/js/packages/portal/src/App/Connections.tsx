@@ -260,7 +260,7 @@ function ConnectionForm(props) {
                                 <Form.Label>Address:</Form.Label>
                                 <Form.Control size="sm" type="text" placeholder="DB IP address or host name"
                                     required
-                                    pattern="^[a-zA-Z0-9._]+$"
+                                    pattern="^[a-zA-Z0-9._-]+$"
                                     value={props.address}
                                     onChange={e => props.setAddress(e.target.value)}
                                 />
