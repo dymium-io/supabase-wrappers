@@ -27,5 +27,6 @@
 
 # pgregress results directory
 results/
-
+json-c
 .idea/
+config.h
