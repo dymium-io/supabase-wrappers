@@ -87,6 +87,7 @@ export default function EditDatascopes() {
             dataField: 'name',
             text: 'Name:',
             sort: true,
+            classes: 'overflow-x-scroll'
         },
         {
             dataField: 'created',

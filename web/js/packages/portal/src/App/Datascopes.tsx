@@ -171,7 +171,16 @@ export function AddDatascope(props) {
             setValidated(true)
             return false
         }
-        
+        if(dbname.match(com.special)) {
+            event.preventDefault();
+            setValidated(true)
+            setAlert(
+                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                    Can't use a reserved word {<b>{dbname}</b>} for a Ghost Database name. 
+                </Alert>
+            )            
+            return false
+        }
         let smb = false
         let conns = Object.keys(datascope)
         let _submittable = submittable
