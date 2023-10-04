@@ -121,8 +121,19 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
         {
             dataField: 'columns',
             text: '# of columns:',
-            isDummyField: true,
+            //isDummyField: true,
             sort: true,
+            sortFunc: (a, b, order, dataField, rowA, rowB) => {
+                let dif = rowA.tablescope.length - rowB.tablescope.length
+                // check asc
+                if(dif === 0)
+                    return 0
+                if (dif > 0) {
+                    return order === 'asc' ? 1 : -1;
+                } else  {
+                    return order === 'asc' ? -1 : 1;
+                }
+            },
             formatter: (cell, row, rowIndex, formatExtraData) => {
 
                 return row.tablescope.length
@@ -133,6 +144,21 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
             text: 'Sensitivity:',
             isDummyField: true,
             sort: true,
+            sortFunc: (a, b, order, dataField, rowA, rowB) => {
+                let senseA = false
+                rowA.tablescope.forEach(x => {
+                    if (x.semantics !== "N/A" && x.semantics != null && x.semantics !== "")
+                        senseA = true
+                })
+                let senseB = false
+                rowB.tablescope.forEach(x => {
+                    if (x.semantics !== "N/A" && x.semantics != null && x.semantics !== "")
+                        senseB = true
+                })
+                if (senseA && !senseB) return order === 'asc' ? 1 : -1;
+                if (!senseA && senseB) return order === 'asc' ? -1 : 1;
+                return 0;
+            },
             formatter: (cell, row, rowIndex, formatExtraData) => {
                 let sense = false
                 row.tablescope.forEach(x => {
@@ -147,6 +173,21 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
             dataField: 'disposition',
             text: 'Access:',
             isDummyField: true,
+            sortFunc: (a, b, order, dataField, rowA, rowB) => {
+                let managedA = false
+                rowA.tablescope.forEach(x => {
+                    if (x.action.toLowerCase() !== "allow")
+                        managedA = true
+                })
+                let managedB = false
+                rowB.tablescope.forEach(x => {
+                    if (x.action.toLowerCase() !== "allow")
+                        managedB = true
+                })
+                if (managedA && !managedB) return order === 'asc' ? 1 : -1;
+                if (!managedA && managedB) return order === 'asc' ? -1 : 1;
+                return 0;
+            },
             sort: true,
             formatter: (cell, row, rowIndex, formatExtraData) => {
                 let managed = false
