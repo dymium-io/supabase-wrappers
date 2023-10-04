@@ -67,7 +67,8 @@ fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)
 		      "cd /fdw; \
           make USE_PGXS=true clean; \
           DESTDIR=. make USE_PGXS=true install && \
-          tar czv --owner=root --group=root -f jdbc_fdw.tar.gz usr; rm -rf usr"
+          cp  /usr/lib/postgresql/14/lib/JDBC* usr/lib/postgresql/14/lib/ && \
+          tar czv --owner=root --group=root -f jdbc_fdw.tar.gz usr" #; rm -rf usr"
 )
 
 
@@ -127,7 +128,7 @@ RUN tar xzvf /usr.tar.gz && rm /usr.tar.gz
 RUN tar xzvf /obfuscator.tar.gz && rm /obfuscator.tar.gz
 RUN tar xzvf /mongo.tar.gz && rm /mongo.tar.gz
 RUN tar xzvf /mongo-lib.tar.gz && rm /mongo-lib.tar.gz
-RUN tar xzvf /jdbc_fdw.tar.gz && rm /jdbc_fdw.tar.gz
+RUN tar xzvf /jdbc_fdw.tar.gz #&& rm /jdbc_fdw.tar.gz
 
 # Add logcollector
 RUN addgroup nobody tty && addgroup postgres tty
