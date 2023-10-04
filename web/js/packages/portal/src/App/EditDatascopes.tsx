@@ -493,7 +493,7 @@ export default function EditDatascopes() {
         <div className=" text-left">
             {alert}
             <Offcanvas show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}
-                title={table["connection"] === undefined ? "Register table" : "Edit table"}>
+                title={table["connection"] === undefined ? "Link table" : "Edit table"}>
                 {showOffcanvas &&
                     <AddTable onHide={() => { setShowOffcanvas(false) }} onAlert={setAlert} onAddTable={onAddTable} table={table} currentConnectionType={currentConnectionType} connectionId={currentConnectionId} />
                 }
