@@ -97,6 +97,6 @@ ENV LD_LIBRARY_PATH="/lib64:/usr/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql
 
 ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
 #ENV PATH="$PATH:/usr/lib/jvm/java-8-openjdk-amd64/bin"
-RUN ln -s /usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/amd64/server/libjvm.so /usr/lib64/libjvm.so
+RUN ln -s /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/libjvm.so /usr/lib64/libjvm.so
 
 EOF
