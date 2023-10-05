@@ -327,6 +327,14 @@ function Test() {
 
   let getSelect = () => {
     let processData = (_txt: stypes.SqlTestResult) => {
+      if(_txt.columns.length === 0) {
+        setAlert(
+          <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+            Empty result set returned. Possibly, the table is empty, or all the columns are blocked.
+          </Alert>
+        )        
+        return
+      }
       setTxt(_txt)
     }
 
