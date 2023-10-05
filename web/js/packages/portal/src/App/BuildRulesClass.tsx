@@ -503,13 +503,13 @@ export default class BuildRulesClass extends Component {
                 <Form.Label>Name:</Form.Label>
                 <Form.Control size="sm" type="text" placeholder="alpha_num, small caps"
                   required
-                  pattern="[\w '&%]+"
+                  pattern="(?!^\s)(?=.*[A-Za-z0-9])[A-Za-z0-9'&%&quot;@#^* ]*(?<!\s)"
                   value={this.state.name}
                   onChange={e => this.setState({ name: e.target.value })}
                 />
                 <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                 <Form.Control.Feedback type="invalid" >
-                  Type systemwide unique name to use in SQL
+                  Type systemwide unique name not starting or ending with a space
                 </Form.Control.Feedback>
               </Form.Group>
             </Col>
