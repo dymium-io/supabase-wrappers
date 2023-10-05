@@ -446,7 +446,7 @@ export function AddConnection() {
                     } else {
                         setAlert(
                             < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
-                                Error: {js.errormessage} !
+                                Error: {com.stripHtmlTags(js.errormessage)} !
                             </Alert >)
                     }
                     setTimeout(() => setSpinner(false), 500)
@@ -460,7 +460,7 @@ export function AddConnection() {
                 resp != null && resp.text().then(t =>
                     setAlert(
                         <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
-                            Error creating connection: {t}
+                            Error creating connection: {com.stripHtmlTags(t)}
                         </Alert>
                     ))
 
