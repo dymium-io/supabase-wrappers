@@ -498,7 +498,7 @@ function Test() {
             <Col>        {selectedDatascope !== "" && selectedTable !== null &&
               <div className=" text-left">
 
-                <Button variant="dymium" size="sm" className="" type="submit">
+                <Button disabled={selectedTableIndex === -1} variant="dymium" size="sm" className="" type="submit">
                   Apply
                 </Button>
 
