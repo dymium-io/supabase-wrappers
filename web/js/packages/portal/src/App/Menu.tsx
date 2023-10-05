@@ -40,7 +40,7 @@ function Menu() {
                 <Modal.Header closeButton>
                     <Modal.Title>Current user:</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body style={{maxHeight: '500px', overflowY: 'scroll'}}>
                     <Row>
                         <Col xs={2}>Name: </Col>
                         <Col>{com.getTokenProperty("name")}</Col>
