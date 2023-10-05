@@ -156,7 +156,7 @@ exports[`add-datascope 1`] = `
                   <input
                     class="form-control form-control-sm"
                     id="dbname"
-                    pattern="[a-z][a-z0-9_]*"
+                    pattern="(?![Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]$)(?![Pp][Gg]_)[A-Za-z][A-Za-z0-9_]+"
                     placeholder="alphanumeric_"
                     required=""
                     type="text"
@@ -472,7 +472,7 @@ exports[`add-datascope 1`] = `
                 <input
                   class="form-control form-control-sm"
                   id="dbname"
-                  pattern="[a-z][a-z0-9_]*"
+                  pattern="(?![Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]$)(?![Pp][Gg]_)[A-Za-z][A-Za-z0-9_]+"
                   placeholder="alphanumeric_"
                   required=""
                   type="text"
@@ -945,7 +945,7 @@ exports[`add-datascope 2`] = `
                   <input
                     class="form-control form-control-sm"
                     id="dbname"
-                    pattern="[a-z][a-z0-9_]*"
+                    pattern="(?![Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]$)(?![Pp][Gg]_)[A-Za-z][A-Za-z0-9_]+"
                     placeholder="alphanumeric_"
                     required=""
                     type="text"
@@ -1361,7 +1361,7 @@ exports[`add-datascope 2`] = `
                 <input
                   class="form-control form-control-sm"
                   id="dbname"
-                  pattern="[a-z][a-z0-9_]*"
+                  pattern="(?![Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]$)(?![Pp][Gg]_)[A-Za-z][A-Za-z0-9_]+"
                   placeholder="alphanumeric_"
                   required=""
                   type="text"
@@ -2401,7 +2401,7 @@ exports[`add-datascope 3`] = `
                   <input
                     class="form-control form-control-sm"
                     id="dbname"
-                    pattern="[a-z][a-z0-9_]*"
+                    pattern="(?![Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]$)(?![Pp][Gg]_)[A-Za-z][A-Za-z0-9_]+"
                     placeholder="alphanumeric_"
                     required=""
                     type="text"
@@ -3384,7 +3384,7 @@ exports[`add-datascope 3`] = `
                 <input
                   class="form-control form-control-sm"
                   id="dbname"
-                  pattern="[a-z][a-z0-9_]*"
+                  pattern="(?![Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]$)(?![Pp][Gg]_)[A-Za-z][A-Za-z0-9_]+"
                   placeholder="alphanumeric_"
                   required=""
                   type="text"
@@ -4424,7 +4424,7 @@ exports[`add-datascope 4`] = `
                   <input
                     class="form-control form-control-sm"
                     id="dbname"
-                    pattern="[a-z][a-z0-9_]*"
+                    pattern="(?![Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]$)(?![Pp][Gg]_)[A-Za-z][A-Za-z0-9_]+"
                     placeholder="alphanumeric_"
                     required=""
                     type="text"
@@ -5407,7 +5407,7 @@ exports[`add-datascope 4`] = `
                 <input
                   class="form-control form-control-sm"
                   id="dbname"
-                  pattern="[a-z][a-z0-9_]*"
+                  pattern="(?![Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]$)(?![Pp][Gg]_)[A-Za-z][A-Za-z0-9_]+"
                   placeholder="alphanumeric_"
                   required=""
                   type="text"
@@ -6458,7 +6458,7 @@ exports[`add-datascope 5`] = `
                   <input
                     class="form-control form-control-sm"
                     id="dbname"
-                    pattern="[a-z][a-z0-9_]*"
+                    pattern="(?![Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]$)(?![Pp][Gg]_)[A-Za-z][A-Za-z0-9_]+"
                     placeholder="alphanumeric_"
                     required=""
                     type="text"
@@ -7452,7 +7452,7 @@ exports[`add-datascope 5`] = `
                 <input
                   class="form-control form-control-sm"
                   id="dbname"
-                  pattern="[a-z][a-z0-9_]*"
+                  pattern="(?![Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]$)(?![Pp][Gg]_)[A-Za-z][A-Za-z0-9_]+"
                   placeholder="alphanumeric_"
                   required=""
                   type="text"
