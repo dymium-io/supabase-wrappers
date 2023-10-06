@@ -56,7 +56,9 @@ fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)
                     make USE_PGXS=true; \
                     DESTDIR=. make USE_PGXS=true install) && \
                     tar czv --owner=root --group=root -f mongo.tar.gz usr; rm -rf usr && \
-                    mkdir -p usr/local/libmongo; cp json-c/lib/* usr/local/libmongo; cp mongo-c-driver/lib/* usr/local/libmongo; tar czv --owner=root --group=root -f mongo-lib.tar.gz usr; rm -rf lib"
+                    mkdir -p usr/local/libmongo; cp json-c/lib/* usr/local/libmongo; \
+                    cp mongo-c-driver/lib/* usr/local/libmongo; \
+                    tar czv --owner=root --group=root -f mongo-lib.tar.gz usr; rm -rf lib; rm -rf json-c"
 )
 (
 	cd $script_d/../foreign_data_wrappers/jdbc_fdw
