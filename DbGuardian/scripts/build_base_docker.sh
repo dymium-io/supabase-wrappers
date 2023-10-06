@@ -61,6 +61,7 @@ RUN apt update &&                \
     libmysqlclient21             \
     freetds-bin                  \
     ksh unzip                    \
+    openjdk-8-jdk              \
     libaio1 &&                   \
   ln -s /usr/lib/x86_64-linux-gnu/libmysqlclient.so.21 /usr/lib/x86_64-linux-gnu/libmysqlclient.so && \
   mkdir -p /opt/oracle
@@ -92,6 +93,10 @@ ENV IBM_DB_INCLUDE="/var/lib/postgresql/sqllib/include"
 ENV IBM_DB_LIB="/var/lib/postgresql/sqllib/lib"
 ENV INSTHOME="/var/lib/postgresql"
 ENV INST_DIR="/var/lib/postgresql/sqllib"
-ENV LD_LIBRARY_PATH="/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib64:/var/lib/postgresql/sqllib/lib64/gskit:/var/lib/postgresql/sqllib/lib32"
+ENV LD_LIBRARY_PATH="/lib64:/usr/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib64:/var/lib/postgresql/sqllib/lib64/gskit:/var/lib/postgresql/sqllib/lib32"
+
+ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+#ENV PATH="$PATH:/usr/lib/jvm/java-8-openjdk-amd64/bin"
+RUN ln -s /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/libjvm.so /usr/lib64/libjvm.so
 
 EOF

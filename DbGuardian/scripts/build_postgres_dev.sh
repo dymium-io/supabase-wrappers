@@ -56,6 +56,7 @@ RUN apt-get update &&            \
       libreadline-dev            \
       flex                       \
       bison                      \
+      openjdk-8-jdk              \
       pkg-config &&              \
     mkdir -p /opt/oracle &&      \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -94,9 +95,13 @@ ENV INST_DIR="/var/lib/postgresql/sqllib"
 ENV LD_LIBRARY_PATH="/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib64:/var/lib/postgresql/sqllib/lib64/gskit:/var/lib/postgresql/sqllib/lib32"
 #ENV PATH="/usr/local/bin:/usr/bin:/bin:/var/lib/postgresql/sqllib/bin:/var/lib/postgresql/sqllib/adm:/var/lib/postgresql/sqllib/misc:/var/lib/postgresql/sqllib/pd:/var/lib/postgresql/sqllib/gskit/bin"
 
+ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+ENV PATH="$PATH:/usr/lib/jvm/java-8-openjdk-amd64/bin"
+
 COPY ./db2_home /opt/ibm/db2/V11.5
 ENV DB2_HOME=/opt/ibm/db2/V11.5
 
+RUN ln -s /usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/amd64/server/libjvm.so /usr/lib64/libjvm.so
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 RUN cargo install cargo-pgx 2>&1 | sed -u '/jemalloc/d'

@@ -56,8 +56,24 @@ fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)
                     make USE_PGXS=true; \
                     DESTDIR=. make USE_PGXS=true install) && \
                     tar czv --owner=root --group=root -f mongo.tar.gz usr; rm -rf usr && \
-                    mkdir -p usr/local/libmongo; cp json-c/lib/* usr/local/libmongo; cp mongo-c-driver/lib/* usr/local/libmongo; tar czv --owner=root --group=root -f mongo-lib.tar.gz usr; rm -rf lib"
+                    mkdir -p usr/local/libmongo; cp json-c/lib/* usr/local/libmongo; \
+                    cp mongo-c-driver/lib/* usr/local/libmongo; \
+                    tar czv --owner=root --group=root -f mongo-lib.tar.gz usr; rm -rf lib; rm -rf json-c"
 )
+(
+	cd $script_d/../foreign_data_wrappers/jdbc_fdw
+  docker run -it --rm \
+		   -v $PWD:/fdw \
+		   postgres-dev \
+		   /bin/bash -c \
+		      "cd /fdw; \
+          make USE_PGXS=true clean; \
+          DESTDIR=. make USE_PGXS=true install && \
+          cp  /usr/lib/postgresql/14/lib/JDBC* usr/lib/postgresql/14/lib/ && \
+          cp /usr/lib/postgresql/14/lib/resultSetInfo.class usr/lib/postgresql/14/lib/ &&\
+          tar czv --owner=root --group=root -f jdbc_fdw.tar.gz usr" #; rm -rf usr"
+)
+
 
 (
     cd $script_d/../obfuscator
@@ -74,6 +90,7 @@ mv ../../foreign_data_wrappers/usr.tar.gz .
 mv ../../obfuscator/obfuscator.tar.gz .
 mv ../../foreign_data_wrappers/mongo_fdw/mongo.tar.gz .
 mv ../../foreign_data_wrappers/mongo_fdw/mongo-lib.tar.gz .
+mv ../../foreign_data_wrappers/jdbc_fdw/jdbc_fdw.tar.gz .
 
 # build log collector
 lc_build_d=${script_d}/../../logcollector/scripts/BLD
@@ -109,11 +126,12 @@ FROM guardian-base
 COPY initializer /docker-entrypoint-initdb.d/initializer.sh
 RUN chmod 777 /docker-entrypoint-initdb.d/initializer.sh
 
-COPY usr.tar.gz obfuscator.tar.gz mongo.tar.gz mongo-lib.tar.gz /
+COPY usr.tar.gz obfuscator.tar.gz mongo.tar.gz mongo-lib.tar.gz jdbc_fdw.tar.gz /
 RUN tar xzvf /usr.tar.gz && rm /usr.tar.gz
 RUN tar xzvf /obfuscator.tar.gz && rm /obfuscator.tar.gz
 RUN tar xzvf /mongo.tar.gz && rm /mongo.tar.gz
 RUN tar xzvf /mongo-lib.tar.gz && rm /mongo-lib.tar.gz
+RUN tar xzvf /jdbc_fdw.tar.gz && rm /jdbc_fdw.tar.gz
 
 # Add logcollector
 RUN addgroup nobody tty && addgroup postgres tty
@@ -131,7 +149,10 @@ RUN chmod a+x /usr/local/bin/logcollector
 COPY ./startup.sh /usr/local/bin/startup.sh
 RUN chmod a+x /usr/local/bin/startup.sh
 
-ENV LD_LIBRARY_PATH="/usr/local/libmongo:/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib64:/var/lib/postgresql/sqllib/lib64/gskit:/var/lib/postgresql/sqllib/lib32"
+ENV LD_LIBRARY_PATH="/usr/local/libmongo:/lib64:/usr/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib64:/var/lib/postgresql/sqllib/lib64/gskit:/var/lib/postgresql/sqllib/lib32"
+
+RUN echo "en_US.UTF-8 UTF-8"> /etc/locale.gen
+RUN locale-gen
 
 ENTRYPOINT ["/usr/local/bin/startup.sh"]
 
