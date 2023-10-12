@@ -348,7 +348,17 @@ function Test() {
       null, body,
       resp => {
         resp.json().then(txt => {
+          if(txt["status"] === "AuthError" || txt["status"] === "Error") {
+            setAlert(
+              <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                Error executing query: {txt["errormessage"]}
+              </Alert>
+            )
+            setSpinner(false)
+            return
+          }
           let tr = stypes.SqlTestResult.fromJson(txt)
+
           processData(tr)
           setTimeout(() => setSpinner(false), 500)
 
