@@ -28,6 +28,8 @@ match s:
     section = 'dymium-stage'
   case '570319887642_AdministratorAccess':
     section = 'test-org'
+  case '647668538014_AdministratorAccess':
+      section = 'prod-support'
   case _:
     print(f'Unknown subaccount {data.sections()[0]}')
     exit(-1)
