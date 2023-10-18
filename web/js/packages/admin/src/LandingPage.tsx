@@ -10,21 +10,27 @@ function LandingPage() {
         position: 'absolute', top: '0px', left: '0px',
         width: '100%', height: '100vh'
       }}>
-        <div id="loginbox">
-        <img style={{position: 'relative', top: '50%', marginTop: '12em'}} className="text-center mb-5 svgshadow" src="/brand.svg"></img>
-          <h4 className="logoheader ">This computer system is intended only for Dymium employees</h4>
-   
-            <div className="mt-5">
-              <a
-                className=" dymium-button-link"
 
-                href="/auth/login"
+        <div id="outer" style={{ height: '100vh' }} className="text-center w-100 d-flex align-items-center justify-content-center pt-2">
+          <div className="w-100 ">
+            <div id="loginb" style={{ width: '30%', marginLeft: 'auto', marginRight: 'auto' }}>
 
-                rel="noopener noreferrer"
-              >
-                Click to login!
-              </a>
+              <img className="text-center mb-5 svgshadow" src="/brand.svg"></img>
+              <h4 className="logoheader ">This computer system is intended only for Dymium employees</h4>
+
+              <div className="mt-5">
+                <a
+                  className=" dymium-button-link"
+
+                  href="/auth/login"
+
+                  rel="noopener noreferrer"
+                >
+                  Click to login!
+                </a>
+              </div>
             </div>
+          </div>
         </div>
       </div>
     </div>
