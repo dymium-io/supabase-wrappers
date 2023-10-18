@@ -65,7 +65,7 @@ function Menu() {
                 </Navbar.Brand>
                 <Navbar.Brand className="text-left p-0 m-0 mr-2" >
                     <Nav.Link className="p-0 m-0 ml-1" style={{ width: '140px' }} href="/">
-                        <img src="/brand.svg" style={{ width: '100%' }} alt="logo" />
+                        <img src="/brand.svg" style={{ width: '100%', marginTop: '-2px', marginLeft: '3px' }} alt="logo" />
                     </Nav.Link >
                 </Navbar.Brand>
 
