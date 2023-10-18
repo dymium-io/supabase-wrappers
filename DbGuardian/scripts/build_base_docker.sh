@@ -49,20 +49,6 @@ cp ${setup_d}/db2/v11.5.8_linuxx64_rtcl.tar.gz .
 cp ${setup_d}/db2/v11.5.4_linuxx64_odbc_cli.tar.gz .
 
 
-
-
-(
-	cd ${script_d}/../go
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-		go build -a -ldflags '-w -extldflags "-static"' -o "${wrk}/initializer"
-)
-
-retval=$?
-[ $retval -ne 0 ] && {
-	echo "build failed with error code $retval"
-	exit $retval
-}
-
 fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)
 (
 	cd $script_d/../foreign_data_wrappers

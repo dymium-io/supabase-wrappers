@@ -6,6 +6,18 @@ script_d=$PWD/$(dirname $0)
 build_d=${script_d}/BLD
 setup_d=${script_d}/../../setup
 
+(
+	cd ${script_d}/../go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+		go build -a -ldflags '-w -extldflags "-static"' -o "${build_d}/initializer"
+)
+
+retval=$?
+[ $retval -ne 0 ] && {
+	echo "build failed with error code $retval"
+	exit $retval
+}
+
 
 # build log collector
 lc_build_d=${script_d}/../../logcollector/scripts/BLD
