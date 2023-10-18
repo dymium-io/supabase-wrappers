@@ -86,10 +86,10 @@ func initRBAC() {
 	adminnames := []string{"createnewconnection", "queryconnection", "updateconnection", "deleteconnection",
 		"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
 		"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
-		"getgroupsfordatascopes", "getselect", "getusage", "getaccesskey", "createnewconnector",
+		"getgroupsfordatascopes", "getusage", "getaccesskey", "createnewconnector",
 		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable"}
 
-	usernames := []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getdatascopetables", "getdatascopesfortestsql"}
+	usernames := []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables", "getdatascopesfortestsql"}
 
 	for _, v := range adminnames {
 		admins["/api/"+v] = 1
