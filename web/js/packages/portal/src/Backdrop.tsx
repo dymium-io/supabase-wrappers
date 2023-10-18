@@ -39,7 +39,7 @@ function Backdrop() {
 
      let boost = 1
     for(let i = 1; i < 8; i++) {     
-        let p = {cx: cx*boost, cy:cy*boost, rx:rx*boost, ry:ry*boost, factor: 1.0, alpha: 0.3}
+        let p = {cx: cx*boost, cy:cy*boost, rx:rx*boost, ry:ry*boost, factor: 1.0, alpha: 0.25}
         points.push(p);
         boost = boost * 1.45
       
@@ -99,7 +99,7 @@ function Backdrop() {
 
       factor = 0.003*factor + 0.997*p.factor
 
-      let alpha =  0.3 + (Math.random() - 0.5) * 0.5
+      let alpha =  0.25 + (Math.random() - 0.5) * 0.5
       alpha = 0.05*alpha + 0.95*p.alpha
 
       Object.assign(p,  { factor, alpha})
