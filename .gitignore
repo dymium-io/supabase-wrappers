@@ -7,6 +7,8 @@
 *.gz
 BLD/
 \#*\#
+.envrc
+.env
 
 GPATH
 GRTAGS
