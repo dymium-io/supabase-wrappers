@@ -94,8 +94,8 @@ copy_to_aws() {
 	done
 	for p in ${packages[@]}; do
 		md5=$(md5sum db2/$p | cut -d ' ' -f 1)
-		echo "aws s3 cp --profile dymium --region us-west-2 db2/$p s3://dymium-dev/db2/$p --metadata md5=$md5"
-		aws s3 cp --profile dymium --region us-west-2 db2/$p s3://dymium-dev/db2/$p --metadata md5=$md5
+		echo "aws s3 cp --profile dymium-dev --region us-west-2 db2/$p s3://dymium-dev/db2/$p --metadata md5=$md5"
+		aws s3 cp --profile dymium-dev --region us-west-2 db2/$p s3://dymium-dev/db2/$p --metadata md5=$md5
 		r=$?
 		[ $r -eq 0 ] || {
 			return $r
@@ -109,7 +109,7 @@ copy_from_aws() {
 	for p in ${packages[@]}; do
 		if [ -f db2/$p ]; then
 			md5=$(md5sum db2/$p | cut -d ' ' -f 1)
-			meta="$(aws --profile dymium --region us-west-2 s3api head-object --bucket dymium-dev --key db2/${p})"
+			meta="$(aws --profile dymium-dev --region us-west-2 s3api head-object --bucket dymium-dev --key db2/${p})"
 			[ $? -eq 0 ] || {
 				echo "package $p not present on AWS S3"
 				exit -1
@@ -117,16 +117,16 @@ copy_from_aws() {
 			if [ "$md5" = "$(echo ${meta} | jq -r '.Metadata.md5')" ]; then
 				echo "=> $p is up to date"
 			else
-				echo "aws s3 cp --profile dymium --region us-west-2 s3://dymium-dev/db2/$p db2/$p"
-				aws s3 cp --profile dymium --region us-west-2 s3://dymium-dev/db2/$p db2/$p
+				echo "aws s3 cp --profile dymium-dev --region us-west-2 s3://dymium-dev/db2/$p db2/$p"
+				aws s3 cp --profile dymium-dev --region us-west-2 s3://dymium-dev/db2/$p db2/$p
 				r=$?
 				[ $r -eq 0 ] || {
 					return $r
 				}
 			fi
 		else
-			echo "aws s3 cp --profile dymium --region us-west-2 s3://dymium-dev/db2/$p db2/$p"
-			aws s3 cp --profile dymium --region us-west-2 s3://dymium-dev/db2/$p db2/$p
+			echo "aws s3 cp --profile dymium-dev --region us-west-2 s3://dymium-dev/db2/$p db2/$p"
+			aws s3 cp --profile dymium-dev --region us-west-2 s3://dymium-dev/db2/$p db2/$p
 			r=$?
 			[ $r -eq 0 ] || {
 				return $r

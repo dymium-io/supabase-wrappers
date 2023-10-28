@@ -157,8 +157,8 @@ copy_to_aws() {
 	done
 	for p in ${packages[@]}; do
 		md5=$(md5sum oracle/$p | cut -d ' ' -f 1)
-		echo "aws s3 cp --profile dymium --region us-west-2 oracle/$p s3://dymium-dev/oracle/$p --metadata md5=$md5"
-		aws s3 cp --profile dymium --region us-west-2 oracle/$p s3://dymium-dev/oracle/$p --metadata md5=$md5
+		echo "aws s3 cp --profile dymium-dev --region us-west-2 oracle/$p s3://dymium-dev/oracle/$p --metadata md5=$md5"
+		aws s3 cp --profile dymium-dev --region us-west-2 oracle/$p s3://dymium-dev/oracle/$p --metadata md5=$md5
 		r=$?
 		[ $r -eq 0 ] || {
 			return $r
@@ -172,7 +172,7 @@ copy_from_aws() {
 	for p in ${packages[@]}; do
 		if [ -f oracle/$p ]; then
 			md5=$(md5sum oracle/$p | cut -d ' ' -f 1)
-			meta="$(aws --profile dymium --region us-west-2 s3api head-object --bucket dymium-dev --key oracle/${p})"
+			meta="$(aws --profile dymium-dev --region us-west-2 s3api head-object --bucket dymium-dev --key oracle/${p})"
 			[ $? -eq 0 ] || {
 				echo "package $p not present on AWS S3"
 				exit -1
@@ -180,16 +180,16 @@ copy_from_aws() {
 			if [ "$md5" = "$(echo ${meta} | jq -r '.Metadata.md5')" ]; then
 				echo "=> $p is up to date"
 			else
-				echo "aws s3 cp --profile dymium --region us-west-2 s3://dymium-dev/oracle/$p oracle/$p"
-				aws s3 cp --profile dymium --region us-west-2 s3://dymium-dev/oracle/$p oracle/$p
+				echo "aws s3 cp --profile dymium-dev --region us-west-2 s3://dymium-dev/oracle/$p oracle/$p"
+				aws s3 cp --profile dymium-dev --region us-west-2 s3://dymium-dev/oracle/$p oracle/$p
 				r=$?
 				[ $r -eq 0 ] || {
 					return $r
 				}
 			fi
 		else
-			echo "aws s3 cp --profile dymium --region us-west-2 s3://dymium-dev/oracle/$p oracle/$p"
-			aws s3 cp --profile dymium --region us-west-2 s3://dymium-dev/oracle/$p oracle/$p
+			echo "aws s3 cp --profile dymium-dev --region us-west-2 s3://dymium-dev/oracle/$p oracle/$p"
+			aws s3 cp --profile dymium-dev --region us-west-2 s3://dymium-dev/oracle/$p oracle/$p
 			r=$?
 			[ $r -eq 0 ] || {
 				return $r
