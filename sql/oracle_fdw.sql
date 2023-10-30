@@ -298,6 +298,21 @@ DELETE FROM typetest1 WHERE FALSE;
 UPDATE shorty SET c = NULL WHERE FALSE RETURNING *;
 -- test deparsing of ScalarArrayOpExpr where the RHS has different element type than the LHS
 SELECT id FROM typetest1 WHERE vc = ANY ('{zzzzz}'::name[]);
+-- test whole-row references with RETURNING (bug #568)
+INSERT INTO shorty (id, c) VALUES (5, 'return me') RETURNING shorty;
+UPDATE shorty SET c = 'changed' WHERE id = 5 RETURNING shorty;
+DELETE FROM shorty WHERE id = 5 RETURNING shorty;
+-- test generated columns (bug #567)
+CREATE FOREIGN TABLE gen (
+   id integer OPTIONS (key 'on') NOT NULL,
+   c character(10) GENERATED ALWAYS AS ('nr ' || id::text) STORED
+) SERVER oracle OPTIONS (schema 'SCOTT', table 'TYPETEST1');
+INSERT INTO gen (id) VALUES (5);
+SELECT id, c FROM gen WHERE id = 5;
+UPDATE gen SET id = 6 WHERE id = 5;
+SELECT id, c FROM gen WHERE id = 6;
+DELETE FROM gen WHERE id = 6;
+DROP FOREIGN TABLE gen;
 
 /*
  * Test "strip_zeros" column option.
@@ -328,15 +343,15 @@ EXPLAIN (COSTS off) SELECT typetest1 FROM typetest1;
  * Test parameters.
  */
 
-PREPARE stmt(integer, date, timestamp) AS SELECT d FROM typetest1 WHERE id = $1 AND d < $2 AND ts < $3;
+PREPARE stmt(integer, date, timestamp, uuid) AS SELECT d FROM typetest1 WHERE id = $1 AND d < $2 AND ts < $3 AND u = $4;
 -- six executions to switch to generic plan
-EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
-EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
-EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
-EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
-EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
-EXPLAIN (COSTS off) EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
-EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
+EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
+EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
+EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
+EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
+EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
+EXPLAIN (COSTS off) EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
+EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
 DEALLOCATE stmt;
 -- test NULL parameters
 SELECT id FROM typetest1 WHERE vc = (SELECT NULL::text);
@@ -504,16 +519,15 @@ DEALLOCATE stmt;
  * Test push-down of the LIMIT clause.
  */
 
--- the LIMIT clause is pushed down with and without ORDER BY
+-- the LIMIT clause is only pushed down with ORDER BY
 EXPLAIN (COSTS off) SELECT d FROM typetest1 LIMIT 2;
-SELECT d FROM typetest1 LIMIT 2;
 EXPLAIN (COSTS off) SELECT d FROM typetest1 ORDER BY d LIMIT 2;
 SELECT d FROM typetest1 ORDER BY d LIMIT 2;
 -- the LIMIT clause is not pushed down because the ORDER BY is not
 EXPLAIN (COSTS off) SELECT d FROM typetest1 ORDER BY lc LIMIT 2;
 -- with an OFFSET clause, the offset value is added to the limit
-EXPLAIN (COSTS off) SELECT * FROM qtest LIMIT 1 OFFSET 2;
-SELECT * FROM qtest LIMIT 1 OFFSET 2;
+EXPLAIN (COSTS off) SELECT * FROM qtest ORDER BY id LIMIT 1 OFFSET 2;
+SELECT * FROM qtest ORDER BY id LIMIT 1 OFFSET 2;
 -- no LIMIT push-down if there is a GROUP BY clause
 EXPLAIN (COSTS off) SELECT d, count(*) FROM typetest1 GROUP BY d LIMIT 2;
 SELECT d, count(*) FROM typetest1 GROUP BY d LIMIT 2;

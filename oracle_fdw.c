@@ -56,6 +56,7 @@
 #endif  /* PG_VERSION_NUM */
 #include "optimizer/pathnode.h"
 #if PG_VERSION_NUM >= 130000
+#include "optimizer/inherit.h"
 #include "optimizer/paths.h"
 #endif  /* PG_VERSION_NUM */
 #include "optimizer/planmain.h"
@@ -914,6 +915,9 @@ oracleGetForeignPaths(PlannerInfo *root, RelOptInfo *baserel, Oid foreigntableid
 #if PG_VERSION_NUM >= 90500
 					NULL,  /* no extra plan */
 #endif  /* PG_VERSION_NUM */
+#if PG_VERSION_NUM >= 170000
+					NIL,   /* no fdw_restrictinfo */
+#endif  /* PG_VERSION_NUM */
 					NIL
 			)
 	);
@@ -1015,7 +1019,7 @@ oracleGetForeignJoinPaths(PlannerInfo *root,
 	joinpath = create_foreignscan_path(
 #else
 	joinpath = create_foreign_join_path(
-#endif
+#endif  /* PG_VERSION_NUM */
 									   root,
 									   joinrel,
 									   NULL,	/* default pathtarget */
@@ -1025,6 +1029,9 @@ oracleGetForeignJoinPaths(PlannerInfo *root,
 									   NIL, 	/* no pathkeys */
 									   joinrel->lateral_relids,
 									   NULL,	/* no epq_path */
+#if PG_VERSION_NUM >= 170000
+									   NIL,		/* no fdw_restrictinfo */
+#endif  /* PG_VERSION_NUM */
 									   NIL);	/* no fdw_private */
 
 	/* add generated path to joinrel */
@@ -1293,7 +1300,7 @@ oracleBeginForeignScan(ForeignScanState *node, int eflags)
 		if (paramDesc->type == TEXTOID || paramDesc->type == VARCHAROID
 				|| paramDesc->type == BPCHAROID || paramDesc->type == CHAROID
 				|| paramDesc->type == DATEOID || paramDesc->type == TIMESTAMPOID
-				|| paramDesc->type == TIMESTAMPTZOID)
+				|| paramDesc->type == TIMESTAMPTZOID || paramDesc->type == UUIDOID)
 			paramDesc->bindType = BIND_STRING;
 		else
 			paramDesc->bindType = BIND_NUMBER;
@@ -1553,27 +1560,41 @@ oraclePlanForeignModify(PlannerInfo *root, ModifyTable *plan, Index resultRelati
 	bool has_trigger = false, firstcol;
 	char paramName[10];
 	TupleDesc tupdesc;
-	Bitmapset *updated_cols;
+	Bitmapset *updated_cols = NULL;
 	Oid check_user;
 
 	/*
-	 * Get the updated columns and the user for permission checks.
-	 * We put that here at the beginning, since the way to do that changed
-	 * considerably over the different PostgreSQL versions.
+	 * Get the user for permission checks.
 	 */
 #if PG_VERSION_NUM >= 160000
 	RTEPermissionInfo *perminfo = getRTEPermissionInfo(root->parse->rteperminfos, rte);
 
 	check_user = perminfo->checkAsUser;
-	updated_cols = perminfo->updatedCols;
 #else
 	check_user = rte->checkAsUser;
-#if PG_VERSION_NUM >= 90500
-	updated_cols = rte->updatedCols;
-#else
-	updated_cols = bms_copy(rte->modifiedCols);
-#endif  /* PG_VERSION_NUM >= 90500 */
 #endif  /* PG_VERSION_NUM >= 160000 */
+
+	/*
+	 * Get all updated columns.
+	 * For PostgreSQL v12 and better, we have to consider generated columns.
+	 * This changed quite a bit over the versions.
+	 * Note also that this changed in 13.10, 14.7 and 15.2, so oracle_fdw
+	 * won't build with older minor versions.
+	 */
+	if (operation == CMD_UPDATE)
+	{
+#if PG_VERSION_NUM >= 130000
+		RelOptInfo *roi = find_base_rel(root, resultRelation);
+
+		updated_cols = get_rel_all_updated_cols(root, roi);
+#elif PG_VERSION_NUM >= 120000
+		updated_cols = bms_union(rte->updatedCols, rte->extraUpdatedCols);
+#elif PG_VERSION_NUM >= 90500
+		updated_cols = rte->updatedCols;
+#else
+		updated_cols = bms_copy(rte->modifiedCols);
+#endif  /* PG_VERSION_NUM */
+	}
 
 #if PG_VERSION_NUM >= 90500
 	/* we don't support INSERT ... ON CONFLICT */
@@ -1697,8 +1718,14 @@ oraclePlanForeignModify(PlannerInfo *root, ModifyTable *plan, Index resultRelati
 
 		if (returningList != NIL)
 		{
+			bool have_wholerow;
+
 			/* get all the attributes mentioned there */
 			pull_varattnos((Node *) returningList, resultRelation, &attrs_used);
+
+			/* If there's a whole-row reference, we'll need all the columns. */
+			have_wholerow = bms_is_member(InvalidAttrNumber - FirstLowInvalidHeapAttributeNumber,
+										  attrs_used);
 
 			/* mark the corresponding columns as used */
 			for (i=0; i<fdwState->oraTable->ncols; ++i)
@@ -1707,7 +1734,8 @@ oraclePlanForeignModify(PlannerInfo *root, ModifyTable *plan, Index resultRelati
 				if (fdwState->oraTable->cols[i]->pgname == NULL)
 					continue;
 
-				if (bms_is_member(fdwState->oraTable->cols[i]->pgattnum - FirstLowInvalidHeapAttributeNumber, attrs_used))
+				if (have_wholerow ||
+					bms_is_member(fdwState->oraTable->cols[i]->pgattnum - FirstLowInvalidHeapAttributeNumber, attrs_used))
 				{
 					/* throw an error if it is a LONG or LONG RAW column */
 					if (fdwState->oraTable->cols[i]->oratype == ORA_TYPE_LONGRAW
@@ -6543,6 +6571,10 @@ setSelectParameters(struct paramDesc *paramList, ExprContext *econtext)
 
 				/* convert the parameter value into a string */
 				param->value = DatumGetCString(OidFunctionCall1(typoutput, datum));
+
+				/* strip hyphens from UUID values */
+				if (param->type == UUIDOID)
+					convertUUID(param->value);
 			}
 		}
 
@@ -6890,9 +6922,9 @@ getIsolationLevel(const char *isolation_level)
 /*
  * pushdownOrderBy
  * 		Attempt to push down the ORDER BY clause.
- * 		If the complete clause can be pushed down, save "order_clause"
- * 		and "usable_pathkeys" in "fdwState" and return "true"
- * 		(this will also return "true" if there is no ORDER BY clause).
+ * 		If there is an ORDER BY clause and the complete clause can be pushed
+ * 		down, save "order_clause" and "usable_pathkeys" in "fdwState" and
+ * 		return "true".
  */
 bool
 pushdownOrderBy(PlannerInfo *root, RelOptInfo *baserel, struct OracleFdwState *fdwState)
@@ -7002,7 +7034,7 @@ pushdownOrderBy(PlannerInfo *root, RelOptInfo *baserel, struct OracleFdwState *f
 		fdwState->usable_pathkeys = usable_pathkeys;
 	}
 
-	return (root->query_pathkeys == NIL || usable_pathkeys != NIL);
+	return (root->query_pathkeys != NIL && usable_pathkeys != NIL);
 }
 
 /*

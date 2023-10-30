@@ -375,6 +375,46 @@ SELECT id FROM typetest1 WHERE vc = ANY ('{zzzzz}'::name[]);
 ----
 (0 rows)
 
+-- test whole-row references with RETURNING (bug #568)
+INSERT INTO shorty (id, c) VALUES (5, 'return me') RETURNING shorty;
+      shorty      
+------------------
+ (5,"return me ")
+(1 row)
+
+UPDATE shorty SET c = 'changed' WHERE id = 5 RETURNING shorty;
+      shorty      
+------------------
+ (5,"changed   ")
+(1 row)
+
+DELETE FROM shorty WHERE id = 5 RETURNING shorty;
+      shorty      
+------------------
+ (5,"changed   ")
+(1 row)
+
+-- test generated columns (bug #567)
+CREATE FOREIGN TABLE gen (
+   id integer OPTIONS (key 'on') NOT NULL,
+   c character(10) GENERATED ALWAYS AS ('nr ' || id::text) STORED
+) SERVER oracle OPTIONS (schema 'SCOTT', table 'TYPETEST1');
+INSERT INTO gen (id) VALUES (5);
+SELECT id, c FROM gen WHERE id = 5;
+ id |     c      
+----+------------
+  5 | nr 5      
+(1 row)
+
+UPDATE gen SET id = 6 WHERE id = 5;
+SELECT id, c FROM gen WHERE id = 6;
+ id |     c      
+----+------------
+  6 | nr 6      
+(1 row)
+
+DELETE FROM gen WHERE id = 6;
+DROP FOREIGN TABLE gen;
 /*
  * Test "strip_zeros" column option.
  */
@@ -432,46 +472,46 @@ EXPLAIN (COSTS off) SELECT typetest1 FROM typetest1;
 /*
  * Test parameters.
  */
-PREPARE stmt(integer, date, timestamp) AS SELECT d FROM typetest1 WHERE id = $1 AND d < $2 AND ts < $3;
+PREPARE stmt(integer, date, timestamp, uuid) AS SELECT d FROM typetest1 WHERE id = $1 AND d < $2 AND ts < $3 AND u = $4;
 -- six executions to switch to generic plan
-EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
+EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
      d      
 ------------
  10-21-1968
 (1 row)
 
-EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
+EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
      d      
 ------------
  10-21-1968
 (1 row)
 
-EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
+EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
      d      
 ------------
  10-21-1968
 (1 row)
 
-EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
+EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
      d      
 ------------
  10-21-1968
 (1 row)
 
-EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
+EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
      d      
 ------------
  10-21-1968
 (1 row)
 
-EXPLAIN (COSTS off) EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
-                                                                                       QUERY PLAN                                                                                        
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EXPLAIN (COSTS off) EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
+                                                                                                     QUERY PLAN                                                                                                      
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Foreign Scan on typetest1
-   Oracle query: SELECT /*e7109a5ab160454*/ r1."ID", r1."D", r1."TS" FROM "TYPETEST1" r1 WHERE (r1."D" < CAST (:p1 AS DATE)) AND (r1."TS" < CAST (:p2 AS TIMESTAMP)) AND (r1."ID" = :p3)
+   Oracle query: SELECT /*948d44ca5107f0d1*/ r1."ID", r1."U", r1."D", r1."TS" FROM "TYPETEST1" r1 WHERE (r1."D" < CAST (:p1 AS DATE)) AND (r1."TS" < CAST (:p2 AS TIMESTAMP)) AND (r1."ID" = :p3) AND (r1."U" = :p4)
 (2 rows)
 
-EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00');
+EXECUTE stmt(1, '2011-03-09', '2011-03-09 05:00:00', '055e26fa-f1d8-771f-e053-1645990add93');
      d      
 ------------
  10-21-1968
@@ -712,21 +752,14 @@ DEALLOCATE stmt;
 /*
  * Test push-down of the LIMIT clause.
  */
--- the LIMIT clause is pushed down with and without ORDER BY
+-- the LIMIT clause is only pushed down with ORDER BY
 EXPLAIN (COSTS off) SELECT d FROM typetest1 LIMIT 2;
-                                              QUERY PLAN                                              
-------------------------------------------------------------------------------------------------------
+                                  QUERY PLAN                                  
+------------------------------------------------------------------------------
  Limit
    ->  Foreign Scan on typetest1
-         Oracle query: SELECT /*1ec5967d52c3030a*/ r1."D" FROM "TYPETEST1" r1 FETCH FIRST 2 ROWS ONLY
+         Oracle query: SELECT /*86c38fa86d962698*/ r1."D" FROM "TYPETEST1" r1
 (3 rows)
-
-SELECT d FROM typetest1 LIMIT 2;
-       d       
----------------
- 10-21-1968
- 03-15-0044 BC
-(2 rows)
 
 EXPLAIN (COSTS off) SELECT d FROM typetest1 ORDER BY d LIMIT 2;
                                                              QUERY PLAN                                                              
@@ -755,15 +788,15 @@ EXPLAIN (COSTS off) SELECT d FROM typetest1 ORDER BY lc LIMIT 2;
 (5 rows)
 
 -- with an OFFSET clause, the offset value is added to the limit
-EXPLAIN (COSTS off) SELECT * FROM qtest LIMIT 1 OFFSET 2;
-                                                                                  QUERY PLAN                                                                                  
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EXPLAIN (COSTS off) SELECT * FROM qtest ORDER BY id LIMIT 1 OFFSET 2;
+                                                                                                  QUERY PLAN                                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  Limit
    ->  Foreign Scan on qtest
-         Oracle query: SELECT /*735674424370741d*/ r1."ID", r1."SUBSTR(VC,1,3)", r1."NUM" FROM (SELECT id, SUBSTR(vc, 1, 3), num FROM typetest1) r1 FETCH FIRST 1+2 ROWS ONLY
+         Oracle query: SELECT /*ebe0d0f6395ace30*/ r1."ID", r1."SUBSTR(VC,1,3)", r1."NUM" FROM (SELECT id, SUBSTR(vc, 1, 3), num FROM typetest1) r1 ORDER BY r1."ID" ASC NULLS LAST FETCH FIRST 1+2 ROWS ONLY
 (3 rows)
 
-SELECT * FROM qtest LIMIT 1 OFFSET 2;
+SELECT * FROM qtest ORDER BY id LIMIT 1 OFFSET 2;
  id | vc  |   num   
 ----+-----+---------
   4 | sho | 0.00000
