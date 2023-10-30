@@ -5,14 +5,15 @@ PORT=9090
 LOG_MIN_MESSAGES=${LOG_MIN_MESSAGES-WARNING}
 LOG_MIN_ERROR_STATEMENT=${LOG_MIN_ERROR_STATEMENT-ERROR}
 
-DATABASE_HOST=${DATABASE_HOST:-data-guardian.local}
-DATABASE_PORT=${DATABASE_PORT:-9090}
-DATABASE_USER=${DATABASE_USER:-dymium}
 CUSTOMER=${CUSTOMER:-spoofcorp}
+DATABASE_HOST="${DATABASE_HOST}.dymium.local"
+DATABASE_PORT=5432
+DATABASE_USER=dymium
 #LOCAL_SEARCH=${LOCAL_SEARCH-http://elasticsearch.dymium.local:9200}
 #LOCAL_SEARCH_USER=${LOCAL_SEARCH_USER:-elastic}
 #LOCAL_SEARCH_PASSWD=${LOCAL_SEARCH_PASSWD:-admin123}
 #SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE:-jsonmessage}
+
 
 LC_ALL="en_US.UTF-8"
 LC_CTYPE="en_US.UTF-8"
@@ -25,8 +26,16 @@ LC_CTYPE="en_US.UTF-8"
 	DATABASE_PASSWORD=$(grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d :)
 }
 
+[ -z "$POSTGRES_PASSWORD" -o -z "$DATABASE_PASSWORD" ] && {
+    echo "DbGuardian passwords are not defined"
+    echo "Please add the following records to ~/.pgpass:"
+    echo "${DATABASE_HOST}:${DATABASE_PORT}:*:postgres:<password1>"
+    echo "${DATABASE_HOST}:${DATABASE_PORT}:*:dymium:<password2>"
+    exit 255
+}
+
 set -x
-docker run --rm --name ${CUSTOMER}.guardian.local --add-host=host.docker.internal:host-gateway \
+docker run --rm --name ${DATABASE_HOST} --add-host=host.docker.internal:host-gateway \
 	--network dymium \
 	-p ${PORT}:5432 \
 	-e LANG="en" \

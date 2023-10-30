@@ -8,7 +8,6 @@ DATABASE_HOST=${DATABASE_HOST:-localhost}
 DATABASE_PORT=${DATABASE_PORT:-5432}
 DATABASE_DB=${DATABASE_DB:-dymium}
 DATABASE_USER=${DATABASE_USER:-dymium}
-DATABASE_PAASSWORD=${DATABASE_PASSWORD:-$kdvnMsp4o}
 DATABASE_TLS=${DATABASE_TLS:-false}
 LOCAL_SEARCH=${LOCAL_SEARCH-http://elasticsearch.dymium.local:9200}
 LOCAL_SEARCH_USER=${LOCAL_SEARCH_USER:-elastic}
@@ -22,6 +21,15 @@ SPOOFCORPPING_KEY=${SPOOFCORPPING_KEY:-6874AB957AA1F505EC6ACC84162B131FA5513558B
     DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )
 }
 
+[ -z "$DATABASE_PASSWORD" ] && {
+    echo "Database password is not defined"
+    echo "Please add the following records to ~/.pgpass:"
+    echo "${DATABASE_HOST}:${DATABASE_PORT}:*:dymium:<password>"
+    exit 255
+}
+
+SPOOFCORP_PASSWORD=
+
 # localhost name as visible from within the docker:
 # docker.for.mac.host.internal
 
@@ -29,17 +37,17 @@ set -x
 docker run --rm  --name db-sync.dymium.local   \
        --network dymium                        \
        -p ${PORT}:8080                         \
-       -e DATABASE_HOST=localhost              \
+       -e DATABASE_HOST=$DATABASE_HOST         \
        -e DATABASE_PORT=$DATABASE_PORT         \
        -e DATABASE_DB=$DATABASE_DB             \
        -e DATABASE_USER=$DATABASE_USER         \
        -e DATABASE_TLS=$DATABASE_TLS           \
        -e DATABASE_PASSWORD=DATABASE_PASSWORD  \
-       -e LOCAL_ENVIRONMENT=true                     \
-       -e LOCAL_SEARCH=$LOCAL_SEARCH                 \
+       -e LOCAL_ENVIRONMENT=true               \
+       -e LOCAL_SEARCH=$LOCAL_SEARCH           \
        -e LOCAL_SEARCH_USER=$LOCAL_SEARCH_USER \
-       -e LOCAL_SEARCH_PASSWD=$LOCAL_SEARCH_PASSWD         \
-       -e SEARCH_IN_PIPELINE=$SEARCH_IN_PIPELINE         \
+       -e LOCAL_SEARCH_PASSWD=$LOCAL_SEARCH_PASSWD \
+       -e SEARCH_IN_PIPELINE=$SEARCH_IN_PIPELINE   \
        -e AWS_LAMBDAS="{}"                     \
        -e AWS_SECRETS="{
                \"DATABASE_PASSWORD\": \"$DATABASE_PASSWORD\",
