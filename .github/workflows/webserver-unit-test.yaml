@@ -48,6 +48,17 @@ jobs:
         run: apt-get install -y libpq5
       - name: Install zstd
         run: apt install zstd
+      - name: Install git annex
+        run: apt install git-annex
+      - name: Install binary utilities
+        env:
+          AWS_ACCESS_KEY_ID: {{ secrets.DYMIUM_DEV_BINARY_UTILITIES_KEY }}
+          AWS_SECRET_ACCESS_KEY: {{ secrets.DYMIUM_DEV_BINARY_UTILITIES_SECRET }}
+          AWS_REGION: us-west-2
+        run: |
+          git annex init
+          git annex enableremote dymium-dev-binary-utilities
+          git annex get bin/
       - name: Run tests
         working-directory: ./web/go/src
         env:
