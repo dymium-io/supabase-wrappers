@@ -52,8 +52,8 @@ jobs:
         run: apt install git-annex
       - name: Install binary utilities
         env:
-          AWS_ACCESS_KEY_ID: {{ secrets.DYMIUM_DEV_BINARY_UTILITIES_KEY }}
-          AWS_SECRET_ACCESS_KEY: {{ secrets.DYMIUM_DEV_BINARY_UTILITIES_SECRET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.DYMIUM_DEV_BINARY_UTILITIES_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.DYMIUM_DEV_BINARY_UTILITIES_SECRET }}
           AWS_REGION: us-west-2
         run: |
           git annex init
