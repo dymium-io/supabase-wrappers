@@ -57,7 +57,8 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.DYMIUM_DEV_BINARY_UTILITIES_SECRET }}
           AWS_REGION: us-west-2
         run: |
-          pwd
+          git config user.email "dev@dymium.io"
+          git config user.name "GitHub Robot"
           git annex init
           git annex enableremote dymium-dev-binary-utilities
           git annex get --from=dymium-dev-binary-utilities bin/
