@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 case "$1" in
     '--profile' | '-profile')
