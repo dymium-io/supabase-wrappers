@@ -60,6 +60,7 @@ jobs:
           ls -lA
           git config --global user.email "dev@dymium.io"
           git config --global user.name "GitHub Robot"
+          git config --global --add safe.directory /__w/Dev/Dev
           git remote -v
           git annex init -d 'zzz'
           git annex enableremote dymium-dev-binary-utilities
