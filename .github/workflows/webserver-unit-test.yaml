@@ -50,8 +50,6 @@ jobs:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
-
-      - name: Install binary utilities
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.DYMIUM_DEV_BINARY_UTILITIES_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.DYMIUM_DEV_BINARY_UTILITIES_SECRET }}
