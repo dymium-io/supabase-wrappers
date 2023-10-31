@@ -50,12 +50,16 @@ jobs:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
+        with:
+          path: /_w/Dev/Dev
+      - name: Install binaries
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.DYMIUM_DEV_BINARY_UTILITIES_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.DYMIUM_DEV_BINARY_UTILITIES_SECRET }}
           AWS_REGION: us-west-2
-        working-directory: .
+        working-directory: /_w/Dev/Dev
         run: |
+          pwd
           git config user.email "dev@dymium.io"
           git config user.name "GitHub Robot"
           git annex init
