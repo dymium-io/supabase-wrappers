@@ -16,5 +16,8 @@ if [[ "$fstLine" =~ ^\[${branchName}\] ]]; then
 elif [[ "$fstLine" =~ ^\[[^]]+\] ]]; then
     echo "[Policy] Commit message must start with '[<branch-name>]'"
 else
-    sed -I '' "1s/^/[$branchName] /" $msg
+    ed -s $msg <<EOF
+1s/^/[${branchName}] /
+,wq
+EOF
 fi
