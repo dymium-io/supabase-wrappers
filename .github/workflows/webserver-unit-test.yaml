@@ -50,18 +50,22 @@ jobs:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v3
+      - name: Initialize Git
+        run: |
+          git config --global --add safe.directory /__w/Dev/Dev
+          git config --global user.email "dev@dymium.io"
+          git config --global user.name "GitHub Robot"
+          git pull origin git-annex:git-annex --rebase
+      - name: Initialize git-annex
+        run:  git annex init -d 'zzz'
+      - name: Enable git-annex remote
+        run:  git annex enableremote dymium-dev-binary-utilities 
       - name: Install binaries
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.DYMIUM_DEV_BINARY_UTILITIES_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.DYMIUM_DEV_BINARY_UTILITIES_SECRET }}
           AWS_REGION: us-west-2
         run: |
-          git config --global user.email "dev@dymium.io"
-          git config --global user.name "GitHub Robot"
-          git config --global --add safe.directory /__w/Dev/Dev
-          git pull origin git-annex:git-annex
-          git annex init -d 'zzz'
-          git annex enableremote dymium-dev-binary-utilities
           git annex get --from=dymium-dev-binary-utilities bin/
       - name: Run tests
         working-directory: ./web/go/src
