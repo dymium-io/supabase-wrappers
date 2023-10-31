@@ -57,7 +57,7 @@ jobs:
           git config --global user.name "GitHub Robot"
           git pull origin git-annex:git-annex --rebase
       - name: Initialize git-annex
-        run:  git annex init -d 'zzz'
+        run:  git annex init 'GitHub insta'
       - name: Enable git-annex remote
         run:  git annex enableremote dymium-dev-binary-utilities 
       - name: Install binaries
