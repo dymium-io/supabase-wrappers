@@ -56,6 +56,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.DYMIUM_DEV_BINARY_UTILITIES_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.DYMIUM_DEV_BINARY_UTILITIES_SECRET }}
           AWS_REGION: us-west-2
+        working-directory: .
         run: |
           git config user.email "dev@dymium.io"
           git config user.name "GitHub Robot"
