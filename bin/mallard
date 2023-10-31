@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -e
+
+d=$(dirname $0)
+
+if [ "${OSTYPE:0:6}" = "darwin" ]; then
+	if ! command -v zstd &>/dev/null; then
+		echo "Please install [zstd] (un)compression tool"
+		echo "For example:"
+		echo "  brew install zstd"
+		exit 255
+	fi
+	if [ "$(arch)" = arm64 ]
+	then
+	    export DYLD_LIBRARY_PATH=/opt/homebrew/lib/postgresql@14
+	    binary="${d}/darwin/arm64/mallard"
+	else
+	    export DYLD_LIBRARY_PATH=/usr/local/lib/postgresql@14
+	    binary="${d}/darwin/x86_64/mallard"
+	fi
+else
+	if ! command -v zstd &>/dev/null; then
+		echo "Please install [zstd] (un)compression tool"
+		echo "For example:"
+		echo "  apt install zstd"
+		exit 255
+	fi
+	binary="${d}/linux/mallard"
+fi
+
+rm -f "${binary}"
+trap "rm -f \"${binary}\"" 1 2 3 6 15 EXIT
+zstd -d -q -f -o "${binary}" "${binary}.zst"
+chmod u+x "${binary}"
+${binary} "$@"
