@@ -58,8 +58,9 @@ jobs:
         working-directory: /__w/Dev/Dev
         run: |
           pwd
-          git config user.email "dev@dymium.io"
-          git config user.name "GitHub Robot"
+          ls -lA
+          git config --global user.email "dev@dymium.io"
+          git config --global user.name "GitHub Robot"
           git annex init
           git annex enableremote dymium-dev-binary-utilities
           git annex get --from=dymium-dev-binary-utilities bin/
