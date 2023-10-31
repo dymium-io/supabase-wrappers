@@ -47,9 +47,9 @@ jobs:
       - name: Set up libpq
         run: apt-get install -y libpq5
       - name: Install zstd
-        run: apt install zstd
+        run: apt install -y zstd
       - name: Install git annex
-        run: apt install git-annex
+        run: apt install -y git-annex
       - name: Install binary utilities
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.DYMIUM_DEV_BINARY_UTILITIES_KEY }}
