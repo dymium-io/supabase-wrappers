@@ -58,7 +58,7 @@ jobs:
         run: |
           git annex init
           git annex enableremote dymium-dev-binary-utilities
-          git annex get bin/
+          git annex get --from=dymium-dev-binary-utilities bin/
       - name: Run tests
         working-directory: ./web/go/src
         env:
