@@ -2,7 +2,7 @@
 
 set -e
 
-PORT=9081
+PORT=${PORT:-9081}
 
 DATABASE_HOST=${DATABASE_HOST:-localhost}
 DATABASE_PORT=${DATABASE_PORT:-5432}
@@ -15,7 +15,7 @@ LOCAL_SEARCH_PASSWD=${LOCAL_SEARCH_PASSWD:-admin123}
 SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE:-}
 
 SPOOFCORP_KEY=${SPOOFCORP_KEY:-6874AB957AA1F505EC6ACC84162B131FA5513558BB64ACEF294388AE6ECDA9C9}
-SPOOFCORPPING_KEY=${SPOOFCORPPING_KEY:-6874AB957AA1F505EC6ACC84162B131FA5513558BB64ACEF294388AE6ECDA9C9}
+SPOOFCORPPING_KEY=${SPOOFCORPPING_KEY:-"Bel5nOvtP1/OjDD6I6NC4p4d5Kz2/jYPs1C2cQCgP1s="}
 
 [ -z "$DATABASE_PASSWORD" ] && {
     DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )
@@ -28,7 +28,18 @@ SPOOFCORPPING_KEY=${SPOOFCORPPING_KEY:-6874AB957AA1F505EC6ACC84162B131FA5513558B
     exit 255
 }
 
-SPOOFCORP_PASSWORD=
+SPOOFCORP_HOST=${SPOOFCORP_HOST:-spoofcorp.guardian.local}
+SPOOFCORPPING_HOST=${SPOOFCORPPING_HOST:=spoofcorpping.guardian.local}
+
+[ -z "$SPOOFCORP_PASSWORD" ] && {
+	SPOOFCORP_PASSWORD=$(grep "^$SPOOFCORP_HOST:\\(5432\\|[*]\\):[^:]*:dymium:" $HOME/.pgpass | cut -f 5 -d :)
+	SPOOFCORP_PASSWORD=${SPOOFCORP_PASSWORD:-$DATABASE_PASSWORD}
+}
+
+[ -z "$SPOOFCORPPING_PASSWORD" ] && {
+	SPOOFCORPPING_PASSWORD=$(grep "^$SPOOFCORPPING_HOST:\\(5432\\|[*]\\):[^:]*:dymium:" $HOME/.pgpass | cut -f 5 -d :)
+	SPOOFCORPPING_PASSWORD=${SPOOFCORPPING_PASSWORD:-$DATABASE_PASSWORD}
+}
 
 # localhost name as visible from within the docker:
 # docker.for.mac.host.internal
@@ -51,24 +62,25 @@ docker run --rm  --name db-sync.dymium.local   \
        -e AWS_LAMBDAS="{}"                     \
        -e AWS_SECRETS="{
                \"DATABASE_PASSWORD\": \"$DATABASE_PASSWORD\",
-               \"SPOOFCORP_PASSWORD\": \"$DATABASE_PASSWORD\",
-               \"SPOOFCORPPING_PASSWORD\": \"$DATABASE_PASSWORD\",
+               \"SPOOFCORP_PASSWORD\": \"$SPOOFCORP_PASSWORD\",
+               \"SPOOFCORPPING_PASSWORD\": \"$SPOOFCORPPING_PASSWORD\",
                \"SPOOFCORP_KEY\": \"$SPOOFCORP_KEY\",
                \"SPOOFCORPPING_KEY\": \"$SPOOFCORPPING_KEY\"
              }"                                \
        -e GUARDIAN_CONF="{
              \"DEFAULT\": {
-                 \"guardian_address\": [\"localhost\"],
-                 \"guardian_port\": 9090,
+                 \"guardian_port\": 5432,
                  \"guardian_tls\": false,
                  \"guardian_user\": \"$DATABASE_USER\",
                  \"guardian_database\": \"postgres\"
              },
              \"spoofcorp\": {
+                 \"guardian_address\": [\"${SPOOFCORP_HOST}\"],
                  \"guardian_password\": \"SPOOFCORP_PASSWORD\",
                  \"customer_aes_key\":  \"SPOOFCORP_KEY\"
              },
              \"spoofcorpping\": {
+                 \"guardian_address\": [\"${SPOOFCORPPING_HOST}\"],
                  \"guardian_password\": \"SPOOFCORPPING_PASSWORD\",
                  \"customer_aes_key\":  \"SPOOFCORPPING_KEY\"
              }
