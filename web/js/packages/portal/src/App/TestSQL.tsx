@@ -468,7 +468,9 @@ function Test() {
                   value={selectedDatascope}
                 >
                   return <option value="">...</option>
-                  {datascopes.map(x => {
+                  {datascopes.sort( (a, b) => {
+                    return (a.name > b.name) ? 1 : -1
+                  }).map(x => {
 
                     return <option key={x.id} value={x.id}>{x.name}</option>
                   })
