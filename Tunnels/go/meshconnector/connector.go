@@ -1,7 +1,5 @@
-//
 // Copyright (c) 2022 Dymium, Inc. All rights reserved.
 // written by igor@dymium.io
-//
 package main
 
 import (
@@ -258,10 +256,12 @@ func pipe(conmap map[int]*Virtcon,
 					}
 				}
 			}
+			mu.Lock()
 			if conn != nil && conn.sock != nil {
 				conn.sock.Close()
-				//conn.sock = nil
+				conn.sock = nil
 			}
+			mu.Unlock()
 			egress.Close()
 			out := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 			messages <- out
@@ -418,14 +418,15 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			mu.RUnlock()
 			if ok {
 				log.InfoTenantf(conn.tenant, "Connection #%d closing, %d left", buff.Id, l-1)
+
+				mu.Lock()
 				if conn != nil && conn.sock != nil {
 					conn.sock.Close()
 				}
-				log.InfoTenantf(conn.tenant, "Connection #%d closed, %d left", buff.Id, l-1)
-				mu.Lock()
 				conn.sock = nil
 				delete(conmap, buff.Id)
 				mu.Unlock()
+				log.InfoTenantf(conn.tenant, "Connection #%d closed, %d left", buff.Id, l-1)
 			} else {
 				log.Errorf("Error finding the descriptor %d in Close", buff.Id)
 			}
