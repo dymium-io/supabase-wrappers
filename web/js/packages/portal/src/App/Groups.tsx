@@ -325,6 +325,7 @@ function GroupMapping() {
       dataField: 'id',
       text: 'id',
       hidden: true,
+      searchable: false
     },
     {
       dataField: 'directorygroup',

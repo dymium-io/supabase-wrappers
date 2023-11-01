@@ -667,6 +667,7 @@ export function EditConnectors(props) {
             dataField: 'id',
             text: 'id',
             hidden: true,
+            searchable: false
         },
         {
             dataField: 'name',

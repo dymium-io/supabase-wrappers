@@ -656,6 +656,7 @@ export function EditConnections(props) {
             dataField: 'id',
             text: 'id',
             hidden: true,
+            searchable: false
         },
         {
             dataField: 'credid',

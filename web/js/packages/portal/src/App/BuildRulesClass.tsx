@@ -91,6 +91,8 @@ export default class BuildRulesClass extends Component {
       dataField: 'id',
       text: 'id',
       hidden: true,
+      searchable: false
+      
     },
 
     {

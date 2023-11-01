@@ -91,6 +91,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
             dataField: 'id',
             text: 'id:',
             hidden: true,
+            searchable: false
         },        
         {
             dataField: 'connection',

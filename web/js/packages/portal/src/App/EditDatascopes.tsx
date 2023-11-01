@@ -81,6 +81,7 @@ export default function EditDatascopes() {
             dataField: 'id',
             text: 'id',
             hidden: true,
+            searchable: false
         },
 
         {
