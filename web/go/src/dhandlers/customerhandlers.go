@@ -1569,7 +1569,7 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 
 	aerr := authentication.CheckConnectorAuth(schema, key, secret)
 	if aerr != nil {
-		http.Error(w, aerr.Error(), http.StatusInternalServerError)
+		http.Error(w, "There is no record of a connector with this configuration", http.StatusInternalServerError)
 		return
 	}
 	//fmt.Printf("schema: %s, key: %s, secret %s\n", schema, key, secret)
