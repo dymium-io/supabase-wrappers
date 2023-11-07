@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Backdrop from "./Backdrop"
 
 function LandingPage() {
@@ -15,7 +15,7 @@ function LandingPage() {
           <div className="w-100 ">
             <div id="loginb" style={{ width: '30%', marginLeft: 'auto', marginRight: 'auto' }}>
 
-              <img className="text-center mb-5 svgshadow" src="/brand.svg"></img>
+              <img alt="brand" className="text-center mb-5 svgshadow" src="/brand.svg"></img>
               <h4 className="logoheader ">This computer system is intended only for Dymium employees</h4>
 
               <div className="mt-5">

@@ -122,6 +122,7 @@ export default function Auth() {
             timeoutId.current = 0
         }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     let onShow = () => {

@@ -100,13 +100,6 @@ function Backdrop() {
       window.addEventListener('resize', resize);
     }
   
-  
-  
-    function scrollCheck() {
-      if (document.body.scrollTop > height) animateHeader = false;
-      else animateHeader = true;
-    }
-  
     function resize() {
       let width = window.innerWidth;
       let height = window.innerHeight;

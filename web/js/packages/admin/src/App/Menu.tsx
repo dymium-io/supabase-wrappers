@@ -3,9 +3,9 @@ import Navbar from 'react-bootstrap/Navbar'
 import Nav from 'react-bootstrap/Nav'
 
 
-
 function Menu() {
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let [avatar, setAvatar] = useState('/avatar.png') // eslint-disable-line no-unused-vars
 
         return (
