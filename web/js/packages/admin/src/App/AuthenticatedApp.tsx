@@ -6,11 +6,6 @@ import Auth from '../Auth'
 import Menu from './Menu'
 import Sidebar from './Sidebar'
 
-const HomePage = (props) => {
-    return (
-        "homepage"
-    )
-}
 const AuthenticatedApp = () => {
     useEffect( () => {
 

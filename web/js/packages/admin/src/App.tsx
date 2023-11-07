@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import LandingPage from './LandingPage'
 import AuthenticatedApp from './App/AuthenticatedApp'
 import Error404 from "./Error404"

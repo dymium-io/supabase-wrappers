@@ -2,9 +2,6 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@dymium/common/App.scss';
 import { Link } from 'react-router-dom'
-import Col from 'react-bootstrap/Col'
-import Row from 'react-bootstrap/Row'
-import Button from 'react-bootstrap/Button'
 import { useAppDispatch, useAppSelector } from './hooks'
 import { setActiveMenu } from '../Slices/menuSlice'
 

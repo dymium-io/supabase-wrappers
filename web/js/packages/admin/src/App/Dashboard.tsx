@@ -1,12 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
-import { Navigate } from "react-router-dom";
 import Spinner from '@dymium/common/Components/Spinner'
 import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
-import Offcanvas from '@dymium/common/Components/Offcanvas'
 import Alert from 'react-bootstrap/Alert'
 import * as http from '@dymium/common/Api/Http'
 //import './Dashboard.scss';

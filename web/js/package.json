@@ -1,14 +1,15 @@
 {
   "name": "Dymium",
   "private": true,
-  "workspaces": ["packages/*",
-  "packages/contrib/react-bootstrap-table2-paginator",
-  "packages/contrib/react-bootstrap-table2-toolkit",
-  "packages/contrib/react-bootstrap-table-next"
-],
-"scripts": {
-  "build": "yarn install && react-scripts build "
-},
+  "workspaces": [
+    "packages/*",
+    "packages/contrib/react-bootstrap-table2-paginator",
+    "packages/contrib/react-bootstrap-table2-toolkit",
+    "packages/contrib/react-bootstrap-table-next"
+  ],
+  "scripts": {
+    "build": "yarn install && react-scripts build "
+  },
   "overrides": {
     "autoprefixer": "10.4.14"
   },
@@ -17,9 +18,9 @@
       "@babel/preset-react",
       "@babel/preset-env"
     ],
-    "plugins": [
-
-    ]
+    "plugins": []
+  },
+  "dependencies": {
+    "update-browserslist-db": "^1.0.13"
   }
-
 }

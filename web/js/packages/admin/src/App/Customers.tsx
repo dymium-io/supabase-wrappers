@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Navigate } from "react-router-dom";
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
@@ -150,7 +149,7 @@ function CustomerForm(props) {
                       Group mapping set up for access control in the customer's portal. Unless there is a reason to change group names, just use 1:1 mapping
                     </li>
                     <li>
-                      Connectivity to the data sources provisioned either via <a href="" target="route53">PrivateLink </a> or <a href="https://docs.google.com/document/d/1U1YZ1xm5n89ch0oQKYhiqIAxzlPUmzlIw-uPlU4BlQM/edit?usp=sharing" target="route53">Dymium Connector</a>  in the customer's portal.
+                      Connectivity to the data sources provisioned either via <a href="https://aws.amazon.com/privatelink/" target="privatelink">PrivateLink </a> or <a href="https://docs.google.com/document/d/1U1YZ1xm5n89ch0oQKYhiqIAxzlPUmzlIw-uPlU4BlQM/edit?usp=sharing" target="route53">Dymium Connector</a>  in the customer's portal.
                       Dymium Connector is easier to set up, and can be used with on-prem installations, as well as less supported clouds.
                     </li>
                     <li>
@@ -286,7 +285,7 @@ function EditCustomers() {
             setShowdelete(true)
         }
     }
-    let GetCustomers = () => {
+    let GetCustomers = useCallback(() => {
         setSpinner(true)
         http.sendToServer("GET", "/api/getcustomers",
             null, "",
@@ -325,7 +324,7 @@ function EditCustomers() {
                 )
                 setSpinner(false)
             })
-    }
+    },[fillDetails, rememberedSelection])
     let UpdateCustomer = () => {
         setSpinner(true)
         let uc = admin.Customer.fromJson({
@@ -396,7 +395,7 @@ function EditCustomers() {
     useEffect(() => {
 
         GetCustomers()
-    }, [rememberedSelection])
+    }, [GetCustomers, rememberedSelection])
 
     useEffect(() => {
         fillDetails()
