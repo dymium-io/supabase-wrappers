@@ -132,18 +132,16 @@ function CustomerForm(props) {
                             <h5>Onboarding a customer</h5>
             <div>
                 This form only creates or updates a global database record for a customer, as well as a dedicated database schema.
+                Before Add New customer please create Auth0 configured either for  <a href="https://docs.google.com/document/d/1CYW7AFfZByBNDZdhWpAJcLD6uNtHfJuaFuXEQaMsl0o/edit?usp=sharing" target="okta">Okta</a> or <a href="https://docs.google.com/document/d/1U1YZ1xm5n89ch0oQKYhiqIAxzlPUmzlIw-uPlU4BlQM/edit?usp=sharing" target="azure">AzureAD</a> integration.
             </div>
             <div className="mt-3">
-                The following steps must be taken in addition:
+                The following steps must be taken in addition, after Add New Customer is completed:
                 <ul>
                     <li>
                         <a href="https://docs.google.com/document/d/1LveztkbSUWUK6CFm08Nrsm5L7upOp7BsGz2NA3DT1kw/edit?usp=sharing" target="terraform">Terraform script executed</a> to bring up all the necessary microservices.
                     </li>
                     <li>
                         <a href="https://docs.google.com/document/d/1yJWNfuAovcdQCAeSm-sThp8MQt5sm3AlK_1TZXqghPM/edit?usp=sharing" target="route53">Hostnames added</a> to Amazons Route53 in the dymium subaccount
-                    </li>
-                    <li>
-                       Auth0 configured either for  <a href="https://docs.google.com/document/d/1CYW7AFfZByBNDZdhWpAJcLD6uNtHfJuaFuXEQaMsl0o/edit?usp=sharing" target="okta">Okta</a> or <a href="https://docs.google.com/document/d/1U1YZ1xm5n89ch0oQKYhiqIAxzlPUmzlIw-uPlU4BlQM/edit?usp=sharing" target="azure">AzureAD</a> integration
                     </li>
                     <li>
                       Group mapping set up for access control in the customer's portal. Unless there is a reason to change group names, just use 1:1 mapping
