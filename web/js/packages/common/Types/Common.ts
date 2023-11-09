@@ -1446,6 +1446,98 @@ export class GroupStatus {
   }
 }
 
+export class MachineTunnel {
+  private '_id': string | null
+  private '_accesskey': string | null
+  private '_secret': string | null
+  private '_name': string
+  private '_groups': Array<string>
+
+  constructor() {
+    this['_id'] = null
+    this['_accesskey'] = null
+    this['_secret'] = null
+    this['_name'] = ''
+    this['_groups'] = []
+  }
+  get id(): string | null { return this['_id'] }
+  set id(__a__: any) {
+    if(__a__ == null) {
+      if(this['_id'] == null) { return }
+      setDirtyFlag()
+      this['_id'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_id'])) {
+        setDirtyFlag()
+        this['_id'] = __v__
+      }
+    }
+  }
+  get accesskey(): string | null { return this['_accesskey'] }
+  set accesskey(__a__: any) {
+    if(__a__ == null) {
+      if(this['_accesskey'] == null) { return }
+      setDirtyFlag()
+      this['_accesskey'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_accesskey'])) {
+        setDirtyFlag()
+        this['_accesskey'] = __v__
+      }
+    }
+  }
+  get secret(): string | null { return this['_secret'] }
+  set secret(__a__: any) {
+    if(__a__ == null) {
+      if(this['_secret'] == null) { return }
+      setDirtyFlag()
+      this['_secret'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_secret'])) {
+        setDirtyFlag()
+        this['_secret'] = __v__
+      }
+    }
+  }
+  get name(): string { return this['_name'] }
+  set name(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_name'])) {
+      setDirtyFlag()
+      this['_name'] = __v__
+    }
+  }
+  get groups(): Array<string> { return this['_groups'] }
+  set groups(__a__: any) {
+    setDirtyFlag()
+    this['_groups'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
+
+  static fromJson(__a__: any): MachineTunnel {
+    disableDF()
+    let cls = new MachineTunnel()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.id = __a__['id'] == null ? null : __a__['id']
+       cls.accesskey = __a__['accesskey'] == null ? null : __a__['accesskey']
+       cls.secret = __a__['secret'] == null ? null : __a__['secret']
+       cls.name = __a__['name']
+       cls.groups = array1Reader(stringReader(''))(__a__['groups'])
+    } else {
+       doAlert(`MachineTunnel: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class OperationStatus {
   private '_status': string
   private '_errormessage': string

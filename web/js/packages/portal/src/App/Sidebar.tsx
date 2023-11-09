@@ -86,6 +86,14 @@ export default function Sidebar() {
           id: 'access'
         })
 
+      if (isadmin)
+      items.push(
+        {
+          item: <div className='darkblue'><i className="fas fa-network-wired mr-2  fa-fw"></i>Machine Access</div>,
+          to: '/app/machineaccess',
+          id: 'machineaccess'
+        })
+
     items.push(
       {
         item: <div className='darkblue'>  <i className="fa-solid fa-vial mr-2 fa-fw"></i>Test SQL </div>,

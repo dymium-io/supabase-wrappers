@@ -187,6 +187,14 @@ type GroupStatus struct {
    Admincount int `json:"admincount"`
 }
 
+type MachineTunnel struct {
+   Id *string `json:"id"`
+   Accesskey *string `json:"accesskey"`
+   Secret *string `json:"secret"`
+   Name string `json:"name"`
+   Groups []string `json:"groups"`
+}
+
 type OperationStatus struct {
    Status string `json:"status"`
    Errormessage string `json:"errormessage"`

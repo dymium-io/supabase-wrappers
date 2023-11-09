@@ -87,7 +87,8 @@ func initRBAC() {
 		"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
 		"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
 		"getgroupsfordatascopes", "getusage", "getaccesskey", "createnewconnector",
-		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable"}
+		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable",
+		"addmachinetunnel"}
 
 	usernames := []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables", "getdatascopesfortestsql"}
 
@@ -2653,4 +2654,99 @@ func SetConnectorStatus(schema string, status string) {
 	if err != nil {
 		log.Errorf("SetConnectorStatus error: %s", err.Error())
 	}
+}
+
+func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error){
+	accesskey, _ := GenerateRandomString(12)
+	accesssecret, _ := GenerateRandomString(128)
+
+	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelfunc()
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Errorf("AddMachineTunnel error 1: %s", err.Error())
+		return "", err
+	}
+	sql := `insert into ` + schema + `.machinetunnelauth( accesskey, accesssecret ) values($1,$2) returning id;`
+	fmt.Printf("sql: %s\n", sql)
+	// execute, and return a string id
+	res := tx.QueryRowContext(ctx, sql, accesskey, accesssecret)
+	var id string
+	// get the string id of the inserted row
+	err = res.Scan(&id)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("AddMachineTunnel error 2: %s", err.Error())
+		return "", err
+	}
+
+	/* now create the tunnel record in the machinetunnels tablemachinetunnels
+	*/
+	sql = `insert into ` + schema + `.machinetunnels(name, id_auth) values($1,$2) returning id;`
+	// execute, and return a string id
+	res = tx.QueryRowContext(ctx, sql, t.Name, id)
+	var tunnelid string
+	// get the string id of the inserted row
+	err = res.Scan(&tunnelid)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("AddMachineTunnel error: %s", err.Error())
+		return "", err
+	}
+	// now record the groups associated with the tunnel in the machinetunnelgroups table
+	for i := 0; i < len(t.Groups); i++ {
+		sql = `insert into ` + schema + `.machinetunnelgroups(tunnel_id, group_id) values($1,$2);`
+		_, err = tx.ExecContext(ctx, sql, tunnelid, t.Groups[i])
+		if err != nil {
+			tx.Rollback()
+			log.Errorf("AddMachineTunnel error: %s", err.Error())
+			return "", err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("AddMachineTunnel error 8: %s", err.Error())
+		return "", err
+	}
+
+	return tunnelid, nil
+}	
+
+func GetMachineTunnels(schema string) ( []types.MachineTunnel, error) {
+	sql := `select a.id, a.name, EXTRACT(epoch from (now() - a.created_at)), b.accesskey, b.accesssecret from ` + schema + `.machinetunnels as a
+	join ` + schema + `.machinetunnelauth as b on a.id_auth=b.id;`
+	var out = []types.MachineTunnel{}
+
+	rows, err := db.Query(sql)
+	if nil == err {
+		defer rows.Close()
+
+		for rows.Next() {
+			var age string
+			var tunnel = types.MachineTunnel{}
+			err = rows.Scan(&tunnel.Id, &tunnel.Name, &age, &tunnel.Accesskey, &tunnel.Secret)
+			if err != nil {
+				break
+			}
+			sql = `select group_id from ` + schema + `.machinetunnelgroups where tunnel_id=$1;`
+			groups := []string{}
+			grows, err := db.Query(sql, tunnel.Id)
+			if nil == err {
+				defer grows.Close()
+				for grows.Next() {
+					var group string
+					err = grows.Scan(&group)
+					if err != nil {
+						break
+					}
+					groups = append(groups, group)
+				}
+			}
+			tunnel.Groups = groups
+			out = append(out, tunnel)
+		}
+	}
+	return out, err
 }

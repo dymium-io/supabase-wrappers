@@ -211,3 +211,10 @@ SetConnectorStatus:
   - key: string
   - secret: string
   - status: string
+  
+MachineTunnel:
+  - id: ?string
+  - accesskey: ?string
+  - secret: ?string
+  - name: string
+  - groups: <|string|>

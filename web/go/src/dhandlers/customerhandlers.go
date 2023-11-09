@@ -1875,7 +1875,7 @@ func DeleteConnector(w http.ResponseWriter, r *http.Request) {
 	roles := r.Context().Value(authenticatedRolesKey).([]string)
 	session := r.Context().Value(authenticatedSessionKey).(string)
 
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	t := types.DatascopeId{}
 	err := json.Unmarshal(body, &t)
@@ -1896,3 +1896,47 @@ func DeleteConnector(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))
 }
+
+func AddMachineTunnel(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	body, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.MachineTunnel{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	o, err := authentication.AddMachineTunnel(schema, t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	js := []byte(`{"status": "OK", "id": "` + o + `"}`)
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func GetMachineTunnels(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	tunnels, err := authentication.GetMachineTunnels(schema)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	js, err := json.Marshal(tunnels)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if len(tunnels) == 0 {
+		js = []byte("[]")
+	}
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}	

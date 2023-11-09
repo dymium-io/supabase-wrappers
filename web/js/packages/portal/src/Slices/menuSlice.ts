@@ -12,6 +12,7 @@ interface MenuState {
   selectedDatascope: string,
   activeAccessTab: string,
   activeGroupsTab: string,
+  activeMachineTab: string,
 }
 
 // Define the initial state using that type
@@ -24,7 +25,8 @@ const initialState: MenuState = {
   activeDatascopeTab: "add",
   selectedDatascope: "",
   activeAccessTab: "datascopes",
-  activeGroupsTab: "groups"  
+  activeGroupsTab: "groups",  
+  activeMachineTab: "add",
 }
 
 export const menuSlice = createSlice({
@@ -58,12 +60,18 @@ export const menuSlice = createSlice({
       },        
       setActiveGroupsTab:(state, action) => {
         state.activeGroupsTab = action.payload
-      },           
+      },
+      setActiveMachineTab: (state, action) => {
+        state.activeMachineTab = action.payload
+      }          
   },
 })
 
 
-export const { setActiveMenu, setActiveRuleTab, setActiveConnectionTab, setActiveConnectorTab, setSelectedConnectorDefault, setActiveDatascopeTab, setSelectedDatascopeDefault, setActiveAccessTab, setActiveGroupsTab } = menuSlice.actions
+export const { setActiveMenu, setActiveRuleTab, setActiveConnectionTab, 
+  setActiveConnectorTab, setSelectedConnectorDefault, setActiveDatascopeTab, 
+  setSelectedDatascopeDefault, setActiveAccessTab, setActiveGroupsTab, 
+  setActiveMachineTab } = menuSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectActiveMenu = (state: RootState) => state.activeMenu
