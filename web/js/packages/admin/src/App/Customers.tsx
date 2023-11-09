@@ -283,7 +283,7 @@ function EditCustomers() {
             setShowdelete(true)
         }
     }
-    let GetCustomers = useCallback(() => {
+    const GetCustomers = useCallback(() => {
         setSpinner(true)
         http.sendToServer("GET", "/api/getcustomers",
             null, "",
@@ -393,7 +393,9 @@ function EditCustomers() {
     useEffect(() => {
 
         GetCustomers()
-    }, [GetCustomers, rememberedSelection])
+    // starts looping if I add GetCustomers to the dependency list
+    // eslint-disable-next-line react-hooks/exhaustive-deps    
+    }, [rememberedSelection])
 
     useEffect(() => {
         fillDetails()
