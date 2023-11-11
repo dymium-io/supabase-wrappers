@@ -40,8 +40,8 @@ export default function PasswordField(props) {
 
             <Form.Control className="no-background" {..._props} style={{ display: 'inline', width: '100%' }} ref={input} />
 
-           {eye ? <i onClick={toggle} className="blue fa fa-eye  fa-fw" style={{ zIndex: '1000', marginTop: '6px', marginLeft: '-25px' }}/> : 
-           <i onClick={toggle} className="blue fa fa-eye-slash  fa-fw" style={{ zIndex: '1000', marginTop: '6px', marginLeft: '-25px' }}/> }
+           {eye ? <i onClick={toggle} className="blue fa fa-eye  fa-fw" style={{ background:'white', marginBottom: '2px', zIndex: '1000', marginTop: '6px', marginLeft: '-25px' }}/> : 
+           <i onClick={toggle} className="blue fa fa-eye-slash  fa-fw" style={{ background:'white', marginBottom: '2px',  zIndex: '1000', marginTop: '6px', marginLeft: '-25px' }}/> }
 
             <Form.Control.Feedback >{validfeedback}</Form.Control.Feedback>
             <Form.Control.Feedback style={{ width: '12em' }} type="invalid" >{invalidfeedback}</Form.Control.Feedback>

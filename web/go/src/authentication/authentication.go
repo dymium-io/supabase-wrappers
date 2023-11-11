@@ -88,7 +88,7 @@ func initRBAC() {
 		"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
 		"getgroupsfordatascopes", "getusage", "getaccesskey", "createnewconnector",
 		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable",
-		"addmachinetunnel"}
+		"addmachinetunnel", "getmachinetunnels", "updatemachinetunnel"}
 
 	usernames := []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables", "getdatascopesfortestsql"}
 
@@ -2669,7 +2669,7 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error){
 		return "", err
 	}
 	sql := `insert into ` + schema + `.machinetunnelauth( accesskey, accesssecret ) values($1,$2) returning id;`
-	fmt.Printf("sql: %s\n", sql)
+	
 	// execute, and return a string id
 	res := tx.QueryRowContext(ctx, sql, accesskey, accesssecret)
 	var id string
@@ -2749,4 +2749,51 @@ func GetMachineTunnels(schema string) ( []types.MachineTunnel, error) {
 		}
 	}
 	return out, err
+}
+
+func UpdateMachineTunnel(schema string, t *types.MachineTunnel) error {
+	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelfunc()
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Errorf("UpdateMachineTunnel error 1: %s", err.Error())
+		return err
+	}
+	sql := `update ` + schema + `.machinetunnels  set name=$1 where id=$2;`
+	fmt.Printf("schema: %s, sql: %s\n", schema, sql)
+	// execute, and return a string id
+	_, err = tx.ExecContext(ctx, sql, t.Name, t.Id)
+	if err != nil {
+		log.Errorf("UpdateMachineTunnel error 1: %s", err.Error())
+		return err
+	}
+
+	sql = `delete from ` + schema + `.machinetunnelgroups  where tunnel_id=$1;`
+	_, err = tx.ExecContext(ctx, sql, t.Id)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("UpdateMachineTunnel error: %s", err.Error())
+		return err
+	}
+
+
+	// now record the groups associated with the tunnel in the machinetunnelgroups table
+	for i := 0; i < len(t.Groups); i++ {
+		sql = `insert into ` + schema + `.machinetunnelgroups(tunnel_id, group_id) values($1,$2);`
+		_, err = tx.ExecContext(ctx, sql, t.Id, t.Groups[i])
+		if err != nil {
+			tx.Rollback()
+			log.Errorf("UpdateMachineTunnel error: %s", err.Error())
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("UpdateMachineTunnel error 8: %s", err.Error())
+		return err
+	}
+
+	return nil
 }

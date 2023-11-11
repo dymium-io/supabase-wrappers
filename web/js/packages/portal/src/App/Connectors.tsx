@@ -635,7 +635,6 @@ export function EditConnectors(props) {
         return e => {
             setSelectedId(id)
             setShowdelete(true)
-
         }
     }
     let setConnector = () => {
