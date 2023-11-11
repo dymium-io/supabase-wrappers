@@ -546,7 +546,7 @@ function EditMachineTunnels() {
         navigator.clipboard.writeText(accesskey);
     }
     return <>
-        <div id="tablecontainer" style={{ width: '90%' }} className="text-left">
+        <div id="tablecontainer" style={{ width: '100%' }} className="text-left">
         {alert}
             <ToolkitProvider
                 bootstrap4
