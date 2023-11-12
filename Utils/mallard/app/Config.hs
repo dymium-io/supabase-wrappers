@@ -34,8 +34,8 @@ import           Control.Lens              hiding (argument)
 import           Data.Char
 import qualified Data.Text                 as T
 import qualified Hasql.Connection          as Sql
-import           Hasql.OptparseApplicative
 import           Options.Applicative
+import           Data.String
 
 class HasRootDirectory a where rootDirectory :: Lens' a T.Text
 class HasPostgreSettings a where postgreSettings :: Lens' a Sql.Settings
@@ -313,3 +313,46 @@ infoVersionParser = info (cmdVersionParser <**> helper)
 
 cmdVersionParser :: Parser Command
 cmdVersionParser = pure (CmdVersion OptsVersion)
+
+-- | Given a function, which updates the long names produces a parser
+-- of @Hasql.Connection.'A.Settings'@.
+--
+-- You can use this function to prefix the name or you can just specify 'id',
+-- if you don't want it changed.
+connectionSettings :: (String -> String) -> Parser Sql.Settings
+connectionSettings updatedName =
+  Sql.settings <$> host <*> port <*> user <*> password <*> database
+  where
+    host =
+      fmap fromString $
+        strOption $
+          long (updatedName "host")
+            <> value "127.0.0.1"
+            <> showDefault
+            <> help "Server host"
+    port =
+      option auto $
+        long (updatedName "port")
+          <> value 5432
+          <> showDefault
+          <> help "Server port"
+    user =
+      fmap fromString $
+        strOption $
+          long (updatedName "user")
+            <> value "postgres"
+            <> showDefault
+            <> help "Username"
+    password =
+      fmap fromString $
+        strOption $
+          long (updatedName "password")
+            <> value ""
+            <> showDefault
+            <> help "Password"
+    database =
+      fmap fromString $
+        strOption $
+          long (updatedName "database")
+            <> help "Database name"
+
