@@ -1,3 +1,0 @@
-#!/bin/bash
-docker run -it --rm -v /tmp/docker:/dist mallard-deb
-echo "mallard debian files are in /tmp/docker/"
