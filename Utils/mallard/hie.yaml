@@ -1,0 +1,6 @@
+cradle:
+  stack:
+    - path: "./lib"
+      component: "mallard:lib"
+    - path: "./app"
+      component: "mallard:exe:mallard"

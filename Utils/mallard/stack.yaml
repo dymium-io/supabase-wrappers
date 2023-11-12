@@ -1,0 +1,9 @@
+packages:
+- '.'
+resolver: lts-20.4
+extra-deps:
+- Interpolation-0.3.0
+# - hasql-th-0.4.0.11
+# - postgresql-syntax-0.4
+- headed-megaparsec-0.2.0.2
+# - selective-0.5
