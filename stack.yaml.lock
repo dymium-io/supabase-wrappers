@@ -11,16 +11,9 @@ packages:
       size: 226
   original:
     hackage: Interpolation-0.3.0
-- completed:
-    hackage: headed-megaparsec-0.2.0.2@sha256:2695b09f0a6208c24f0112fac1b97b392b410ca59db38c6b8a25e175ebf8d661,1571
-    pantry-tree:
-      sha256: 630ccfe8e3224de8b952aeb4758609aebcd89a2d654d3c0574b7ad40577abe0b
-      size: 383
-  original:
-    hackage: headed-megaparsec-0.2.0.2
 snapshots:
 - completed:
-    sha256: 3770dfd79f5aed67acdcc65c4e7730adddffe6dba79ea723cfb0918356fc0f94
-    size: 648660
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/4.yaml
-  original: lts-20.4
+    sha256: fb482b8e2d5d061cdda4ba1da2957c012740c893a5ee1c1b99001adae7b1fbe7
+    size: 640046
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/19.yaml
+  original: lts-21.19

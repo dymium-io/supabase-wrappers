@@ -21,7 +21,7 @@ case ${1:-"--darwin"} in
         zstd -f --rm --ultra darwin/mallard -o ${install_path}
 	;;
     "--linux")
-	cat <<EOF | docker run --rm -i -v $HOME/.stack:/root/.stack -v $PWD:/z fpco/stack-build-small:lts /bin/bash -
+	cat <<EOF | docker run --rm -i -v $HOME/.stack:/root/.stack -v $PWD:/z fpco/stack-build-small:lts-21.19 /bin/bash -
 apt update
 apt upgrade -y
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
@@ -31,7 +31,7 @@ rm /etc/localtime
 dpkg-reconfigure -f noninteractive tzdata
 apt install -y libpq-dev
 cd /z
-stack setup
+stack setup --install-ghc
 stack build --copy-bins --local-bin-path linux
 EOF
 	retval=$?
