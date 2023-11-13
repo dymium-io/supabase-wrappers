@@ -8,7 +8,7 @@ mkDerivation {
   pname = "mallard";
   version = "0.6.3.0";
   src = ./.;
-  isLibrary = true;
+  isLibrary = false;
   isExecutable = true;
   libraryHaskellDepends = [
     base byteable bytestring cryptohash exceptions fgl file-embed foldl
@@ -19,6 +19,11 @@ mkDerivation {
     base exceptions fgl hasql hasql-pool lens mtl optparse-applicative
     optparse-text path path-io text time unordered-containers
   ];
+  configureFlags = [
+    "--disable-shared"
+  ];
+  doHaddock = false;
+  doCheck = false;
   homepage = "https://github.com/AndrewRademacher/mallard";
   description = "Database migration and testing as a library";
   license = lib.licenses.mit;
