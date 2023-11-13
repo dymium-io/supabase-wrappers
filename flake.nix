@@ -9,15 +9,11 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [];
+          overlays = [ ];
         };
         hsPkgs = pkgs.haskellPackages;
-      in
-        {
-          packages = {
-            mallard = hsPkgs.callPackage ./default.nix { };
-          };
-          defaultPackage = self.packages.${system}.mallard;
-        }
-    );
+      in {
+        packages = { mallard = hsPkgs.callPackage ./default.nix { }; };
+        defaultPackage = self.packages.${system}.mallard;
+      });
 }
