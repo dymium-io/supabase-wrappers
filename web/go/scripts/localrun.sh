@@ -2,8 +2,8 @@
 
 set -e
 
-export DATABASE_HOST=${DATABASE_HOST:-docker.for.mac.host.internal}
-export DATABASE_PORT=${DATABASE_PORT:-5432}
+export DATABASE_HOST=${D_DATABASE_HOST:-docker.for.mac.host.internal}
+export DATABASE_PORT=${D_DATABASE_PORT:-5432}
 export DATABASE_NAME=${DATABASE_NAME:-dymium}
 export DATABASE_USER=${DATABASE_USER:-dymium}
 export DATABASE_TLS=${DATABASE_TLS:-disable}
@@ -12,8 +12,6 @@ export LOG_LEVEL=${LOG_LEVEL-Error}
 [ -z "$DATABASE_PASSWORD" ] && {
     DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )
 }
-
-echo "password: $DATABASE_PASSWORD"
 
 export AUTH0_ADMIN_DOMAIN='https://dymium-dev-admin.us.auth0.com/'
 export AUTH0_ADMIN_CLIENT_ID='XiRxsWQLAvSSwLWEQ72hTvvhHoLaEBIE'
@@ -57,8 +55,22 @@ echo $AWS_LAMBDAS
     DATABASE_PASSWORD=$( grep "^$DATABASE_HOST:\\($DATABASE_PORT\\|[*]\\):[^:]*:$DATABASE_USER:" $HOME/.pgpass | cut -f 5 -d : )
 }
 
+# localhost name as visible from within the docker:
+[ "$(sed 's/#.*//' /etc/hosts | grep -w $DATABASE_HOST | cut -d ' ' -f 1)" = "127.0.0.1" ] && {
+    DATABASE_HOST="host.docker.internal"
+}
+
+go run https_proxy.go &
+https_proxy_pid=$!
+stop_https_proxy() {
+  echo 'Killing https_proxy...'
+  kill $https_proxy_pid >/dev/null 2>&1
+  :
+}
+trap stop_https_proxy EXIT
+
 set -x
-docker run --rm -m="0.5Gb" --cpus="0.5" --name dymium --network=dymium -p 3000:80 \
+docker run --rm -m="0.5Gb" --cpus="0.5" --name dymium --network=dymium -p 3080:80 \
     -e DATABASE_HOST=$DATABASE_HOST \
     -e DATABASE_USER=$DATABASE_USER \
     -e DATABASE_PASSWORD=$DATABASE_PASSWORD \
@@ -94,4 +106,5 @@ docker run --rm -m="0.5Gb" --cpus="0.5" --name dymium --network=dymium -p 3000:8
     -e LOG_LEVEL=${LOG_LEVEL} \
     -e LOCAL_SEARCH=${LOCAL_SEARCH} \
     -e SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE} \
+    -e LOCAL_ENVIRONMENT=true \
     dymium
