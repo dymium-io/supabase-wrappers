@@ -7,7 +7,13 @@
 mkDerivation {
   pname = "mallard";
   version = "0.6.3.0";
+  buildTarget = exe:mallard;
   src = ./.;
+  doCheck = false;
+  doHaddock = false;
+  enableLibraryProfiling = false;
+  enableSharedLibraries = false;
+  enableStaticLibraries = false;
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [
