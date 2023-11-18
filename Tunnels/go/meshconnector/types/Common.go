@@ -192,6 +192,8 @@ type MachineTunnel struct {
    Accesskey *string `json:"accesskey"`
    Secret *string `json:"secret"`
    Name string `json:"name"`
+   Username *string `json:"username"`
+   Password *string `json:"password"`
    Groups []string `json:"groups"`
 }
 

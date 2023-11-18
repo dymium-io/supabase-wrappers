@@ -55,10 +55,12 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated.HandleFunc("/api/deleteconnector", dhandlers.DeleteConnector).Methods("POST").Name("deleteconnector")
 	authenticated.HandleFunc("/api/getpolicies", dhandlers.GetPolicies).Methods("GET").Name("getpolicies")
 	authenticated.HandleFunc("/api/savepolicies", dhandlers.SavePolicies).Methods("POST").Name("savepolicies")
+	authenticated.HandleFunc("/api/deletemachinetunnel", dhandlers.DeleteMachineTunnel).Methods("POST").Name("deletemachinetunnel")			
 	authenticated.HandleFunc("/api/addmachinetunnel", dhandlers.AddMachineTunnel).Methods("POST").Name("addmachinetunnel")	
 	authenticated.HandleFunc("/api/getmachinetunnels", dhandlers.GetMachineTunnels).Methods("GET").Name("getmachinetunnels")	
-	authenticated.HandleFunc("/api/updatemachinetunnel", dhandlers.UpdateMachineTunnel).Methods("POST").Name("updatemachinetunnel")	
-	
+	authenticated.HandleFunc("/api/updatemachinetunnel", dhandlers.UpdateMachineTunnel).Methods("POST").Name("updatemachinetunnel")
+	authenticated.HandleFunc("/api/regenmachinetunnel", dhandlers.RegenMachineTunnel).Methods("POST").Name("regenmachinetunnel")
+
 
 	nonauthenticated.HandleFunc("/api/fakelogin", dhandlers.FakeLogin).Methods("GET")
 	nonauthenticated.HandleFunc("/api/getlogin", dhandlers.GetLogin).Methods("GET")

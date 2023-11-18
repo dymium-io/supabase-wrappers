@@ -1,7 +1,5 @@
-//
 // Copyright (c) 2022 Dymium, Inc. All rights reserved.
 // written by igor@dymium.io
-//
 package authentication
 
 import (
@@ -88,7 +86,7 @@ func initRBAC() {
 		"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
 		"getgroupsfordatascopes", "getusage", "getaccesskey", "createnewconnector",
 		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable",
-		"addmachinetunnel", "getmachinetunnels", "updatemachinetunnel"}
+		"addmachinetunnel", "getmachinetunnels", "updatemachinetunnel", "deletemachinetunnel", "regenmachinetunnel"}
 
 	usernames := []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables", "getdatascopesfortestsql"}
 
@@ -2680,12 +2678,23 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error){
 		log.Errorf("AddMachineTunnel error 2: %s", err.Error())
 		return "", err
 	}
+	// generate username and password:
+	username, _ := GenerateRandomString(16)
+	password, _ := GenerateRandomString(32)
+	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
+	if hexkey == "" {
+		return id, errors.New("Api CreateNewConnection: No key found")
+	}
+	enc, err := AESencrypt([]byte(password), hexkey)
+	if err != nil {
+		return id, err
+	}
 
 	/* now create the tunnel record in the machinetunnels tablemachinetunnels
 	*/
-	sql = `insert into ` + schema + `.machinetunnels(name, id_auth) values($1,$2) returning id;`
+	sql = `insert into ` + schema + `.machinetunnels(name, id_auth, username, password) values($1, $2, $3, $4) returning id;`
 	// execute, and return a string id
-	res = tx.QueryRowContext(ctx, sql, t.Name, id)
+	res = tx.QueryRowContext(ctx, sql, t.Name, id, username, enc)
 	var tunnelid string
 	// get the string id of the inserted row
 	err = res.Scan(&tunnelid)
@@ -2715,7 +2724,7 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error){
 }	
 
 func GetMachineTunnels(schema string) ( []types.MachineTunnel, error) {
-	sql := `select a.id, a.name, EXTRACT(epoch from (now() - a.created_at)), b.accesskey, b.accesssecret from ` + schema + `.machinetunnels as a
+	sql := `select a.id, a.name, EXTRACT(epoch from (now() - a.created_at)), b.accesskey, b.accesssecret, a.username, a.password from ` + schema + `.machinetunnels as a
 	join ` + schema + `.machinetunnelauth as b on a.id_auth=b.id;`
 	var out = []types.MachineTunnel{}
 
@@ -2724,11 +2733,18 @@ func GetMachineTunnels(schema string) ( []types.MachineTunnel, error) {
 		defer rows.Close()
 
 		for rows.Next() {
-			var age string
+			var age float64
 			var tunnel = types.MachineTunnel{}
-			err = rows.Scan(&tunnel.Id, &tunnel.Name, &age, &tunnel.Accesskey, &tunnel.Secret)
+			var bpass []byte
+			err = rows.Scan(&tunnel.Id, &tunnel.Name, &age, &tunnel.Accesskey, &tunnel.Secret, &tunnel.Username, &bpass)
 			if err != nil {
 				break
+			}
+			pass, _ := DecryptPassword(schema, bpass) 
+
+			tunnel.Password = &pass
+			if age > 60*60*24 {
+				tunnel.Password  = &pswd
 			}
 			sql = `select group_id from ` + schema + `.machinetunnelgroups where tunnel_id=$1;`
 			groups := []string{}
@@ -2796,4 +2812,32 @@ func UpdateMachineTunnel(schema string, t *types.MachineTunnel) error {
 	}
 
 	return nil
+}
+
+func DeleteMachineTunnel(schema, id string) error {
+	// delete record by id from machinetunnels table
+	sql := `delete from ` + schema + `.machinetunnelgroups where tunnel_id=$1;`
+	_, err := db.Exec(sql, id)
+	if err != nil {
+		return err
+	}
+	sql = `delete from ` + schema + `.machinetunnels where id=$1;`
+	_, err = db.Exec(sql, id)
+	return err
+}
+
+func RegenMachineTunnel(schema, id string) error {
+	// generate password:
+	password, _ := GenerateRandomString(32)
+	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
+	if hexkey == "" {
+		return errors.New("API RegenMachineTunnel: no key found")
+	}
+	enc, err := AESencrypt([]byte(password), hexkey)
+	if err != nil {
+		return err
+	}
+	sql := `update ` + schema + `.machinetunnels set password=$1,created_at=now() where id=$2;`
+	_, err = db.Exec(sql, enc, id)
+	return err
 }

@@ -1962,4 +1962,50 @@ func UpdateMachineTunnel(w http.ResponseWriter, r *http.Request) {
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
-}	
+}
+
+func DeleteMachineTunnel(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	body, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.DatascopeId{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = authentication.DeleteMachineTunnel(schema, t.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	js := []byte(`{"status": "OK"}`)
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func RegenMachineTunnel(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	body, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.DatascopeId{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = authentication.RegenMachineTunnel(schema, t.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	js := []byte(`{"status": "OK"}`)
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}		

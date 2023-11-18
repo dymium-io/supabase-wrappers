@@ -22,6 +22,12 @@ CREATE TABLE machinetunnelgroups (
     group_id varchar(36) NOT NULL REFERENCES groupmapping(id)
 );
 
+-- #!migration
+-- name: "customer/add-machinetunnel-passwords",
+-- requires: ["customer/machinetunnels"],
+-- description: "add passwords to machinetunnels";
+ALTER TABLE machinetunnels ADD COLUMN username text NOT NULL DEFAULT '';
+ALTER TABLE machinetunnels ADD COLUMN password bytea NOT NULL DEFAULT '\x';
 
 
 

@@ -45,7 +45,7 @@ function App() {
             <Route path="/app/groups" element={<Groups />} />    
             <Route path="/app/rules" element={<Rules />} />   
             <Route path="/app/access" element={<Access />} />      
-            <Route path="/app/machineaccess" element={<MachineAccess />} />      
+            <Route path="/app/machineaccess/*" element={<MachineAccess />} />      
             <Route path="/app/test" element={<TestSQL />} />                                             
             <Route path="/app/" element={<Sticky />} />          
           </Route>

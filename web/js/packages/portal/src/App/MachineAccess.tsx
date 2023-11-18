@@ -7,9 +7,9 @@ import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Multiselect from 'multiselect-react-dropdown';
-import { Link } from "react-router-dom";
 import Spinner from '@dymium/common/Components/Spinner'
 import Offcanvas from '@dymium/common/Components/Offcanvas'
+import { useLocation, useNavigate } from "react-router-dom";
 import * as com from '../Common'
 import * as types from '@dymium/common/Types/Internal'
 import * as http from '@dymium/common/Api/Http'
@@ -19,7 +19,7 @@ import { setActiveMachineTab, setSelectedTunnel } from '../Slices/menuSlice'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit';
-import { send } from 'process';
+import Modal from 'react-bootstrap/Modal'
 
 const { SearchBar, ClearSearchButton } = Search;
 
@@ -34,8 +34,9 @@ function AddMachineTunnel() {
     let redstyle = { chips: { background: "rgb(0, 151,206)" }, searchBox: { border: '1px solid red' } }
     let normalstyle = { chips: { background: "rgb(0, 151,206)" } }
     const [multistyle, setMultistyle] = useState(normalstyle)
-
+    const appDispatch = useAppDispatch()
     let form = useRef<HTMLFormElement>(null)
+    const navigate = useNavigate();
 
     let getGroups = () => {
         http.sendToServer("GET", "/api/getmappings",
@@ -82,7 +83,6 @@ function AddMachineTunnel() {
                 )
                 setSpinner(false)
             })
-
     }
     useEffect(() => {
         getGroups()
@@ -98,9 +98,15 @@ function AddMachineTunnel() {
             null, body,
             resp => {
                 resp.json().then(js => {
-                    let grps: types.Group[] = []
+                    setAlert(
+                        <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                            Machine tunnel created successfully.
+                        </Alert>
+                    )
                     setSpinner(false)
-
+                    appDispatch(setSelectedTunnel(js.id))
+                    appDispatch(setActiveMachineTab("edit"))
+                    setTimeout(() => navigate("/app/machineaccess/redirect#bookmark"), 100)
                 }).catch((error) => {
                     setAlert(
                         <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
@@ -152,6 +158,7 @@ function AddMachineTunnel() {
         sendNewMachineTunnel()
         return false
     }
+
     let onSelect = (selectedList, selectedItem) => {
         setSelectedgroups(selectedList)
         setMultistyle(normalstyle)
@@ -185,7 +192,7 @@ function AddMachineTunnel() {
                 <Row>
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="name">
-                            <Form.Label>Machine Tunnel Name</Form.Label>
+                            <Form.Label>Machine Tunnel Name:</Form.Label>
                             <Form.Control style={{ width: '25em' }} required type="text"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
@@ -200,7 +207,7 @@ function AddMachineTunnel() {
                 <Row>
                     <Col xs="auto">
                         <Form.Group className="mb-3" controlId="groups">
-                            <Form.Label>Groups</Form.Label>
+                            <Form.Label>Groups:</Form.Label>
                             <Multiselect
                                 id="multiselect"
                                 selectedValues={selectedgroups}
@@ -241,12 +248,15 @@ function EditMachineTunnels() {
     const [name, setName] = useState("")
     const [data, setData] = useState([])
     const [page, setPage] = useState(1);
-
+    const [todelete, setToDelete] = useState("")
     const [accesskey, setAccesskey] = useState("")
     const [accesssecret, setAccesssecret] = useState("")
     const [, setSortField] = useState('createdat'); // Default sort column
     const [, setSortOrder] = useState('asc'); // Default sort order
     const [, setSearchText] = useState('');
+
+    const [username, setUsername] = useState("")
+    const [password, setPassword] = useState("")
 
     const [showOffhelp, setShowOffhelp] = useState(false)
 
@@ -275,6 +285,8 @@ function EditMachineTunnels() {
     }, [rememberedSelection])
     let onDelete = id => {
         return e => {
+            
+            setToDelete(id)
         }
     }
     let columns = [
@@ -366,10 +378,8 @@ function EditMachineTunnels() {
                 )
                 setSpinner(false)
             })
-
     }
     const loadTunnels = () => {
-        //
         http.sendToServer("GET", "/api/getmachinetunnels",
             null, "",
             resp => {
@@ -382,7 +392,6 @@ function EditMachineTunnels() {
                         </Alert>
                     )
                     setSpinner(false)
-
                 })
             },
             resp => {
@@ -460,6 +469,52 @@ function EditMachineTunnels() {
                 setSpinner(false)
             })
     }
+    const deleteMachineTunnel = (todelete) => {
+        let js = {
+            id: todelete,
+        }
+        let body = JSON.stringify(js)
+        setSpinner(true)
+        http.sendToServer("POST", "/api/deletemachinetunnel",
+            null, body,
+            resp => {
+                resp.json().then(js => {
+                    setSpinner(false)
+                    loadTunnels()
+                    setToDelete("")
+                    if(todelete === rememberedSelection) {
+                        appDispatch(setSelectedTunnel(""))
+                    }
+                }).catch((error) => {
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error deleting tunnel {error}.
+                        </Alert>
+                    )
+                    setSpinner(false)
+                })
+            },
+            resp => {
+                setSpinner(false)
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error deleting tunnel: {t}
+                        </Alert>
+                    ))
+                setSpinner(false)
+            },
+            error => {
+                console.log("on exception")
+                setSpinner(false)
+                setAlert(
+                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                        Error deleting tunnel.
+                    </Alert>
+                )
+                setSpinner(false)
+            })
+    }
     const calculateSelectedGroups = (groupids) => {
         let grps: any[] = []
         groupids.forEach(g => {
@@ -478,6 +533,8 @@ function EditMachineTunnels() {
                 setSelectedgroups(calculateSelectedGroups(t["groups"]))
                 setAccesskey(t["accesskey"])
                 setAccesssecret(t["secret"])
+                setUsername(t["username"])
+                setPassword(t["password"])
             }
         }
     }
@@ -545,9 +602,75 @@ function EditMachineTunnels() {
     const copykey = e => {
         navigator.clipboard.writeText(accesskey);
     }
+    const nameFromId = (id) => {
+        let t = data.find(x => x["id"] === id)
+        if (t !== undefined) {
+            return t["name"]
+        }
+        return ""
+    }
+    const regenerate = () => {
+        let js = {
+            id: rememberedSelection,
+        }
+        let body = JSON.stringify(js)
+        setSpinner(true)
+        http.sendToServer("POST", "/api/regenmachinetunnel",
+            null, body,
+            resp => {
+                resp.json().then(js => {
+                    setSpinner(false)
+                    loadTunnels()
+                    setToDelete("")
+                }).catch((error) => {
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error regenerating password {error}.
+                        </Alert>
+                    )
+                    setSpinner(false)
+                })
+            },
+            resp => {
+                setSpinner(false)
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error regenerating password: {t}
+                        </Alert>
+                    ))
+                setSpinner(false)
+            },
+            error => {
+                setSpinner(false)
+                setAlert(
+                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                        Error regenerating password.
+                    </Alert>
+                )
+                setSpinner(false)
+            })
+    }
     return <>
         <div id="tablecontainer" style={{ width: '100%' }} className="text-left">
         {alert}
+        <Modal centered show={todelete !== ""} onHide={() => setToDelete("")} data-testid="modal-delete">
+                <Modal.Header closeButton>
+                    <Modal.Title>Delete tunnel?</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>Are you sure you want to remove the tunnel {nameFromId(todelete)}? This operation is irreversible.</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="danger" role="button" id="Delete" data-testid="Delete"
+                        aria-label={"Delete"}
+                        onClick={() => {
+                            deleteMachineTunnel(todelete)
+                        }
+                        }>Delete</Button> <Button variant="dymium" onClick={() => {
+                            setToDelete("")
+                        }}>Cancel</Button>
+                </Modal.Footer>
+            </Modal>
+            
             <ToolkitProvider
                 bootstrap4
                 condensed
@@ -591,9 +714,9 @@ function EditMachineTunnels() {
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                     <hr />
                     <Row>
-                        <Col>
+                        <Col xs="auto">
                             <Form.Group className="mb-3" controlId="name">
-                                <Form.Label>Machine Tunnel Name</Form.Label>
+                                <Form.Label>Machine Tunnel Name:</Form.Label>
                                 <Form.Control style={{ width: '25em' }} required type="text"
                                     value={name}
                                     size="sm"
@@ -604,12 +727,11 @@ function EditMachineTunnels() {
                                 </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
-                    </Row>
-                    <Row>
-                        <Col>
+  
+                        <Col xs="auto">
 
                             <Form.Group className="mb-3" controlId="name">
-                                <Form.Label>Access Key</Form.Label>
+                                <Form.Label>Access Key:</Form.Label>
                                 <span className="d-flex">
                                     <Form.Control style={{ width: '25em' }} required type="text"
                                         value={accesskey}
@@ -622,12 +744,13 @@ function EditMachineTunnels() {
                             </Form.Group>
 
                         </Col>
+                        <Col></Col>
                     </Row>
                     <Row>
                         <Col>
 
                             <Form.Group className="mb-3" controlId="name">
-                                <Form.Label>Access Secret</Form.Label>
+                                <Form.Label>Access Secret:</Form.Label>
                                 <span className="d-flex">
                                     <PasswordField type="password"
 
@@ -648,8 +771,49 @@ function EditMachineTunnels() {
                     </Row>
                     <Row>
                         <Col xs="auto">
+
+                            <Form.Group className="mb-3" controlId="name">
+                                <Form.Label>Ghost Database Username:</Form.Label>
+                                <span className="d-flex">
+                                    <Form.Control style={{ width: '13em' }} required type="text"
+                                        value={username}
+                                        size="sm"
+                                    /><i onClick={copykey} style={{ marginTop: '1px' }} className="fas fa-copy clipbtn"></i>
+                                </span>
+                            </Form.Group>
+                        </Col>
+                        <Col xs="auto">
+                        
+                        
+                        <Form.Group className="mb-3" controlId="name">
+                                <Form.Label>Ghost Database Password:</Form.Label>
+                                {password === "**********" ? <div>{password}{password}{password}</div>
+                                :
+                                <span className="d-flex">
+                                    <PasswordField type="password"
+
+                                        placeholder="DB password"
+                                        pattern=".+"
+                                        validfeedback="Looks good!"
+                                        invalidfeedback="Admin password"
+                                        value={password}
+                                        className="w-20em"
+
+                                        size="sm" /><i onClick={copysecret} style={{ marginTop: '1px' }} className="fas fa-copy clipbtn"></i>
+                                </span>
+                                }
+                            </Form.Group>                            
+                        </Col>
+                        <Col>
+                        {password === "**********" &&
+                        <Button onClick={regenerate} style={{position: 'relative', top: '1.9em'}} variant="dymium" size="sm">Regenerate</Button>
+                            }
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col xs="auto">
                             <Form.Group className="mb-3" controlId="groups">
-                                <Form.Label>Groups</Form.Label>
+                                <Form.Label>Groups:</Form.Label>
                                 <Multiselect
                                     id="multiselect"
                                     selectedValues={selectedgroups}
@@ -674,23 +838,45 @@ function EditMachineTunnels() {
                         Update
                     </Button>
                 </Form>
+                <div id="bookmark"></div>
             </div>}
         </div>
     </>
 }
 
+function useQuery() {
+    const { search } = useLocation();
 
+    return React.useMemo(() => new URLSearchParams(search), [search]);
+}
 export default function MachineAccess() {
-    const t = useAppSelector((state) => {
-
+    const navigate = useNavigate();
+    var t = useAppSelector((state) => {
         return state.reducer.activeMachineTab
     }
     )
     const appDispatch = useAppDispatch()
+    let query = useQuery();
 
+    let tt = query.get("key")
+    if (tt !== null) {
+        t = tt
+    }
+    if (t == null) {
+        t = "add"
+    }
+    useEffect(() => {
+        if (location.pathname === '/app/machineaccess/redirect') {
+            navigate('/app/machineaccess')
+        }
+        if (query.get("key") != null) {
+            navigate("/app/machineaccess")
+        }
+    }, [t])
+    
     return (
         <Tabs
-            defaultActiveKey={t} id="machinetunnels"
+            activeKey={t} id="machinetunnels"
             onSelect={(k) => appDispatch(setActiveMachineTab(k))}
 
             unmountOnExit={true} className="mb-3 text-left">

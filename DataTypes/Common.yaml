@@ -217,4 +217,6 @@ MachineTunnel:
   - accesskey: ?string
   - secret: ?string
   - name: string
+  - username: ?string
+  - password: ?string
   - groups: <|string|>
