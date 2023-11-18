@@ -120,9 +120,9 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         setValidated(false)
         event.stopPropagation();
 
-        props.onAddTable({ schema, table, tablescope:  tablestructure})
+        props.onAddTable({ schema, table, tablescope: tablestructure })
         setTableStructure(emptyarray)
-  
+
         setSchema("")
         setTable("")
         return false
@@ -162,7 +162,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         if (props.table.connection !== undefined && props.table.connection !== "") {
             setSchema(props.table.schema)
             setTable(props.table.table)
- 
+
             setTableStructure(tablestructure => cloneDeep(props.table.tablescope))
         } else {
             let body = JSON.stringify({
@@ -186,7 +186,8 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         if (props.table.schema !== undefined && props.table.table !== undefined) {
                             setSchema(schema => {
                                 setTable(props.table.table)
-                                return props.table.schema})
+                                return props.table.schema
+                            })
                         }
                         setSpinner(false)
 
@@ -208,7 +209,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     setSpinner(false)
 
                 })
-        }        
+        }
     }
     let getPolicies = () => {
 
@@ -222,27 +223,27 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         let po = ctypes.DataPolicy.fromJson(js)
                         setPolicy(po)
                         createLevels(po)
-                        let newPIIs:PiiPair[] = [{id: "", label: "N/A"}, {id: "xx", label: "UNSUPPORTED"} ].concat(po.piisuggestions.map(x => { 
-                                let id = ""
-                                if(x.detector.id != null)   
-                                    id = x.detector.id
-                                return {id, label: x.detector.name}
-                            }))
+                        let newPIIs: PiiPair[] = [{ id: "", label: "N/A" }].concat(po.piisuggestions.map(x => {
+                            let id = ""
+                            if (x.detector.id != null)
+                                id = x.detector.id
+                            return { id, label: x.detector.name }
+                        }))
                         setPIIs(PIIs => newPIIs)
                     } else {
                         props.onAlert(<Alert variant="danger" onClose={() => props.onAlert(<></>)} dismissible>
                             Error: {js.error}
-                            <br/>
+                            <br />
                             Check if you defined any rules and access levels!
-                        </Alert>)                        
+                        </Alert>)
                         setPrefills(DefaultPrefills)
                     }
-               
+
                 }).catch((error) => {
                     props.onAlert(<Alert variant="danger" onClose={() => props.onAlert(<></>)} dismissible>
-                    Exception: {error.message}
-                </Alert>)     
-                console.log(error.stack)
+                        Exception: {error.message}
+                    </Alert>)
+                    console.log(error.stack)
                 })
             },
             resp => {
@@ -258,15 +259,15 @@ const AddTable: React.FC<AddTableProps> = (props) => {
 
     }, [])
     useEffect(() => {
-        if(tablestructure.length !== 0)
+        if (tablestructure.length !== 0)
             setTableStructure(tables)
 
     }, [tables])
-    
+
     let getSemanticsFromId = (semantics) => {
-        if(semantics === '' || semantics == null) 
+        if (semantics === '' || semantics == null)
             return "N/A"
-        if(semantics === "UNSUPPORTED") 
+        if (semantics === "UNSUPPORTED")
             return "UNSUPPORTED"
 
         for (let i = 0; i < policy.piisuggestions.length; i++) {
@@ -302,18 +303,18 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         setTable(table[0].toString())
     }
 
-    let selectTable = (table: any[] ) => {
-        if(table.length === 0 ) {
+    let selectTable = (table: any[]) => {
+        if (table.length === 0) {
             setTables(tables => [])
             return
         }
-       let b = {
+        let b = {
             ConnectionId: props.connectionId,
             Schema: schema,
             Table: table[0]
         }
-        if(schema === "" && props.table.schema !== "") {
-            b.Schema =  props.table.schema
+        if (schema === "" && props.table.schema !== "") {
+            b.Schema = props.table.schema
         }
         let body = JSON.stringify(b)
         setSpinner(true)
@@ -330,15 +331,16 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         setSpinner(false)
                         return
                     }
-                    setTables(tables => { 
+                    setTables(tables => {
                         setTable(table => {
                             setTableStructure(js.response.tblInfo.columns)
                             return js.response.tblInfo.tblName
-                        }) ; 
-                        return js.response.tblInfo.columns })
-                    
+                        });
+                        return js.response.tblInfo.columns
+                    })
 
-                    
+
+
                     /*
                                         setDatabase(js.response.dbInfo)
                                         if (props.table.schema !== undefined && props.table.table !== undefined) {
@@ -368,11 +370,11 @@ const AddTable: React.FC<AddTableProps> = (props) => {
     }
 
     useEffect(() => {
-        if(tablestructure.length == 0)
+        if (tablestructure.length == 0)
             return
-        if(PIIs.length == 0)
+        if (PIIs.length == 0)
             return
-            
+
 
         let schemacolumns: TableColumn[] = [
             {
@@ -397,6 +399,8 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                     let pattern = "^(" + PIIs.map(x => x.label).join("|") + ")$"
                     let def = row.semantics !== undefined && row.semantics !== "" ? [{ id: row.semantics, label: getSemanticsFromId(row.semantics) }] : [{id:"", label:"N/A"}]
                     return <Typeahead
+                        clearButton={row.semantics !== "UNSUPPORTED"}
+                        disabled={row.semantics === "UNSUPPORTED"}
                         id={"semantics" + rowIndex}
                         inputProps={{ required: true, pattern, id: "semantics" + rowIndex }}
                         key={"semantics" + rowIndex + validated}
@@ -404,7 +408,6 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                         options={PIIs}
                         defaultSelected={def}
                         placeholder="Data type..."
-                        clearButton
                     />
                 }
             },
@@ -439,27 +442,27 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             }
         ]
 
-        setTabledef(tabledef => cloneDeep(schemacolumns) )
+        setTabledef(tabledef => cloneDeep(schemacolumns))
     }, [table, tablestructure])
 
     useEffect(() => {
-        if(PIIs.length !== 0)
-           getConnections()
+        if (PIIs.length !== 0)
+            getConnections()
     }, [PIIs])
 
     useEffect(() => {
         if (props.table.connection === undefined || props.table.connection === "") {
             initTableSchema()
         }
-        if(table !== "" /*&& tables.length === 0*/ && (props.table.tablescope === undefined)) {
+        if (table !== "" /*&& tables.length === 0*/ && (props.table.tablescope === undefined)) {
             selectTable([table])
         }
     }, [table])
     useEffect(() => {
 
-       if ( schema !== "" && table === "" ) {
-        //    setTable(props.table.table)
-       }
+        if (schema !== "" && table === "") {
+            //    setTable(props.table.table)
+        }
     }, [schema])
     console.log(">>>", schema, PIIs.length, tablestructure.length, tabledef.length)
     let getTables = () => {
@@ -480,7 +483,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         return event => {
             setTableStructure(tablestructure => {
                 let t = cloneDeep(tablestructure)
-                if(event.length === 0 || event[0].id == undefined) {
+                if (event.length === 0 || event[0].id == undefined) {
                     t[rowIndex].semantics = ""
                 } else {
                     t[rowIndex].semantics = event[0].id
@@ -495,9 +498,9 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         return event => {
             setTableStructure(tablestructure => {
                 let t = cloneDeep(tablestructure)
-                if(event.length === 0 || event[0].id == undefined) {
+                if (event.length === 0 || event[0].id == undefined) {
                     t[rowIndex].action = ""
-                } else {                
+                } else {
                     t[rowIndex].action = event[0].id
                 }
                 return t
@@ -540,7 +543,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
     let ActionByName = (predo, semantics: string) => {
         let action = "N/A"
         for (let i = 0; i < predo.rules.length; i++) {
-            
+
             if (semantics === predo.rules[i].semantics) {
 
                 return [predo.rules[i].action.toLowerCase(), predo.rules[i].id]
@@ -554,10 +557,10 @@ const AddTable: React.FC<AddTableProps> = (props) => {
     let applyPrefill = () => {
         if (level === "")
             return
-        let newtablestructure = cloneDeep( sessionGetTablestructure() )
+        let newtablestructure = cloneDeep(sessionGetTablestructure())
 
         let predo = Prefills[level]
-        
+
         for (let i = 0; i < newtablestructure.length; i++) {
             let table = newtablestructure[i]
 
@@ -575,13 +578,13 @@ const AddTable: React.FC<AddTableProps> = (props) => {
         setTableStructure(tablestructure => newtablestructure)
     }
     let correctname = ["MariaDB", "MySQL"].includes(props.currentConnectionType) ? "Database" : "Schema"
-   
+
     return <div>
 
         <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
 
             <Row>
-                <Col  className="mr-0 pr-0">
+                <Col className="mr-0 pr-0">
                     <Form.Group className="mb-3" controlId="schemaname">
                         <Form.Label>{correctname} Name:</Form.Label>
                         <Typeahead id="schemaname" inputProps={{ id: "schemaname" }}
@@ -591,7 +594,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                             clearButton
                             data-testid="schemaname"
                             placeholder={`Choose ${correctname}...`}
-                            disabled={props.table.connection !== undefined && props.table.connection !== ""|| (props.table.table !== "")}
+                            disabled={props.table.connection !== undefined && props.table.connection !== "" || (props.table.table !== "")}
                         />
 
                         <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
@@ -633,7 +636,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                                 labelKey="Table"
                                 placeholder="Choose table..."
                                 defaultSelected={table != undefined ? [table] : []}
-                                disabled={ (props.table.connection !== undefined && props.table.connection !== "") || (props.table.table !== "")}
+                                disabled={(props.table.connection !== undefined && props.table.connection !== "") || (props.table.table !== "")}
                             />
 
                             <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
@@ -642,11 +645,11 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                             </Form.Control.Feedback>
                         </Form.Group>
                     </Col>
-             
+
                 </Row>
             }
-            {schema !== "" && schema != undefined && table !== "" && table != undefined && 
-            PIIs.length != 0 && tablestructure.length !== 0 && tabledef.length !== 0 &&
+            {schema !== "" && schema != undefined && table !== "" && table != undefined &&
+                PIIs.length != 0 && tablestructure.length !== 0 && tabledef.length !== 0 &&
                 <>
                     <BootstrapTable id="schematable"
                         condensed
