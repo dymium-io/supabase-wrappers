@@ -422,9 +422,9 @@ func (da *MySQL) getSample(schema, table string, sample []detect.Sample) error {
 			colNames.WriteString("`" + sample[k].Name + "`")
 		}
 	}
-
-	sql := fmt.Sprintf("SELECT %s from `%s`.`%s` ORDER BY RAND() LIMIT %d",
-		colNames.String(), schema, table, detect.SampleSize)
+	
+	sql := fmt.Sprintf("SELECT * FROM (SELECT %s FROM `%s`.`%s` LIMIT %d) ORDER BY RAND() LIMIT %d",
+		colNames.String(), schema, table, detect.LimitSize, detect.SampleSize)
 	r, err := da.db.Query(sql)
 	if err != nil {
 		return err

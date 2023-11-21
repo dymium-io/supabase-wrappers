@@ -6,7 +6,10 @@ import (
 	"regexp"
 )
 
-const SampleSize = 32
+const (
+	SampleSize = 32
+	LimitSize = 1024
+)
 
 type Detectors struct {
 	columnNameDetectors []detector
