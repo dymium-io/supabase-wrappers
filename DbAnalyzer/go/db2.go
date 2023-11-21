@@ -408,7 +408,8 @@ func (da *DB2) getSample(schema, table string, sample []detect.Sample) error {
 	}
 
 	//SELECT %s from "%s"."%s" tablesample bernoulli (%d)
-	sql := fmt.Sprintf(`SELECT %s FROM "%s"."%s" ORDER BY RAND() LIMIT %d`, colNames.String(), schema, table, detect.SampleSize)
+	sql := fmt.Sprintf(`SELECT * FROM (SELECT %s FROM "%s"."%s" FETCH FIRST %d ROWS ONLY) ORDER BY RAND() FETCH FIRST %d ROWS ONLY`,
+		colNames.String(), schema, table, detect.LimitSize, detect.SampleSize)
 	log.Infof("sql: %s", sql)
 	r, err := da.db.Query(sql)
 	if err != nil {

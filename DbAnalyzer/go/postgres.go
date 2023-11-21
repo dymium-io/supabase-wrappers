@@ -722,9 +722,8 @@ func (da *Postgres) getSample(schema, table string, sample []detect.Sample) erro
 			colNames.WriteString(`"` + sample[k].Name + `"`)
 		}
 	}
-
-	sql := fmt.Sprintf(`SELECT %s from "%s"."%s" ORDER BY RANDOM() LIMIT %d`,
-		colNames.String(), schema, table, detect.SampleSize)
+	sql := fmt.Sprintf(`SELECT * from (SELECT %s from "%s"."%s" LIMIT %d) ORDER BY RANDOM() LIMIT %d`,
+		colNames.String(), schema, table, detect.LimitSize, detect.SampleSize)
 	r, err := da.db.Query(sql)
 	if err != nil {
 		return err
