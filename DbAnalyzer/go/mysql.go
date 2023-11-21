@@ -6,7 +6,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 
 	"fmt"
+	"math/rand"
+	"sort"
 	"strings"
+	"time"
 
 	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
@@ -394,6 +397,19 @@ func (da *MySQL) getSample(schema, table string, sample []detect.Sample) error {
 
 	nColumns := len(sample)
 
+	var count int
+	{
+		r := da.db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM `%s`.`%s`",
+			schema, table))
+		r.Scan(&count)
+		if count <= 0 {
+			for _, s := range sample {
+				s.Data = make([]*string, 0)
+			}
+			return nil
+		}
+	}
+
 	for _, s := range sample {
 		if s.IsSamplable {
 			s.Data = make([]*string, 0, detect.SampleSize)
@@ -422,16 +438,33 @@ func (da *MySQL) getSample(schema, table string, sample []detect.Sample) error {
 			colNames.WriteString("`" + sample[k].Name + "`")
 		}
 	}
-	
-	sql := fmt.Sprintf("SELECT * FROM (SELECT %s FROM `%s`.`%s` LIMIT %d) ORDER BY RAND() LIMIT %d",
-		colNames.String(), schema, table, detect.LimitSize, detect.SampleSize)
+
+	sql := fmt.Sprintf("SELECT %s FROM `%s`.`%s` LIMIT %d",
+		colNames.String(), schema, table, detect.LimitSize)
 	r, err := da.db.Query(sql)
 	if err != nil {
 		return err
 	}
 	defer r.Close()
 
+	selected := generateRandomNumbers(utils.Min(detect.LimitSize, count),
+		detect.SampleSize)
+	iter, ks := 0, 0
+
 	for r.Next() {
+		if ks == len(selected) {
+			break
+		}
+
+		if iter != selected[ks] {
+			iter += 1
+			continue
+		}
+
+		// case of: iter == selected[ks]
+		iter += 1
+		ks += 1
+
 		if err := r.Scan(i...); err != nil {
 			return err
 		}
@@ -451,7 +484,33 @@ func (da *MySQL) getSample(schema, table string, sample []detect.Sample) error {
 				}
 			}
 		}
+
 	}
 
 	return nil
+}
+
+func generateRandomNumbers(N, n int) []int {
+	numbers := make([]int, N)
+	for i := 0; i < N; i++ {
+		numbers[i] = i
+	}
+
+	if N <= n {
+		return numbers
+	}
+
+	// Shuffle the numbers
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(numbers), func(i, j int) {
+		numbers[i], numbers[j] = numbers[j], numbers[i]
+	})
+
+	// Select the first 32 numbers
+	selectedNumbers := numbers[:n]
+
+	// Sort the selected numbers
+	sort.Ints(selectedNumbers)
+
+	return selectedNumbers
 }

@@ -444,7 +444,7 @@ func (da *SqlServer) getSample(schema, table string, sample []detect.Sample) err
 		}
 	}
 
-	sql := fmt.Sprintf(`SELECT TOP %d * FROM (SELECT TOP %d %s from [%s].[%s]) ORDER BY NEWID()`,
+	sql := fmt.Sprintf(`SELECT TOP %d * FROM (SELECT TOP %d %s from [%s].[%s]) AS subquery ORDER BY NEWID()`,
 		detect.SampleSize, detect.LimitSize, colNames.String(), schema, table)
 	r, err := da.db.Query(sql)
 	if err != nil {
