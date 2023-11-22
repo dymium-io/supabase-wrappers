@@ -573,7 +573,7 @@ Content-Type: application/json
 
 
 //elasticsearch
-POST http://localhost:8080/api/dbanalyzer/dbping
+POST http://localhost:8888/api/dbanalyzer/dbping
 Content-Type: application/json
 
 {
@@ -587,7 +587,7 @@ Content-Type: application/json
 }
 ###
 
-POST http://localhost:8080/api/dbanalyzer/dbschemas
+POST http://localhost:8888/api/dbanalyzer/dbschemas
 Content-Type: application/json
 
 {
@@ -601,7 +601,7 @@ Content-Type: application/json
 }
 ###
 
-POST http://localhost:8080/api/dbanalyzer/dbtabtypes
+POST http://localhost:8888/api/dbanalyzer/dbtabtypes
 Content-Type: application/json
 
 {
@@ -615,7 +615,7 @@ Content-Type: application/json
 }
 ###
 
-POST http://localhost:8080/api/dbanalyzer/dbtables
+POST http://localhost:8888/api/dbanalyzer/dbtables
 Content-Type: application/json
 
 {
@@ -629,7 +629,7 @@ Content-Type: application/json
 }
 ###
 
-POST http://localhost:8080/api/dbanalyzer/dbcolumns/nyc_restaurants
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/nyc_restaurants
 Content-Type: application/json
 
 {
@@ -642,3 +642,37 @@ Content-Type: application/json
   "password": "admin123"
 }
 ###
+
+POST http://localhost:8888/api/dbanalyzer/dbsample?table=nyc_restaurants&samplesize=5
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9200,
+  "database": "",
+  "properties": "",
+  "user": "elastic",
+  "password": "admin123"
+}
+###
+
+
+POST http://localhost:9200/_sql?format=txt
+Content-Type: application/json
+Authorization: Basic ZWxhc3RpYzphZG1pbjEyMw==
+
+{
+  "query": "SELECT * FROM nyc_restaurants LIMIT 5",
+  "field_multi_value_leniency": true
+}
+###
+
+POST http://localhost:9200/_sql
+Content-Type: application/json
+Authorization: Basic ZWxhc3RpYzphZG1pbjEyMw==
+
+{
+"query": "SELECT * FROM nyc_restaurants LIMIT 5",
+"field_multi_value_leniency": true
+}

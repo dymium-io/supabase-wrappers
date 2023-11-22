@@ -1,6 +1,8 @@
 package dymium.io.dto
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class DbConnectDto (
@@ -45,7 +47,7 @@ data class DbTabListResponse (
 data class DbColListResponse (
     val status: String,
     val message: String,
-    val tables: List<DbColumnInfo>,
+    val columns: List<DbColumnInfo>,
 )
 
 @Serializable
@@ -95,4 +97,11 @@ data class DbColumnInfo (
                                         //YES --- if this a generated column
                                         //NO --- if this not a generated column
                                         //empty string --- if it cannot be determined whether this is a generated column
+)
+
+@Serializable
+data class DbSampleResponse (
+    val status: String,
+    val message: String,
+    val data: List<JsonElement>,
 )

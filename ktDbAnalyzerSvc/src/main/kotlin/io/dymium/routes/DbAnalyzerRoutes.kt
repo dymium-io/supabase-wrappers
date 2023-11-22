@@ -103,6 +103,20 @@ fun Application.DbAnalyzerRoutes() {
                         failure = { handleRequestError(it) }
                     )
             }
+            // Get sample data for given Schema (Optional), Table with sample size --> POST /api/dbanalyzer/dbsample?schema=ss&&table=t&&samplesize=sz
+            post("/dbsample") {
+                logger.debug { "POST dbSample /$ENDPOINT/dbsample" }
+
+                val schema = call.request.queryParameters["schema"]
+                val table = call.request.queryParameters["table"]
+                val sampleSize = call.request.queryParameters["samplesize"]?.toInt()
+                val dto = call.receive<DbConnectDto>()
+                dbService.dbSample(dto,schema,table,sampleSize)
+                    .mapBoth(
+                        success = { call.respond(HttpStatusCode.OK, it) },
+                        failure = { handleRequestError(it) }
+                    )
+            }
         }
     }
 }

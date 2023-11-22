@@ -2,10 +2,12 @@ package io.dymium.services
 
 import io.dymium.errors.DbAnalyzerError
 import com.github.michaelbull.result.*
+import com.google.gson.Gson
 import dymium.io.dto.*
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.config.*
 import io.ktor.server.engine.*
+import kotlinx.serialization.json.*
 import java.sql.DriverManager
 import java.sql.JDBCType
 import java.sql.ResultSet
@@ -110,6 +112,82 @@ class DbService(val config: ApplicationConfig) {
                 }
             )
     }
+
+    fun convertToJson(resultSet: ResultSet): JsonElement {
+        val metaData = resultSet.metaData
+        val row = mutableMapOf<String, Any?>()
+        for (i in 1..metaData.columnCount) {
+            val columnName = metaData.getColumnName(i)
+            val value = resultSet.getObject(columnName)
+            row[columnName] = value
+        }
+        // kotlin serialization doesn't have serializer for Any. Using gson for that.
+        val gson = Gson()
+        return Json.encodeToJsonElement(gson.toJson(row))
+    }
+
+    fun dbSample(dbInfo: DbConnectDto, schema: String?, table: String?, sampleSize: Int?): Result<DbSampleResponse, DbAnalyzerError> {
+        if (schema.isNullOrEmpty()) {
+            if (dbInfo.dbType !in listOf("elasticsearch", "es") ) {
+                val err = DbAnalyzerError.BadRequest("schema is required")
+                logError(err)
+                return Err(err)
+            }
+        }
+        if (table.isNullOrEmpty()) {
+            val err = DbAnalyzerError.BadRequest("table name is required")
+            logError(err)
+            return Err(err)
+        }
+        if (sampleSize == null) {
+            val err = DbAnalyzerError.BadRequest("sample size is required")
+            logError(err)
+            return Err(err)
+        }
+
+        var query : String
+        if (schema.isNullOrEmpty()) {
+            query = "SELECT * FROM $table LIMIT $sampleSize"
+        } else {
+            query = "SELECT * FROM $schema.$table LIMIT $sampleSize"
+        }
+
+        return validateRequestDbInfo(dbInfo)
+            .mapBoth(
+                success = { dbInfo ->
+                    val url = getConnectionURL(dbInfo)
+                    logger.debug { "DB Connection URL: $url" }
+                    try {
+                        val connection = DriverManager.getConnection(url, dbInfo.user, dbInfo.password)
+                        var response: DbSampleResponse
+                        connection.use {
+                            val msg =
+                                "Database Name: ${it.metaData.databaseProductName} (${it.metaData.databaseProductVersion})"
+
+                            val statement = connection.createStatement()
+                            val resultSet = statement.executeQuery(query)
+                            val jsonArray = mutableListOf<JsonElement>()
+                            while (resultSet.next()) {
+                                jsonArray.add((convertToJson(resultSet)))
+                            }
+                            response = DbSampleResponse("Ok", msg, data = jsonArray)
+                        }
+                        logger.debug { "DB Schemas: ${response}" }
+                        Ok(response)
+                    } catch (e: Exception) {
+                        val err = DbAnalyzerError.BadRequest("Error connecting to database: ${e.message}")
+                        logError(err)
+                        Err(err)
+                    }
+                },
+                failure = { err ->
+                    logError(err)
+                    Err(err)
+                }
+            )
+
+    }
+
 
     suspend fun dbTabList(dbInfo: DbConnectDto, schema: String?): Result<DbTabListResponse, DbAnalyzerError> {
         if (schema.isNullOrEmpty() && dbInfo.dbType !in listOf("elasticsearch", "es")) {
@@ -321,5 +399,4 @@ class DbService(val config: ApplicationConfig) {
 
             else -> Ok(dbInfo)
         }
-
 }
