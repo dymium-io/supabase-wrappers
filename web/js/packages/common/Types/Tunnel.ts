@@ -599,6 +599,58 @@ export class GetKeySecret {
   }
 }
 
+export class MachineCSRResponse {
+  private '_version': string
+  private '_jwt': string
+  private '_certificate': string
+
+  constructor() {
+    this['_version'] = ''
+    this['_jwt'] = ''
+    this['_certificate'] = ''
+  }
+  get version(): string { return this['_version'] }
+  set version(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_version'])) {
+      setDirtyFlag()
+      this['_version'] = __v__
+    }
+  }
+  get jwt(): string { return this['_jwt'] }
+  set jwt(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_jwt'])) {
+      setDirtyFlag()
+      this['_jwt'] = __v__
+    }
+  }
+  get certificate(): string { return this['_certificate'] }
+  set certificate(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_certificate'])) {
+      setDirtyFlag()
+      this['_certificate'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
+
+  static fromJson(__a__: any): MachineCSRResponse {
+    disableDF()
+    let cls = new MachineCSRResponse()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.version = __a__['version']
+       cls.jwt = __a__['jwt']
+       cls.certificate = __a__['certificate']
+    } else {
+       doAlert(`MachineCSRResponse: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class RequestUpdate {
   private '_protocolVersion': string
   private '_clientMajorVersion': string

@@ -99,3 +99,5 @@ web/go/src/dymium
 Tunnels/go/meshserver/output.txt
 Tunnels/go/meshconnector/connector.go.old
 DbAnalyzer/scripts/.localrun.sh.swp
+Tunnels/go/machineclient/output.txt
+Tunnels/go/machineclient/machineclient

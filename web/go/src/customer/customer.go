@@ -75,6 +75,7 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/api/datascopehelp", dhandlers.DatascopeHelp).Queries("token", "{token}", "port", "{port}").Methods("GET")
 	nonauthenticated.HandleFunc("/api/getconnectorcertificate",  dhandlers.GetConnectorCertificate).Methods("POST").Name("getconnectorcertificate")
 	nonauthenticated.HandleFunc("/api/connectorstatus",  dhandlers.SetConnectorStatus).Methods("POST").Name("connectorstatus")
+	nonauthenticated.HandleFunc("/api/getmachineclientcertificate",  dhandlers.GetMachineClientCertificate).Methods("POST").Name("getmachineclientcertificate")
 	
 	
 	

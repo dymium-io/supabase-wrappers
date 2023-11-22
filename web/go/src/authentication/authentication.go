@@ -88,7 +88,7 @@ func initRBAC() {
 		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable",
 		"addmachinetunnel", "getmachinetunnels", "updatemachinetunnel", "deletemachinetunnel", "regenmachinetunnel"}
 
-	usernames := []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables", "getdatascopesfortestsql"}
+	usernames := []string{"getmachineclientcertificate", "getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables", "getdatascopesfortestsql"}
 
 	for _, v := range adminnames {
 		admins["/api/"+v] = 1
@@ -2841,3 +2841,39 @@ func RegenMachineTunnel(schema, id string) error {
 	_, err = db.Exec(sql, enc, id)
 	return err
 }
+
+
+func CheckMachineTunnelGroups(schema, key, secret string) ([]string, string, error) {
+	// check if key and secret are valid against the machinetunnels table key and secret
+	sql := `select b.id, b.name from ` + schema + `.machinetunnelauth as a join `+schema+`.machinetunnels as b 
+		on a.id=b.id_auth  where a.accesskey=$1 and a.accesssecret=$2;`
+	row := db.QueryRow(sql, key, secret)
+	var id string
+	var name string
+	err := row.Scan(&id, &name)
+
+	if err != nil {
+		return []string{}, "", err
+	}
+
+	// get the groups associated with the tunnel
+	sql = `select group_id from ` + schema + `.machinetunnelgroups where tunnel_id=$1;`
+	rows, err := db.Query(sql, id)
+	if nil == err {
+		defer rows.Close()
+		var groups []string
+		for rows.Next() {
+			var group string
+			err = rows.Scan(&group)
+			if err != nil {
+				break
+			}
+			groups = append(groups, group)
+		}
+		token, err := GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s", 
+			schema, name, "N/A", groups, []string{gotypes.RoleUser}, "unknown")
+		return groups, token, err
+	}
+	return []string{}, "", err
+}
+

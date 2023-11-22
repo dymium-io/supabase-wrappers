@@ -5,19 +5,10 @@ package dhandlers
 import (
 	"crypto/rand"
 	"crypto/x509"
-	"dymium.com/dymium/authentication"
-	"dymium.com/dymium/common"
-	"dymium.com/dymium/log"
-	"dymium.com/dymium/types"
-	"dymium.com/server/protocol"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/Jeffail/gabs"
-	"github.com/gorilla/mux"
-	_ "github.com/gorilla/mux"
-	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -28,6 +19,16 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"dymium.com/dymium/authentication"
+	"dymium.com/dymium/common"
+	"dymium.com/dymium/log"
+	"dymium.com/dymium/types"
+	"dymium.com/server/protocol"
+	"github.com/Jeffail/gabs"
+	"github.com/gorilla/mux"
+	_ "github.com/gorilla/mux"
+	"golang.org/x/net/context"
 )
 
 type contextKey int
@@ -1553,7 +1554,7 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
 // check the secret here!!!
 func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	var t types.CertificateRequestWithSecret
 
@@ -1628,6 +1629,92 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 	var certout types.CSRResponse
 	certout.Certificate = string(out)
 	certout.Version = protocol.MeshServerVersion
+	js, err := json.Marshal(certout)
+	if err != nil {
+		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	log.InfoTenantf(schema, "Api GetConnectorCertificate, success")
+
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(js))
+}
+
+func GetMachineClientCertificate(w http.ResponseWriter, r *http.Request) {
+	// get a cert based on csr authenticating against machine access ket/secret, similar to previous function
+	// but with machine access key/secret
+
+	body, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	var t types.CertificateRequestWithSecret
+
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		log.Errorf("Api GetMachineClientCertificate, error unmarshaling cert: %s", err.Error())
+		http.Error(w, "Invalid request", http.StatusInternalServerError)
+		return
+	}
+	schema := t.Customer
+	key := t.Key
+	secret := t.Secret
+
+	groups, token, aerr := authentication.CheckMachineTunnelGroups(schema, key, secret)
+	if aerr != nil {
+		log.ErrorTenantf(schema, "Api GetMachineClientCertificate. There is no record of machine tunnel with this configuration")
+		http.Error(w, "There is no record of machine tunnel with this configuration", http.StatusInternalServerError)
+		return
+	}
+	//fmt.Printf("schema: %s, key: %s, secret %s\n", schema, key, secret)
+
+	pemBlock, _ := pem.Decode([]byte(t.Csr))
+	if pemBlock == nil {
+		log.ErrorTenantf(schema, "Api GetMachineClientCertificate, pem.Decode failed")
+		http.Error(w, "Certificate Request has invalid encoding", http.StatusInternalServerError)
+		return
+	}
+
+	clientCSR, err := x509.ParseCertificateRequest(pemBlock.Bytes)
+	if err = clientCSR.CheckSignature(); err != nil {
+		log.ErrorTenantf(schema, "Api GetMachineClientCertificate, error: %s", err.Error())
+		http.Error(w, "Certificate Request has invalid format", http.StatusInternalServerError)
+		return
+	}
+
+	// create client certificate template
+	clientCRTTemplate := x509.Certificate{
+		Signature:          clientCSR.Signature,
+		SignatureAlgorithm: clientCSR.SignatureAlgorithm,
+
+		PublicKeyAlgorithm: clientCSR.PublicKeyAlgorithm,
+		PublicKey:          clientCSR.PublicKey,
+
+		SerialNumber: big.NewInt(2),
+		Issuer:       authentication.CaCert.Subject,
+		Subject:      clientCSR.Subject,
+		NotBefore:    time.Now().Add(-GRACE * time.Second), // grace time
+		NotAfter:     time.Now().Add(GRACE * time.Second),  // DELETE ME
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+		DNSNames:     groups,
+	}
+
+	// create client certificate from template and CA public key
+	clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, authentication.CaCert,
+		clientCSR.PublicKey, authentication.CaKey)
+
+	if err != nil {
+		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
+		http.Error(w, "Dymium failed to create a client cert", http.StatusInternalServerError)
+		return
+	}
+
+	out := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: clientCRTRaw})
+
+	var certout types.MachineCSRResponse
+	certout.Certificate = string(out)
+	certout.Jwt = token
 	js, err := json.Marshal(certout)
 	if err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
@@ -1939,7 +2026,7 @@ func GetMachineTunnels(w http.ResponseWriter, r *http.Request) {
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
-}	
+}
 
 func UpdateMachineTunnel(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
@@ -2008,4 +2095,4 @@ func RegenMachineTunnel(w http.ResponseWriter, r *http.Request) {
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
-}		
+}

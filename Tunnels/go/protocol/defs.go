@@ -16,3 +16,4 @@ type TransmissionUnit struct {
 }
 
 var MeshServerVersion = "0.1.4"
+var TunnelServerVersion = "0.1.4"
