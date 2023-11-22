@@ -9,6 +9,7 @@ ConnectionType:
   - OracleDB   <*> Oracle Database
   - DB2        <*> IBM DB2 Database
   - MongoDB    <*> MongoDB Database
+  - ElasticSearch <*> ElasticSearch Database
 
 ConnectionPortsType:
   - PostgreSQL_5432
@@ -18,6 +19,7 @@ ConnectionPortsType:
   - OracleDB_1521
   - DB2_50000
   - MongoDB_27017
+  - ElasticSearch_9200
 
 GroupMapping:
   - id: ?string

@@ -27,6 +27,8 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 	var cnf *conf
 	var err error
 
+	log.Infof("Request: %v", c)
+
 	switch c.Action {
 	case types.A_Delete:
 		if cnf, err = getConf(c.Customer, true); err != nil {
@@ -65,16 +67,19 @@ func LambdaHandler(c types.Request) (interface{}, error) {
 		return nil, err
 	}
 
+	log.Infof("getDatascopes: Customer: %v, Datascope: %v", c.Customer, c.Datascope)
 	datascopes, err := getDatascopes(db, c.Customer, c.Datascope)
 	if err != nil {
 		return nil, err
 	}
 
+	log.Infof("getConnections: Customer: %v, Connector: %v", c.Customer, cnf.ConnectorDomain)
 	connections, err := getConnections(db, c.Customer, cnf.ConnectorDomain)
 	if err != nil {
 		return nil, err
 	}
 
+	log.Infof("getCredentials: Customer: %v, Key: %v", c.Customer, cnf.GuardianConf.CustomerAESKey)
 	credentials, err := getCredentials(db, c.Customer, cnf.GuardianConf.CustomerAESKey)
 	if err != nil {
 		return nil, err

@@ -3,6 +3,8 @@ package main
 import (
 	"dymium.com/dymium/log"
 	"github.com/aws/aws-lambda-go/lambda"
+	"os"
+	"strconv"
 
 	"DbAnalyzer/types"
 	"DbAnalyzer/utils"
@@ -25,6 +27,27 @@ func dbAnalyzer(dt types.ConnectionType) DA {
 		da = &DB2{}
 	case types.CT_MongoDB:
 		da = &MongoClient{}
+	case types.CT_ElasticSearch:
+		host := os.Getenv("DASVC_HOST")
+		if host == "" {
+			host = "localhost"
+		}
+
+		port := 8888
+		portStr := os.Getenv("DASVC_PORT")
+		if portStr != "" {
+			p, err := strconv.Atoi(portStr)
+			if err != nil {
+				log.Errorf("Error converting %s to int: %v, using default value.\n", portStr, err)
+			} else {
+				port = p
+			}
+		}
+
+		da = &JdbcClient{
+			ktDAHost: host,
+			ktDAPort: port,
+		}
 	}
 	return da
 }
