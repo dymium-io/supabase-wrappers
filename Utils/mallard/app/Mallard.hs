@@ -11,6 +11,7 @@ import           Control.Lens                                   hiding
                                                                  (argument,
                                                                  noneOf)
 import           Data.Text.Lens                                 hiding (text)
+import           Data.Time.Clock
 import           Database.Mallard
 import qualified Database.Mallard.Commands.ConfirmChecksums     as Commands
 import qualified Database.Mallard.Commands.Drop                 as Commands
@@ -54,7 +55,7 @@ mainVersion _ = putStrLn "mallard -- 0.6.3.0"
 
 mainMigrate :: C.OptsMigrate -> IO ()
 mainMigrate appOpts = do
-    pool <- Pool.acquire 1 (Just 30) (appOpts ^. C.postgreSettings)
+    pool <- Pool.acquire 1 (1 :: DiffTime) (10 :: DiffTime) (appOpts ^. C.postgreSettings)
 
     root <- resolveDir' (appOpts ^. C.rootDirectory . unpacked)
     Commands.migrate pool
@@ -69,7 +70,7 @@ mainMigrate appOpts = do
 
 mainDropSchema :: C.OptsDropSchema -> IO ()
 mainDropSchema appOpts = do
-    pool <- Pool.acquire 1 (Just 30) (appOpts ^. C.postgreSettings)
+    pool <- Pool.acquire 1 (1 :: DiffTime) (10 :: DiffTime) (appOpts ^. C.postgreSettings)
 
     Commands.dropSchema pool (appOpts ^. C.postgreSchema)
 
@@ -79,7 +80,7 @@ mainDropSchema appOpts = do
 
 mainConfirmChecksums :: C.OptsConfirmChecksums -> IO ()
 mainConfirmChecksums appOpts = do
-    pool <- Pool.acquire 1 (Just 30) (appOpts ^. C.postgreSettings)
+    pool <- Pool.acquire 1 (1 :: DiffTime) (10 :: DiffTime) (appOpts ^. C.postgreSettings)
 
     root <- resolveDir' (appOpts ^. C.rootDirectory . unpacked)
     Commands.confirmChecksums pool root (appOpts ^. C.postgreSchema)
@@ -90,7 +91,7 @@ mainConfirmChecksums appOpts = do
 
 mainRepairChecksum :: C.OptsRepairChecksum -> IO ()
 mainRepairChecksum appOpts = do
-    pool <- Pool.acquire 1 (Just 30) (appOpts ^. C.postgreSettings)
+    pool <- Pool.acquire 1 (1 :: DiffTime) (10 :: DiffTime) (appOpts ^. C.postgreSettings)
 
     root <- resolveDir' (appOpts ^. C.rootDirectory . unpacked)
     Commands.repairChecksum pool root (MigrationId (appOpts ^. C.migrationName))
@@ -99,7 +100,7 @@ mainRepairChecksum appOpts = do
 
 mainRegisterMigrations :: C.OptsRegisterMigrations -> IO ()
 mainRegisterMigrations appOpts = do
-    pool <- Pool.acquire 1 (Just 30) (appOpts ^. C.postgreSettings)
+    pool <- Pool.acquire 1 (1 :: DiffTime) (10 :: DiffTime) (appOpts ^. C.postgreSettings)
 
     root <- resolveDir' (appOpts ^. C.rootDirectory . unpacked)
 
@@ -112,7 +113,7 @@ mainRegisterMigrations appOpts = do
 
 mainUnregisterMigrations :: C.OptsUnregisterMigrations -> IO ()
 mainUnregisterMigrations appOpts = do
-    pool <- Pool.acquire 1 (Just 30) (appOpts ^. C.postgreSettings)
+    pool <- Pool.acquire 1 (1 :: DiffTime) (10 :: DiffTime) (appOpts ^. C.postgreSettings)
 
     Commands.unregisterMigrations pool
       (appOpts ^. C.postgreSchema)

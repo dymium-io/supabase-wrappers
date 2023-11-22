@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:jammy
 LABEL com.dymium.vendor="Dymium" \
       version="0.1" \
       product="Dymium Mesh Connector"

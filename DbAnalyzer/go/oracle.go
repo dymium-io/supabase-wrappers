@@ -501,7 +501,8 @@ func (da *OracleDB) getSample(schema, table string, sample []detect.Sample) erro
 		}
 	}
 
-	sql := fmt.Sprintf(`SELECT %s from "%s"."%s" WHERE ROWNUM <= %d ORDER BY DBMS_RANDOM.VALUE`, colNames.String(), schema, table, detect.SampleSize)
+	sql := fmt.Sprintf(`SELECT * FROM (SELECT %s from "%s"."%s" WHERE ROWNUM <= %d) WHERE ROWNUM < %d ORDER BY DBMS_RANDOM.VALUE`,
+		colNames.String(), schema, table, detect.LimitSize, detect.SampleSize)
 	rows, err := da.db.Query(sql)
 	if err != nil {
 		return err
