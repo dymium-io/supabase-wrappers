@@ -582,6 +582,7 @@ func UsernameFromEmail(email string) string {
 	return username
 }
 
+
 func RegenerateDatascopePassword(schema string, email string, groups []string) (types.UserDatascopes, error) {
 	var out types.UserDatascopes
 	var conf types.UserConf
@@ -2723,6 +2724,46 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error){
 	return tunnelid, nil
 }	
 
+func UpdateDbGuardian(schema string, username, password, email string, groups []string) error {
+	var out types.UserDatascopes
+	var conf types.UserConf
+	var rq types.Request
+	rq.Action = types.A_ConfUser
+	rq.Customer = schema
+	rq.UserConf = &conf
+
+	sql := `select distinct a.name, a.id from ` + schema + `.datascopes as a  join ` + schema + `.groupsfordatascopes as b on a.id=b.datascope_id join ` + schema + `.groupmapping as c on c.id=b.group_id where c.outergroup = any ($1)`
+
+	out.Schema = schema
+
+	rq.UserConf.Name = username
+	rq.UserConf.Password = password
+
+	rows, err := db.Query(sql, pq.Array(groups))
+	if nil == err {
+		defer rows.Close()
+
+		for rows.Next() {
+			var ds types.DatascopeIdName
+			err = rows.Scan(&ds.Name, &ds.Id)
+			if err != nil {
+				log.Errorf("UpdateDbGuardian error: %s", err.Error())
+			} else {
+				out.Datascopes = append(out.Datascopes, ds)
+
+			}
+			rq.UserConf.Datascopes = append(rq.UserConf.Datascopes, ds.Name)
+		}
+	} else {
+		log.Errorf("UpdateDbGuardian error: %s", err.Error())
+	}
+
+	snc, _ := json.Marshal(rq)
+	_, err = Invoke("DbSync", nil, snc)
+
+	return err
+}
+
 func GetMachineTunnels(schema string) ( []types.MachineTunnel, error) {
 	sql := `select a.id, a.name, EXTRACT(epoch from (now() - a.created_at)), b.accesskey, b.accesssecret, a.username, a.password from ` + schema + `.machinetunnels as a
 	join ` + schema + `.machinetunnelauth as b on a.id_auth=b.id;`
@@ -2843,19 +2884,25 @@ func RegenMachineTunnel(schema, id string) error {
 }
 
 
-func CheckMachineTunnelGroups(schema, key, secret string) ([]string, string, error) {
+func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, string, error) {
 	// check if key and secret are valid against the machinetunnels table key and secret
-	sql := `select b.id, b.name from ` + schema + `.machinetunnelauth as a join `+schema+`.machinetunnels as b 
-		on a.id=b.id_auth  where a.accesskey=$1 and a.accesssecret=$2;`
+	sql := `select b.id, b.username, b.password, b.name from ` + schema + `.machinetunnelauth as a join `+schema+`.machinetunnels as b 
+	on a.id=b.id_auth  where a.accesskey=$1 and a.accesssecret=$2;`
+	var id, username, password string
+	var name string	
 	row := db.QueryRow(sql, key, secret)
-	var id string
-	var name string
-	err := row.Scan(&id, &name)
+//fmt.Printf(`select b.id, b.username, b.password, b.name from ` + schema + `.machinetunnelauth as a join `+schema+`.machinetunnels as b 
+//on a.id=b.id_auth  where a.accesskey='%s' and a.accesssecret='%s';`, key, secret)
+	err := row.Scan(&id, &username, &password, &name)
 
 	if err != nil {
 		return []string{}, "", err
 	}
-
+	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
+	decpassword, err := AESencrypt([]byte(password), hexkey)
+	if err != nil {
+		return []string{}, "", err
+	}
 	// get the groups associated with the tunnel
 	sql = `select group_id from ` + schema + `.machinetunnelgroups where tunnel_id=$1;`
 	rows, err := db.Query(sql, id)
@@ -2872,6 +2919,8 @@ func CheckMachineTunnelGroups(schema, key, secret string) ([]string, string, err
 		}
 		token, err := GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s", 
 			schema, name, "N/A", groups, []string{gotypes.RoleUser}, "unknown")
+
+		UpdateDbGuardian(schema, username, string(decpassword), name, groups)
 		return groups, token, err
 	}
 	return []string{}, "", err

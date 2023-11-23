@@ -1660,7 +1660,7 @@ func GetMachineClientCertificate(w http.ResponseWriter, r *http.Request) {
 	key := t.Key
 	secret := t.Secret
 
-	groups, token, aerr := authentication.CheckMachineTunnelGroups(schema, key, secret)
+	groups, token, aerr := authentication.AuthenticateAndPrepareMachineTunnel(schema, key, secret)
 	if aerr != nil {
 		log.ErrorTenantf(schema, "Api GetMachineClientCertificate. There is no record of machine tunnel with this configuration")
 		http.Error(w, "There is no record of machine tunnel with this configuration", http.StatusInternalServerError)
