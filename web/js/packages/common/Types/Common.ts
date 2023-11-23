@@ -16,9 +16,9 @@ export type ConnectionPortsType =
   | 'OracleDB_1521'
   | 'DB2_50000'
   | 'MongoDB_27017'
-  | 'ElasticSearch_9200'
+  | 'Elasticsearch_9200'
 
-export const ConnectionPortsType_as_strings = [ 'PostgreSQL_5432', 'MySQL_3306', 'MariaDB_3306', 'SqlServer_1433', 'OracleDB_1521', 'DB2_50000', 'MongoDB_27017', 'ElasticSearch_9200' ] as const;
+export const ConnectionPortsType_as_strings = [ 'PostgreSQL_5432', 'MySQL_3306', 'MariaDB_3306', 'SqlServer_1433', 'OracleDB_1521', 'DB2_50000', 'MongoDB_27017', 'Elasticsearch_9200' ] as const;
 
 
 
@@ -30,9 +30,9 @@ export type ConnectionType =
   | 'OracleDB'
   | 'DB2'
   | 'MongoDB'
-  | 'ElasticSearch'
+  | 'Elasticsearch'
 
-export const ConnectionType_as_strings = [ 'PostgreSQL', 'MySQL', 'MariaDB', 'SqlServer', 'OracleDB', 'DB2', 'MongoDB', 'ElasticSearch' ] as const;
+export const ConnectionType_as_strings = [ 'PostgreSQL', 'MySQL', 'MariaDB', 'SqlServer', 'OracleDB', 'DB2', 'MongoDB', 'Elasticsearch' ] as const;
 
 export function humanReadableConnectionType(__a__ : ConnectionType) : string {
   switch(__a__) {
@@ -43,7 +43,7 @@ export function humanReadableConnectionType(__a__ : ConnectionType) : string {
     case 'OracleDB': return 'Oracle Database';
     case 'DB2': return 'IBM DB2 Database';
     case 'MongoDB': return 'MongoDB Database';
-    case 'ElasticSearch': return 'ElasticSearch Database';
+    case 'Elasticsearch': return 'Elasticsearch Database';
   }
   return '';
 }

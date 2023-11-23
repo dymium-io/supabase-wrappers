@@ -580,7 +580,21 @@ Content-Type: application/json
   "dbType": "elasticsearch",
   "host": "localhost",
   "port": 9200,
-  "database": "",
+  "database": "test-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "admin123"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbping
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "host.docker.internal",
+  "port": 9200,
+  "database": "test-cluster",
   "properties": "",
   "user": "elastic",
   "password": "admin123"
@@ -594,7 +608,7 @@ Content-Type: application/json
   "dbType": "elasticsearch",
   "host": "localhost",
   "port": 9200,
-  "database": "",
+  "database": "test-cluster",
   "properties": "",
   "user": "elastic",
   "password": "admin123"
@@ -608,7 +622,7 @@ Content-Type: application/json
   "dbType": "elasticsearch",
   "host": "localhost",
   "port": 9200,
-  "database": "",
+  "database": "test-cluster",
   "properties": "",
   "user": "elastic",
   "password": "admin123"
@@ -622,7 +636,36 @@ Content-Type: application/json
   "dbType": "elasticsearch",
   "host": "localhost",
   "port": 9200,
-  "database": "",
+  "database": "test-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "admin123"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbtables
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "host.docker.internal",
+  "port": 9200,
+  "database": "test-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "admin123"
+}
+###
+
+
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/nyc_restaurants
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9200,
+  "database": "test-cluster",
   "properties": "",
   "user": "elastic",
   "password": "admin123"
@@ -634,9 +677,9 @@ Content-Type: application/json
 
 {
   "dbType": "elasticsearch",
-  "host": "localhost",
+  "host": "host.docker.internal",
   "port": 9200,
-  "database": "",
+  "database": "test-cluster",
   "properties": "",
   "user": "elastic",
   "password": "admin123"
@@ -650,7 +693,21 @@ Content-Type: application/json
   "dbType": "elasticsearch",
   "host": "localhost",
   "port": 9200,
-  "database": "",
+  "database": "test-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "admin123"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbsample?table=nyc_restaurants&samplesize=5
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "host.docker.internal",
+  "port": 9200,
+  "database": "test-cluster",
   "properties": "",
   "user": "elastic",
   "password": "admin123"

@@ -100,7 +100,7 @@ func extensionName(connectionType types.ConnectionType) (string, error) {
 		return "db2_fdw", nil
 	case types.CT_MongoDB:
 		return "mongo_fdw", nil
-	case types.CT_ElasticSearch:
+	case types.CT_Elasticsearch:
 		return "jdbc_fdw", nil
 
 	}
@@ -206,10 +206,16 @@ func options(connectionType types.ConnectionType) iOptions {
 					esc(remoteSchema), esc(remoteTable))
 			},
 		}
-	case types.CT_ElasticSearch:
+	case types.CT_Elasticsearch:
 		return iOptions{
 			// TODO: add support for configurable authentication_database
 			server: func(host string, port int, dbname string) string {
+				if dbname != "" {
+					return fmt.Sprintf(
+						`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver',
+							url 'jdbc:es://%s:%d/?catalog=%s',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.10.2.jar',maxheapsize '600'`,
+						esc(host), port, dbname)
+				}
 				return fmt.Sprintf(
 					`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver',
 							url 'jdbc:es://%s:%d',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.10.2.jar',maxheapsize '600'`,

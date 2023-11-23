@@ -15,61 +15,61 @@ import (
 )
 
 type DbConnectDto struct {
-	dbType     string `json:"dbType"`
-	host       string `json:"host"`
-	port       int    `json:"port"`
-	database   string `json:"database"`
-	properties string `json:"properties"`
-	user       string `json:"user"`
-	password   string `json:"password"`
+	DbType     string `json:"dbType"`
+	Host       string `json:"host"`
+	Port       int    `json:"port"`
+	Database   string `json:"database"`
+	Properties string `json:"properties"`
+	User       string `json:"user"`
+	Password   string `json:"password"`
 }
 
 type DbConnectResponse struct {
-	status  string `json:"status"`
-	message string `json:"message"`
+	Status  string `json:"status"`
+	Message string `json:"message"`
 }
 
 type DbSchemasResponse struct {
-	status  string   `json:"status"`
-	message string   `json:"message"`
-	schemas []string `json:"schemas"`
+	Status  string   `json:"status"`
+	Message string   `json:"message"`
+	Schemas []string `json:"schemas"`
 }
 
 type DbTabTypesResponse struct {
-	status   string   `json:"status"`
-	message  string   `json:"message"`
-	tabtypes []string `json:"tabtypes"`
+	Status   string   `json:"status"`
+	Message  string   `json:"message"`
+	Tabtypes []string `json:"tabtypes"`
 }
 
 type DbTabListResponse struct {
-	status  string   `json:"status"`
-	message string   `json:"message"`
-	tables  []string `json:"tables"`
+	Status  string   `json:"status"`
+	Message string   `json:"message"`
+	Tables  []string `json:"tables"`
 }
 
 type DbColListResponse struct {
-	status  string         `json:"status"`
-	message string         `json:"message"`
-	columns []DbColumnInfo `json:"tables"`
+	Status  string         `json:"status"`
+	Message string         `json:"message"`
+	Columns []DbColumnInfo `json:"tables"`
 }
 
 type DbColumnInfo struct {
-	tableCat string `json:"tableCat"`
+	TableCat string `json:"tableCat"`
 	//TABLE_CAT String => table catalog (may be null)
-	tableSchema string `json:"tableSchema"`
+	TableSchema string `json:"tableSchema"`
 	//TABLE_SCHEM String => table schema (may be null)
-	tableName string `json:"tableName"`
+	TableName string `json:"tableName"`
 	//TABLE_NAME String => table name
-	columnName string `json:"columnName"`
+	ColumnName string `json:"columnName"`
 	//COLUMN_NAME String => column name
-	dataType int `json:"dataType"`
+	DataType int `json:"dataType"`
 	//DATA_TYPE int => SQL type from java.sql.Types
-	dataTypeStr string `json:"dataTypeStr"`
+	DataTypeStr string `json:"dataTypeStr"`
 	//Added conversion from java.sql.Types to String
-	typeName string `json:"typeName"`
+	TypeName string `json:"typeName"`
 	//TYPE_NAME String => Data source dependent type name,
 	// for a UDT the type name is fully qualified
-	columnSize int `json:"columnSize"`
+	ColumnSize int `json:"columnSize"`
 	//COLUMN_SIZE int => column size.
 	//The COLUMN_SIZE column specifies the column size for the given column.
 	//For numeric data, this is the maximum precision.
@@ -78,46 +78,46 @@ type DbColumnInfo struct {
 	//(assuming the maximum allowed precision of the fractional seconds component).
 	//For binary data, this is the length in bytes.
 	//For the ROWID datatype, this is the length in bytes. Null is returned for data types where the column size is not applicable.
-	decimalDigits int `json:"decimalDigits"`
+	DecimalDigits int `json:"decimalDigits"`
 	//DECIMAL_DIGITS int => the number of fractional digits. Null is returned for data types where DECIMAL_DIGITS is not applicable.
-	numPrecRadix int `json:"numPrecRadix"`
+	NumPrecRadix int `json:"numPrecRadix"`
 	//NUM_PREC_RADIX int => Radix (typically either 10 or 2)
-	nullable int `json:"nullable"`
+	Nullable int `json:"nullable"`
 	//NULLABLE int => is NULL allowed.
 	//columnNoNulls - might not allow NULL values
 	//columnNullable - definitely allows NULL values
 	//columnNullableUnknown - nullability unknown
-	remarks string `json:"remarks"`
+	Remarks string `json:"remarks"`
 	//REMARKS String => comment describing column (may be null)
-	columnDef string `json:"columnDef"`
+	ColumnDef string `json:"columnDef"`
 	//COLUMN_DEF String => default value for the column, which should be interpreted
 	// as a string when the value is enclosed in single quotes (may be null)
-	charOctetLength int `json:"charOctetLength"`
+	CharOctetLength int `json:"charOctetLength"`
 	//CHAR_OCTET_LENGTH int => for char types the maximum number of bytes in the column
-	ordinalPosition int `json:"ordinalPosition"`
+	OrdinalPosition int `json:"ordinalPosition"`
 	//ORDINAL_POSITION int => index of column in table (starting at 1)
-	isNullable string `json:"isNullable"`
+	IsNullable string `json:"isNullable"`
 	//IS_NULLABLE String => ISO rules are used to determine the nullability for a column.
 	//YES --- if the column can include NULLs
 	//NO --- if the column cannot include NULLs
 	//empty string --- if the nullability for the column is unknown
-	scopeCatalog string `json:"scopeCatalog"`
+	ScopeCatalog string `json:"scopeCatalog"`
 	//SCOPE_CATALOG String => catalog of table that is the scope of a reference attribute (null if DATA_TYPE isn't REF)
-	scopeSchema string `json:"scopeSchema"`
+	ScopeSchema string `json:"scopeSchema"`
 	//SCOPE_SCHEMA String => schema of table that is the scope of a reference attribute (null if the DATA_TYPE isn't REF)
-	scopeTable string `json:"scopeTable"`
+	ScopeTable string `json:"scopeTable"`
 	//SCOPE_TABLE String => table name that this the scope of a reference attribute (null if the DATA_TYPE isn't REF)
-	sourceData int `json:"sourceData"`
+	SourceData int `json:"sourceData"`
 	//SOURCE_DATA_TYPE short => source type of a distinct type or user-generated Ref type, SQL type from java.sql.Types
 	// (null if DATA_TYPE isn't DISTINCT or user-generated REF)
-	sourceDataStr string `json:"sourceDataStr"`
+	SourceDataStr string `json:"sourceDataStr"`
 	// Convert sourceData to name
-	isAutoIncrement string `json:"isAutoIncrement"`
+	IsAutoIncrement string `json:"isAutoIncrement"`
 	//IS_AUTOINCREMENT String => Indicates whether this column is auto incremented
 	//YES --- if the column is auto incremented
 	//NO --- if the column is not auto incremented
 	//empty string --- if it cannot be determined whether the column is auto incremented
-	isGeneratedColumn string `json:"isGeneratedColumn"`
+	IsGeneratedColumn string `json:"isGeneratedColumn"`
 	//IS_GENERATEDCOLUMN String => Indicates whether this is a generated column
 	//YES --- if this a generated column
 	//NO --- if this not a generated column
@@ -125,50 +125,52 @@ type DbColumnInfo struct {
 }
 
 type DbSampleResponse struct {
-	status  string                   `json:"status"`
-	message string                   `json:"message"`
-	data    []map[string]interface{} `json:"data"`
+	Status  string                   `json:"status"`
+	Message string                   `json:"message"`
+	Data    []map[string]interface{} `json:"data"`
 }
 
 type JdbcClient struct {
 	//mcl *mongo.Client
-	ktDAHost   string
-	ktDAPort   int
-	sourceType string
-	host       string
-	port       int
-	database   string
-	properties string
-	user       string
-	password   string
+	KtDAHost   string
+	KtDAPort   int
+	SourceType string
+	Host       string
+	Port       int
+	Database   string
+	Properties string
+	User       string
+	Password   string
 }
 
 // Define a map to store the connection type to string mapping for known connection types
 var connTypesURL = map[types.ConnectionType]string{
-	types.CT_ElasticSearch: "elasticsearch",
+	types.CT_Elasticsearch: "elasticsearch",
 }
 
 func (cl *JdbcClient) sendRequest(path string) ([]byte, error) {
 	postPayload := DbConnectDto{
-		dbType:     cl.sourceType,
-		host:       cl.host,
-		port:       cl.port,
-		database:   cl.database,
-		properties: cl.properties, // TODO: add support for different connection types, TLS, etc.
-		user:       cl.user,
-		password:   cl.password,
+		DbType:     cl.SourceType,
+		Host:       cl.Host,
+		Port:       cl.Port,
+		Database:   cl.Database,
+		Properties: cl.Properties, // TODO: add support for different connection types, TLS, etc.
+		User:       cl.User,
+		Password:   cl.Password,
 	}
+
 	// Convert the payload to JSON
 	jsonPayload, err := json.Marshal(postPayload)
 	if err != nil {
-		log.Errorf("Error encoding JSON:", err)
+		log.Errorf("Error encoding JSON: %s", err)
 		return nil, err
 	}
-	apiUrl := fmt.Sprintf("http://%s:%d/%s", cl.ktDAHost, cl.ktDAPort, path)
+
+	apiUrl := fmt.Sprintf("http://%s:%d/%s", cl.KtDAHost, cl.KtDAPort, path)
 	// Create a POST request with the JSON payload
 	req, err := http.NewRequest("POST", apiUrl, bytes.NewBuffer(jsonPayload))
 	if err != nil {
-		log.Errorf("Error creating request:", err)
+		log.Errorf("Error creating request: %s", err)
 		return nil, err
 	}
 
@@ -180,7 +182,7 @@ func (cl *JdbcClient) sendRequest(path string) ([]byte, error) {
 	// Send the POST request
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Errorf("Error sending request:", err)
+		log.Errorf("Error sending request: %s", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -194,7 +196,7 @@ func (cl *JdbcClient) sendRequest(path string) ([]byte, error) {
 	// Read the response body
 	responseBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Errorf("Error reading response body:", err)
+		log.Errorf("Error reading response body: %s", err)
 		return nil, err
 	}
 	return responseBytes, nil
@@ -215,17 +217,19 @@ func (cl *JdbcClient) Connect(c *types.ConnectionParams) error {
 		log.Errorf("Connection type %s is not supported", c.Typ)
 		return errors.New("connection type is not supported")
 	}
-	cl.sourceType = srcType
-	cl.host = c.Address
-	cl.port = c.Port
-	cl.database = c.Database
-	cl.properties = "" // FIXME - add support for different connection types, TLS, etc.
-	cl.user = c.User
-	cl.password = c.Password
+	cl.SourceType = srcType
+	cl.Host = c.Address
+	cl.Port = c.Port
+	cl.Database = c.Database
+	cl.Properties = "" // FIXME - add support for different connection types, TLS, etc.
+	cl.User = c.User
+	cl.Password = c.Password
+
+	log.Infof("Connecting to Host:%s Port:%d DB:%s", cl.Host, cl.Port, cl.Database)
 
 	responseBytes, err := cl.sendRequest("api/dbanalyzer/dbping")
 	if err != nil {
-		log.Errorf("Error sending request:", err)
+		log.Errorf("Error sending request: %s", err)
 		return err
 	}
 
@@ -233,11 +237,11 @@ func (cl *JdbcClient) Connect(c *types.ConnectionParams) error {
 	var postResponse DbConnectResponse
 
 	if err := json.Unmarshal(responseBytes, &postResponse); err != nil {
-		log.Errorf("Error decoding JSON response:", err)
+		log.Errorf("Error decoding JSON response: %s", err)
 		return err
 	}
 
-	log.Infof("Connected to  server: %s", postResponse.message)
+	log.Infof("Connected to  server: %s", postResponse.Message)
 
 	return nil
 }
@@ -254,7 +258,7 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 
 	responseBytes, err := cl.sendRequest("api/dbanalyzer/dbschemas")
 	if err != nil {
-		log.Errorf("Error getting schema info:", err)
+		log.Errorf("Error getting schema info: %s", err)
 		return nil, err
 	}
 
@@ -262,12 +266,12 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 	var postResponse DbSchemasResponse
 
 	if err := json.Unmarshal(responseBytes, &postResponse); err != nil {
-		log.Errorf("Error decoding JSON response:", err)
+		log.Errorf("Error decoding JSON response: %s", err)
 		return nil, err
 	}
 
-	if len(postResponse.schemas) > 0 {
-		for _, schema := range postResponse.schemas {
+	if len(postResponse.Schemas) > 0 {
+		for _, schema := range postResponse.Schemas {
 			database.Schemas = append(database.Schemas, types.Schema{
 				Name:     schema,
 				IsSystem: false, // TODO: add support for system schemas
@@ -286,11 +290,13 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 	for _, schema := range database.Schemas {
 		reqURL := fmt.Sprintf("api/dbanalyzer/dbtables")
 		if schema.Name != "_default_db_" {
-			reqURL = fmt.Sprintf("%s/%s", reqURL, schema)
+			reqURL = fmt.Sprintf("%s/%s", reqURL, schema.Name)
 		}
+
+		log.Infof("Getting tables for schema: %s", schema.Name)
 		responseBytes, err := cl.sendRequest(reqURL)
 		if err != nil {
-			log.Errorf("Error getting table info:", err)
+			log.Errorf("Error getting table info: %s", err)
 			return nil, err
 		}
 
@@ -298,11 +304,11 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 		var postResponse DbTabListResponse
 
 		if err := json.Unmarshal(responseBytes, &postResponse); err != nil {
-			log.Errorf("Error decoding JSON response:", err)
+			log.Errorf("Error decoding JSON response: %s", err)
 			return nil, err
 		}
-
-		for _, table := range postResponse.tables {
+		log.Infof("Got tables: %s", postResponse.Tables)
+		for _, table := range postResponse.Tables {
 			schema.Tables = append(schema.Tables, types.Table{
 				Name:     table,
 				IsSystem: false, // TODO: add support for system tables
@@ -321,20 +327,22 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 	}
 	reqURL = fmt.Sprintf("%s/%s", reqURL, tip.Table)
 
+	log.Infof("Getting columns for table: %s", tip.Table)
+
 	responseBytes, err := cl.sendRequest(reqURL)
 	if err != nil {
-		log.Errorf("Error getting columns info:", err)
+		log.Errorf("Error getting columns info: %s", err)
 		return nil, err
 	}
 
 	// Parse the JSON response into a struct
 	var postResponse DbColListResponse
 	if err := json.Unmarshal(responseBytes, &postResponse); err != nil {
-		log.Errorf("Error decoding JSON response:", err)
+		log.Errorf("Error decoding JSON response: %s", err)
 		return nil, err
 	}
 
-	log.Infof("Got column info for:", tip.Table)
+	log.Infof("Got column info for: %s", tip.Table)
 
 	ti := types.TableInfoData{
 		DbName:  dbName,
@@ -353,15 +361,15 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 
 	descr := []*data{}
 
-	for _, column := range postResponse.columns {
+	for _, column := range postResponse.Columns {
 		var d data
 		var isNullable_ string
-		d.pos = column.ordinalPosition
-		d.cName = column.columnName
-		d.cTyp = column.dataTypeStr
-		*d.cLength = column.columnSize
-		*d.cScale = column.decimalDigits
-		isNullable_ = column.isNullable
+		d.pos = column.OrdinalPosition
+		d.cName = column.ColumnName
+		d.cTyp = column.DataTypeStr
+		*d.cLength = column.ColumnSize
+		*d.cScale = column.DecimalDigits
+		isNullable_ = column.IsNullable
 		if isNullable_ == "YES" {
 			d.isNullable = true
 		} else {
@@ -688,7 +696,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 	return &ti, nil
 }
 
-func (cl *JdbcClient) getSample(schema, table string, sample []detect.Sample) error {
+func (cl *JdbcClient) getSample(schema string, table string, sample []detect.Sample) error {
 
 	nColumns := len(sample)
 
@@ -721,10 +729,14 @@ func (cl *JdbcClient) getSample(schema, table string, sample []detect.Sample) er
 			colNames.WriteString("\"" + sample[k].Name + "\"")
 		}
 	}
-
-	responseBytes, err := cl.sendRequest("api/dbanalyzer/dbschemas")
+	var reqUrl = fmt.Sprintf("api/dbanalyzer/dbsample?table=%s&samplesize=%d", table, detect.SampleSize)
+	if schema != "" && schema != "_default_db_" {
+		reqUrl = fmt.Sprintf("%s&schema=%s", reqUrl, schema)
+	}
+	log.Infof("Getting sample for schema: %s, table: %s, sample: %d", schema, table, detect.SampleSize)
+	responseBytes, err := cl.sendRequest(reqUrl)
 	if err != nil {
-		log.Errorf("Error getting schema info:", err)
+		log.Errorf("Error getting schema info: %s", err)
 		return err
 	}
 
@@ -732,11 +744,12 @@ func (cl *JdbcClient) getSample(schema, table string, sample []detect.Sample) er
 	var postResponse DbSampleResponse
 
 	if err := json.Unmarshal(responseBytes, &postResponse); err != nil {
-		log.Errorf("Error decoding JSON response:", err)
+		log.Errorf("Error decoding JSON response: %s", err)
 		return err
 	}
 
-	rows := postResponse.data
+	rows := postResponse.Data
+	log.Infof("Got sample for schema: %s, table: %s, sample: %d", schema, table, len(rows))
 
 	for _, row := range rows {
 		for k := range sample {

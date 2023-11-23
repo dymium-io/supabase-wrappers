@@ -27,7 +27,7 @@ func dbAnalyzer(dt types.ConnectionType) DA {
 		da = &DB2{}
 	case types.CT_MongoDB:
 		da = &MongoClient{}
-	case types.CT_ElasticSearch:
+	case types.CT_Elasticsearch:
 		host := os.Getenv("DASVC_HOST")
 		if host == "" {
 			host = "localhost"
@@ -45,8 +45,8 @@ func dbAnalyzer(dt types.ConnectionType) DA {
 		}
 
 		da = &JdbcClient{
-			ktDAHost: host,
-			ktDAPort: port,
+			KtDAHost: host,
+			KtDAPort: port,
 		}
 	}
 	return da

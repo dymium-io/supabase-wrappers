@@ -13,7 +13,7 @@ const (
 	CPT_OracleDB_1521      ConnectionPortsType = "OracleDB_1521"
 	CPT_DB2_50000          ConnectionPortsType = "DB2_50000"
 	CPT_MongoDB_27017      ConnectionPortsType = "MongoDB_27017"
-	CPT_ElasticSearch_9200 ConnectionPortsType = "ElasticSearch_9200"
+	CPT_Elasticsearch_9200 ConnectionPortsType = "Elasticsearch_9200"
 )
 
 type ConnectionType string
@@ -26,7 +26,7 @@ const (
 	CT_OracleDB      ConnectionType = "OracleDB"
 	CT_DB2           ConnectionType = "DB2"
 	CT_MongoDB       ConnectionType = "MongoDB"
-	CT_ElasticSearch ConnectionType = "ElasticSearch"
+	CT_Elasticsearch ConnectionType = "Elasticsearch"
 )
 
 type DataHandling string

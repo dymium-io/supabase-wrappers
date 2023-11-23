@@ -27,6 +27,7 @@ fun Application.DbAnalyzerRoutes() {
                 logger.debug { "POST dbPing /$ENDPOINT/dbping" }
 
                 val dto = call.receive<DbConnectDto>()
+
                 dbService.dbPing(dto)
                     .mapBoth(
                         success = { call.respond(HttpStatusCode.OK, it) },

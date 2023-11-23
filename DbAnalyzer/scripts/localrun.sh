@@ -9,6 +9,7 @@ PORT=9080
 echo "Starting on port $PORT"
 docker run --rm  --name db-analyzer.dymium.local \
        --network dymium \
+       -p 8888:8888 \
        -p ${PORT}:8080 \
               -e LOCAL_ENVIRONMENT=true                     \
               -e LOCAL_SEARCH=$LOCAL_SEARCH                 \

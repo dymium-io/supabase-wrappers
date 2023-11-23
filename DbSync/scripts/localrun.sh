@@ -42,7 +42,9 @@ SPOOFCORPPING_HOST=${SPOOFCORPPING_HOST:=spoofcorpping.guardian.local}
 }
 
 # localhost name as visible from within the docker:
-# docker.for.mac.host.internal
+[ "$(sed 's/#.*//' /etc/hosts | grep -w $DATABASE_HOST | cut -d ' ' -f 1)" = "127.0.0.1" ] && {
+    DATABASE_HOST="host.docker.internal"
+}
 
 set -x
 docker run --rm  --name db-sync.dymium.local   \
@@ -53,7 +55,7 @@ docker run --rm  --name db-sync.dymium.local   \
        -e DATABASE_DB=$DATABASE_DB             \
        -e DATABASE_USER=$DATABASE_USER         \
        -e DATABASE_TLS=$DATABASE_TLS           \
-       -e DATABASE_PASSWORD=$DATABASE_PASSWORD  \
+       -e DATABASE_PASSWORD=DATABASE_PASSWORD  \
        -e LOCAL_ENVIRONMENT=true               \
        -e LOCAL_SEARCH=$LOCAL_SEARCH           \
        -e LOCAL_SEARCH_USER=$LOCAL_SEARCH_USER \

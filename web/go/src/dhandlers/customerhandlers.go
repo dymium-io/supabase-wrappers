@@ -738,6 +738,7 @@ func CreateNewConnection(w http.ResponseWriter, r *http.Request) {
 	if error == nil {
 		// get the connection details
 		conn, use_connector, err := authentication.GetConnection(schema, id)
+		log.Infof("schema: %s, id: %s", schema, id)
 
 		if err == nil {
 			log.InfoUserf(schema, session, email, groups, roles, "Api Connection to %s created", conn.Database)

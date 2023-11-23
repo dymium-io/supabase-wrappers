@@ -61,6 +61,9 @@ class DbService(val config: ApplicationConfig) {
                             while (rsSchemas.next()) {
                                 schemas.add(rsSchemas.getString("TABLE_SCHEM"))
                             }
+                            if (schemas.isEmpty()) {
+                                schemas.add("_default_db_")
+                            }
                             response = DbSchemasResponse("Ok", msg, schemas)
                         }
                         logger.debug { "DB Schemas: ${response.schemas}" }
@@ -98,7 +101,7 @@ class DbService(val config: ApplicationConfig) {
                             }
                             response = DbTabTypesResponse("Ok", msg, tableTypes)
                         }
-                        logger.debug { "DB Schemas: ${response}" }
+                        logger.debug { "DB Table Types: ${response}" }
                         Ok(response)
                     } catch (e: Exception) {
                         val err = DbAnalyzerError.BadRequest("Error connecting to database: ${e.message}")
@@ -126,14 +129,20 @@ class DbService(val config: ApplicationConfig) {
         return Json.encodeToJsonElement(gson.toJson(row))
     }
 
-    fun dbSample(dbInfo: DbConnectDto, schema: String?, table: String?, sampleSize: Int?): Result<DbSampleResponse, DbAnalyzerError> {
-        if (schema.isNullOrEmpty()) {
+    fun dbSample(dbInfo: DbConnectDto, dbschema: String?, table: String?, sampleSize: Int?): Result<DbSampleResponse, DbAnalyzerError> {
+        if (dbschema.isNullOrEmpty()) {
             if (dbInfo.dbType !in listOf("elasticsearch", "es") ) {
                 val err = DbAnalyzerError.BadRequest("schema is required")
                 logError(err)
                 return Err(err)
             }
         }
+
+        val schema = if (dbInfo.dbType in listOf("elasticsearch", "es") && dbschema == "_default_db_")
+            null
+        else
+            dbschema
+
         if (table.isNullOrEmpty()) {
             val err = DbAnalyzerError.BadRequest("table name is required")
             logError(err)
@@ -145,11 +154,11 @@ class DbService(val config: ApplicationConfig) {
             return Err(err)
         }
 
-        var query : String
-        if (schema.isNullOrEmpty()) {
-            query = "SELECT * FROM $table LIMIT $sampleSize"
+
+        val query = if (schema.isNullOrEmpty()) {
+            "SELECT * FROM $table LIMIT $sampleSize"
         } else {
-            query = "SELECT * FROM $schema.$table LIMIT $sampleSize"
+            "SELECT * FROM $schema.$table LIMIT $sampleSize"
         }
 
         return validateRequestDbInfo(dbInfo)
@@ -335,6 +344,16 @@ class DbService(val config: ApplicationConfig) {
                 // Creating Oracle Connection URL
                 // FIXME - for now we hard code the encryption to false
                 "jdbc:oracle:thin:@${dbInfo.host}:${dbInfo.port}/${dbInfo.database}"
+            }
+            "elasticsearch", "es" -> {
+                // Creating Elasticsearch Connection URL
+                // FIXME - for now we hard code the encryption to false
+                if (dbInfo.database.isNullOrEmpty()) {
+                    "jdbc:elasticsearch://${dbInfo.host}:${dbInfo.port}"
+                } else {
+                    // TODO: This is Elasticsearch feature in preview, can be removed in the future
+                    "jdbc:elasticsearch://${dbInfo.host}:${dbInfo.port}/?catalog=${dbInfo.database}"
+                }
             }
             else -> {
                 var url = "jdbc:${dbInfo.dbType}://${dbInfo.host}:${dbInfo.port}/${dbInfo.database}"
