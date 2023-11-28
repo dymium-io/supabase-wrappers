@@ -89,12 +89,14 @@ func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 
 	switch c.Dtype {
 	case types.DT_Test:
+		log.Infof("Test connection: %v\n", c.Connection)
 		return &types.AnalyzerResponse{
 			Dtype:   types.DT_Test,
 			DbInfo:  nil,
 			TblInfo: nil,
 		}, nil
 	case types.DT_DatabaseInfo:
+		log.Infof("Get database info: %v\n", c.Connection)
 		if di, err := da.GetDbInfo(c.Connection.Database); err != nil {
 			return nil, err
 		} else {
@@ -105,6 +107,7 @@ func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 			}, nil
 		}
 	case types.DT_TableInfo:
+		log.Infof("Get table info: %v\n", c.Connection)
 		if ti, err := da.GetTblInfo(c.Connection.Database, c.TableInfo); err != nil {
 			return nil, err
 		} else {

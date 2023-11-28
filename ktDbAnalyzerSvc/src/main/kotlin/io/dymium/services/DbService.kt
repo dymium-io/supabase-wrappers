@@ -62,7 +62,7 @@ class DbService(val config: ApplicationConfig) {
                                 schemas.add(rsSchemas.getString("TABLE_SCHEM"))
                             }
                             if (schemas.isEmpty()) {
-                                schemas.add("_default_db_")
+                                schemas.add("defaultdb")
                             }
                             response = DbSchemasResponse("Ok", msg, schemas)
                         }
@@ -116,7 +116,7 @@ class DbService(val config: ApplicationConfig) {
             )
     }
 
-    fun convertToJson(resultSet: ResultSet): JsonElement {
+    fun convertToJson(resultSet: ResultSet): JsonObject {
         val metaData = resultSet.metaData
         val row = mutableMapOf<String, Any?>()
         for (i in 1..metaData.columnCount) {
@@ -126,7 +126,7 @@ class DbService(val config: ApplicationConfig) {
         }
         // kotlin serialization doesn't have serializer for Any. Using gson for that.
         val gson = Gson()
-        return Json.encodeToJsonElement(gson.toJson(row))
+        return gson.toJson(row).let { Json.parseToJsonElement(it) }.jsonObject
     }
 
     fun dbSample(dbInfo: DbConnectDto, dbschema: String?, table: String?, sampleSize: Int?): Result<DbSampleResponse, DbAnalyzerError> {
@@ -138,7 +138,7 @@ class DbService(val config: ApplicationConfig) {
             }
         }
 
-        val schema = if (dbInfo.dbType in listOf("elasticsearch", "es") && dbschema == "_default_db_")
+        val schema = if (dbInfo.dbType in listOf("elasticsearch", "es") && dbschema == "defaultdb")
             null
         else
             dbschema
@@ -175,13 +175,13 @@ class DbService(val config: ApplicationConfig) {
 
                             val statement = connection.createStatement()
                             val resultSet = statement.executeQuery(query)
-                            val jsonArray = mutableListOf<JsonElement>()
+                            val jsonArray = mutableListOf<JsonObject>()
                             while (resultSet.next()) {
                                 jsonArray.add((convertToJson(resultSet)))
                             }
                             response = DbSampleResponse("Ok", msg, data = jsonArray)
                         }
-                        logger.debug { "DB Schemas: ${response}" }
+                        //logger.debug { "DB Sample: ${response}" }
                         Ok(response)
                     } catch (e: Exception) {
                         val err = DbAnalyzerError.BadRequest("Error connecting to database: ${e.message}")
@@ -233,7 +233,7 @@ class DbService(val config: ApplicationConfig) {
                             }
                             response = DbTabListResponse("Ok", msg, tables)
                         }
-                        logger.debug { "DB Schemas: ${response}" }
+                        //logger.debug { "DB Schemas: ${response}" }
                         Ok(response)
                     } catch (e: Exception) {
                         val err = DbAnalyzerError.BadRequest("Error connecting to database: ${e.message}")
@@ -317,7 +317,7 @@ class DbService(val config: ApplicationConfig) {
                             }
                             response = DbColListResponse("Ok", msg, columns)
                         }
-                        logger.debug { "DB Schemas: ${response}" }
+                        //logger.debug { "DB Schemas: ${response}" }
                         Ok(response)
                     } catch (e: Exception) {
                         val err = DbAnalyzerError.BadRequest("Error connecting to database: ${e.message}")

@@ -47,12 +47,6 @@ type DbTabListResponse struct {
 	Tables  []string `json:"tables"`
 }
 
-type DbColListResponse struct {
-	Status  string         `json:"status"`
-	Message string         `json:"message"`
-	Columns []DbColumnInfo `json:"tables"`
-}
-
 type DbColumnInfo struct {
 	TableCat string `json:"tableCat"`
 	//TABLE_CAT String => table catalog (may be null)
@@ -124,10 +118,16 @@ type DbColumnInfo struct {
 	//empty string --- if it cannot be determined whether this is a generated column
 }
 
+type DbColListResponse struct {
+	Status  string            `json:"status"`
+	Message string            `json:"message"`
+	Columns []json.RawMessage `json:"columns"`
+}
+
 type DbSampleResponse struct {
-	Status  string                   `json:"status"`
-	Message string                   `json:"message"`
-	Data    []map[string]interface{} `json:"data"`
+	Status  string            `json:"status"`
+	Message string            `json:"message"`
+	Data    []json.RawMessage `json:"data"`
 }
 
 type JdbcClient struct {
@@ -249,7 +249,7 @@ func (cl *JdbcClient) Connect(c *types.ConnectionParams) error {
 func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 	if dbName == "" {
 		// if no database name is specified (ex. there is no database name for given datasource), use the default database
-		dbName = "_default_db_"
+		dbName = "defaultdb"
 	}
 	database := types.DatabaseInfoData{
 		DbName:  dbName,
@@ -270,8 +270,11 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 		return nil, err
 	}
 
+	log.Infof("Got schemas: %s", postResponse.Schemas)
+
 	if len(postResponse.Schemas) > 0 {
 		for _, schema := range postResponse.Schemas {
+			log.Debugf("Adding schema: %s", schema)
 			database.Schemas = append(database.Schemas, types.Schema{
 				Name:     schema,
 				IsSystem: false, // TODO: add support for system schemas
@@ -280,6 +283,7 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 		}
 	} else {
 		// Database has no schemas, so we create a single schema with the database name
+		log.Debugf("Adding schema (default): %s", dbName)
 		database.Schemas = append(database.Schemas, types.Schema{
 			Name:     dbName,
 			IsSystem: false, // TODO: add support for system schemas
@@ -287,13 +291,13 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 		})
 	}
 
-	for _, schema := range database.Schemas {
+	for currentSchema, schema := range database.Schemas {
 		reqURL := fmt.Sprintf("api/dbanalyzer/dbtables")
-		if schema.Name != "_default_db_" {
+		if schema.Name != "defaultdb" {
 			reqURL = fmt.Sprintf("%s/%s", reqURL, schema.Name)
 		}
 
-		log.Infof("Getting tables for schema: %s", schema.Name)
+		log.Debugf("Getting tables for schema: %s", schema.Name)
 		responseBytes, err := cl.sendRequest(reqURL)
 		if err != nil {
 			log.Errorf("Error getting table info: %s", err)
@@ -307,27 +311,39 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 			log.Errorf("Error decoding JSON response: %s", err)
 			return nil, err
 		}
-		log.Infof("Got tables: %s", postResponse.Tables)
+
+		log.Debugf("Got tables: %s", postResponse.Tables)
+
 		for _, table := range postResponse.Tables {
-			schema.Tables = append(schema.Tables, types.Table{
+			database.Schemas[currentSchema].Tables = append(database.Schemas[currentSchema].Tables, types.Table{
 				Name:     table,
-				IsSystem: false, // TODO: add support for system tables
+				IsSystem: cl.isSystemTable(table), // TODO: add support for system tables
 			})
 		}
-
+		log.Debugf("Added tables: %v", database.Schemas[currentSchema].Tables)
 	}
-
+	log.Debugf("Got database info: %v", database)
 	return &database, nil
 }
 
+func (cl *JdbcClient) isSystemTable(table string) bool {
+	//TODO: add support for different system tables
+	return strings.HasPrefix(table, "pg_") ||
+		strings.HasPrefix(table, "sql_") ||
+		strings.HasPrefix(table, "information_schema.") ||
+		strings.HasPrefix(table, "sys.") ||
+		strings.HasPrefix(table, "sys_") ||
+		strings.HasPrefix(table, ".")
+}
+
 func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
+	log.Infof("Getting columns for table: %s", tip.Table)
+
 	reqURL := fmt.Sprintf("api/dbanalyzer/dbcolumns")
-	if tip.Schema != "" && tip.Schema != "_default_db_" {
+	if tip.Schema != "" && tip.Schema != "defaultdb" {
 		reqURL = fmt.Sprintf("%s/%s", reqURL, tip.Schema)
 	}
 	reqURL = fmt.Sprintf("%s/%s", reqURL, tip.Table)
-
-	log.Infof("Getting columns for table: %s", tip.Table)
 
 	responseBytes, err := cl.sendRequest(reqURL)
 	if err != nil {
@@ -341,8 +357,6 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 		log.Errorf("Error decoding JSON response: %s", err)
 		return nil, err
 	}
-
-	log.Infof("Got column info for: %s", tip.Table)
 
 	ti := types.TableInfoData{
 		DbName:  dbName,
@@ -361,22 +375,32 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 
 	descr := []*data{}
 
-	for _, column := range postResponse.Columns {
+	for _, columnRaw := range postResponse.Columns {
+		var column DbColumnInfo
+		err := json.Unmarshal(columnRaw, &column)
+		if err != nil {
+			log.Errorf("Error decoding JSON response: %s", err)
+			return nil, err
+		}
+
 		var d data
 		var isNullable_ string
 		d.pos = column.OrdinalPosition
 		d.cName = column.ColumnName
 		d.cTyp = column.DataTypeStr
-		*d.cLength = column.ColumnSize
-		*d.cScale = column.DecimalDigits
+		d.cLength = &column.ColumnSize
+		d.cScale = &column.DecimalDigits
 		isNullable_ = column.IsNullable
 		if isNullable_ == "YES" {
 			d.isNullable = true
 		} else {
 			d.isNullable = false
 		}
+		log.Infof("Got description for %s: %v", d.cName, d)
 		descr = append(descr, &d)
 	}
+
+	log.Infof("Got columns description: %v", descr)
 
 	detectors, err := detect.Compile(tip.Rules)
 	if err != nil {
@@ -679,10 +703,14 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 		ti.Columns = append(ti.Columns, c)
 	}
 
+	log.Debugf("Got table info: %v", ti)
+
+	log.Debugf("Sampling the table: %s", tip.Table)
 	if err = cl.getSample(tip.Schema, tip.Table, sample); err != nil {
 		return nil, err
 	}
 
+	log.Debugf("Detecting semantics for the table: %s", tip.Table)
 	if err = detectors.FindSemantics(sample); err != nil {
 		return nil, err
 	}
@@ -730,9 +758,10 @@ func (cl *JdbcClient) getSample(schema string, table string, sample []detect.Sam
 		}
 	}
 	var reqUrl = fmt.Sprintf("api/dbanalyzer/dbsample?table=%s&samplesize=%d", table, detect.SampleSize)
-	if schema != "" && schema != "_default_db_" {
+	if schema != "" && schema != "defaultdb" {
 		reqUrl = fmt.Sprintf("%s&schema=%s", reqUrl, schema)
 	}
+
 	log.Infof("Getting sample for schema: %s, table: %s, sample: %d", schema, table, detect.SampleSize)
 	responseBytes, err := cl.sendRequest(reqUrl)
 	if err != nil {
@@ -742,16 +771,19 @@ func (cl *JdbcClient) getSample(schema string, table string, sample []detect.Sam
 
 	// Parse the JSON response into a struct
 	var postResponse DbSampleResponse
-
 	if err := json.Unmarshal(responseBytes, &postResponse); err != nil {
 		log.Errorf("Error decoding JSON response: %s", err)
 		return err
 	}
 
 	rows := postResponse.Data
-	log.Infof("Got sample for schema: %s, table: %s, sample: %d", schema, table, len(rows))
-
-	for _, row := range rows {
+	for _, rowRaw := range rows {
+		var row map[string]interface{}
+		err := json.Unmarshal(rowRaw, &row)
+		if err != nil {
+			log.Errorf("Error decoding JSON response: %s", err)
+			return err
+		}
 		for k := range sample {
 			if sample[k].IsSamplable {
 				var strVal string
