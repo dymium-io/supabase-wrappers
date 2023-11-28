@@ -213,7 +213,7 @@ func options(connectionType types.ConnectionType) iOptions {
 				if dbname != "" {
 					return fmt.Sprintf(
 						`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver',
-							url 'jdbc:es://%s:%d/?catalog=%s',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.10.2.jar',maxheapsize '600'`,
+							url 'jdbc:es://%s:%d/?catalog=%s',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.10.4.jar',maxheapsize '600'`,
 						esc(host), port, dbname)
 				}
 				return fmt.Sprintf(

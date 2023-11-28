@@ -76,6 +76,9 @@ cd $build_d
 cp ../entry.sh .
 cp $ktDbAnalyzerSvc_d/build/distributions/ktDbAnalyzerSvc-0.0.1.tar .
 
+# copy jar file to setup folder to add dependencies to DbGuardian
+cp $ktDbAnalyzerSvc_d/build/distributions/ktDbAnalyzerSvc-0.0.1.tar ${setup_d}/ktDbAnalyzerSvc-0.0.1.tar
+
 # creating docker
 DbAnalyzer=$(docker images db-analyzer -q)
 [ -z "$DbAnalyzer" ] || docker rmi -f "$DbAnalyzer"
