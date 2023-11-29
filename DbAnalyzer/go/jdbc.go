@@ -531,7 +531,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			sample[k] = dtk(false, sem)
 		case "LONGNVARCHAR":
 			//Identifies the generic SQL type LONGNVARCHAR.
-			if d.cLength != nil && *d.cLength > 0 {
+			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
 				t = fmt.Sprintf("varchar(%d)", *d.cLength)
 			} else {
 				t = "text"
@@ -546,7 +546,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			sample[k] = dtk(false)
 		case "LONGVARCHAR":
 			//Identifies the generic SQL type LONGVARCHAR.
-			if d.cLength != nil && *d.cLength > 0 {
+			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
 				t = fmt.Sprintf("varchar(%d)", *d.cLength)
 			} else {
 				t = "text"
@@ -567,7 +567,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 		case "NCLOB":
 			//Identifies the generic SQL type NCLOB.
 			// TODO: check if this is correct
-			if d.cLength != nil && *d.cLength > 0 {
+			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
 				t = fmt.Sprintf("varchar(%d)", *d.cLength)
 			} else {
 				t = "text"
@@ -584,7 +584,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 		case "NVARCHAR":
 			//Identifies the generic SQL type NVARCHAR.
 			// TODO: check if this is correct
-			if d.cLength != nil && *d.cLength > 0 {
+			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
 				t = fmt.Sprintf("varchar(%d)", *d.cLength)
 			} else {
 				t = "text"
@@ -677,7 +677,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			possibleActions = allowable
 			sample[k] = dtk(true)
 		case "VARCHAR":
-			if d.cLength != nil && *d.cLength > 0 {
+			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
 				t = fmt.Sprintf("varchar(%d)", *d.cLength)
 			} else {
 				t = "text"
