@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-
+set -x
 build_d=BLD
 
 [ -d $build_d ] && {

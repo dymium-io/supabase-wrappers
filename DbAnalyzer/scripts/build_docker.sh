@@ -78,7 +78,10 @@ ENV ORACLE_HOME=/opt/oracle/${instantclient_version}
 
 RUN yum install -y tar gzip pam && \
     yum clean all
-
+RUN yum update -y curl 
+RUN yum update -y nghttp2
+RUN yum update -y python
+RUN yum update -y
 RUN mkdir /db2_cli_odbc_driver
 COPY ./v11.5.4_linuxx64_odbc_cli.tar.gz /db2_cli_odbc_driver
 RUN cd /db2_cli_odbc_driver && tar xvf v11.5.4_linuxx64_odbc_cli.tar.gz

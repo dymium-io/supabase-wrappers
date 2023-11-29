@@ -6,6 +6,9 @@ build_d=BLD
     rm -rf $build_d
 }
 
+set -e
+set -x
+
 mkdir $build_d
 
 cd ../../meshconnector
