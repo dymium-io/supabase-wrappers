@@ -286,12 +286,20 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 				sample[k] = dtk(true)
 			default:
 				possibleActions = blocked
-				t = d.eTyp + "[]"
+				if d.cTyp == "<nil>" {
+					t = "UNKNOWN" + "[]"
+				} else {
+					t = d.eTyp + "[]"
+				}
 				sem = utils.Unsupported
 				sample[k] = dtk(false, sem)
 			}
 		default:
-			t = d.cTyp
+			if d.cTyp == "<nil>" {
+				t = "UNKNOWN"
+			} else {
+				t = d.cTyp
+			}
 			possibleActions = blocked
 			sem = utils.Unsupported
 			sample[k] = dtk(false, sem)
