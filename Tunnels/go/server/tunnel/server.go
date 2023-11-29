@@ -21,7 +21,7 @@ import (
 	"dymium.com/dymium/log"
 	"dymium.com/server/gotypes"
 	"dymium.com/server/protocol"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/redis/go-redis/v9"
 )
 

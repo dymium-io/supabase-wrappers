@@ -1,5 +1,5 @@
 package gotypes
-import "github.com/dgrijalva/jwt-go"
+import "github.com/golang-jwt/jwt"
 
 const RoleUser = "user"
 const RoleAdmin = "admin"

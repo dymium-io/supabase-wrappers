@@ -312,7 +312,7 @@ function Downloads() {
 
         <div className="viewport">
           <div>On MS Windows:</div>
-          <a href="/DymiumInstaller.exe" download="DymiumInstaller.exe"> <i className="fab fa-windows mr-2" aria-hidden="true"></i>Click to Download MS Windows Client</a>
+          <a href="/bin/DymiumInstaller.exe" download="DymiumInstaller.exe"> <i className="fab fa-windows mr-2" aria-hidden="true"></i>Click to Download MS Windows Client</a>
           <div>
             CLI Usage:
             <div style={{ display: "flex" }}>
@@ -327,7 +327,7 @@ function Downloads() {
 
         <div className="viewport">
           <div>On Mac OS X:</div>
-          <a href="/DymiumInstaller.pkg" download="DymiumInstaller.pkg"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Mac OS X Client</a>
+          <a href="/bin/DymiumInstaller.pkg" download="DymiumInstaller.pkg"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Mac OS X Client</a>
           <div>
             CLI Usage:
             <div style={{ display: "flex" }}>
@@ -341,7 +341,7 @@ function Downloads() {
 
         <div className="viewport">
           <div>On Linux:</div>
-          <a href="/tunnel.tar.gz" download="tunnel.tar.gz"> <i className="fab fa-linux mr-2" aria-hidden="true"></i>Click to Download Linux Client</a>
+          <a href="/bin/tunnel.tar.gz" download="tunnel.tar.gz"> <i className="fab fa-linux mr-2" aria-hidden="true"></i>Click to Download Linux Client</a>
           <div>
             CLI Usage:
             <div style={{ display: "flex" }}>

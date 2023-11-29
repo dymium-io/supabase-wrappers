@@ -1,3 +1,3 @@
 module dymium.com/client/types
 
-go 1.18
+igo 1.20

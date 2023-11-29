@@ -4,6 +4,9 @@ package authentication
 
 import (
 	"aws"
+	awssdk "github.com/aws/aws-sdk-go/aws"
+    "github.com/aws/aws-sdk-go/aws/session"
+    "github.com/aws/aws-sdk-go/service/s3"
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
@@ -26,13 +29,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/gotypes"
 	"dymium.com/dymium/log"
 	"dymium.com/dymium/types"
 	"github.com/Jeffail/gabs"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 	"github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
@@ -41,6 +43,57 @@ import (
 )
 
 var pswd = `**********`
+
+var s3Client *s3.S3
+
+func InitS3() error {
+    sess, err := session.NewSession(&awssdk.Config{
+        Region: awssdk.String("your-region"),
+    })
+    if err != nil {
+        return fmt.Errorf("failed to create session: %v", err)
+    }
+
+    s3Client = s3.New(sess)
+    return nil
+}
+
+func StreamFromS3(w http.ResponseWriter, r *http.Request, bucketName, key string) {
+    // Get the object
+    input := &s3.GetObjectInput{
+        Bucket: awssdk.String(bucketName),
+        Key:    awssdk.String(key),
+    }
+
+    result, err := s3Client.GetObject(input)
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Failed to get object: %v", err), http.StatusInternalServerError)
+        return
+    }
+
+	// now set all the headers:
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Disposition", "attachment; filename=\"DymiumInstaller.exe\"")
+	w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Strict-Transport-Security", "max-age=31536000")
+	w.Header().Set("Content-Security-Policy", "frame-ancestors none")
+	w.Header().Set("X-Frame-Options", "sameorigin")
+	w.Header().Set("X-XSS-Protection", "1; mode=block")
+	w.Header().Set("X-Download-Options", "noopen")
+	w.Header().Set("X-Permitted-Cross-Domain-Policies", "none")
+	w.Header().Set("Referrer-Policy", "no-referrer")
+
+
+    // Stream the object's content to the response body
+    defer result.Body.Close()
+    _, err = io.Copy(w, result.Body)
+    if err != nil {
+        // You may want to handle this error differently depending on your application's needs
+        http.Error(w, fmt.Sprintf("Failed to stream object: %v", err), http.StatusInternalServerError)
+        return
+    }
+}
 
 func GenerateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
@@ -332,7 +385,8 @@ func Init(host string, port, user, password, dbname, tls string) error {
 		o.Password = redisPassword
 	}
 	rdb = redis.NewClient(o)
-
+	InitS3()
+	
 	return nil
 }
 

@@ -61,7 +61,17 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated.HandleFunc("/api/updatemachinetunnel", dhandlers.UpdateMachineTunnel).Methods("POST").Name("updatemachinetunnel")
 	authenticated.HandleFunc("/api/regenmachinetunnel", dhandlers.RegenMachineTunnel).Methods("POST").Name("regenmachinetunnel")
 
+	nonauthenticated.HandleFunc("/bin/DymiumInstaller.exe", dhandlers.DymiumInstallerExe).Methods("GET")
+	nonauthenticated.HandleFunc("/bin/DymiumInstaller.pkg", dhandlers.DymiumInstallerPkg).Methods("GET")
+	nonauthenticated.HandleFunc("/bin/tunnel.tar.gz", dhandlers.DymiumInstallerGzip).Methods("GET")
 
+	nonauthenticated.HandleFunc("/bin/meshconnector_darwin_amd64.tgz", dhandlers.DymiumDarwinConnector).Methods("GET")
+	nonauthenticated.HandleFunc("/bin//meshconnector_linux_amd64.tgz", dhandlers.DymiumLinuxConnector).Methods("GET")
+	nonauthenticated.HandleFunc("/bin/meshconnector_windows_amd64.zip", dhandlers.DymiumWindowsConnector).Methods("GET")
+
+	
+
+	
 	nonauthenticated.HandleFunc("/api/fakelogin", dhandlers.FakeLogin).Methods("GET")
 	nonauthenticated.HandleFunc("/api/getlogin", dhandlers.GetLogin).Methods("GET")
 	nonauthenticated.HandleFunc("/api/logout", dhandlers.GetLogout).Methods("GET")

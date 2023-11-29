@@ -101,3 +101,6 @@ Tunnels/go/meshconnector/connector.go.old
 DbAnalyzer/scripts/.localrun.sh.swp
 Tunnels/go/machineclient/output.txt
 Tunnels/go/machineclient/machineclient
+Tunnels/go/machineclient/src/machineclient
+Tunnels/go/machineclient/src/output.txt
+Tunnels/go/meshconnector/meshconnector_linux_amd64.tgz

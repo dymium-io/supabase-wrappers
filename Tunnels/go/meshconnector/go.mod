@@ -1,6 +1,6 @@
 module dymium.com/meshconnector
 
-go 1.18
+go 1.20
 
 require (
 	dymium.com/dymium/log v0.0.0-00010101000000-000000000000
@@ -12,7 +12,7 @@ require (
 
 require (
 	github.com/apex/log v1.9.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.271 // indirect
+	github.com/aws/aws-sdk-go v1.48.6 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

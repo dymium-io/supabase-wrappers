@@ -1,5 +1,6 @@
 -- #!migration
 -- name: "customer/machinetunnels",
+-- requires: ["customer/groupmapping-inunique"],
 -- description: "Machine Tunnels";
 
 CREATE TABLE machinetunnelauth (

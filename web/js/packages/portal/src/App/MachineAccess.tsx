@@ -23,6 +23,46 @@ import Modal from 'react-bootstrap/Modal'
 
 const { SearchBar, ClearSearchButton } = Search;
 
+function MachineTunnelHelp() {
+    return <>
+
+        <div className="mb-3">
+            Below is the complete list of necessary variables, in an example bash script.
+        </div>
+        <div className="mb-3">
+            <div className="d-block " style={{ fontFamily: "monospace", fontSize: "0.6em", overflow: "hidden", color: '#33cc33', backgroundColor: 'black' }}>
+                <div className=" text-nowrap p-1" >
+                    <div >
+                        #!/bin/bash
+                    </div><div>
+                        export LOG_LEVEL=Info
+                    </div><div>
+                        export PORTAL=https://portal.dymium.io/
+                    </div><div>
+                        export CONNECTOR=<span style={{ fontStyle: 'italic' }}>your connector id</span>
+                    </div><div>
+                        export KEY=<span style={{ fontStyle: 'italic' }}>your secret key</span>
+                    </div><div>
+                        export SECRET=<span style={{ fontStyle: 'italic' }}>your secret</span>
+                    </div><div>
+                        export CUSTOMER={com.getTokenProperty("schema")}
+                    </div><div>
+                        export TUNNELSERVER={com.getTokenProperty("schema")}.dymium.io
+                    </div><div>
+                        export LISTENER_PORT=<span style={{ fontStyle: 'italic' }}>your desired port</span>
+
+                    </div><div>
+                        ./machinetunnel
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
+    </>
+}
+
 function AddMachineTunnel() {
     const [spinner, setSpinner] = useState(false)
     const [alert, setAlert] = useState<JSX.Element>(<></>)
@@ -285,7 +325,7 @@ function EditMachineTunnels() {
     }, [rememberedSelection])
     let onDelete = id => {
         return e => {
-            
+
             setToDelete(id)
         }
     }
@@ -431,11 +471,11 @@ function EditMachineTunnels() {
             null, body,
             resp => {
                 resp.json().then(js => {
-                  
+
                     setSpinner(false)
                     setAlert(
                         <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
-                           Tunnel settings updated.
+                            Tunnel settings updated.
                         </Alert>
                     )
                     loadTunnels()
@@ -482,7 +522,7 @@ function EditMachineTunnels() {
                     setSpinner(false)
                     loadTunnels()
                     setToDelete("")
-                    if(todelete === rememberedSelection) {
+                    if (todelete === rememberedSelection) {
                         appDispatch(setSelectedTunnel(""))
                     }
                 }).catch((error) => {
@@ -653,8 +693,8 @@ function EditMachineTunnels() {
     }
     return <>
         <div id="tablecontainer" style={{ width: '100%' }} className="text-left">
-        {alert}
-        <Modal centered show={todelete !== ""} onHide={() => setToDelete("")} data-testid="modal-delete">
+            {alert}
+            <Modal centered show={todelete !== ""} onHide={() => setToDelete("")} data-testid="modal-delete">
                 <Modal.Header closeButton>
                     <Modal.Title>Delete tunnel?</Modal.Title>
                 </Modal.Header>
@@ -670,7 +710,17 @@ function EditMachineTunnels() {
                         }}>Cancel</Button>
                 </Modal.Footer>
             </Modal>
-            
+            <Offcanvas modal={false} width={300} show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}>
+                <h5>Launching a Machine Tunnel</h5>
+                <div className="mb-3">
+                    If you just created a new machine tunnel, please save the parameters. The Password will only be visible in the GUI for a day.
+                </div>
+                <div className="mb-3">
+                    Click on the Downloads tab to get a binary for your platform or a repository for a container. The configuration parameters must be passed to the
+                    connector executable via environment variables.
+                </div>
+                <MachineTunnelHelp />
+            </Offcanvas>
             <ToolkitProvider
                 bootstrap4
                 condensed
@@ -683,7 +733,7 @@ function EditMachineTunnels() {
                 {
                     props => (
                         <div className="text-left">
-                          
+
                             <div className="d-flex">
                                 <h5 >Review And Manage Machine Tunnels  <i onClick={e => { setShowOffcanvas(!showOffcanvas) }} className="trash fa-solid fa-circle-info"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
 
@@ -727,7 +777,7 @@ function EditMachineTunnels() {
                                 </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
-  
+
                         <Col xs="auto">
 
                             <Form.Group className="mb-3" controlId="name">
@@ -783,30 +833,30 @@ function EditMachineTunnels() {
                             </Form.Group>
                         </Col>
                         <Col xs="auto">
-                        
-                        
-                        <Form.Group className="mb-3" controlId="name">
+
+
+                            <Form.Group className="mb-3" controlId="name">
                                 <Form.Label>Ghost Database Password:</Form.Label>
                                 {password === "**********" ? <div>{password}{password}{password}</div>
-                                :
-                                <span className="d-flex">
-                                    <PasswordField type="password"
+                                    :
+                                    <span className="d-flex">
+                                        <PasswordField type="password"
 
-                                        placeholder="DB password"
-                                        pattern=".+"
-                                        validfeedback="Looks good!"
-                                        invalidfeedback="Admin password"
-                                        value={password}
-                                        className="w-20em"
+                                            placeholder="DB password"
+                                            pattern=".+"
+                                            validfeedback="Looks good!"
+                                            invalidfeedback="Admin password"
+                                            value={password}
+                                            className="w-20em"
 
-                                        size="sm" /><i onClick={copysecret} style={{ marginTop: '1px' }} className="fas fa-copy clipbtn"></i>
-                                </span>
+                                            size="sm" /><i onClick={copysecret} style={{ marginTop: '1px' }} className="fas fa-copy clipbtn"></i>
+                                    </span>
                                 }
-                            </Form.Group>                            
+                            </Form.Group>
                         </Col>
                         <Col>
-                        {password === "**********" &&
-                        <Button onClick={regenerate} style={{position: 'relative', top: '1.9em'}} variant="dymium" size="sm">Regenerate</Button>
+                            {password === "**********" &&
+                                <Button onClick={regenerate} style={{ position: 'relative', top: '1.9em' }} variant="dymium" size="sm">Regenerate</Button>
                             }
                         </Col>
                     </Row>
@@ -844,6 +894,42 @@ function EditMachineTunnels() {
     </>
 }
 
+function MachineTunnelDownloads() {
+    const [spinner, setSpinner] = useState(false)
+    const [alert, setAlert] = useState<JSX.Element>(<></>)
+    const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
+    const docker = "public.ecr.aws/a9d3u0m7/dymiummachinetunnel:latest"
+    let copydocker = e => {
+        navigator.clipboard.writeText(docker);
+    }
+    return <div className=" text-left">
+        {alert}
+        <h5 > Machine Client Downloads And Use <i onClick={e => { setShowOffcanvas(!showOffcanvas) }} className="trash fa-solid fa-circle-info"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+        <Offcanvas modal={false} width={300} show={showOffcanvas} onClose={(e) => { setShowOffcanvas(false) }}>
+            <h5>Machine Client Downloads</h5>
+            <div className="mb-3">
+                Dymium offers a machine to machine tunneling client in the form of docker container.
+            </div>
+
+            <div className="viewport">
+                <div>A Docker container:</div>
+                <i className="fab fa-docker thickblue" style={{ marginRight: '0.3em' }} ></i>{docker}<i style={{ marginTop: '0.1em', marginLeft: '0.3em' }} onClick={copydocker} className="fas fa-copy clipbtn"></i>
+
+            </div>
+
+        </Offcanvas>
+        <div className="mb-3">
+            Dymium offers a machine to machine tunneling client in the form of docker container.
+        </div>
+
+        <div className="viewport">
+            <div>A Docker container:</div>
+            <i className="fab fa-docker thickblue" style={{ marginRight: '0.3em' }} ></i>{docker}<i style={{ marginTop: '0.1em', marginLeft: '0.3em' }} onClick={copydocker} className="fas fa-copy clipbtn"></i>
+
+        </div>
+        <MachineTunnelHelp />
+    </div>
+}
 function useQuery() {
     const { search } = useLocation();
 
@@ -873,7 +959,7 @@ export default function MachineAccess() {
             navigate("/app/machineaccess")
         }
     }, [t])
-    
+
     return (
         <Tabs
             activeKey={t} id="machinetunnels"
@@ -885,6 +971,9 @@ export default function MachineAccess() {
             </Tab>
             <Tab eventKey="edit" title="Edit Machine Tunnels" className="mx-4">
                 <EditMachineTunnels />
+            </Tab>
+            <Tab eventKey="client" title="Client Downloads and Use" className="mx-4">
+                <MachineTunnelDownloads />
             </Tab>
         </Tabs>
 

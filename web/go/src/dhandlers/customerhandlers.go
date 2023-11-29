@@ -2096,3 +2096,38 @@ func RegenMachineTunnel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
+
+func getClientBucket() string {
+	b :=  os.Getenv("CLIENT_BUCKET")
+	if b == "" {
+		return "dymium-dev-tunneling-clients"
+	}
+	return b
+}
+func getConnectorBucket() string {
+	b :=  os.Getenv("CONNECTOR_BUCKET")
+	if b == "" {
+		return "dymium-dev-connectors"
+	}
+	return b
+}
+
+func DymiumInstallerExe(w http.ResponseWriter, r *http.Request) {
+	authentication.StreamFromS3(w, r, getClientBucket(), "/windows/DymiumInstaller.exe")
+}
+func DymiumInstallerPkg(w http.ResponseWriter, r *http.Request)  {
+	authentication.StreamFromS3(w, r, getClientBucket(), "/macos/DymiumInstaller.pkg")
+}
+func DymiumInstallerGzip(w http.ResponseWriter, r *http.Request)  {
+	authentication.StreamFromS3(w, r, getClientBucket(), "/linux/tunnel.tar.gz")
+}
+
+func DymiumDarwinConnector(w http.ResponseWriter, r *http.Request) {
+	authentication.StreamFromS3(w, r, getConnectorBucket(), "/darwin/meshconnector_darwin_amd64.tgz")
+}
+func DymiumLinuxConnector(w http.ResponseWriter, r *http.Request) {
+	authentication.StreamFromS3(w, r, getConnectorBucket(), "/linux/meshconnector_linux_amd64.tgz")
+}
+func DymiumWindowsConnector(w http.ResponseWriter, r *http.Request) {
+	authentication.StreamFromS3(w, r, getConnectorBucket(), "/windows/meshconnector_windows_amd64.zip")
+}
