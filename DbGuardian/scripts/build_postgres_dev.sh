@@ -58,8 +58,9 @@ RUN apt-get update &&            \
       bison                      \
       openjdk-8-jdk              \
       pkg-config &&              \
-    mkdir -p /opt/oracle &&      \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    mkdir -p /opt/oracle
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 COPY ./ /opt/oracle/
 

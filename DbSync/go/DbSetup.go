@@ -212,13 +212,11 @@ func options(connectionType types.ConnectionType) iOptions {
 			server: func(host string, port int, dbname string) string {
 				if dbname != "" {
 					return fmt.Sprintf(
-						`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver',
-							url 'jdbc:es://%s:%d/?catalog=%s',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.10.4.jar',maxheapsize '600'`,
+						`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver', url 'jdbc:elasticsearch://%s:%d/?catalog=%s',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.10.4.jar',maxheapsize '600'`,
 						esc(host), port, dbname)
 				}
 				return fmt.Sprintf(
-					`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver',
-							url 'jdbc:es://%s:%d',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.10.2.jar',maxheapsize '600'`,
+					`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver', url 'jdbc:elasticsearch://%s:%d',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.10.2.jar',maxheapsize '600'`,
 					esc(host), port)
 			},
 			userMapping: func(user, password string) string {
@@ -354,16 +352,10 @@ func configureDatabase(db *sql.DB,
 
 		{
 			// Don't use exec(), because sql contains password
-			sql := fmt.Sprintf(`
-                                      CREATE USER MAPPING FOR public
-                                      SERVER `+c.Name+`_server
-                                      OPTIONS (%s)`,
+			sql := fmt.Sprintf(`CREATE USER MAPPING FOR public SERVER `+c.Name+`_server OPTIONS (%s)`,
 				opts.userMapping(cred.User_name, cred.Password))
 			if _, err := tx.ExecContext(ctx, sql); err != nil {
-				errSql := fmt.Sprintf(`
-                                      CREATE USER MAPPING FOR public
-                                      SERVER `+c.Name+`_server
-                                      OPTIONS (%s)`,
+				errSql := fmt.Sprintf(`CREATE USER MAPPING FOR public SERVER `+c.Name+`_server OPTIONS (%s)`,
 					opts.userMapping(cred.User_name, "******"))
 				return rollback(err, "["+errSql+"] failed")
 			}
