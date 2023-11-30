@@ -720,7 +720,7 @@ Content-Type: application/json
 Authorization: Basic ZWxhc3RpYzphZG1pbjEyMw==
 
 {
-  "query": "SELECT * FROM nyc_restaurants LIMIT 5",
+  "query": "SELECT * FROM nyc_restaurants LIMIT 20",
   "field_multi_value_leniency": true
 }
 ###
@@ -730,7 +730,7 @@ Content-Type: application/json
 Authorization: Basic ZWxhc3RpYzphZG1pbjEyMw==
 
 {
-"query": "SELECT * FROM nyc_restaurants LIMIT 5",
+"query": "SELECT * FROM nyc_restaurants LIMIT 20",
 "field_multi_value_leniency": true
 }
 ###
