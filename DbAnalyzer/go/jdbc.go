@@ -249,7 +249,7 @@ func (cl *JdbcClient) Connect(c *types.ConnectionParams) error {
 func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 	if dbName == "" {
 		// if no database name is specified (ex. there is no database name for given datasource), use the default database
-		dbName = "defaultdb"
+		dbName = "_defaultdb_"
 	}
 	database := types.DatabaseInfoData{
 		DbName:  dbName,
@@ -293,7 +293,7 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 
 	for currentSchema, schema := range database.Schemas {
 		reqURL := fmt.Sprintf("api/dbanalyzer/dbtables")
-		if schema.Name != "defaultdb" {
+		if schema.Name != "_defaultdb_" {
 			reqURL = fmt.Sprintf("%s/%s", reqURL, schema.Name)
 		}
 
@@ -340,7 +340,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 	log.Infof("Getting columns for table: %s", tip.Table)
 
 	reqURL := fmt.Sprintf("api/dbanalyzer/dbcolumns")
-	if tip.Schema != "" && tip.Schema != "defaultdb" {
+	if tip.Schema != "" && tip.Schema != "_defaultdb_" {
 		reqURL = fmt.Sprintf("%s/%s", reqURL, tip.Schema)
 	}
 	reqURL = fmt.Sprintf("%s/%s", reqURL, tip.Table)
@@ -532,7 +532,8 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 		case "LONGNVARCHAR":
 			//Identifies the generic SQL type LONGNVARCHAR.
 			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
-				t = fmt.Sprintf("varchar(%d)", *d.cLength)
+				t = "varchar"
+				//t = fmt.Sprintf("varchar(%d)", *d.cLength)
 			} else {
 				t = "text"
 			}
@@ -547,7 +548,8 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 		case "LONGVARCHAR":
 			//Identifies the generic SQL type LONGVARCHAR.
 			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
-				t = fmt.Sprintf("varchar(%d)", *d.cLength)
+				//t = fmt.Sprintf("varchar(%d)", *d.cLength)
+				t = "varchar"
 			} else {
 				t = "text"
 			}
@@ -568,7 +570,8 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			//Identifies the generic SQL type NCLOB.
 			// TODO: check if this is correct
 			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
-				t = fmt.Sprintf("varchar(%d)", *d.cLength)
+				t = "varchar"
+				//t = fmt.Sprintf("varchar(%d)", *d.cLength)
 			} else {
 				t = "text"
 			}
@@ -585,7 +588,8 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			//Identifies the generic SQL type NVARCHAR.
 			// TODO: check if this is correct
 			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
-				t = fmt.Sprintf("varchar(%d)", *d.cLength)
+				t = "varchar"
+				//t = fmt.Sprintf("varchar(%d)", *d.cLength)
 			} else {
 				t = "text"
 			}
@@ -648,7 +652,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			possibleActions = allowable
 			sample[k] = dtk(true)
 		case "TIME_WITH_TIMEZONE":
-			if d.cLength != nil && *d.cLength < 6 {
+			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 6 {
 				t = fmt.Sprintf("time(%d) with time zone", *d.cLength)
 			} else {
 				t = "time with time zone"
@@ -656,7 +660,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			possibleActions = allowable
 			sample[k] = dtk(true)
 		case "TIMESTAMP":
-			if d.cScale != nil {
+			if d.cScale != nil && *d.cScale > 0 {
 				t = fmt.Sprintf("timestamp (%d) with time zone", *d.cScale)
 			} else {
 				t = "time with time zone"
@@ -664,7 +668,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			possibleActions = allowable
 			sample[k] = dtk(true)
 		case "TIMESTAMP_WITH_TIMEZONE":
-			if d.cLength != nil && *d.cLength < 6 {
+			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 6 {
 				t = fmt.Sprintf("timestamp(%d) with time zone", *d.cLength)
 			} else {
 				t = "timestamp with time zone"
@@ -678,7 +682,8 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			sample[k] = dtk(true)
 		case "VARCHAR":
 			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
-				t = fmt.Sprintf("varchar(%d)", *d.cLength)
+				t = "varchar"
+				//t = fmt.Sprintf("varchar(%d)", *d.cLength)
 			} else {
 				t = "text"
 			}
@@ -758,7 +763,7 @@ func (cl *JdbcClient) getSample(schema string, table string, sample []detect.Sam
 		}
 	}
 	var reqUrl = fmt.Sprintf("api/dbanalyzer/dbsample?table=%s&samplesize=%d", table, detect.SampleSize)
-	if schema != "" && schema != "defaultdb" {
+	if schema != "" && schema != "_defaultdb_" {
 		reqUrl = fmt.Sprintf("%s&schema=%s", reqUrl, schema)
 	}
 

@@ -224,6 +224,9 @@ func options(connectionType types.ConnectionType) iOptions {
 					esc(user), esc(password))
 			},
 			table: func(remoteSchema, remoteTable string) string {
+				if remoteSchema == "_defaultdb_" {
+					return fmt.Sprintf("table_name '%s'", esc(remoteTable))
+				}
 				return fmt.Sprintf("schema_name '%s', table_name '%s'",
 					esc(remoteSchema), esc(remoteTable))
 			},

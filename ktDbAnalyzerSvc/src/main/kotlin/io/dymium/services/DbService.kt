@@ -62,7 +62,7 @@ class DbService(val config: ApplicationConfig) {
                                 schemas.add(rsSchemas.getString("TABLE_SCHEM"))
                             }
                             if (schemas.isEmpty()) {
-                                schemas.add("defaultdb")
+                                schemas.add("_defaultdb_")
                             }
                             response = DbSchemasResponse("Ok", msg, schemas)
                         }
@@ -138,7 +138,7 @@ class DbService(val config: ApplicationConfig) {
             }
         }
 
-        val schema = if (dbInfo.dbType in listOf("elasticsearch", "es") && dbschema == "defaultdb")
+        val schema = if (dbInfo.dbType in listOf("elasticsearch", "es") && dbschema == "_defaultdb_")
             null
         else
             dbschema
