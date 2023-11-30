@@ -185,6 +185,11 @@ exports[`add-connection 1`] = `
               >
                 MongoDB Database
               </option>
+              <option
+                value="Elasticsearch"
+              >
+                Elasticsearch Database
+              </option>
             </select>
             <div
               className="valid-feedback"
