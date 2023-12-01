@@ -46,7 +46,7 @@ function Downloads(props) {
         <h5 > Connector Binary Downloads</h5>
         <div className="viewport">
             <div>For MS Windows:</div>
-            <a href="/meshconnector_windows_amd64.zip" download="meshconnector.zip"> <i className="fab fa-windows mr-2" aria-hidden="true"></i>Click to Download MS Windows Connector</a>
+            <a href="/bin/meshconnector_windows_amd64.zip" download="meshconnector.zip"> <i className="fab fa-windows mr-2" aria-hidden="true"></i>Click to Download MS Windows Connector</a>
             <div>
 
                 <div style={{ display: "flex" }}>
@@ -59,7 +59,7 @@ function Downloads(props) {
         </div>
         <div className="viewport">
             <div>For x64 Linux:</div>
-            <a href="/meshconnector_linux_amd64.tgz" download="meshconnector.tar.gz"> <i className="fab fa-linux mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
+            <a href="/bin/meshconnector_linux_amd64.tgz" download="meshconnector.tar.gz"> <i className="fab fa-linux mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
             <div>
 
                 <div style={{ display: "flex" }}>
@@ -73,7 +73,7 @@ function Downloads(props) {
 
         <div className="viewport">
             <div>For Mac OS X:</div>
-            <a href="/meshconnector_darwin_amd64.tgz" download="meshconnector.tar.gz"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Mac OS Connector</a>
+            <a href="/bin/meshconnector_darwin_amd64.tgz" download="meshconnector.tar.gz"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Mac OS Connector</a>
             <div>
 
                 <div style={{ display: "flex" }}>

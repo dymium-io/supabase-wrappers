@@ -47,8 +47,12 @@ var pswd = `**********`
 var s3Client *s3.S3
 
 func InitS3() error {
+	r :=  os.Getenv("BUCKET_REGION")
+	if r == "" {
+		r  = "us-west-2"
+	}
     sess, err := session.NewSession(&awssdk.Config{
-        Region: awssdk.String("your-region"),
+        Region: awssdk.String(r),
     })
     if err != nil {
         return fmt.Errorf("failed to create session: %v", err)
@@ -64,7 +68,7 @@ func StreamFromS3(w http.ResponseWriter, r *http.Request, bucketName, key string
         Bucket: awssdk.String(bucketName),
         Key:    awssdk.String(key),
     }
-
+	name := filepath.Base(key)
     result, err := s3Client.GetObject(input)
     if err != nil {
         http.Error(w, fmt.Sprintf("Failed to get object: %v", err), http.StatusInternalServerError)
@@ -73,7 +77,7 @@ func StreamFromS3(w http.ResponseWriter, r *http.Request, bucketName, key string
 
 	// now set all the headers:
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", "attachment; filename=\"DymiumInstaller.exe\"")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+name+"\"")
 	w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Strict-Transport-Security", "max-age=31536000")

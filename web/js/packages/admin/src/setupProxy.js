@@ -1,7 +1,7 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 module.exports = function(app) {
   app.use(
-    ['/api/', '/auth/'],
+    ['/api/', '/auth/', '/bin/'],
     createProxyMiddleware({
       target: 'http://admin.dymium.local',
       changeOrigin: true,

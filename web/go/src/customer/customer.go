@@ -66,7 +66,7 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/bin/tunnel.tar.gz", dhandlers.DymiumInstallerGzip).Methods("GET")
 
 	nonauthenticated.HandleFunc("/bin/meshconnector_darwin_amd64.tgz", dhandlers.DymiumDarwinConnector).Methods("GET")
-	nonauthenticated.HandleFunc("/bin//meshconnector_linux_amd64.tgz", dhandlers.DymiumLinuxConnector).Methods("GET")
+	nonauthenticated.HandleFunc("/bin/meshconnector_linux_amd64.tgz", dhandlers.DymiumLinuxConnector).Methods("GET")
 	nonauthenticated.HandleFunc("/bin/meshconnector_windows_amd64.zip", dhandlers.DymiumWindowsConnector).Methods("GET")
 
 	

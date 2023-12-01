@@ -12,6 +12,7 @@ import (
 	"os"
 	"time"
 	"fmt"
+	"strings"
 	"github.com/go-http-utils/etag"
 	"github.com/gorilla/mux"
 	cache "github.com/victorspringer/http-cache"
@@ -24,6 +25,21 @@ import (
 )
 
 
+// CustomETagMiddleware applies custom logic and then etag middleware
+func CustomETagMiddleware(h http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // Your custom pre-etag logic here
+		if strings.HasPrefix(r.URL.Path, "/bin/") || strings.HasPrefix(r.URL.Path, "/api/") || strings.HasPrefix(r.URL.Path, "/auth/") {
+			h.ServeHTTP(w, r)
+			return
+		}
+        // Apply etag middleware
+        etagHandler := etag.Handler(h, false)
+        etagHandler.ServeHTTP(w, r)
+
+        // Your custom post-etag logic here
+    })
+}
 
 func main() {
 	selfAddr := flag.String("address", "", "IP address to listen on")
@@ -122,7 +138,9 @@ func main() {
 	customer.CustomerHandlers(p)
 
 	_ = cacheClient.Middleware(CompressHandler(etag.Handler(p, false)))
-	cp := CompressHandler(etag.Handler(p, false))
+	cp := CompressHandler(CustomETagMiddleware(p))
+	//cp := CompressHandler(p)
+
 	if *ssl {
 		log.Infof("Start listening on %s", *selfAddr+":443")
 		log.Panic(http.ListenAndServeTLS(*selfAddr+":443", "../../devcerts/dymium.crt", "../../devcerts/dymium.key", cp))
