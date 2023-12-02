@@ -2131,3 +2131,27 @@ func DymiumLinuxConnector(w http.ResponseWriter, r *http.Request) {
 func DymiumWindowsConnector(w http.ResponseWriter, r *http.Request) {
 	authentication.StreamFromS3(w, r, getConnectorBucket(), "/windows/meshconnector_windows_amd64.zip")
 }
+
+func GetDockers(w http.ResponseWriter, r *http.Request) {
+	var dockers = types.DockerDownloads{}
+
+	dockers.Meshconnector = os.Getenv("CONNECTOR_DOCKER")
+	dockers.Machineclient = os.Getenv("MACHINE_CLIENT_DOCKER")
+
+	if dockers.Meshconnector == "" {
+		dockers.Meshconnector = "public.ecr.aws/a9d3u0m7/dymiumconnector:latest"
+	}	
+	if dockers.Machineclient == "" {
+		dockers.Machineclient = "public.ecr.aws/a9d3u0m7/dymiummachinetunnel:latest"
+	}
+
+	js, err := json.Marshal(dockers)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}

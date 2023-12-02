@@ -898,7 +898,22 @@ function MachineTunnelDownloads() {
     const [spinner, setSpinner] = useState(false)
     const [alert, setAlert] = useState<JSX.Element>(<></>)
     const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
-    const docker = "public.ecr.aws/a9d3u0m7/dymiummachinetunnel:latest"
+    const [docker, setDocker] = useState("public.ecr.aws/a9d3u0m7/dymiummachinetunnel:latest")
+
+    useEffect(() => {
+        http.sendToServer("GET", "/api/getdockers",
+            null, "",
+            resp => {
+                resp.json().then(js => {
+                    setDocker(js.machineclient)
+                })
+            },
+            resp => {
+            },
+            error => {
+            })
+    }, [])
+
     let copydocker = e => {
         navigator.clipboard.writeText(docker);
     }

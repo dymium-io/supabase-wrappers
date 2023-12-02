@@ -220,3 +220,8 @@ MachineTunnel:
   - username: ?string
   - password: ?string
   - groups: <|string|>
+
+DockerDownloads:
+  - meshconnector: string
+  - machineclient: string
+

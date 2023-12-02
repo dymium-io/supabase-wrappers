@@ -4,9 +4,6 @@ package authentication
 
 import (
 	"aws"
-	awssdk "github.com/aws/aws-sdk-go/aws"
-    "github.com/aws/aws-sdk-go/aws/session"
-    "github.com/aws/aws-sdk-go/service/s3"
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
@@ -29,11 +26,15 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/gotypes"
 	"dymium.com/dymium/log"
 	"dymium.com/dymium/types"
 	"github.com/Jeffail/gabs"
+	awssdk "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 	"github.com/lib/pq"
@@ -47,33 +48,33 @@ var pswd = `**********`
 var s3Client *s3.S3
 
 func InitS3() error {
-	r :=  os.Getenv("BUCKET_REGION")
+	r := os.Getenv("BUCKET_REGION")
 	if r == "" {
-		r  = "us-west-2"
+		r = "us-west-2"
 	}
-    sess, err := session.NewSession(&awssdk.Config{
-        Region: awssdk.String(r),
-    })
-    if err != nil {
-        return fmt.Errorf("failed to create session: %v", err)
-    }
+	sess, err := session.NewSession(&awssdk.Config{
+		Region: awssdk.String(r),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create session: %v", err)
+	}
 
-    s3Client = s3.New(sess)
-    return nil
+	s3Client = s3.New(sess)
+	return nil
 }
 
 func StreamFromS3(w http.ResponseWriter, r *http.Request, bucketName, key string) {
-    // Get the object
-    input := &s3.GetObjectInput{
-        Bucket: awssdk.String(bucketName),
-        Key:    awssdk.String(key),
-    }
+	// Get the object
+	input := &s3.GetObjectInput{
+		Bucket: awssdk.String(bucketName),
+		Key:    awssdk.String(key),
+	}
 	name := filepath.Base(key)
-    result, err := s3Client.GetObject(input)
-    if err != nil {
-        http.Error(w, fmt.Sprintf("Failed to get object: %v", err), http.StatusInternalServerError)
-        return
-    }
+	result, err := s3Client.GetObject(input)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get object: %v", err), http.StatusInternalServerError)
+		return
+	}
 
 	// now set all the headers:
 	w.Header().Set("Content-Type", "application/octet-stream")
@@ -88,15 +89,14 @@ func StreamFromS3(w http.ResponseWriter, r *http.Request, bucketName, key string
 	w.Header().Set("X-Permitted-Cross-Domain-Policies", "none")
 	w.Header().Set("Referrer-Policy", "no-referrer")
 
-
-    // Stream the object's content to the response body
-    defer result.Body.Close()
-    _, err = io.Copy(w, result.Body)
-    if err != nil {
-        // You may want to handle this error differently depending on your application's needs
-        http.Error(w, fmt.Sprintf("Failed to stream object: %v", err), http.StatusInternalServerError)
-        return
-    }
+	// Stream the object's content to the response body
+	defer result.Body.Close()
+	_, err = io.Copy(w, result.Body)
+	if err != nil {
+		// You may want to handle this error differently depending on your application's needs
+		http.Error(w, fmt.Sprintf("Failed to stream object: %v", err), http.StatusInternalServerError)
+		return
+	}
 }
 
 func GenerateRandomBytes(n int) ([]byte, error) {
@@ -143,9 +143,12 @@ func initRBAC() {
 		"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
 		"getgroupsfordatascopes", "getusage", "getaccesskey", "createnewconnector",
 		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable",
-		"addmachinetunnel", "getmachinetunnels", "updatemachinetunnel", "deletemachinetunnel", "regenmachinetunnel"}
+		"addmachinetunnel", "getmachinetunnels", "updatemachinetunnel", "deletemachinetunnel",
+		"regenmachinetunnel"}
 
-	usernames := []string{"getmachineclientcertificate", "getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables", "getdatascopesfortestsql"}
+	usernames := []string{"getmachineclientcertificate", "getclientcertificate", "getdatascopes",
+		"getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables",
+		"getdatascopesfortestsql", "getdockers"}
 
 	for _, v := range adminnames {
 		admins["/api/"+v] = 1
@@ -294,7 +297,7 @@ func InitInvoke(i gotypes.Invoke_t) {
 	Invoke = i
 }
 
-//aws.Invoke("DbAnalyzer", nil, bconn)
+// aws.Invoke("DbAnalyzer", nil, bconn)
 func Init(host string, port, user, password, dbname, tls string) error {
 	_, err := GenerateRandomString(32)
 	if err != nil {
@@ -390,7 +393,7 @@ func Init(host string, port, user, password, dbname, tls string) error {
 	}
 	rdb = redis.NewClient(o)
 	InitS3()
-	
+
 	return nil
 }
 
@@ -639,7 +642,6 @@ func UsernameFromEmail(email string) string {
 	username = strings.ToLower(username)
 	return username
 }
-
 
 func RegenerateDatascopePassword(schema string, email string, groups []string) (types.UserDatascopes, error) {
 	var out types.UserDatascopes
@@ -2713,7 +2715,7 @@ func SetConnectorStatus(schema string, status string) {
 	}
 }
 
-func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error){
+func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error) {
 	accesskey, _ := GenerateRandomString(12)
 	accesssecret, _ := GenerateRandomString(128)
 
@@ -2726,7 +2728,7 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error){
 		return "", err
 	}
 	sql := `insert into ` + schema + `.machinetunnelauth( accesskey, accesssecret ) values($1,$2) returning id;`
-	
+
 	// execute, and return a string id
 	res := tx.QueryRowContext(ctx, sql, accesskey, accesssecret)
 	var id string
@@ -2750,7 +2752,7 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error){
 	}
 
 	/* now create the tunnel record in the machinetunnels tablemachinetunnels
-	*/
+	 */
 	sql = `insert into ` + schema + `.machinetunnels(name, id_auth, username, password) values($1, $2, $3, $4) returning id;`
 	// execute, and return a string id
 	res = tx.QueryRowContext(ctx, sql, t.Name, id, username, enc)
@@ -2780,7 +2782,7 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error){
 	}
 
 	return tunnelid, nil
-}	
+}
 
 func UpdateDbGuardian(schema string, username, password, email string, groups []string) error {
 	var out types.UserDatascopes
@@ -2822,7 +2824,7 @@ func UpdateDbGuardian(schema string, username, password, email string, groups []
 	return err
 }
 
-func GetMachineTunnels(schema string) ( []types.MachineTunnel, error) {
+func GetMachineTunnels(schema string) ([]types.MachineTunnel, error) {
 	sql := `select a.id, a.name, EXTRACT(epoch from (now() - a.created_at)), b.accesskey, b.accesssecret, a.username, a.password from ` + schema + `.machinetunnels as a
 	join ` + schema + `.machinetunnelauth as b on a.id_auth=b.id;`
 	var out = []types.MachineTunnel{}
@@ -2839,11 +2841,11 @@ func GetMachineTunnels(schema string) ( []types.MachineTunnel, error) {
 			if err != nil {
 				break
 			}
-			pass, _ := DecryptPassword(schema, bpass) 
+			pass, _ := DecryptPassword(schema, bpass)
 
 			tunnel.Password = &pass
 			if age > 60*60*24 {
-				tunnel.Password  = &pswd
+				tunnel.Password = &pswd
 			}
 			sql = `select group_id from ` + schema + `.machinetunnelgroups where tunnel_id=$1;`
 			groups := []string{}
@@ -2891,7 +2893,6 @@ func UpdateMachineTunnel(schema string, t *types.MachineTunnel) error {
 		log.Errorf("UpdateMachineTunnel error: %s", err.Error())
 		return err
 	}
-
 
 	// now record the groups associated with the tunnel in the machinetunnelgroups table
 	for i := 0; i < len(t.Groups); i++ {
@@ -2941,16 +2942,15 @@ func RegenMachineTunnel(schema, id string) error {
 	return err
 }
 
-
 func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, string, error) {
 	// check if key and secret are valid against the machinetunnels table key and secret
-	sql := `select b.id, b.username, b.password, b.name from ` + schema + `.machinetunnelauth as a join `+schema+`.machinetunnels as b 
+	sql := `select b.id, b.username, b.password, b.name from ` + schema + `.machinetunnelauth as a join ` + schema + `.machinetunnels as b 
 	on a.id=b.id_auth  where a.accesskey=$1 and a.accesssecret=$2;`
 	var id, username, password string
-	var name string	
+	var name string
 	row := db.QueryRow(sql, key, secret)
-//fmt.Printf(`select b.id, b.username, b.password, b.name from ` + schema + `.machinetunnelauth as a join `+schema+`.machinetunnels as b 
-//on a.id=b.id_auth  where a.accesskey='%s' and a.accesssecret='%s';`, key, secret)
+	//fmt.Printf(`select b.id, b.username, b.password, b.name from ` + schema + `.machinetunnelauth as a join `+schema+`.machinetunnels as b
+	//on a.id=b.id_auth  where a.accesskey='%s' and a.accesssecret='%s';`, key, secret)
 	err := row.Scan(&id, &username, &password, &name)
 
 	if err != nil {
@@ -2975,7 +2975,7 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 			}
 			groups = append(groups, group)
 		}
-		token, err := GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s", 
+		token, err := GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s",
 			schema, name, "N/A", groups, []string{gotypes.RoleUser}, "unknown")
 
 		UpdateDbGuardian(schema, username, string(decpassword), name, groups)
@@ -2983,4 +2983,3 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 	}
 	return []string{}, "", err
 }
-

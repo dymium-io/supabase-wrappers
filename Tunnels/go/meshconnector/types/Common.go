@@ -161,6 +161,11 @@ type DatascopesStatus struct {
    Records []DatascopeIdName `json:"records"`
 }
 
+type DockerDownloads struct {
+   Meshconnector string `json:"meshconnector"`
+   Machineclient string `json:"machineclient"`
+}
+
 type GroupAssignment struct {
    Name string `json:"name"`
    Id string `json:"id"`

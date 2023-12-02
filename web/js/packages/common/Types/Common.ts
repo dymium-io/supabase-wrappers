@@ -1215,6 +1215,47 @@ export class DatascopesStatus {
   }
 }
 
+export class DockerDownloads {
+  private '_meshconnector': string
+  private '_machineclient': string
+
+  constructor() {
+    this['_meshconnector'] = ''
+    this['_machineclient'] = ''
+  }
+  get meshconnector(): string { return this['_meshconnector'] }
+  set meshconnector(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_meshconnector'])) {
+      setDirtyFlag()
+      this['_meshconnector'] = __v__
+    }
+  }
+  get machineclient(): string { return this['_machineclient'] }
+  set machineclient(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_machineclient'])) {
+      setDirtyFlag()
+      this['_machineclient'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
+
+  static fromJson(__a__: any): DockerDownloads {
+    disableDF()
+    let cls = new DockerDownloads()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.meshconnector = __a__['meshconnector']
+       cls.machineclient = __a__['machineclient']
+    } else {
+       doAlert(`DockerDownloads: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class GroupAssignment {
   private '_name': string
   private '_id': string
