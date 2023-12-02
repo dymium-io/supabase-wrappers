@@ -275,7 +275,7 @@ function ConnectionForm(props) {
                                 <Form.Label>Port:</Form.Label>
                                 <Form.Control size="sm" type="number"
                                     required
-                                    pattern=".+"
+                                    min={1}
                                     placeholder="DB port number"
                                     value={props.port}
                                     onChange={e => props.setPort(e.target.value)}
