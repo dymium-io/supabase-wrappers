@@ -3,6 +3,8 @@ package main
 import (
 	"dymium.com/dymium/log"
 	"github.com/aws/aws-lambda-go/lambda"
+	"os"
+	"strconv"
 
 	"DbAnalyzer/types"
 	"DbAnalyzer/utils"
@@ -25,6 +27,27 @@ func dbAnalyzer(dt types.ConnectionType) DA {
 		da = &DB2{}
 	case types.CT_MongoDB:
 		da = &MongoClient{}
+	case types.CT_Elasticsearch:
+		host := os.Getenv("DASVC_HOST")
+		if host == "" {
+			host = "localhost"
+		}
+
+		port := 8888
+		portStr := os.Getenv("DASVC_PORT")
+		if portStr != "" {
+			p, err := strconv.Atoi(portStr)
+			if err != nil {
+				log.Errorf("Error converting %s to int: %v, using default value.\n", portStr, err)
+			} else {
+				port = p
+			}
+		}
+
+		da = &JdbcClient{
+			KtDAHost: host,
+			KtDAPort: port,
+		}
 	}
 	return da
 }
@@ -66,12 +89,14 @@ func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 
 	switch c.Dtype {
 	case types.DT_Test:
+		log.Infof("Test connection: %v\n", c.Connection)
 		return &types.AnalyzerResponse{
 			Dtype:   types.DT_Test,
 			DbInfo:  nil,
 			TblInfo: nil,
 		}, nil
 	case types.DT_DatabaseInfo:
+		log.Infof("Get database info: %v\n", c.Connection)
 		if di, err := da.GetDbInfo(c.Connection.Database); err != nil {
 			return nil, err
 		} else {
@@ -82,6 +107,7 @@ func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 			}, nil
 		}
 	case types.DT_TableInfo:
+		log.Infof("Get table info: %v\n", c.Connection)
 		if ti, err := da.GetTblInfo(c.Connection.Database, c.TableInfo); err != nil {
 			return nil, err
 		} else {

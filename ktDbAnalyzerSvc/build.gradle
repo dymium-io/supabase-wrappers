@@ -1,0 +1,56 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.9.10'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.10'
+    id 'io.ktor.plugin' version '2.3.5'
+
+    // KSP for Koin Annotations
+    //id("com.google.devtools.ksp") version "1.9.10-1.0.13"
+
+}
+
+group "io.dymium"
+version "0.0.1"
+mainClassName = "io.ktor.server.netty.EngineMain"
+
+def isDevelopment = project.ext.has("development")
+applicationDefaultJvmArgs = ["-Dio.ktor.development=$isDevelopment"]
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "io.ktor:ktor-server-core-jvm"
+    implementation "io.ktor:ktor-server-content-negotiation-jvm"
+    implementation "io.ktor:ktor-serialization-kotlinx-json-jvm"
+    implementation "io.ktor:ktor-server-call-logging-jvm"
+    implementation "io.ktor:ktor-server-call-id-jvm"
+    implementation "io.ktor:ktor-server-netty-jvm"
+    implementation "ch.qos.logback:logback-classic:$logback_version"
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+
+
+    // Databases: jdbc drivers - TODO: add more drivers here
+    implementation "com.mysql:mysql-connector-j:8.1.0"
+    implementation "org.postgresql:postgresql:42.6.0"
+    implementation "com.oracle.database.jdbc:ojdbc8:23.3.0.23.09"
+    implementation "com.ibm.db2:jcc:11.5.8.0"
+    implementation "org.elasticsearch.plugin:x-pack-sql-jdbc:8.10.4"
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:12.2.0.jre11'
+    //implementation 'org.mongodb:mongodb-jdbc:2.0.2'
+    implementation 'org.mariadb.jdbc:mariadb-java-client:3.1.4'
+
+
+    implementation 'io.github.oshai:kotlin-logging-jvm:5.0.1'
+    implementation("com.michael-bull.kotlin-result:kotlin-result:1.1.18")
+
+    //implementation("io.insert-koin:koin-ktor:$koin_ktor_version") // Koit for Ktor
+    //implementation("io.insert-koin:koin-logger-slf4j:$koin_ktor_version") // Koin Logger
+    //implementation("io.insert-koin:koin-annotations:$koin_ksp_version") // Koin Annotations for KSP
+    //ksp("io.insert-koin:koin-ksp-compiler:$koin_ksp_version") // Koin KSP Compiler for KSP
+
+
+    testImplementation "io.ktor:ktor-server-tests-jvm"
+    testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+}

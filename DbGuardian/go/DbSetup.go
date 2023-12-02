@@ -100,6 +100,9 @@ func extensionName(connectionType types.ConnectionType) (string, error) {
 		return "db2_fdw", nil
 	case types.CT_MongoDB:
 		return "mongo_fdw", nil
+	case types.CT_Elasticsearch:
+		return "jdbc_fdw", nil
+
 	}
 	return "", fmt.Errorf("Extension %v is not supported yet", connectionType)
 }
@@ -200,6 +203,31 @@ func options(connectionType types.ConnectionType) iOptions {
 			},
 			table: func(remoteSchema, remoteTable string) string {
 				return fmt.Sprintf("database '%s', collection '%s'",
+					esc(remoteSchema), esc(remoteTable))
+			},
+		}
+	case types.CT_Elasticsearch:
+		return iOptions{
+			// TODO: add support for configurable authentication_database
+			server: func(host string, port int, dbname string) string {
+				if dbname != "" {
+					return fmt.Sprintf(
+						`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver', url 'jdbc:elasticsearch://%s:%d/?catalog=%s',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.10.4.jar',maxheapsize '600'`,
+						esc(host), port, dbname)
+				}
+				return fmt.Sprintf(
+					`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver', url 'jdbc:elasticsearch://%s:%d',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.10.2.jar',maxheapsize '600'`,
+					esc(host), port)
+			},
+			userMapping: func(user, password string) string {
+				return fmt.Sprintf("username '%s', password '%s'",
+					esc(user), esc(password))
+			},
+			table: func(remoteSchema, remoteTable string) string {
+				if remoteSchema == "_defaultdb_" {
+					return fmt.Sprintf("table_name '%s'", esc(remoteTable))
+				}
+				return fmt.Sprintf("schema_name '%s', table_name '%s'",
 					esc(remoteSchema), esc(remoteTable))
 			},
 		}
@@ -327,16 +355,10 @@ func configureDatabase(db *sql.DB,
 
 		{
 			// Don't use exec(), because sql contains password
-			sql := fmt.Sprintf(`
-                                      CREATE USER MAPPING FOR public
-                                      SERVER `+c.Name+`_server
-                                      OPTIONS (%s)`,
+			sql := fmt.Sprintf(`CREATE USER MAPPING FOR public SERVER `+c.Name+`_server OPTIONS (%s)`,
 				opts.userMapping(cred.User_name, cred.Password))
 			if _, err := tx.ExecContext(ctx, sql); err != nil {
-				errSql := fmt.Sprintf(`
-                                      CREATE USER MAPPING FOR public
-                                      SERVER `+c.Name+`_server
-                                      OPTIONS (%s)`,
+				errSql := fmt.Sprintf(`CREATE USER MAPPING FOR public SERVER `+c.Name+`_server OPTIONS (%s)`,
 					opts.userMapping(cred.User_name, "******"))
 				return rollback(err, "["+errSql+"] failed")
 			}

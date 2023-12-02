@@ -15,10 +15,12 @@
     "@types/react-bootstrap-table-next": "^4.0.18",
     "@types/react-bootstrap-typeahead": "^5.1.8",
     "@types/react-dom": "^18.0.4",
+    "and": "^0.0.3",
     "array-move": "^4.0.0",
     "autoprefixer": "10.4.14",
     "beautiful-react-hooks": "^4.3.0",
     "bootstrap": "5.2.3",
+    "build": "^0.1.4",
     "enzyme-to-json": "^3.6.2",
     "gsap": "^3.11.5",
     "html-react-parser": "^3.0.15",
@@ -44,7 +46,8 @@
     "sass": "^1.62.1",
     "underscore": "^1.13.1",
     "uuid": "^9.0.0",
-    "web-vitals": "^3.3.1"
+    "web-vitals": "^3.3.1",
+    "yarn": "^1.22.21"
   },
   "scripts": {
     "start": "HTTPS=true DANGEROUSLY_DISABLE_HOST_CHECK=true SSL_CRT_FILE=../../../devcerts/dymium.crt SSL_KEY_FILE=../../../devcerts/dymium.key HOST=portal.dymium.local PORT=3001 react-app-rewired  start",

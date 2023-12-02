@@ -1024,7 +1024,9 @@ int
 jq_connection_used_password(const Jconn * conn)
 {
 	ereport(DEBUG3, (errmsg("In jq_connection_used_password")));
-	return 0;
+	//FIXME: what is the meaning of this function? MK - changed to return 1
+	return 1;
+	//return 0;
 }
 
 void

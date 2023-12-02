@@ -47,8 +47,15 @@ RUN apt-get update &&            \
       postgresql-server-dev-all  \
       libmariadb3 libmariadb-dev \
       freetds-dev                \
+      openjdk-11-jdk             \
+      curl wget unzip zip        \
+      snapd                      \
       libaio1 &&                 \
     mkdir -p /opt/oracle
+
+#install gradle
+RUN wget -c https://services.gradle.org/distributions/gradle-8.4-bin.zip -P /tmp
+RUN unzip -d /opt/gradle /tmp/gradle-8.4-bin.zip
 
 COPY ./instantclient* /opt/oracle/
 
@@ -79,11 +86,8 @@ ENV IBM_DB_HOME="/db2_cli_odbc_driver/odbc_cli/clidriver"
 ENV CGO_CFLAGS="-I/db2_cli_odbc_driver/odbc_cli/clidriver/include"
 ENV CGO_LDFLAGS="-L/db2_cli_odbc_driver/odbc_cli/clidriver/lib"
 
-
-#ENV PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/include:$PATH"
-
+ENV GRADLE_HOME=/opt/gradle/gradle-8.4
+ENV PATH="/opt/gradle/gradle-8.4/bin:${PATH}"
 
 RUN apt-get install -y unixodbc unixodbc-dev
-
-#ENV PATH="$PATH:/opt/ibm/db2/V11.5/inclide"
 EOF
