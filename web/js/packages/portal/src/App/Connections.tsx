@@ -892,7 +892,7 @@ export function EditConnections(props) {
 
         <div className=" text-left">
 
-            <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
+            <Modal  size="lg" centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
                 <Modal.Header closeButton>
                     <Modal.Title>Delete connection {connectionName()}?</Modal.Title>
                 </Modal.Header>

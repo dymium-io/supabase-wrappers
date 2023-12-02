@@ -991,7 +991,7 @@ export function EditConnectors(props) {
                 </>
             </Offcanvas>
 
-            <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
+            <Modal  size="lg" centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
                 <Modal.Header closeButton>
                     <Modal.Title>Deprovision connector {connectionName()}?</Modal.Title>
                 </Modal.Header>
