@@ -386,7 +386,7 @@ exports[`edit-connections-form 1`] = `
               <input
                 class="form-control form-control-sm"
                 id="portnumber"
-                pattern=".+"
+                min="1"
                 placeholder="DB port number"
                 required=""
                 type="number"

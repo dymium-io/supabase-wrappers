@@ -441,8 +441,8 @@ exports[`add-connection 1`] = `
             <input
               className="form-control form-control-sm"
               id="portnumber"
+              min={1}
               onChange={[Function]}
-              pattern=".+"
               placeholder="DB port number"
               required={true}
               type="number"
