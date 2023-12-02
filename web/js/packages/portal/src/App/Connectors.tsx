@@ -164,7 +164,7 @@ function ConnectionForm(props) {
                             />
                             <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                             <Form.Control.Feedback type="invalid" >
-                                Ender Data Source Address
+                                Enter Data Source Address
                             </Form.Control.Feedback>
                         </Form.Group>
                     </Col>

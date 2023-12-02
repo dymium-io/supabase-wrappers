@@ -266,7 +266,7 @@ function ConnectionForm(props) {
                                 />
                                 <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                                 <Form.Control.Feedback type="invalid" >
-                                    Ender DB address for Dymium
+                                    Enter DB address for Dymium
                                 </Form.Control.Feedback>
                             </Form.Group>
                         </Col>

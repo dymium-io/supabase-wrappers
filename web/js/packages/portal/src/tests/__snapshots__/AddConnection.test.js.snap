@@ -422,7 +422,7 @@ exports[`add-connection 1`] = `
             <div
               className="invalid-feedback"
             >
-              Ender DB address for Dymium
+              Enter DB address for Dymium
             </div>
           </div>
         </div>
