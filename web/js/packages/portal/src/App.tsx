@@ -15,6 +15,7 @@ import Groups from "./App/Groups"
 import Rules from "./App/Rules"
 import Access from "./App/Access"
 import TestSQL from "./App/TestSQL"
+import MachineAccess from "./App/MachineAccess"
 import * as com from './Common'
 
 import "@fontsource/roboto";
@@ -43,7 +44,8 @@ function App() {
             <Route path="/app/connectors/*" element={<Connectors />} />                
             <Route path="/app/groups" element={<Groups />} />    
             <Route path="/app/rules" element={<Rules />} />   
-            <Route path="/app/access" element={<Access />} />                     
+            <Route path="/app/access" element={<Access />} />      
+            <Route path="/app/machineaccess/*" element={<MachineAccess />} />      
             <Route path="/app/test" element={<TestSQL />} />                                             
             <Route path="/app/" element={<Sticky />} />          
           </Route>

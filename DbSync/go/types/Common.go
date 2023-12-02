@@ -161,6 +161,11 @@ type DatascopesStatus struct {
    Records []DatascopeIdName `json:"records"`
 }
 
+type DockerDownloads struct {
+   Meshconnector string `json:"meshconnector"`
+   Machineclient string `json:"machineclient"`
+}
+
 type GroupAssignment struct {
    Name string `json:"name"`
    Id string `json:"id"`
@@ -185,6 +190,16 @@ type GroupStatus struct {
    Status string `json:"status"`
    Errormessage string `json:"errormessage"`
    Admincount int `json:"admincount"`
+}
+
+type MachineTunnel struct {
+   Id *string `json:"id"`
+   Accesskey *string `json:"accesskey"`
+   Secret *string `json:"secret"`
+   Name string `json:"name"`
+   Username *string `json:"username"`
+   Password *string `json:"password"`
+   Groups []string `json:"groups"`
 }
 
 type OperationStatus struct {

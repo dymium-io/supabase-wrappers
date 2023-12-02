@@ -1,6 +1,6 @@
 module github.com/apex/log
 
-go 1.18
+go 1.20
 
 replace github.com/tj/go-kinesis v0.0.0-00010101000000-000000000000 => ../go-kinesis
 
@@ -11,7 +11,7 @@ replace github.com/tj/go-elastic => ../go-elastic
 replace github.com/tj/go-elastic/batch v0.0.0-00010101000000-000000000000 => ../go-elastic/batch
 
 require (
-	github.com/aws/aws-sdk-go v1.44.260
+	github.com/aws/aws-sdk-go v1.48.5
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/fastuuid v1.2.0

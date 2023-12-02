@@ -35,6 +35,11 @@ CSRResponse:
   - version: string
   - certificate: string
 
+MachineCSRResponse:
+  - version: string
+  - jwt: string
+  - certificate: string
+
 RequestUpdate:
   - protocolVersion: string
   - clientMajorVersion: string

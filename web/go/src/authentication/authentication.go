@@ -1,7 +1,5 @@
-//
 // Copyright (c) 2022 Dymium, Inc. All rights reserved.
 // written by igor@dymium.io
-//
 package authentication
 
 import (
@@ -34,7 +32,10 @@ import (
 	"dymium.com/dymium/log"
 	"dymium.com/dymium/types"
 	"github.com/Jeffail/gabs"
-	"github.com/dgrijalva/jwt-go"
+	awssdk "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 	"github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
@@ -43,6 +44,60 @@ import (
 )
 
 var pswd = `**********`
+
+var s3Client *s3.S3
+
+func InitS3() error {
+	r := os.Getenv("BUCKET_REGION")
+	if r == "" {
+		r = "us-west-2"
+	}
+	sess, err := session.NewSession(&awssdk.Config{
+		Region: awssdk.String(r),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create session: %v", err)
+	}
+
+	s3Client = s3.New(sess)
+	return nil
+}
+
+func StreamFromS3(w http.ResponseWriter, r *http.Request, bucketName, key string) {
+	// Get the object
+	input := &s3.GetObjectInput{
+		Bucket: awssdk.String(bucketName),
+		Key:    awssdk.String(key),
+	}
+	name := filepath.Base(key)
+	result, err := s3Client.GetObject(input)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get object: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// now set all the headers:
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+name+"\"")
+	w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Strict-Transport-Security", "max-age=31536000")
+	w.Header().Set("Content-Security-Policy", "frame-ancestors none")
+	w.Header().Set("X-Frame-Options", "sameorigin")
+	w.Header().Set("X-XSS-Protection", "1; mode=block")
+	w.Header().Set("X-Download-Options", "noopen")
+	w.Header().Set("X-Permitted-Cross-Domain-Policies", "none")
+	w.Header().Set("Referrer-Policy", "no-referrer")
+
+	// Stream the object's content to the response body
+	defer result.Body.Close()
+	_, err = io.Copy(w, result.Body)
+	if err != nil {
+		// You may want to handle this error differently depending on your application's needs
+		http.Error(w, fmt.Sprintf("Failed to stream object: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
 
 func GenerateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
@@ -87,9 +142,13 @@ func initRBAC() {
 		"getconnections", "savedatascope", "updatedatascope", "deletedatascope", "getdatascopedetails",
 		"createmapping", "updatemapping", "deletemapping", "getmappings", "savegroups",
 		"getgroupsfordatascopes", "getusage", "getaccesskey", "createnewconnector",
-		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable"}
+		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable",
+		"addmachinetunnel", "getmachinetunnels", "updatemachinetunnel", "deletemachinetunnel",
+		"regenmachinetunnel"}
 
-	usernames := []string{"getclientcertificate", "getdatascopes", "getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables", "getdatascopesfortestsql"}
+	usernames := []string{"getmachineclientcertificate", "getclientcertificate", "getdatascopes",
+		"getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables",
+		"getdatascopesfortestsql", "getdockers"}
 
 	for _, v := range adminnames {
 		admins["/api/"+v] = 1
@@ -238,7 +297,7 @@ func InitInvoke(i gotypes.Invoke_t) {
 	Invoke = i
 }
 
-//aws.Invoke("DbAnalyzer", nil, bconn)
+// aws.Invoke("DbAnalyzer", nil, bconn)
 func Init(host string, port, user, password, dbname, tls string) error {
 	_, err := GenerateRandomString(32)
 	if err != nil {
@@ -333,6 +392,7 @@ func Init(host string, port, user, password, dbname, tls string) error {
 		o.Password = redisPassword
 	}
 	rdb = redis.NewClient(o)
+	InitS3()
 
 	return nil
 }
@@ -2653,4 +2713,273 @@ func SetConnectorStatus(schema string, status string) {
 	if err != nil {
 		log.Errorf("SetConnectorStatus error: %s", err.Error())
 	}
+}
+
+func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error) {
+	accesskey, _ := GenerateRandomString(12)
+	accesssecret, _ := GenerateRandomString(128)
+
+	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelfunc()
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Errorf("AddMachineTunnel error 1: %s", err.Error())
+		return "", err
+	}
+	sql := `insert into ` + schema + `.machinetunnelauth( accesskey, accesssecret ) values($1,$2) returning id;`
+
+	// execute, and return a string id
+	res := tx.QueryRowContext(ctx, sql, accesskey, accesssecret)
+	var id string
+	// get the string id of the inserted row
+	err = res.Scan(&id)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("AddMachineTunnel error 2: %s", err.Error())
+		return "", err
+	}
+	// generate username and password:
+	username, _ := GenerateRandomString(16)
+	password, _ := GenerateRandomString(32)
+	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
+	if hexkey == "" {
+		return id, errors.New("Api CreateNewConnection: No key found")
+	}
+	enc, err := AESencrypt([]byte(password), hexkey)
+	if err != nil {
+		return id, err
+	}
+
+	/* now create the tunnel record in the machinetunnels tablemachinetunnels
+	 */
+	sql = `insert into ` + schema + `.machinetunnels(name, id_auth, username, password) values($1, $2, $3, $4) returning id;`
+	// execute, and return a string id
+	res = tx.QueryRowContext(ctx, sql, t.Name, id, username, enc)
+	var tunnelid string
+	// get the string id of the inserted row
+	err = res.Scan(&tunnelid)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("AddMachineTunnel error: %s", err.Error())
+		return "", err
+	}
+	// now record the groups associated with the tunnel in the machinetunnelgroups table
+	for i := 0; i < len(t.Groups); i++ {
+		sql = `insert into ` + schema + `.machinetunnelgroups(tunnel_id, group_id) values($1,$2);`
+		_, err = tx.ExecContext(ctx, sql, tunnelid, t.Groups[i])
+		if err != nil {
+			tx.Rollback()
+			log.Errorf("AddMachineTunnel error: %s", err.Error())
+			return "", err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("AddMachineTunnel error 8: %s", err.Error())
+		return "", err
+	}
+
+	return tunnelid, nil
+}
+
+func UpdateDbGuardian(schema string, username, password, email string, groups []string) error {
+	var out types.UserDatascopes
+	var conf types.UserConf
+	var rq types.Request
+	rq.Action = types.A_ConfUser
+	rq.Customer = schema
+	rq.UserConf = &conf
+
+	sql := `select distinct a.name, a.id from ` + schema + `.datascopes as a  join ` + schema + `.groupsfordatascopes as b on a.id=b.datascope_id join ` + schema + `.groupmapping as c on c.id=b.group_id where c.outergroup = any ($1)`
+
+	out.Schema = schema
+
+	rq.UserConf.Name = username
+	rq.UserConf.Password = password
+
+	rows, err := db.Query(sql, pq.Array(groups))
+	if nil == err {
+		defer rows.Close()
+
+		for rows.Next() {
+			var ds types.DatascopeIdName
+			err = rows.Scan(&ds.Name, &ds.Id)
+			if err != nil {
+				log.Errorf("UpdateDbGuardian error: %s", err.Error())
+			} else {
+				out.Datascopes = append(out.Datascopes, ds)
+
+			}
+			rq.UserConf.Datascopes = append(rq.UserConf.Datascopes, ds.Name)
+		}
+	} else {
+		log.Errorf("UpdateDbGuardian error: %s", err.Error())
+	}
+
+	snc, _ := json.Marshal(rq)
+	_, err = Invoke("DbSync", nil, snc)
+
+	return err
+}
+
+func GetMachineTunnels(schema string) ([]types.MachineTunnel, error) {
+	sql := `select a.id, a.name, EXTRACT(epoch from (now() - a.created_at)), b.accesskey, b.accesssecret, a.username, a.password from ` + schema + `.machinetunnels as a
+	join ` + schema + `.machinetunnelauth as b on a.id_auth=b.id;`
+	var out = []types.MachineTunnel{}
+
+	rows, err := db.Query(sql)
+	if nil == err {
+		defer rows.Close()
+
+		for rows.Next() {
+			var age float64
+			var tunnel = types.MachineTunnel{}
+			var bpass []byte
+			err = rows.Scan(&tunnel.Id, &tunnel.Name, &age, &tunnel.Accesskey, &tunnel.Secret, &tunnel.Username, &bpass)
+			if err != nil {
+				break
+			}
+			pass, _ := DecryptPassword(schema, bpass)
+
+			tunnel.Password = &pass
+			if age > 60*60*24 {
+				tunnel.Password = &pswd
+			}
+			sql = `select group_id from ` + schema + `.machinetunnelgroups where tunnel_id=$1;`
+			groups := []string{}
+			grows, err := db.Query(sql, tunnel.Id)
+			if nil == err {
+				defer grows.Close()
+				for grows.Next() {
+					var group string
+					err = grows.Scan(&group)
+					if err != nil {
+						break
+					}
+					groups = append(groups, group)
+				}
+			}
+			tunnel.Groups = groups
+			out = append(out, tunnel)
+		}
+	}
+	return out, err
+}
+
+func UpdateMachineTunnel(schema string, t *types.MachineTunnel) error {
+	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelfunc()
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Errorf("UpdateMachineTunnel error 1: %s", err.Error())
+		return err
+	}
+	sql := `update ` + schema + `.machinetunnels  set name=$1 where id=$2;`
+	fmt.Printf("schema: %s, sql: %s\n", schema, sql)
+	// execute, and return a string id
+	_, err = tx.ExecContext(ctx, sql, t.Name, t.Id)
+	if err != nil {
+		log.Errorf("UpdateMachineTunnel error 1: %s", err.Error())
+		return err
+	}
+
+	sql = `delete from ` + schema + `.machinetunnelgroups  where tunnel_id=$1;`
+	_, err = tx.ExecContext(ctx, sql, t.Id)
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("UpdateMachineTunnel error: %s", err.Error())
+		return err
+	}
+
+	// now record the groups associated with the tunnel in the machinetunnelgroups table
+	for i := 0; i < len(t.Groups); i++ {
+		sql = `insert into ` + schema + `.machinetunnelgroups(tunnel_id, group_id) values($1,$2);`
+		_, err = tx.ExecContext(ctx, sql, t.Id, t.Groups[i])
+		if err != nil {
+			tx.Rollback()
+			log.Errorf("UpdateMachineTunnel error: %s", err.Error())
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		log.Errorf("UpdateMachineTunnel error 8: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func DeleteMachineTunnel(schema, id string) error {
+	// delete record by id from machinetunnels table
+	sql := `delete from ` + schema + `.machinetunnelgroups where tunnel_id=$1;`
+	_, err := db.Exec(sql, id)
+	if err != nil {
+		return err
+	}
+	sql = `delete from ` + schema + `.machinetunnels where id=$1;`
+	_, err = db.Exec(sql, id)
+	return err
+}
+
+func RegenMachineTunnel(schema, id string) error {
+	// generate password:
+	password, _ := GenerateRandomString(32)
+	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
+	if hexkey == "" {
+		return errors.New("API RegenMachineTunnel: no key found")
+	}
+	enc, err := AESencrypt([]byte(password), hexkey)
+	if err != nil {
+		return err
+	}
+	sql := `update ` + schema + `.machinetunnels set password=$1,created_at=now() where id=$2;`
+	_, err = db.Exec(sql, enc, id)
+	return err
+}
+
+func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, string, error) {
+	// check if key and secret are valid against the machinetunnels table key and secret
+	sql := `select b.id, b.username, b.password, b.name from ` + schema + `.machinetunnelauth as a join ` + schema + `.machinetunnels as b 
+	on a.id=b.id_auth  where a.accesskey=$1 and a.accesssecret=$2;`
+	var id, username, password string
+	var name string
+	row := db.QueryRow(sql, key, secret)
+	//fmt.Printf(`select b.id, b.username, b.password, b.name from ` + schema + `.machinetunnelauth as a join `+schema+`.machinetunnels as b
+	//on a.id=b.id_auth  where a.accesskey='%s' and a.accesssecret='%s';`, key, secret)
+	err := row.Scan(&id, &username, &password, &name)
+
+	if err != nil {
+		return []string{}, "", err
+	}
+	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
+	decpassword, err := AESencrypt([]byte(password), hexkey)
+	if err != nil {
+		return []string{}, "", err
+	}
+	// get the groups associated with the tunnel
+	sql = `select group_id from ` + schema + `.machinetunnelgroups where tunnel_id=$1;`
+	rows, err := db.Query(sql, id)
+	if nil == err {
+		defer rows.Close()
+		var groups []string
+		for rows.Next() {
+			var group string
+			err = rows.Scan(&group)
+			if err != nil {
+				break
+			}
+			groups = append(groups, group)
+		}
+		token, err := GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s",
+			schema, name, "N/A", groups, []string{gotypes.RoleUser}, "unknown")
+
+		UpdateDbGuardian(schema, username, string(decpassword), name, groups)
+		return groups, token, err
+	}
+	return []string{}, "", err
 }

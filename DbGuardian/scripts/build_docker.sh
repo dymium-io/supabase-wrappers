@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 set -e
-
+set -x
 script_d=$PWD/$(dirname $0)
 build_d=${script_d}/BLD
 setup_d=${script_d}/../../setup
@@ -50,6 +50,8 @@ DataGuardian=$(docker images data-guardian -q)
 cat <<EOF | docker build --platform linux/amd64 --compress --label "git.branch=$(git branch --show-current)" --label "git.commit=$(git rev-parse HEAD)" -t data-guardian -f - .
 FROM guardian-base
 
+RUN apt update &&                \
+  apt upgrade -y 
 COPY initializer /docker-entrypoint-initdb.d/initializer.sh
 RUN chmod 777 /docker-entrypoint-initdb.d/initializer.sh
 

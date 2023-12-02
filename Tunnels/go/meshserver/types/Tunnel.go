@@ -80,6 +80,12 @@ type GetKeySecret struct {
    Secret string `json:"secret"`
 }
 
+type MachineCSRResponse struct {
+   Version string `json:"version"`
+   Jwt string `json:"jwt"`
+   Certificate string `json:"certificate"`
+}
+
 type RequestUpdate struct {
    ProtocolVersion string `json:"protocolVersion"`
    ClientMajorVersion string `json:"clientMajorVersion"`

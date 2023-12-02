@@ -1,11 +1,10 @@
 module dymium.com/dymium/log
 
-go 1.18
-replace github.com/apex/log =>   ../../../libs/go/log
+go 1.20
 
-require (
-	github.com/apex/log v1.9.0
-)
+replace github.com/apex/log => ../../../libs/go/log
+
+require github.com/apex/log v1.9.0
 
 require (
 	github.com/aws/aws-sdk-go v1.44.260 // indirect

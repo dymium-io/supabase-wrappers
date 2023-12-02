@@ -1,6 +1,6 @@
 module initializer
 
-go 1.18
+go 1.20
 
 replace aws => ../../libs/go/aws
 
@@ -13,7 +13,7 @@ require (
 
 require (
 	github.com/apex/log v1.9.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.260 // indirect
+	github.com/aws/aws-sdk-go v1.48.8 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

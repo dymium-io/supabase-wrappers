@@ -1215,6 +1215,47 @@ export class DatascopesStatus {
   }
 }
 
+export class DockerDownloads {
+  private '_meshconnector': string
+  private '_machineclient': string
+
+  constructor() {
+    this['_meshconnector'] = ''
+    this['_machineclient'] = ''
+  }
+  get meshconnector(): string { return this['_meshconnector'] }
+  set meshconnector(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_meshconnector'])) {
+      setDirtyFlag()
+      this['_meshconnector'] = __v__
+    }
+  }
+  get machineclient(): string { return this['_machineclient'] }
+  set machineclient(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_machineclient'])) {
+      setDirtyFlag()
+      this['_machineclient'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
+
+  static fromJson(__a__: any): DockerDownloads {
+    disableDF()
+    let cls = new DockerDownloads()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.meshconnector = __a__['meshconnector']
+       cls.machineclient = __a__['machineclient']
+    } else {
+       doAlert(`DockerDownloads: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class GroupAssignment {
   private '_name': string
   private '_id': string
@@ -1440,6 +1481,134 @@ export class GroupStatus {
        cls.admincount = __a__['admincount']
     } else {
        doAlert(`GroupStatus: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class MachineTunnel {
+  private '_id': string | null
+  private '_accesskey': string | null
+  private '_secret': string | null
+  private '_name': string
+  private '_username': string | null
+  private '_password': string | null
+  private '_groups': Array<string>
+
+  constructor() {
+    this['_id'] = null
+    this['_accesskey'] = null
+    this['_secret'] = null
+    this['_name'] = ''
+    this['_username'] = null
+    this['_password'] = null
+    this['_groups'] = []
+  }
+  get id(): string | null { return this['_id'] }
+  set id(__a__: any) {
+    if(__a__ == null) {
+      if(this['_id'] == null) { return }
+      setDirtyFlag()
+      this['_id'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_id'])) {
+        setDirtyFlag()
+        this['_id'] = __v__
+      }
+    }
+  }
+  get accesskey(): string | null { return this['_accesskey'] }
+  set accesskey(__a__: any) {
+    if(__a__ == null) {
+      if(this['_accesskey'] == null) { return }
+      setDirtyFlag()
+      this['_accesskey'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_accesskey'])) {
+        setDirtyFlag()
+        this['_accesskey'] = __v__
+      }
+    }
+  }
+  get secret(): string | null { return this['_secret'] }
+  set secret(__a__: any) {
+    if(__a__ == null) {
+      if(this['_secret'] == null) { return }
+      setDirtyFlag()
+      this['_secret'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_secret'])) {
+        setDirtyFlag()
+        this['_secret'] = __v__
+      }
+    }
+  }
+  get name(): string { return this['_name'] }
+  set name(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_name'])) {
+      setDirtyFlag()
+      this['_name'] = __v__
+    }
+  }
+  get username(): string | null { return this['_username'] }
+  set username(__a__: any) {
+    if(__a__ == null) {
+      if(this['_username'] == null) { return }
+      setDirtyFlag()
+      this['_username'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_username'])) {
+        setDirtyFlag()
+        this['_username'] = __v__
+      }
+    }
+  }
+  get password(): string | null { return this['_password'] }
+  set password(__a__: any) {
+    if(__a__ == null) {
+      if(this['_password'] == null) { return }
+      setDirtyFlag()
+      this['_password'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_password'])) {
+        setDirtyFlag()
+        this['_password'] = __v__
+      }
+    }
+  }
+  get groups(): Array<string> { return this['_groups'] }
+  set groups(__a__: any) {
+    setDirtyFlag()
+    this['_groups'] = __a__
+  }
+
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
+
+  static fromJson(__a__: any): MachineTunnel {
+    disableDF()
+    let cls = new MachineTunnel()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.id = __a__['id'] == null ? null : __a__['id']
+       cls.accesskey = __a__['accesskey'] == null ? null : __a__['accesskey']
+       cls.secret = __a__['secret'] == null ? null : __a__['secret']
+       cls.name = __a__['name']
+       cls.username = __a__['username'] == null ? null : __a__['username']
+       cls.password = __a__['password'] == null ? null : __a__['password']
+       cls.groups = array1Reader(stringReader(''))(__a__['groups'])
+    } else {
+       doAlert(`MachineTunnel: an attempt to initialize from ${__a__}`)
     }
     enableDF()
     return cls

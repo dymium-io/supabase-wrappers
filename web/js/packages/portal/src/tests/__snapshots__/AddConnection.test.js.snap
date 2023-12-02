@@ -657,6 +657,8 @@ exports[`add-connection 1`] = `
                 onClick={[Function]}
                 style={
                   {
+                    "background": "white",
+                    "marginBottom": "2px",
                     "marginLeft": "-25px",
                     "marginTop": "6px",
                     "zIndex": "1000",

@@ -112,7 +112,7 @@ func CompressHandlerLevel(h http.Handler, level int) http.Handler {
 		// if we weren't able to identify an encoding we're familiar with, pass on the
 		// request to the handler and return
 		if encoding == "" || strings.HasSuffix(r.URL.Path, ".png") || strings.HasSuffix(r.URL.Path, ".gif") ||
-			strings.HasSuffix(r.URL.Path, ".woff2") {
+			strings.HasSuffix(r.URL.Path, ".woff2") || strings.HasPrefix(r.URL.Path, "/bin/") {
 			h.ServeHTTP(w, r)
 			return
 		}

@@ -37,7 +37,21 @@ const databases = Object.keys(com.databaseTypes).map(key => {
 })
 
 function Downloads(props) {
-    const docker = "public.ecr.aws/a9d3u0m7/dymiumconnector:latest"
+    const [docker, setDocker] = useState("public.ecr.aws/a9d3u0m7/dymiumconnector:latest")
+
+    useEffect(() => {
+        http.sendToServer("GET", "/api/getdockers",
+            null, "",
+            resp => {
+                resp.json().then(js => {
+                    setDocker(js.meshconnector)
+                })
+            },
+            resp => {
+            },
+            error => {
+            })
+    }, [])
     let copydocker = e => {
         navigator.clipboard.writeText(docker);
     }
@@ -46,7 +60,7 @@ function Downloads(props) {
         <h5 > Connector Binary Downloads</h5>
         <div className="viewport">
             <div>For MS Windows:</div>
-            <a href="/meshconnector_windows_amd64.zip" download="meshconnector.zip"> <i className="fab fa-windows mr-2" aria-hidden="true"></i>Click to Download MS Windows Connector</a>
+            <a href="/bin/meshconnector_windows_amd64.zip" download="meshconnector.zip"> <i className="fab fa-windows mr-2" aria-hidden="true"></i>Click to Download MS Windows Connector</a>
             <div>
 
                 <div style={{ display: "flex" }}>
@@ -59,7 +73,7 @@ function Downloads(props) {
         </div>
         <div className="viewport">
             <div>For x64 Linux:</div>
-            <a href="/meshconnector_linux_amd64.tgz" download="meshconnector.tar.gz"> <i className="fab fa-linux mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
+            <a href="/bin/meshconnector_linux_amd64.tgz" download="meshconnector.tar.gz"> <i className="fab fa-linux mr-2" aria-hidden="true"></i>Click to Download Linux Connector</a>
             <div>
 
                 <div style={{ display: "flex" }}>
@@ -73,7 +87,7 @@ function Downloads(props) {
 
         <div className="viewport">
             <div>For Mac OS X:</div>
-            <a href="/meshconnector_darwin_amd64.tgz" download="meshconnector.tar.gz"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Mac OS Connector</a>
+            <a href="/bin/meshconnector_darwin_amd64.tgz" download="meshconnector.tar.gz"> <i className="fab fa-apple mr-2" aria-hidden="true"></i>Click to Download Mac OS Connector</a>
             <div>
 
                 <div style={{ display: "flex" }}>
@@ -129,12 +143,12 @@ function ConnectionForm(props) {
                 props.setTunnel(tunnel)
             }
             let graphStatus = () => {
-                switch(props.tunnel[i].status) {
-                    case "active" : return <i className="fa-solid fa-thumbs-up "></i>
+                switch (props.tunnel[i].status) {
+                    case "active": return <i className="fa-solid fa-thumbs-up "></i>
                     case "configured": return <i className="fa-solid fa-thumbs-down "></i>
                     default: return <i className="fa-solid fa-gears "></i>
 
-                } 
+                }
             }
             out.push(
                 <Row key={"tunnel" + i} className={i % 2 ? "palegray" : "palergray"}>
@@ -635,7 +649,6 @@ export function EditConnectors(props) {
         return e => {
             setSelectedId(id)
             setShowdelete(true)
-
         }
     }
     let setConnector = () => {
@@ -743,7 +756,7 @@ export function EditConnectors(props) {
                     if (js.status === "OK") {
                         setAlert(
                             <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
-                                Connector {name} updated successfully! <br/><b>Note</b> that the <b>connector must be restarted</b> to update its configuration.
+                                Connector {name} updated successfully! <br /><b>Note</b> that the <b>connector must be restarted</b> to update its configuration.
                             </Alert>
                         )
 
@@ -981,11 +994,11 @@ export function EditConnectors(props) {
                 <>
                     <h5>Connectors</h5>
                     <div className="mb-3">
-                        If you just created a new connector, please save the parameters. The Secret will only be visible in the GUI for a day. 
+                        If you just created a new connector, please save the parameters. The Secret will only be visible in the GUI for a day.
                     </div>
                     <div className="mb-3">
                         Click on the Downloads tab to get a binary for your platform or a repository for a container. The configuration parameters must be passed to the
-                        connector executable via environment variables. 
+                        connector executable via environment variables.
                     </div>
                     <ContainerHelp />
                 </>
