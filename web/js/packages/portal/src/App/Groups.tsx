@@ -521,7 +521,7 @@ function GroupMapping() {
           </Modal.Footer>
         </Form>
       </Modal>
-      <Modal centered show={showdelete} onHide={() => setShowdelete(false)} >
+      <Modal  size="lg" centered show={showdelete} onHide={() => setShowdelete(false)} >
         <Modal.Header closeButton>
           <Modal.Title>Delete mapping?</Modal.Title>
         </Modal.Header>

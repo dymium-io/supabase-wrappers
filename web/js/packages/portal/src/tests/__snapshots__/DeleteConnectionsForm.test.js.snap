@@ -2,7 +2,7 @@
 
 exports[`delete-connections-form 1`] = `
 <div
-  class="modal-dialog modal-dialog-centered"
+  class="modal-dialog modal-lg modal-dialog-centered"
   data-testid="modal-delete"
 >
   <div

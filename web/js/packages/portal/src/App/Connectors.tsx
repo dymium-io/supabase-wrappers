@@ -178,7 +178,7 @@ function ConnectionForm(props) {
                             />
                             <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                             <Form.Control.Feedback type="invalid" >
-                                Ender Data Source Address
+                                Enter Data Source Address
                             </Form.Control.Feedback>
                         </Form.Group>
                     </Col>
@@ -187,7 +187,7 @@ function ConnectionForm(props) {
                             <Form.Label>Port:</Form.Label>
                             <Form.Control size="sm" type="number"
                                 required
-                                pattern=".+"
+                                min={1}
                                 placeholder="DB port number"
                                 value={props.tunnel[i].port}
                                 onChange={e => setPort(e.target.value)}
@@ -1004,7 +1004,7 @@ export function EditConnectors(props) {
                 </>
             </Offcanvas>
 
-            <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
+            <Modal  size="lg" centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
                 <Modal.Header closeButton>
                     <Modal.Title>Deprovision connector {connectionName()}?</Modal.Title>
                 </Modal.Header>

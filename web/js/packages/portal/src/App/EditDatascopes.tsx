@@ -508,7 +508,7 @@ export default function EditDatascopes() {
                     The same interface as for adding a Ghost Database is used. You select Data Sources and tables that you want to expose
                 </div>
             </Offcanvas>
-            <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
+            <Modal size="lg" centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
                 <Modal.Header closeButton>
                     <Modal.Title>Delete Datascope {nameById(slatedToDelete)}?</Modal.Title>
                 </Modal.Header>

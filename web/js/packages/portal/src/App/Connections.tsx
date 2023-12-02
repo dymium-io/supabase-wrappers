@@ -266,7 +266,7 @@ function ConnectionForm(props) {
                                 />
                                 <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                                 <Form.Control.Feedback type="invalid" >
-                                    Ender DB address for Dymium
+                                    Enter DB address for Dymium
                                 </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
@@ -275,7 +275,7 @@ function ConnectionForm(props) {
                                 <Form.Label>Port:</Form.Label>
                                 <Form.Control size="sm" type="number"
                                     required
-                                    pattern=".+"
+                                    min={1}
                                     placeholder="DB port number"
                                     value={props.port}
                                     onChange={e => props.setPort(e.target.value)}
@@ -892,7 +892,7 @@ export function EditConnections(props) {
 
         <div className=" text-left">
 
-            <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
+            <Modal  size="lg" centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
                 <Modal.Header closeButton>
                     <Modal.Title>Delete connection {connectionName()}?</Modal.Title>
                 </Modal.Header>

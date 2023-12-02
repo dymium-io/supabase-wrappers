@@ -2,7 +2,7 @@
 
 exports[`delete-connections-form 1`] = `
 <div
-  class="modal-dialog modal-dialog-centered"
+  class="modal-dialog modal-lg modal-dialog-centered"
   data-testid="modal-delete"
 >
   <div
@@ -367,7 +367,7 @@ exports[`edit-connections-form 1`] = `
               <div
                 class="invalid-feedback"
               >
-                Ender DB address for Dymium
+                Enter DB address for Dymium
               </div>
             </div>
           </div>
@@ -386,7 +386,7 @@ exports[`edit-connections-form 1`] = `
               <input
                 class="form-control form-control-sm"
                 id="portnumber"
-                pattern=".+"
+                min="1"
                 placeholder="DB port number"
                 required=""
                 type="number"
