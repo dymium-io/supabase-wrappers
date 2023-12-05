@@ -27,33 +27,41 @@ function MachineTunnelHelp() {
     return <>
 
         <div className="mb-3">
-            Below is the complete list of necessary variables, in an example bash script.
+            To establish a connection between your database and the Dymium Machine Tunnel Docker container,
+            you need map the internal listener port 5432 to the host listener port that will be used by your application.
+            <br />
+            Steps for Configuration:
+            <br />
+            Set Environment Variables:
+            <br />
+            Define the necessary environment variables inside the Docker container.
+            These include configurations for log level, portal URL, connector ID, key, secret, customer name, tunnel server, and the local listener port.
         </div>
         <div className="mb-3">
             <div className="d-block " style={{ fontFamily: "monospace", fontSize: "0.6em", overflow: "hidden", color: '#33cc33', backgroundColor: 'black' }}>
                 <div className=" text-nowrap p-1" >
                     <div >
-                        #!/bin/bash
+                        docker run \
                     </div><div>
-                        export LOG_LEVEL=Info
+                        -e LOG_LEVEL=Info \
                     </div><div>
-                        export PORTAL=https://portal.dymium.io/
+                        -e PORTAL=https://portal.dymium.io/ \
                     </div><div>
-                        export CONNECTOR=<span style={{ fontStyle: 'italic' }}>your connector id</span>
+                        -e CONNECTOR=&lt;your_connector_id&gt; \
                     </div><div>
-                        export KEY=<span style={{ fontStyle: 'italic' }}>your secret key</span>
+                        -e KEY=&lt;your_secret_key&gt; \
                     </div><div>
-                        export SECRET=<span style={{ fontStyle: 'italic' }}>your secret</span>
+                        -e SECRET=&lt;your_secret&gt; \
                     </div><div>
-                        export CUSTOMER={com.getTokenProperty("schema")}
+                        -e CUSTOMER=spoofcorp \
                     </div><div>
-                        export TUNNELSERVER={com.getTokenProperty("schema")}.dymium.io
+                        -e TUNNELSERVER=spoofcorp.dymium.io \
                     </div><div>
-                        export LISTENER_PORT=<span style={{ fontStyle: 'italic' }}>your desired port</span>
-
+                        -p &lt;LOCAL_LISTENER&gt;:5432 \
                     </div><div>
-                        ./machinetunnel
+                        public.ecr.aws/a9d3u0m7/dymiummachinetunnel:latest
                     </div>
+
                 </div>
             </div>
 
@@ -925,12 +933,13 @@ function MachineTunnelDownloads() {
             <div className="mb-3">
                 Dymium offers a machine to machine tunneling client in the form of docker container.
             </div>
-
-            <div className="viewport">
-                <div>A Docker container:</div>
-                <i className="fab fa-docker thickblue" style={{ marginRight: '0.3em' }} ></i>{docker}<i style={{ marginTop: '0.1em', marginLeft: '0.3em' }} onClick={copydocker} className="fas fa-copy clipbtn"></i>
-
+            <div>
+                The container is distributed as a docker image, and can be pulled from the Dymium repository.
             </div>
+            <div>
+                Run is using Docker Desktop on all OSes, or WSL2 on Windows.
+            </div>
+
 
         </Offcanvas>
         <div className="mb-3">
