@@ -80,14 +80,14 @@ RUN cd /db2_cli_odbc_driver && tar xvf v11.5.4_linuxx64_odbc_cli.tar.gz
 COPY ./db2_home/include /db2_cli_odbc_driver/odbc_cli/clidriver/include
 
 ENV DB2_CLI_DRIVER_INSTALL_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver"
-ENV LD_LIBRARY_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:/opt/ibm/db2/V11.5/lib64:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
-ENV LIBPATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:$LIBPATH"
+ENV LD_LIBRARY_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:/opt/ibm/db2/V11.5/lib64:/usr/lib/x86_64-linux-gnu:\$LD_LIBRARY_PATH"
+ENV LIBPATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:\$LIBPATH"
 ENV IBM_DB_HOME="/db2_cli_odbc_driver/odbc_cli/clidriver"
 ENV CGO_CFLAGS="-I/db2_cli_odbc_driver/odbc_cli/clidriver/include"
 ENV CGO_LDFLAGS="-L/db2_cli_odbc_driver/odbc_cli/clidriver/lib"
 
 ENV GRADLE_HOME=/opt/gradle/gradle-8.4
-ENV PATH="/opt/gradle/gradle-8.4/bin:${PATH}"
+ENV PATH="/opt/gradle/gradle-8.4/bin:\${PATH}"
 
 RUN apt-get install -y unixodbc unixodbc-dev
 EOF
