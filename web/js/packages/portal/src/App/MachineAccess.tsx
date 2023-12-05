@@ -151,10 +151,13 @@ function AddMachineTunnel() {
                             Machine tunnel created successfully.
                         </Alert>
                     )
-                    setSpinner(false)
-                    appDispatch(setSelectedTunnel(js.id))
-                    appDispatch(setActiveMachineTab("edit"))
-                    setTimeout(() => navigate("/app/machineaccess/redirect#bookmark"), 100)
+                   
+                    setTimeout(() => {
+                        appDispatch(setSelectedTunnel(js.id))
+                        appDispatch(setActiveMachineTab("edit"))
+                        setSpinner(false)
+                        navigate("/app/machineaccess/redirect#bookmark")
+                    }, 1000)
                 }).catch((error) => {
                     setAlert(
                         <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
