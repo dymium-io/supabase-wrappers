@@ -40,7 +40,8 @@ export default function EditDatascopes() {
     let form = useRef<HTMLFormElement>(null)
 
     let setSDRef = useRef(setSelectedDatascope)
-
+    let cloneref = useRef<HTMLFormElement>(null)
+    const [clonevalidated, setClonevalidated] = useState(false)
     const [showOffcanvas, setShowOffcanvas] = useState<boolean>(false)
     const [table, setTable] = useState<internal.TableScope>({ schema: "", table: "" })
     const [dbname, setDbname] = useState("")
@@ -48,6 +49,8 @@ export default function EditDatascopes() {
     const [currentConnectionId, setCurrentConnectionId] = useState("")
     const [currentConnectionType, setCurrentConnectionType] = useState("")
     const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
+    const [showclone, setShowclone] = useState(false)
+    const [clonename, setClonename] = useState("")
 
     let t = useAppSelector((state) => {
 
@@ -98,7 +101,7 @@ export default function EditDatascopes() {
             formatter: (cell, row, rowIndex, formatExtraData) => {
                 const date = new Date(row["created"]);
                 const options: Intl.DateTimeFormatOptions = {
-                    timeZoneName: "short" 
+                    timeZoneName: "short"
                 }
                 const dateString = date.toLocaleString("en-US", options)
                 return <div>{dateString}</div>
@@ -112,12 +115,12 @@ export default function EditDatascopes() {
             formatter: (cell, row, rowIndex, formatExtraData) => {
                 const date = new Date(row["modified"]);
                 const options: Intl.DateTimeFormatOptions = {
-                    timeZoneName: "short" 
+                    timeZoneName: "short"
                 }
                 const dateString = date.toLocaleString("en-US", options)
                 return <div>{dateString}</div>
             }
-        },        
+        },
         {
             text: 'Edit',
             dataField: 'edit',
@@ -277,8 +280,8 @@ export default function EditDatascopes() {
 
                 st.tablescope.forEach(ts => {
                     let ref: null | internal.Reference = null
-                    if(ts.reference != null) {
-                        ref = {schema: ts.reference.schema, table: ts.reference.table, column: ts.reference.column}
+                    if (ts.reference != null) {
+                        ref = { schema: ts.reference.schema, table: ts.reference.table, column: ts.reference.column }
                     }
                     let ob: internal.DatascopeRecord = {
                         connection: st.connection, schema: st.schema, table: st.table,
@@ -291,7 +294,7 @@ export default function EditDatascopes() {
             })
 
         })
-        if(retarray.length === 0)  {
+        if (retarray.length === 0) {
             DeleteDatascope(selectedDatascope)
             setSelectedDatascope("")
             return
@@ -300,7 +303,7 @@ export default function EditDatascopes() {
         setSpinner(true)
         let retob = new types.Datascope()
         retob.name = dbname
-        retob.records = retarray 
+        retob.records = retarray
         let body = retob.toJson()
         http.sendToServer("POST", "/api/updatedatascope",
             null, body,
@@ -367,28 +370,28 @@ export default function EditDatascopes() {
         }
         let conns = Object.keys(datascope)
         let _submittable = true
-        if(conns.length === 0) {
+        if (conns.length === 0) {
             _submittable = false
-            } else {
-            for(let i = 0; i < conns.length; i++) {
+        } else {
+            for (let i = 0; i < conns.length; i++) {
                 let connection = conns[i]
                 let conn = datascope[connection]
                 let schematables = Object.keys(conn)
-                if(schematables.length === 0) {
+                if (schematables.length === 0) {
                     _submittable = false
                     break
                 }
-                for(let j = 0; j < schematables.length; j++) {
+                for (let j = 0; j < schematables.length; j++) {
                     let schematable = schematables[j]
                     let st = conn[schematable]
-                    if(st.tablescope.length === 0) {
+                    if (st.tablescope.length === 0) {
                         _submittable = false
                         break
                     }
                 }
             }
         }
-        if(!_submittable) {
+        if (!_submittable) {
             setAlert(
                 <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
                     Can't save a Ghost Database with empty or no connections. Either remove them, or add connections and tables.
@@ -396,8 +399,8 @@ export default function EditDatascopes() {
             )
             event.preventDefault();
             setValidated(true)
-            return false            
-        }        
+            return false
+        }
         event.preventDefault();
         setValidated(false)
         event.stopPropagation();
@@ -444,7 +447,7 @@ export default function EditDatascopes() {
                         capi.getConnections(setSpinner, setConns, setAlert, remap, () => {
 
                             com.getDatascopes(setSpinner, setAlert, setDatascopes, () => {
-                                if(slatedToDelete !== t) {
+                                if (slatedToDelete !== t) {
                                     //setSelectedDatascope(t)
                                     //appDispatch(setSelectedDatascopeDefault(""))
                                 } else {
@@ -490,6 +493,22 @@ export default function EditDatascopes() {
         delete datascope[c]
         setDatascope(datascope)
     }
+    let doClone = event => {
+        if (cloneref.current == null) {
+            setClonevalidated(false)
+            return false
+        }
+        if (cloneref.current.reportValidity() === false) {
+            event.preventDefault();
+            setClonevalidated(true)
+            return false
+        }
+
+        setShowclone(false)
+        event.preventDefault();
+        setClonevalidated(false)
+        event.stopPropagation();
+    }
     return (
         <div className=" text-left">
             {alert}
@@ -508,7 +527,9 @@ export default function EditDatascopes() {
                     The same interface as for adding a Ghost Database is used. You select Data Sources and tables that you want to expose
                 </div>
             </Offcanvas>
-            <Modal size="lg" centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
+            <Modal size="lg" centered show={showdelete} onHide={() => {
+                setShowdelete(false)
+            }} data-testid="modal-delete">
                 <Modal.Header closeButton>
                     <Modal.Title>Delete Datascope {nameById(slatedToDelete)}?</Modal.Title>
                 </Modal.Header>
@@ -524,6 +545,52 @@ export default function EditDatascopes() {
                         }}>Cancel</Button>
                 </Modal.Footer>
             </Modal>
+
+            <Modal centered show={showclone} onHide={() => {
+                setShowclone(false)
+                setClonevalidated(false)
+            }
+            } data-testid="modal-delete">
+                <Modal.Header closeButton>
+                    <Modal.Title>Clone {selectedDatascopeDetails?.name}?</Modal.Title>
+                </Modal.Header>
+                <Form ref={cloneref} noValidate validated={clonevalidated} onSubmit={doClone}>
+                    <Modal.Body>
+
+                        <Row>
+                            <Col>
+                                <Form.Group className="mb-3" controlId="name" >
+                                    <Form.Label >New Ghost Database Name:</Form.Label>
+                                    <Form.Control type="text" size="sm"
+                                        required
+                                        placeholder="alphanumeric_"
+                                        autoComplete="off"
+                                        pattern="(?![Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]$)(?![Pp][Gg]_)[A-Za-z][A-Za-z0-9_]+"
+                                        onChange={e => {
+                                            setClonename(e.target.value)
+                                        }}
+                                        value={clonename}
+                                    />
+                                    <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                                    <Form.Control.Feedback type="invalid" >
+                                        Type a unique Ghost Database name
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="danger" role="button" id="Clone" data-testid="Clone"
+                            aria-label={"Clone"} type="submit"
+                        >Clone</Button> <Button variant="dymium" onClick={() => {
+                            setShowclone(false)
+                            setClonevalidated(false)
+                        }}>Cancel</Button>
+                    </Modal.Footer>
+                </Form>
+            </Modal>
+
             <div className=" text-left">
                 {/*
                 <Row> <Col xs="auto">
@@ -581,7 +648,8 @@ export default function EditDatascopes() {
                                                 selectRow={selectRow}
                                                 defaultSorted={[{
                                                     dataField: 'modified',
-                                                    order: 'desc'}]}
+                                                    order: 'desc'
+                                                }]}
                                                 striped bootstrap4 bordered={false}
                                                 pagination={paginationFactory({
                                                     sizePerPage: 5,
@@ -610,6 +678,12 @@ export default function EditDatascopes() {
 
                             <Button variant="dymium" size="sm" className="mt-4" type="submit">
                                 Apply
+                            </Button>
+                            <Button variant="dymium" size="sm" className="mt-4 ml-3"
+                                onClick={e => {
+                                    setShowclone(true)
+                                }}>
+                                Clone
                             </Button>
                         </Form>
                     </div>

@@ -29,6 +29,7 @@ var rdb *redis.Client
 var ctx = context.Background()
 var iprecords []net.IP
 var resolvemutex sync.RWMutex
+
 type Virtcon struct {
 	sock            net.Conn
 	tenant          string
@@ -157,10 +158,10 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 	var err error
 	var pkey []byte
 	/*
-	go func() {
-		http.ListenAndServe("localhost:6060", nil)
-	}()
-*/
+		go func() {
+			http.ListenAndServe("localhost:6060", nil)
+		}()
+	*/
 	initRedis(redisAddress, redisPort, redisPassword)
 
 	go logBandwidth(customer)
@@ -215,7 +216,7 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 		os.Exit(1)
 	}
 	defer ln.Close()
-
+	timeoutDuration := 5 * time.Second
 	for {
 		ingress, err := ln.Accept()
 
@@ -229,21 +230,26 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 			log.Errorf("server: erm, this is not a tls conn")
 			continue
 		}
-		// perform handshake
-		if err := tlsConn.Handshake(); err != nil {
-			log.Errorf("client: error during handshake, error: %s", err.Error())
-			continue
-		}
-
-		// get connection state and print some stuff
-		state := tlsConn.ConnectionState()
-		for _, cert := range state.PeerCertificates {
-			for _, name := range cert.DNSNames {
-				log.Debugf("Group: %s", name)
+		go func(tlsConn *tls.Conn) {
+			// perform handshake
+			tlsConn.SetDeadline(time.Now().Add(timeoutDuration))
+			err = tlsConn.Handshake()
+			tlsConn.SetDeadline(time.Time{})
+			if err != nil {
+				log.Errorf("client: error during handshake, error: %s", err.Error())
+				return
 			}
-		}
 
-		go proxyConnection(targetHost, ingress, customer, postgresPort)
+			// get connection state and print some stuff
+			state := tlsConn.ConnectionState()
+			for _, cert := range state.PeerCertificates {
+				for _, name := range cert.DNSNames {
+					log.Debugf("Group: %s", name)
+				}
+			}
+
+			go proxyConnection(targetHost, ingress, customer, postgresPort)
+		}(tlsConn)
 	}
 }
 
