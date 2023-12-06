@@ -11,6 +11,7 @@ import Modal from 'react-bootstrap/Modal'
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit';
+import { useNavigate } from "react-router-dom";
 import AddTable from './AddTable'
 import { useAppDispatch, useAppSelector } from './hooks'
 import { setSelectedDatascopeDefault } from '../Slices/menuSlice'
@@ -51,7 +52,8 @@ export default function EditDatascopes() {
     const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
     const [showclone, setShowclone] = useState(false)
     const [clonename, setClonename] = useState("")
-
+    let timeoutid = useRef<number | null>(null)
+    const navigate = useNavigate();
     let t = useAppSelector((state) => {
 
         return state.reducer.selectedDatascope
@@ -359,15 +361,7 @@ export default function EditDatascopes() {
             addTableR.current.current(table)
         }
     }
-    let handleSubmit = event => {
-        if (form.current == null) {
-            return false
-        }
-        if (form.current.reportValidity() === false) {
-            event.preventDefault();
-            setValidated(true)
-            return false
-        }
+    let isSubmittable = (datascope) => {
         let conns = Object.keys(datascope)
         let _submittable = true
         if (conns.length === 0) {
@@ -391,6 +385,18 @@ export default function EditDatascopes() {
                 }
             }
         }
+        return _submittable
+    }
+    let handleSubmit = event => {
+        if (form.current == null) {
+            return false
+        }
+        if (form.current.reportValidity() === false) {
+            event.preventDefault();
+            setValidated(true)
+            return false
+        }
+        let _submittable = isSubmittable(datascope)
         if (!_submittable) {
             setAlert(
                 <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
@@ -493,6 +499,96 @@ export default function EditDatascopes() {
         delete datascope[c]
         setDatascope(datascope)
     }
+    let cloneSelected = () => {
+        let _submittable = isSubmittable(datascope)
+        if (!_submittable) {
+            setAlert(
+                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                    Can't save a Ghost Database with empty or no connections. Either remove them, or add connections and tables.
+                </Alert>
+            )
+            return
+        }
+
+        let retarray: internal.DatascopeRecord[] = []
+        Object.keys(datascope).forEach(connection => {
+            let conn = datascope[connection]
+            Object.keys(conn).forEach(schematable => {
+                let st = conn[schematable]
+                // connection, schema, table, tablescope[typ, semantics, name, position, reference, action]
+
+                st.tablescope.forEach(ts => {
+                    let ref: null | internal.Reference = null
+                    if (ts.reference != null) {
+                        ref = { schema: ts.reference.schema, table: ts.reference.table, column: ts.reference.column }
+                    }
+                    let ob: internal.DatascopeRecord = {
+                        connection: st.connection, schema: st.schema, table: st.table,
+                        typ: ts.typ, position: ts.position, reference: ts.reference, action: ts.action,
+                        col: ts.name, semantics: ts.semantics, dflt: ts.dflt, isnullable: ts.isnullable,
+                        possibleActions: ts.possibleActions
+                    }
+                    retarray.push(ob)
+                })
+            })
+
+        })
+        if (retarray.length === 0) {
+            DeleteDatascope(selectedDatascope)
+            setSelectedDatascope("")
+            return
+        }
+        // now do send
+        setSpinner(true)
+        let retob = new types.Datascope()
+        retob.name = clonename
+        retob.records = retarray
+        let body = retob.toJson()        
+        window.scroll({ top: 0, left: 0, behavior: 'smooth' })
+        http.sendToServer("POST", "/api/savedatascope",
+            null, body,
+            resp => {
+
+                resp.json().then(js => {
+                    if (js.status === "OK") {
+                        setAlert(
+                            <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                                Ghost Database {clonename} created successfully!<br />
+                                <Link to="?key=groups">We are navigating you now </Link>to assign groups make it accessible to users.
+                            </Alert>
+                        )
+                        window.scroll({ top: 0, left: 0, behavior: 'smooth' })
+                        timeoutid.current = window.setTimeout(() => {
+                            timeoutid.current = null
+                            navigate("?key=groups")
+                        }, 3000)
+
+                    } else {
+                        setAlert(
+                            <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                                Error creating {clonename}:  {js.errormessage}!
+                            </Alert>
+                        )
+                    }
+                })
+                setSpinner(false)
+            },
+            resp => {
+                console.log("on error")
+                setSpinner(false)
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error creating {clonename}:  {t}!
+                        </Alert>
+                    )
+                )
+            },
+            error => {
+                console.log("on exception: " + error)
+                setSpinner(false)
+            })
+    }
     let doClone = event => {
         if (cloneref.current == null) {
             setClonevalidated(false)
@@ -503,7 +599,7 @@ export default function EditDatascopes() {
             setClonevalidated(true)
             return false
         }
-
+        let done = cloneSelected()
         setShowclone(false)
         event.preventDefault();
         setClonevalidated(false)
