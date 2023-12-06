@@ -403,6 +403,7 @@ const DatascopeForm: React.FC<DatascopeFormProps> = (props) => {
                             <Form.Label>Ghost Database Name:</Form.Label>
                             <Form.Control size="sm" type="text" placeholder="alphanumeric_"
                                 required
+                                autoComplete="off"
                                 pattern="(?![Pp][Oo][Ss][Tt][Gg][Rr][Ee][Ss]$)(?![Pp][Gg]_)[A-Za-z][A-Za-z0-9_]+"
                                 value={props.dbname}
                                 onChange={e => {
