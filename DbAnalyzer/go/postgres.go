@@ -607,7 +607,7 @@ ORDER BY
 				possibleActions = allowable
 				sample[k] = dtk(false)
 			case "tsvector", "tsquery":
-				t = d.cTyp+"[]"
+				t = d.eTyp+"[]"
 				possibleActions = allowable
 				sample[k] = dtk(true)
 			default:
