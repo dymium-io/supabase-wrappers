@@ -480,6 +480,10 @@ ORDER BY
 			t = d.cTyp
 			possibleActions = allowable
 			sample[k] = dtk(false)
+		case "tsvector", "tsquery":
+			t = d.cTyp
+			possibleActions = allowable
+			sample[k] = dtk(true)
 		case "ARRAY":
 			switch *d.eTyp {
 			case "boolean",
@@ -602,6 +606,10 @@ ORDER BY
 				t = "bytea[]"
 				possibleActions = allowable
 				sample[k] = dtk(false)
+			case "tsvector", "tsquery":
+				t = d.cTyp+"[]"
+				possibleActions = allowable
+				sample[k] = dtk(true)
 			default:
 				possibleActions = blocked
 				t = *d.eTyp + "[]"
