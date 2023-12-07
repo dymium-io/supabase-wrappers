@@ -1,7 +1,6 @@
 #!/bin/zsh
 
 set -e
-set -x
 script_d=$PWD/$(dirname $0)
 build_d=${script_d}/BLD
 setup_d=${script_d}/../../setup
