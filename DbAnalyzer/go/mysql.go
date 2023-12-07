@@ -288,7 +288,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 			sample[k] = dtk(true)
 		case "json":
 			t = "json"
-			possibleActions = obfuscatable
+			possibleActions = allowable
 			sample[k] = dtk(true)
 		default:
 			switch {
