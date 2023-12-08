@@ -2977,8 +2977,10 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 		}
 		token, err := GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s",
 			schema, name, "N/A", groups, []string{gotypes.RoleUser}, "unknown")
-
-		UpdateDbGuardian(schema, username, string(decpassword), name, groups)
+		if err!= nil {
+			return []string{}, "", err
+		}
+		err = UpdateDbGuardian(schema, username, string(decpassword), name, groups)
 		return groups, token, err
 	}
 	return []string{}, "", err
