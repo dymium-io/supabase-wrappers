@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-
+	"github.com/gorilla/mux"
 	"dymium.com/client/ca"
 	_ "dymium.com/client/ca"
 	"dymium.com/client/sockopts"
@@ -442,11 +442,34 @@ func DoConnect() {
 	runProxy(listener, message, port, token)
 	// waitForConnection(message)
 }
+func health() {
+	p := mux.NewRouter()
 
+	p.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", Nocache)
+		w.Header().Set("Content-Type", "text/html")
+
+		io.WriteString(w, "<html><body>OK</body></html>")
+	}).Methods("GET")
+
+	p.HandleFunc("/healthshellcheck", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", Nocache)
+		w.Header().Set("Content-Type", "text/html")
+
+		io.WriteString(w, "<html><body>OK</body></html>")
+		
+	}).Methods("GET")
+
+	
+	log.Infof("Listen for health on :80")
+	http.ListenAndServe(":80", p)
+}
 func main() {
 	verbose := os.Getenv("LOG_LEVEL")
-
-	log.SetLevelFromString(verbose)
+	if verbose != "" {
+		log.SetLevelFromString(verbose)
+	}
+	go health()
 	for {
 		DoConnect()
 	}
