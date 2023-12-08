@@ -35,7 +35,7 @@ function MachineTunnelHelp() {
             Set Environment Variables:
             <br />
             Define the necessary environment variables inside the Docker container.
-            These include configurations for log level, portal URL, connector ID, key, secret, customer name, tunnel server, and the local listener port.
+            These include configurations for log level, portal URL, key, secret, customer name, tunnel server, and the local listener port.
         </div>
         <div className="mb-3">
             <div className="d-block " style={{ fontFamily: "monospace", fontSize: "0.6em", overflow: "hidden", color: '#33cc33', backgroundColor: 'black' }}>
@@ -46,8 +46,6 @@ function MachineTunnelHelp() {
                         -e LOG_LEVEL=Info \
                     </div><div>
                         -e PORTAL=https://portal.dymium.io/ \
-                    </div><div>
-                        -e CONNECTOR=&lt;your_connector_id&gt; \
                     </div><div>
                         -e KEY=&lt;your_secret_key&gt; \
                     </div><div>
@@ -232,7 +230,7 @@ function AddMachineTunnel() {
             </div>
 
             <div className="mb-3">
-                Create a new connector by specifying a unique name, and groups that will define the Ghost Database accessible through the tunnel.
+                Create a new tunnel by specifying a unique name, and groups that will define the Ghost Database accessible through the tunnel.
             </div>
             <div>
 
@@ -728,7 +726,7 @@ function EditMachineTunnels() {
                 </div>
                 <div className="mb-3">
                     Click on the Downloads tab to get a binary for your platform or a repository for a container. The configuration parameters must be passed to the
-                    connector executable via environment variables.
+                    tunnel executable via environment variables.
                 </div>
                 <MachineTunnelHelp />
             </Offcanvas>
