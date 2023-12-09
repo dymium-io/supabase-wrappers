@@ -45,8 +45,8 @@ cd $build_d
 #get jdbc dependencies
 jdbclibs=${setup_d}/ktDbAnalyzerSvc-0.0.1.tar
 [ -f $jdbclibs ] || {
-		echo "Kdbc lib dependencies file not found in ${setup_d}"
-		echo "Please build DbAnalyzer to get them"
+		echo "jdbc lib dependencies file not found in ${setup_d}"
+		echo "Please build ktDbAnalyzerSvc to get them"
 		exit -1
 	}
 cp $jdbclibs .

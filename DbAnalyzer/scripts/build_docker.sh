@@ -55,29 +55,11 @@ retval=$?
     exit $retval
 }
 
-echo Building ktDbAnalyzerSvc...
-docker run -it --rm \
-                   -v $ktDbAnalyzerSvc_d:/src      \
-                   db-dev          \
-                   /bin/sh -c      \
-        "cd /src && \
-         gradle build && \
-         gradle distTar"
-
-retval=$?
-[ $retval -ne 0 ] && {
-    echo "build failed with error code $retval"
-    exit $retval
-}
-
-
 cd $build_d
 
 cp ../entry.sh .
-cp $ktDbAnalyzerSvc_d/build/distributions/ktDbAnalyzerSvc-0.0.1.tar .
+cp ${setup_d}/ktDbAnalyzerSvc-0.0.1.tar .
 
-# copy jar file to setup folder to add dependencies to DbGuardian
-cp $ktDbAnalyzerSvc_d/build/distributions/ktDbAnalyzerSvc-0.0.1.tar ${setup_d}/ktDbAnalyzerSvc-0.0.1.tar
 
 # creating docker
 DbAnalyzer=$(docker images db-analyzer -q)
