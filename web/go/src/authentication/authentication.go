@@ -2820,7 +2820,9 @@ func UpdateDbGuardian(schema string, username, password, email string, groups []
 
 	snc, _ := json.Marshal(rq)
 	_, err = Invoke("DbSync", nil, snc)
-
+	if err != nil {
+		log.Errorf("UpdateDbGuardian error: %s", err.Error())
+	}
 	return err
 }
 
@@ -2973,6 +2975,8 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 			var group string
 			err = rows.Scan(&group)
 			if err != nil {
+				log.Errorf("AuthenticateAndPrepareMachineTunnel, getting group error: %s", err.Error())
+
 				break
 			}
 			groups = append(groups, group)
@@ -2980,10 +2984,13 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 		token, err := GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s",
 			schema, name, "N/A", groups, []string{gotypes.RoleUser}, "unknown")
 		if err!= nil {
+			log.Errorf("AuthenticateAndPrepareMachineTunnel, generate token error: %s", err.Error())
 			return []string{}, "", err
 		}
 		err = UpdateDbGuardian(schema, username, string(decpassword), name, groups)
 		return groups, token, err
 	}
+	log.Errorf("AuthenticateAndPrepareMachineTunnel, query error: %s", err.Error())
+
 	return []string{}, "", err
 }
