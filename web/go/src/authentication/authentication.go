@@ -123,6 +123,23 @@ func GenerateRandomString(n int) (string, error) {
 	return string(ret), nil
 }
 
+func GenerateUsernameString(n int) (string, error) {
+	const letters = "0123456789abcdefghijklmnopqrstuvwxyz"
+	ret := make([]byte, n)
+	for i := 0; i < n; i++ {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			return "", err
+		}
+		if i == 0 {
+			ret[i] = letters[10:][ num.Int64()]
+		} else {
+			ret[i] = letters[num.Int64()]
+		}
+	}
+	return string(ret), nil
+}
+
 func contains[T comparable](s []T, str T) bool {
 	for _, v := range s {
 		if v == str {
@@ -2740,7 +2757,7 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error) {
 		return "", err
 	}
 	// generate username and password:
-	username, _ := GenerateRandomString(16)
+	username, _ := GenerateUsernameString(16)
 	password, _ := GenerateRandomString(32)
 	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
 	if hexkey == "" {
