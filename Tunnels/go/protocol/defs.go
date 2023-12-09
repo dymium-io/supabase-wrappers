@@ -15,5 +15,17 @@ type TransmissionUnit struct {
 	Data   []byte
 }
 
+
 var MeshServerVersion = "0.1.4"
 var TunnelServerVersion = "0.1.4"
+
+/*
+
+Protocol chunk:
+
+Action: byte
+Id: int32
+Length: int32
+[Data: byte[] ]
+*/
+const ProtocolChunkSize = 9

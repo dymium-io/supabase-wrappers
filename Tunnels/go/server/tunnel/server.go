@@ -4,14 +4,14 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/gob"
+	"encoding/binary"
 	"encoding/pem"
 	"fmt"
 	"io"
 	"math/rand"
 	"net"
-	_ "net/http"
-	_ "net/http/pprof"
+//	"net/http"
+//	_ "net/http/pprof"
 	"os"
 	"strings"
 	"sync"
@@ -29,6 +29,8 @@ var rdb *redis.Client
 var ctx = context.Background()
 var iprecords []net.IP
 var resolvemutex sync.RWMutex
+var messagesCapacity = 8
+var readBufferSize = 16 * 4096
 
 type Virtcon struct {
 	sock            net.Conn
@@ -47,9 +49,9 @@ func (x *Virtcon) LogDownstream(bytes int, final bool) {
 	atomic.AddInt64(&x.accumDownstream, int64(bytes))
 	atomic.AddInt64(&x.totalDownstream, int64(bytes))
 	accumDownstream := atomic.LoadInt64(&x.accumDownstream)
-	if (accumDownstream > 10000 || final) && accumDownstream > 0 {
-		sl := fmt.Sprintf("%d", x.accumDownstream)
-		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "Downstream, sent #%d bytes", []string{sl}, x.accumDownstream)
+	if (accumDownstream > 100000 || final) && accumDownstream > 0 {
+		// sl := fmt.Sprintf("%d", x.accumDownstream)
+		// log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "Downstream, sent #%d bytes", []string{sl}, x.accumDownstream)
 		atomic.StoreInt64(&x.accumDownstream, 0)
 	}
 	if final {
@@ -61,7 +63,7 @@ func (x *Virtcon) LogUpstream(bytes int, final bool) {
 	atomic.AddInt64(&x.accumUpstream, int64(bytes))
 	atomic.AddInt64(&x.totalUpstream, int64(bytes))
 	accumUpstream := atomic.LoadInt64(&x.accumUpstream)
-	if (accumUpstream > 10000 || final) && accumUpstream > 0 {
+	if (accumUpstream > 100000 || final) && accumUpstream > 0 {
 		sl := fmt.Sprintf("%d", x.accumUpstream)
 		log.InfoUserArrayf(x.tenant, x.session, x.email, x.groups, x.roles, "Upstream, sent #%d bytes", []string{sl}, x.accumUpstream)
 		atomic.StoreInt64(&x.accumUpstream, 0)
@@ -76,17 +78,22 @@ var bytesInLog = make(chan int, 128)
 var bytesOutLog = make(chan int, 128)
 
 func logBandwidth(customer string) {
+	timer := time.NewTimer(30 * time.Second)
+	defer timer.Stop()
+
 	bytesIn := 0
 	bytesOut := 0
+
 	for {
 		select {
 		case _bytesIn := <-bytesInLog:
 			bytesIn += _bytesIn
-			//log.Debugf("bytesIn=%d", bytesIn)
+
 		case _bytesOut := <-bytesOutLog:
 			bytesOut += _bytesOut
-			//log.Debugf("bytesOut=%d", bytesOut)
-		case <-time.After(30 * time.Second):
+
+		case <-timer.C:
+			// Handle timer firing...
 			if bytesIn != 0 || bytesOut != 0 {
 				_, err := rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 					pipe.IncrBy(ctx, customer+":bytesin", int64(bytesIn))
@@ -97,13 +104,13 @@ func logBandwidth(customer string) {
 					pipe.Expire(ctx, "$:bytesout", time.Hour)
 					return nil
 				})
-
 				if err != nil {
-					log.Debugf("Error saving bytes to redis: %s", err.Error())
+					log.Debugf("Error saving bytes to Redis: %s", err.Error())
 				}
+				bytesIn = 0
+				bytesOut = 0
 			}
-			bytesIn = 0
-			bytesOut = 0
+			timer.Reset(30 * time.Second)
 		}
 	}
 }
@@ -116,7 +123,6 @@ func initRedis(redisAddress, redisPort, redisPassword string) {
 		o.Password = redisPassword
 	}
 	rdb = redis.NewClient(o)
-
 }
 func displayBuff(what string, buff []byte) {
 	if len(buff) > 14 {
@@ -157,11 +163,11 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 	redisAddress, redisPort, redisPassword string) {
 	var err error
 	var pkey []byte
-	/*
-		go func() {
-			http.ListenAndServe("localhost:6060", nil)
-		}()
-	*/
+/*
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
+*/
 	initRedis(redisAddress, redisPort, redisPassword)
 
 	go logBandwidth(customer)
@@ -209,27 +215,40 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 	}
 	connect := fmt.Sprintf("%s:%d", address, port)
 	log.Debugf("TLS listen on %s", connect)
-	ln, err := tls.Listen("tcp", connect, config)
+
+	ln, err := net.Listen("tcp", connect)
 
 	if err != nil {
-		log.Errorf("Error in tls.Listen: %s", err.Error())
+		log.Errorf("Error in net.Listen: %s", err.Error())
 		os.Exit(1)
 	}
 	defer ln.Close()
 	timeoutDuration := 5 * time.Second
 	for {
-		ingress, err := ln.Accept()
-
+		conn, err := ln.Accept()
 		if err != nil {
-			log.Errorf("Error in tls.Accept: %s", err.Error())
+			log.Errorf("Error in Accept: %s", err.Error())
 			continue
 		}
-		// get the underlying tls connection
-		tlsConn, ok := ingress.(*tls.Conn)
+	
+		tcpConn, ok := conn.(*net.TCPConn)
 		if !ok {
-			log.Errorf("server: erm, this is not a tls conn")
+			log.Errorf("Not a TCP connection")
+			conn.Close()
 			continue
 		}
+	
+		// Set TCP_NODELAY
+		err = tcpConn.SetNoDelay(true)
+		if err != nil {
+			log.Errorf("Error setting TCP_NODELAY: %s", err.Error())
+			conn.Close()
+			continue
+		}
+	
+		// Wrap with TLS
+		tlsConn := tls.Server(tcpConn, config)
+
 		go func(tlsConn *tls.Conn) {
 			// perform handshake
 			tlsConn.SetDeadline(time.Now().Add(timeoutDuration))
@@ -247,21 +266,28 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 					log.Debugf("Group: %s", name)
 				}
 			}
-
-			go proxyConnection(targetHost, ingress, customer, postgresPort)
+			
+			go proxyConnection(targetHost, tlsConn, customer, postgresPort)
 		}(tlsConn)
 	}
 }
 
 func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.TransmissionUnit, id int, token string, mu *sync.RWMutex) {
-
+	arena := make([]byte, readBufferSize*(1 + messagesCapacity))
+	index := 0
 	for {
-		buff := make([]byte, 4096)
+		//buff := make([]byte, 4*4096)
+		// buff := make([]byte, 16*4096)
+		//buff := make([]byte, 64)
+		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
+		index = (index + 1) % (1 +  messagesCapacity)
 		n, err := egress.Read(buff)
+		//log.Debugf("Read from db %d bytes, connection %d", n, id)
 		mu.RLock()
 		conn, ok := conmap[id]
 		mu.RUnlock()
 		if err != nil {
+			log.Errorf("Reading error %s, connection %d", err.Error(), id)
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				// no op
 			} else {
@@ -279,13 +305,15 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 			egress.Close()
 			out := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 			messages <- out
+
 			if ok {
 				conn.LogDownstream(0, true)
 			}
 			return
 		}
 		b := buff[:n]
-		bytesOutLog <- n
+
+		//bytesOutLog <- n
 
 		if ok {
 			conn.LogDownstream(n, false)
@@ -300,7 +328,54 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 	}
 }
 
-func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder,
+func WriteToTunnel(buff *protocol.TransmissionUnit, conn net.Conn) error {
+    err := binary.Write(conn, binary.BigEndian, &buff.Action ) 
+	if err != nil {
+		return err
+	}
+    err = binary.Write(conn, binary.BigEndian, &buff.Id ) 
+	if err != nil {
+		return err
+	}
+	var l int32
+	d := buff.Data
+	if d != nil {
+		l = int32(len(d))
+	}
+	err = binary.Write(conn, binary.BigEndian, &l ) 
+	if err != nil {
+		return err
+	}
+	if d != nil {
+		_, err := conn.Write(buff.Data)
+		if err != nil {
+			return err
+		}	
+	}
+	return nil
+}
+
+func ReadFull(conn net.Conn, buf []byte, length int) (int, error) {
+    if len(buf) < length {
+        return 0, io.ErrShortBuffer
+    }
+
+    totalRead := 0
+    for totalRead < length {
+        n, err := conn.Read(buf[totalRead:length])
+        if err != nil {
+            if err == io.EOF && totalRead > 0 {
+                break // EOF is only OK if we read some bytes
+            }
+            return 0, err
+        }
+        totalRead += n
+    }
+
+    return totalRead, nil
+}
+
+func MultiplexWriter(messages chan protocol.TransmissionUnit, 
 	ingress net.Conn, conmap map[int]*Virtcon) {
 	for {
 		buff, ok := <-messages
@@ -309,14 +384,16 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder,
 			return
 		}
 
-		err := enc.Encode(buff)
+		err := WriteToTunnel(&buff, ingress)
 		if err != nil {
 			if strings.Contains(err.Error(), "closed network connection") {
-				log.Debugf("Error in encoder: %s", err.Error())
+				log.Debugf("Error in writer: %s", err.Error())
 			} else {
-				log.Errorf("Error in encoder: %s", err.Error())
+				log.Errorf("Error in writer: %s", err.Error())
 			}
 			ingress.Close()
+		} else {
+			//log.Debugf("Encoded  %d bytes", len(buff.Data) )
 		}
 	}
 }
@@ -326,11 +403,9 @@ func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort
 	var mu sync.RWMutex
 	claim := &gotypes.Claims{}
 
-	dec := gob.NewDecoder(ingress)
-	enc := gob.NewEncoder(ingress)
 
-	messages := make(chan protocol.TransmissionUnit, 50)
-	go MultiplexWriter(messages, enc, ingress, conmap)
+	messages := make(chan protocol.TransmissionUnit, messagesCapacity)
+	go MultiplexWriter(messages, ingress, conmap)
 
 	// totalUpstream := 0
 
@@ -432,7 +507,8 @@ func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort
 						log.DebugUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Write to db error: %s", err.Error())
 						conn.sock.Close()
 					} else {
-						bytesInLog <- n
+						//log.Debugf("Wrote  %d bytes, connection %d", n, buff.Id)
+						//bytesOutLog <- n
 						conn.LogUpstream(n, false)
 					}
 				} else {

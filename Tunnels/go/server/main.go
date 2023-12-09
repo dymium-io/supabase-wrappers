@@ -51,6 +51,8 @@ func main() {
 	if port == 0 {
 		port = 443
 	}
+	loglevel := os.Getenv("LOG_LEVEL")
+	log.Infof("Log level: %s", loglevel)
 	log.Debugf("address: %s, port %d", address, port)
 	certificatejson := os.Getenv("CERTIFICATE")
 	t := struct {

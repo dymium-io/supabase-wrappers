@@ -1,7 +1,5 @@
-//
 // Copyright (c) 2022 Dymium, Inc. All rights reserved.
 // written by igor@dymium.io
-//
 package main
 
 import (
@@ -20,7 +18,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-
+	_ "net/http/pprof"
 	"dymium.com/client/ca"
 	"dymium.com/client/content"
 	"dymium.com/client/installer"
@@ -290,7 +288,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 	messages <- out
 
 	for {
-		buff := make([]byte, 4096)
+		buff := make([]byte, 16*4096)
 
 		n, err := ingress.Read(buff)
 		if err != nil {
@@ -413,17 +411,55 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 	}
 
 	config := &tls.Config{
+		ServerName: lbaddress,
 		RootCAs:      caCertPool,
 		Certificates: []tls.Certificate{clientCert}}
 	target := fmt.Sprintf("%s:%d", lbaddress, lbport)
 	back <- fmt.Sprintf("Connect to %s", target)
 	log.Debugf("tls.Dial to %s", target)
+
+	tcpConn, err := net.Dial("tcp", target)
+	if err != nil {
+		log.Errorf("Error dialing TCP: %s", err.Error())
+		back <- err.Error()
+		back <- "error"
+		return
+	}
+
+	// Type assert to *net.TCPConn and set NoDelay
+	tcpTCPConn, ok := tcpConn.(*net.TCPConn)
+	if !ok {
+		log.Errorf("Failed to assert net.Conn to *net.TCPConn")
+		back <- err.Error()
+		back <- "error"
+		return
+	}
+	err = tcpTCPConn.SetNoDelay(true)
+	if err != nil {
+		log.Errorf("Error setting TCP_NODELAY: %s", err.Error())
+		back <- err.Error()
+		back <- "error"
+		return
+	}
+
+	egress := tls.Client(tcpConn, config)
+
+	// Perform the TLS handshake
+	err = egress.Handshake()
+	if err != nil {
+		log.Errorf("TLS handshake failed: %s", err)
+		back <- err.Error()
+		back <- "error"
+		return
+	}
+/*
 	egress, err := tls.Dial("tcp", target, config) // *Conn
 	if err != nil {
 		back <- err.Error()
 		back <- "error"
 		return
 	}
+*/	
 	back <- "Connected successfully"
 	log.Debugf("Wrote to back Connected")
 
@@ -465,6 +501,20 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 			log.Errorf("Error in Accept: %s", err.Error())
 			panic(err)
 		}
+
+		tcpConn, ok := ingress.(*net.TCPConn)
+		if !ok {
+			log.Errorf("Not a TCP connection")
+			panic(err)
+		}
+	
+		// Set TCP_NODELAY
+		err = tcpConn.SetNoDelay(true)
+		if err != nil {
+			log.Errorf("Error setting TCP_NODELAY: %s", err.Error())
+			panic(err)
+		}
+
 		mu.Lock()
 		conmap[connectionCounter] = ingress
 		mu.Unlock()
@@ -593,6 +643,9 @@ func checkUpdateFlags(forcenoupdate, forceupdate bool) {
 }
 func main() {
 	log.SetHandler(cli.New(os.Stderr))
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
 
 	forcenoupdate := flag.Bool("r", false, "Don't update")
 	forceupdate := flag.Bool("u", false, "Force update")
