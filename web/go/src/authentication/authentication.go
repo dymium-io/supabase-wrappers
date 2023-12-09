@@ -2954,6 +2954,8 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 	err := row.Scan(&id, &username, &password, &name)
 
 	if err != nil {
+		log.Errorf("AuthenticateAndPrepareMachineTunnel error: %s", err.Error())
+		log.Infof("AuthenticateAndPrepareMachineTunnel error, sql: %s, schema: %s, key: %s, secret: %s", sql, schema, key, secret)
 		return []string{}, "", err
 	}
 	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
