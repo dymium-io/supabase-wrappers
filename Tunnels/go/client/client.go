@@ -287,8 +287,8 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 	messages <- out
 
 	for {
-		//buff := make([]byte, 4096)
-		buff := make([]byte, 64)
+		buff := make([]byte, 16*4096)
+		//buff := make([]byte, 64)
 		n, err := ingress.Read(buff)
 		
 		if err != nil {
@@ -336,13 +336,13 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, messages chan pro
 	st := make([]byte, protocol.ProtocolChunkSize)
 	for {
 		var buff protocol.TransmissionUnit
-		n,  err := protocol.ReadFull(egress, st, 9)
+		_,  err := protocol.ReadFull(egress, st, 9)
 		
 		if err == nil {
 			err = protocol.GetTransmissionUnit(st, &buff, egress)
 
 		}
-		log.Debugf("Read from tunnel %d bytes, action: %d, buffer len %d", n, buff.Action, len(buff.Data))
+		// log.Debugf("Read from tunnel %d bytes, action: %d, buffer len %d", n, buff.Action, len(buff.Data))
 		if err != nil {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				log.Infof("Tunnel is closed, shutting down...")
@@ -379,7 +379,7 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, messages chan pro
 			mu.RLock()
 			sock, ok := conmap[buff.Id]
 			mu.RUnlock()
-			displayBuff("read:", buff.Data)
+			//displayBuff("read:", buff.Data)
 			if ok {
 				_, err := sock.Write(buff.Data)
 

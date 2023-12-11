@@ -29,8 +29,8 @@ var ctx = context.Background()
 var iprecords []net.IP
 var resolvemutex sync.RWMutex
 var messagesCapacity = 8
-//var readBufferSize = 16 * 4096
-var readBufferSize = 64
+var readBufferSize = 16 * 4096
+//var readBufferSize = 64
 
 type Virtcon struct {
 	sock            net.Conn
@@ -273,14 +273,14 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 }
 
 func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.TransmissionUnit, id int, token string, mu *sync.RWMutex) {
-	//arena := make([]byte, readBufferSize*(1 + messagesCapacity))
-	//index := 0
+	arena := make([]byte, readBufferSize*(2 * messagesCapacity))
+	index := 0
 	for {
 		//buff := make([]byte, 4*4096)
 		// buff := make([]byte, 16*4096)
-		buff := make([]byte, readBufferSize)
-		//buff := arena[index*readBufferSize : (index+1)*readBufferSize]
-		//index = (index + 1) % (1 +  messagesCapacity)
+		// buff := make([]byte, readBufferSize)
+		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
+		index = (index + 1) % (2 *  messagesCapacity)
 		n, err := egress.Read(buff)
 		//log.Debugf("Read from db %d bytes, connection %d", n, id)
 		mu.RLock()
@@ -336,7 +336,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 			close(messages)
 			return
 		}
-		log.Debugf("In Write: Action: %d,\n%s\n", buff.Action, string(buff.Data) )
+		// log.Debugf("In Write: Action: %d,\n%s\n", buff.Action, string(buff.Data) )
 		err := protocol.WriteToTunnel(&buff, ingress)
 		if err != nil {
 			if strings.Contains(err.Error(), "closed network connection") {
