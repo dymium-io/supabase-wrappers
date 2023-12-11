@@ -41,7 +41,7 @@ func health() {
 }
 func main() {
 	log.Init("tunnel")
-	log.Info("Starting tunnel server, Version 0.20")
+	log.Info("Starting tunnel server, Version 0.30")
 	flag.IntVar(&port, "p", 0, "Port")
 	flag.StringVar(&address, "a", "", "Address")
 	flag.Parse()

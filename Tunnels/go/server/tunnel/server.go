@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/binary"
 	"encoding/pem"
 	"fmt"
 	"io"
@@ -30,7 +29,8 @@ var ctx = context.Background()
 var iprecords []net.IP
 var resolvemutex sync.RWMutex
 var messagesCapacity = 8
-var readBufferSize = 16 * 4096
+//var readBufferSize = 16 * 4096
+var readBufferSize = 64
 
 type Virtcon struct {
 	sock            net.Conn
@@ -125,12 +125,12 @@ func initRedis(redisAddress, redisPort, redisPassword string) {
 	rdb = redis.NewClient(o)
 }
 func displayBuff(what string, buff []byte) {
-	if len(buff) > 14 {
-		head := buff[:6]
-		tail := buff[len(buff)-6:]
-		log.Debugf("%s head: %v, tail: %v", what, head, tail)
+	if len(buff) > 100 {
+		head := buff[:60]
+		tail := buff[len(buff)-60:]
+		log.Debugf("\n%s head: \n%s\ntail: \n%s", what, string(head), string(tail))
 	} else {
-		log.Debugf("%s buffer: %v", what, buff)
+		log.Debugf("\n%s buffer:\n%s", what, string(buff))
 	}
 }
 func getTargetConnection(targetHost string, customer, postgresPort string) (net.Conn, error) {
@@ -319,60 +319,13 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 			conn.LogDownstream(n, false)
 			//log.InfoUserArrayf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Downstream, sent #%d bytes", []string{sl}, n)
 		}
-
-		//displayBuff("Read from db ", b)
+		log.Debugf("read %d bytes", n)
+		displayBuff("Read from db ", b)
 		//log.Printf("Send to client %d bytes, connection %d", n, id)
 		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
 		//write out result
 		messages <- out
 	}
-}
-
-func WriteToTunnel(buff *protocol.TransmissionUnit, conn net.Conn) error {
-    err := binary.Write(conn, binary.BigEndian, &buff.Action ) 
-	if err != nil {
-		return err
-	}
-    err = binary.Write(conn, binary.BigEndian, &buff.Id ) 
-	if err != nil {
-		return err
-	}
-	var l int32
-	d := buff.Data
-	if d != nil {
-		l = int32(len(d))
-	}
-	err = binary.Write(conn, binary.BigEndian, &l ) 
-	if err != nil {
-		return err
-	}
-	if d != nil {
-		_, err := conn.Write(buff.Data)
-		if err != nil {
-			return err
-		}	
-	}
-	return nil
-}
-
-func ReadFull(conn net.Conn, buf []byte, length int) (int, error) {
-    if len(buf) < length {
-        return 0, io.ErrShortBuffer
-    }
-
-    totalRead := 0
-    for totalRead < length {
-        n, err := conn.Read(buf[totalRead:length])
-        if err != nil {
-            if err == io.EOF && totalRead > 0 {
-                break // EOF is only OK if we read some bytes
-            }
-            return 0, err
-        }
-        totalRead += n
-    }
-
-    return totalRead, nil
 }
 
 func MultiplexWriter(messages chan protocol.TransmissionUnit, 
@@ -383,8 +336,8 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 			close(messages)
 			return
 		}
-
-		err := WriteToTunnel(&buff, ingress)
+		log.Debugf("Action: %d, Encoded  %d bytes", buff.Action, len(buff.Data) )
+		err := protocol.WriteToTunnel(&buff, ingress)
 		if err != nil {
 			if strings.Contains(err.Error(), "closed network connection") {
 				log.Debugf("Error in writer: %s", err.Error())
@@ -398,6 +351,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 	}
 }
 
+
 func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort string) {
 	var conmap = make(map[int]*Virtcon)
 	var mu sync.RWMutex
@@ -408,10 +362,13 @@ func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort
 	go MultiplexWriter(messages, ingress, conmap)
 
 	// totalUpstream := 0
-
+	st := make([]byte, protocol.ProtocolChunkSize)
 	for {
 		var buff protocol.TransmissionUnit
-		err := dec.Decode(&buff)
+		_,  err := protocol.ReadFull(ingress, st, 9)
+
+		protocol.GetTransmissionUnit(st, &buff, ingress)
+		
 
 		if err != nil {
 			if err != io.EOF {
@@ -502,6 +459,7 @@ func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort
 			mu.RUnlock()
 			if ok && conn != nil {
 				if conn.sock != nil {
+					displayBuff("write:", buff.Data)
 					n, err := conn.sock.Write(buff.Data)
 					if err != nil {
 						log.DebugUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Write to db error: %s", err.Error())

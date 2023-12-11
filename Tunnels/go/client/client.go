@@ -10,7 +10,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/gob"
 	"encoding/json"
 	"encoding/pem"
 	"flag"
@@ -63,12 +62,12 @@ var (
 )
 
 func displayBuff(what string, buff []byte) {
-	if len(buff) > 10 {
-		head := buff[:6]
-		tail := buff[len(buff)-6:]
-		log.Debugf("%s head: %v, tail: %v", what, head, tail)
+	if len(buff) > 100 {
+		head := buff[:60]
+		tail := buff[len(buff)-60:]
+		log.Debugf("\n%s head: \n%s\ntail: \n%s", what, string(head), string(tail))
 	} else {
-		log.Debugf("%s buffer: %v", what, buff)
+		log.Debugf("\n%s buffer: \n%s", what, string(buff))
 	}
 }
 func restart() {
@@ -278,7 +277,7 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool, forceupdate
 	return back.LoginURL
 }
 
-func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, token string, id int, mu sync.RWMutex) {
+func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, token string, id int, mu *sync.RWMutex) {
 	out := protocol.TransmissionUnit{Action: protocol.Open, Id: id, Data: []byte(token)}
 
 	mu.RLock()
@@ -288,9 +287,10 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 	messages <- out
 
 	for {
-		buff := make([]byte, 16*4096)
-
+		//buff := make([]byte, 4096)
+		buff := make([]byte, 64)
 		n, err := ingress.Read(buff)
+		
 		if err != nil {
 			if err != io.EOF {
 				s := err.Error()
@@ -302,6 +302,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 				log.Infof("Connection %d closed by client", id)
 			}
 			ingress.Close()
+			log.Debugf("Read %d bytes from local connection #%d", n, id)
 			back := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 			messages <- back
 			return
@@ -315,7 +316,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 	}
 }
 
-func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) {
+func MultiplexWriter(messages chan protocol.TransmissionUnit, egress net.Conn) {
 	for {
 		buff, ok := <-messages
 		if !ok {
@@ -323,18 +324,25 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
 			close(messages)
 			return
 		}
-		//fmt.Printf("Encode %d bytes into SSL channel", len(buff.Data))
+		log.Debugf("Action %d, Encode %d bytes into SSL channel", buff.Action, len(buff.Data))
+		err := protocol.WriteToTunnel(&buff, egress)
 
-		err := enc.Encode(buff)
 		if err != nil {
 			log.Errorf("Error writing into tunnel %s", err.Error())
 		}
 	}
 }
-func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder, messages chan protocol.TransmissionUnit, mu *sync.RWMutex) {
+func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, messages chan protocol.TransmissionUnit, mu *sync.RWMutex) {
+	st := make([]byte, protocol.ProtocolChunkSize)
 	for {
 		var buff protocol.TransmissionUnit
-		err := dec.Decode(&buff)
+		n,  err := protocol.ReadFull(egress, st, 9)
+		
+		if err == nil {
+			err = protocol.GetTransmissionUnit(st, &buff, egress)
+
+		}
+		log.Debugf("Read from tunnel %d bytes, Action %d", n, len(buff.Data))
 		if err != nil {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				log.Infof("Tunnel is closed, shutting down...")
@@ -371,6 +379,7 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder,
 			mu.RLock()
 			sock, ok := conmap[buff.Id]
 			mu.RUnlock()
+			displayBuff("read:", buff.Data)
 			if ok {
 				_, err := sock.Write(buff.Data)
 
@@ -484,11 +493,10 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 	var mu sync.RWMutex
 
 	connectionCounter := 0
-	dec := gob.NewDecoder(egress)
-	enc := gob.NewEncoder(egress)
+
 	messages := make(chan protocol.TransmissionUnit)
-	go MultiplexWriter(messages, enc)
-	go MultiplexReader(egress, conmap, dec, messages, &mu)
+	go MultiplexWriter(messages, egress)
+	go MultiplexReader(egress, conmap, messages, &mu)
 
 	back <- "end"
 
@@ -518,7 +526,7 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 		mu.Lock()
 		conmap[connectionCounter] = ingress
 		mu.Unlock()
-		go pipe(ingress, messages, conmap, token, connectionCounter, mu)
+		go pipe(ingress, messages, conmap, token, connectionCounter, &mu)
 		connectionCounter++
 	}
 }
