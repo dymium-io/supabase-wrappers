@@ -26,6 +26,14 @@ done
 
 cd $build_d
 
+ktDbAnalyzerSvc=${setup_d}/ktDbAnalyzerSvc-0.0.1.tar
+[ -f $ktDbAnalyzerSvc ] || {
+		echo "ktDbAnalyzerSvc file not found in ${setup_d}"
+		echo "Please build ktDbAnalyzerSvc."
+		exit -1
+	}
+cp $ktDbAnalyzerSvc .
+
 for f in ${instantclients[@]}; do
 	unzip ${setup_d}/oracle/$f
 done
@@ -58,7 +66,6 @@ retval=$?
 cd $build_d
 
 cp ../entry.sh .
-cp ${setup_d}/ktDbAnalyzerSvc-0.0.1.tar .
 
 
 # creating docker
