@@ -65,9 +65,9 @@ func displayBuff(what string, buff []byte) {
 	if len(buff) > 100 {
 		head := buff[:60]
 		tail := buff[len(buff)-60:]
-		log.Debugf("\n%s head: \n%s\ntail: \n%s", what, string(head), string(tail))
+		log.Debugf("\n%s head: \n%s\ntail: \n%s\n", what, string(head), string(tail))
 	} else {
-		log.Debugf("\n%s buffer: \n%s", what, string(buff))
+		log.Debugf("\n%s buffer: \n%s\n", what, string(buff))
 	}
 }
 func restart() {
@@ -342,7 +342,7 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, messages chan pro
 			err = protocol.GetTransmissionUnit(st, &buff, egress)
 
 		}
-		log.Debugf("Read from tunnel %d bytes, Action %d", n, len(buff.Data))
+		log.Debugf("Read from tunnel %d bytes, action: %d, buffer len %d", n, buff.Action, len(buff.Data))
 		if err != nil {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				log.Infof("Tunnel is closed, shutting down...")

@@ -128,9 +128,9 @@ func displayBuff(what string, buff []byte) {
 	if len(buff) > 100 {
 		head := buff[:60]
 		tail := buff[len(buff)-60:]
-		log.Debugf("\n%s head: \n%s\ntail: \n%s", what, string(head), string(tail))
+		log.Debugf("\n%s head: \n%s\ntail: \n%s\n", what, string(head), string(tail))
 	} else {
-		log.Debugf("\n%s buffer:\n%s", what, string(buff))
+		log.Debugf("\n%s buffer:\n%s\n", what, string(buff))
 	}
 }
 func getTargetConnection(targetHost string, customer, postgresPort string) (net.Conn, error) {
@@ -273,14 +273,14 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 }
 
 func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.TransmissionUnit, id int, token string, mu *sync.RWMutex) {
-	arena := make([]byte, readBufferSize*(1 + messagesCapacity))
-	index := 0
+	//arena := make([]byte, readBufferSize*(1 + messagesCapacity))
+	//index := 0
 	for {
 		//buff := make([]byte, 4*4096)
 		// buff := make([]byte, 16*4096)
-		//buff := make([]byte, 64)
-		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
-		index = (index + 1) % (1 +  messagesCapacity)
+		buff := make([]byte, readBufferSize)
+		//buff := arena[index*readBufferSize : (index+1)*readBufferSize]
+		//index = (index + 1) % (1 +  messagesCapacity)
 		n, err := egress.Read(buff)
 		//log.Debugf("Read from db %d bytes, connection %d", n, id)
 		mu.RLock()
@@ -320,7 +320,7 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 			//log.InfoUserArrayf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Downstream, sent #%d bytes", []string{sl}, n)
 		}
 		log.Debugf("read %d bytes", n)
-		displayBuff("Read from db ", b)
+		// displayBuff("Read from db ", b)
 		//log.Printf("Send to client %d bytes, connection %d", n, id)
 		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
 		//write out result
@@ -336,7 +336,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 			close(messages)
 			return
 		}
-		log.Debugf("Action: %d, Encoded  %d bytes", buff.Action, len(buff.Data) )
+		log.Debugf("In Write: Action: %d,\n%s\n", buff.Action, string(buff.Data) )
 		err := protocol.WriteToTunnel(&buff, ingress)
 		if err != nil {
 			if strings.Contains(err.Error(), "closed network connection") {
