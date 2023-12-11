@@ -2983,7 +2983,7 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 		return []string{}, "", err
 	}
 	// get the groups associated with the tunnel
-	sql = `select distinct b.innergroup from ` + schema + `.machinetunnelgroups as a join` + schema + `.groupmapping as b on
+	sql = `select distinct b.innergroup from ` + schema + `.machinetunnelgroups as a join ` + schema + `.groupmapping as b on
 	a.group_id=b.id where a.tunnel_id=$1;`
 	rows, err := db.Query(sql, id)
 	if nil == err {
