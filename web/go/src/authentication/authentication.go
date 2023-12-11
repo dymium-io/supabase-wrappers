@@ -2983,7 +2983,8 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 		return []string{}, "", err
 	}
 	// get the groups associated with the tunnel
-	sql = `select group_id from ` + schema + `.machinetunnelgroups where tunnel_id=$1;`
+	sql = `select distinct b.innergroup from ` + schema + `.machinetunnelgroups as a join` + schema + `.groupmapping as b on
+	a.group_id=b.id where a.tunnel_id=$1;`
 	rows, err := db.Query(sql, id)
 	if nil == err {
 		defer rows.Close()
@@ -2998,6 +2999,7 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 			}
 			groups = append(groups, group)
 		}
+		log.Debugf("AuthenticateAndPrepareMachineTunnel, groups: %v", groups)
 		token, err := GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s",
 			schema, name, "N/A", groups, []string{gotypes.RoleUser}, "unknown")
 		if err!= nil {
