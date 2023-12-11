@@ -2978,7 +2978,7 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 		return []string{}, "", err
 	}
 	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
-	decpassword, err := AESencrypt([]byte(password), hexkey)
+	decpassword, err := AESDecrypt([]byte(password), hexkey)
 	if err != nil {
 		return []string{}, "", err
 	}
