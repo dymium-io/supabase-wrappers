@@ -54,6 +54,8 @@ var lbaddress string
 var lbport int
 var connectionError = false
 var wg sync.WaitGroup
+var messagesCapacity = 16
+var readBufferSize = 16 * 4096
 
 var (
 	MajorVersion    string
@@ -285,10 +287,15 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 	mu.RUnlock()
 	//write out result
 	messages <- out
+	arena := make([]byte, readBufferSize*(2 * messagesCapacity))
+	index := 0
 
 	for {
-		buff := make([]byte, 16*4096)
+		//buff := make([]byte, 16*4096)
 		//buff := make([]byte, 64)
+		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
+		index = (index + 1) % (2 *  messagesCapacity)
+		
 		n, err := ingress.Read(buff)
 		
 		if err != nil {
@@ -302,7 +309,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 				log.Infof("Connection %d closed by client", id)
 			}
 			ingress.Close()
-			log.Debugf("Read %d bytes from local connection #%d", n, id)
+			// log.Debugf("Read %d bytes from local connection #%d", n, id)
 			back := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 			messages <- back
 			return
@@ -324,7 +331,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, egress net.Conn) {
 			close(messages)
 			return
 		}
-		log.Debugf("Action %d, Encode %d bytes into SSL channel", buff.Action, len(buff.Data))
+		// log.Debugf("Action %d, Encode %d bytes into SSL channel", buff.Action, len(buff.Data))
 		err := protocol.WriteToTunnel(&buff, egress)
 
 		if err != nil {

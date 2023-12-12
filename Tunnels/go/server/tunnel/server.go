@@ -9,14 +9,14 @@ import (
 	"io"
 	"math/rand"
 	"net"
-//	"net/http"
-//	_ "net/http/pprof"
+	"net/http"
+	_ "net/http/pprof"
+	"github.com/felixge/fgprof"
 	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-
 	"dymium.com/dymium/log"
 	"dymium.com/server/gotypes"
 	"dymium.com/server/protocol"
@@ -28,9 +28,8 @@ var rdb *redis.Client
 var ctx = context.Background()
 var iprecords []net.IP
 var resolvemutex sync.RWMutex
-var messagesCapacity = 8
+var messagesCapacity = 16
 var readBufferSize = 16 * 4096
-//var readBufferSize = 64
 
 type Virtcon struct {
 	sock            net.Conn
@@ -150,9 +149,9 @@ func backgroundResolve(targetHost string) {
 	for {
 		time.Sleep(2 * time.Minute)
 		addrs, _ := net.LookupIP(targetHost)
-		for _, addr := range addrs {
-			log.Debugf("Resolved %s to %s", targetHost, addr.String())
-		}
+		//for _, addr := range addrs {
+			// log.Debugf("Resolved %s to %s", targetHost, addr.String())
+		// }
 		resolvemutex.Lock()
 		iprecords = addrs
 		resolvemutex.Unlock()
@@ -163,11 +162,12 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 	redisAddress, redisPort, redisPassword string) {
 	var err error
 	var pkey []byte
-/*
+
+	http.DefaultServeMux.Handle("/debug/fgprof", fgprof.Handler())
 	go func() {
-		http.ListenAndServe("localhost:6060", nil)
+		http.ListenAndServe(":6060", nil)
 	}()
-*/
+
 	initRedis(redisAddress, redisPort, redisPassword)
 
 	go logBandwidth(customer)
@@ -273,14 +273,14 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 }
 
 func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.TransmissionUnit, id int, token string, mu *sync.RWMutex) {
-	arena := make([]byte, readBufferSize*(2 * messagesCapacity))
+	arena := make([]byte, readBufferSize*(4 + messagesCapacity))
 	index := 0
 	for {
 		//buff := make([]byte, 4*4096)
 		// buff := make([]byte, 16*4096)
 		// buff := make([]byte, readBufferSize)
 		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
-		index = (index + 1) % (2 *  messagesCapacity)
+		index = (index + 1) % (4 +  messagesCapacity)
 		n, err := egress.Read(buff)
 		//log.Debugf("Read from db %d bytes, connection %d", n, id)
 		mu.RLock()
@@ -319,7 +319,6 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 			conn.LogDownstream(n, false)
 			//log.InfoUserArrayf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Downstream, sent #%d bytes", []string{sl}, n)
 		}
-		log.Debugf("read %d bytes", n)
 		// displayBuff("Read from db ", b)
 		//log.Printf("Send to client %d bytes, connection %d", n, id)
 		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
@@ -459,7 +458,7 @@ func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort
 			mu.RUnlock()
 			if ok && conn != nil {
 				if conn.sock != nil {
-					displayBuff("write:", buff.Data)
+					// displayBuff("write:", buff.Data)
 					n, err := conn.sock.Write(buff.Data)
 					if err != nil {
 						log.DebugUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Write to db error: %s", err.Error())
