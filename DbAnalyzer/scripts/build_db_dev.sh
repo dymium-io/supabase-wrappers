@@ -37,7 +37,7 @@ DbDev=$(docker images db-dev -q)
 [ -z "$DbDev" ] || docker rmi -f "$DbDev"
 
 cat <<EOF | docker build --platform linux/amd64 --compress -t db-dev -f - .
-FROM ubuntu:jammy
+FROM golang:1.20-buster
 
 
 RUN apt-get update &&            \
@@ -50,9 +50,12 @@ RUN apt-get update &&            \
       openjdk-11-jdk             \
       curl wget unzip zip        \
       snapd                      \
-      wget ca-certificates       \
       libaio1 &&                 \
     mkdir -p /opt/oracle
+
+#install gradle
+RUN wget -c https://services.gradle.org/distributions/gradle-8.4-bin.zip -P /tmp
+RUN unzip -d /opt/gradle /tmp/gradle-8.4-bin.zip
 
 COPY ./instantclient* /opt/oracle/
 
@@ -76,11 +79,6 @@ RUN cd /db2_cli_odbc_driver && tar xvf v11.5.4_linuxx64_odbc_cli.tar.gz
 
 COPY ./db2_home/include /db2_cli_odbc_driver/odbc_cli/clidriver/include
 
-ENV GOLANG_VERSION 1.20
-# Download Go. Verify the tarball checksum for security.
-RUN wget -O go.tgz "https://golang.org/dl/go\${GOLANG_VERSION}.linux-amd64.tar.gz" \
-  && tar -C /usr/local -xzf go.tgz
-
 ENV DB2_CLI_DRIVER_INSTALL_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver"
 ENV LD_LIBRARY_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:/opt/ibm/db2/V11.5/lib64:/usr/lib/x86_64-linux-gnu:\$LD_LIBRARY_PATH"
 ENV LIBPATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:\$LIBPATH"
@@ -88,7 +86,8 @@ ENV IBM_DB_HOME="/db2_cli_odbc_driver/odbc_cli/clidriver"
 ENV CGO_CFLAGS="-I/db2_cli_odbc_driver/odbc_cli/clidriver/include"
 ENV CGO_LDFLAGS="-L/db2_cli_odbc_driver/odbc_cli/clidriver/lib"
 
-ENV PATH="/usr/local/go/bin:\${PATH}"
+ENV GRADLE_HOME=/opt/gradle/gradle-8.4
+ENV PATH="/opt/gradle/gradle-8.4/bin:\${PATH}"
 
 RUN apt-get install -y unixodbc unixodbc-dev
 EOF
