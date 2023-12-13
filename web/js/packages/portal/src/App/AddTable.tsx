@@ -390,6 +390,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             {
                 dataField: 'typ',
                 text: 'Type:',
+                classes: 'overflow-x-scroll'
             },
             {
                 dataField: 'semantics',
