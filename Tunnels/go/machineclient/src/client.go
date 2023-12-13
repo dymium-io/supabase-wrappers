@@ -10,8 +10,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/gob"
-	_ "encoding/gob"
+
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -56,6 +55,8 @@ var lbaddress string
 var lbport int
 var connectionError = false
 
+var messagesCapacity = 16
+var readBufferSize = 16 * 4096
 
 var (
 	MajorVersion    string
@@ -81,10 +82,14 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 	mu.RUnlock()
 	//write out result
 	messages <- out
+	arena := make([]byte, readBufferSize*(2 * messagesCapacity))
+	index := 0
 
 	for {
-		buff := make([]byte, 4096)
-
+		// buff := make([]byte, 4096)
+		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
+		index = (index + 1) % (2 *  messagesCapacity)
+		
 		n, err := ingress.Read(buff)
 		if err != nil {
 			if err != io.EOF {
@@ -127,7 +132,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
 	}
 }
 
-func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, dec *gob.Decoder, messages chan protocol.TransmissionUnit, mu *sync.RWMutex) {
+func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, messages chan protocol.TransmissionUnit, mu *sync.RWMutex) {
 	for {
 		var buff protocol.TransmissionUnit
 		err := dec.Decode(&buff)
@@ -234,11 +239,10 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 	var mu sync.RWMutex
 
 	connectionCounter := 0
-	dec := gob.NewDecoder(egress)
-	enc := gob.NewEncoder(egress)
+
 	messages := make(chan protocol.TransmissionUnit)
-	go MultiplexWriter(messages, enc)
-	go MultiplexReader(egress, conmap, dec, messages, &mu)
+	go MultiplexWriter(messages, egress)
+	go MultiplexReader(egress, conmap,  messages, &mu)
 
 	//back <- "end"
 
