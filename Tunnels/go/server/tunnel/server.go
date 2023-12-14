@@ -9,9 +9,9 @@ import (
 	"io"
 	"math/rand"
 	"net"
-	"net/http"
+	_ "net/http"
 	_ "net/http/pprof"
-	"github.com/felixge/fgprof"
+	_ "github.com/felixge/fgprof"
 	"os"
 	"strings"
 	"sync"
@@ -162,12 +162,12 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 	redisAddress, redisPort, redisPassword string) {
 	var err error
 	var pkey []byte
-
+/*
 	http.DefaultServeMux.Handle("/debug/fgprof", fgprof.Handler())
 	go func() {
 		http.ListenAndServe(":6060", nil)
 	}()
-
+*/
 	initRedis(redisAddress, redisPort, redisPassword)
 
 	go logBandwidth(customer)
@@ -355,7 +355,6 @@ func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort
 	var conmap = make(map[int]*Virtcon)
 	var mu sync.RWMutex
 	claim := &gotypes.Claims{}
-
 
 	messages := make(chan protocol.TransmissionUnit, messagesCapacity)
 	go MultiplexWriter(messages, ingress, conmap)

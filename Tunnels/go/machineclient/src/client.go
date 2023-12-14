@@ -115,7 +115,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 	}
 }
 
-func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) {
+func MultiplexWriter(messages chan protocol.TransmissionUnit, egress net.Conn) {
 	for {
 		buff, ok := <-messages
 		if !ok {
@@ -125,7 +125,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
 		}
 		fmt.Printf("Encode %d bytes into SSL channel", len(buff.Data))
 
-		err := enc.Encode(buff)
+		err := protocol.WriteToTunnel(&buff, egress)
 		if err != nil {
 			log.Errorf("Error writing into tunnel %s", err.Error())
 		}
@@ -133,9 +133,15 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, enc *gob.Encoder) 
 }
 
 func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, messages chan protocol.TransmissionUnit, mu *sync.RWMutex) {
+	st := make([]byte, protocol.ProtocolChunkSize)
 	for {
 		var buff protocol.TransmissionUnit
-		err := dec.Decode(&buff)
+		_,  err := protocol.ReadFull(egress, st, 9)
+		
+		if err == nil {
+			err = protocol.GetTransmissionUnit(st, &buff, egress)
+
+		}
 		if err != nil {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				log.Infof("Tunnel is closed, shutting down...")
@@ -201,14 +207,45 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 		log.Debugf("add ca #%d, status %t", i, ok)
 	}
 	log.Infof("Number of CA certificates: %d", len(ca.RootCApem))
+	target := os.Getenv("TUNNELSERVER")
+	host, _, err := net.SplitHostPort(target)
 	config := &tls.Config{
 		RootCAs:      caCertPool,
-		Certificates: []tls.Certificate{clientCert}}
+		Certificates: []tls.Certificate{clientCert},
+		ServerName: host,
+	}
 	log.Info("TLS configuration created")
-	target := os.Getenv("TUNNELSERVER")
+
 	//back <- fmt.Sprintf("Connect to %s", target)
 	log.Debugf("tls.Dial to %s", target)
-	egress, err := tls.Dial("tcp", target, config) // *Conn
+	//egress, err := tls.Dial("tcp", target, config) // *Conn
+
+	tcpConn, err := net.Dial("tcp", target)
+	if err != nil {
+		log.Errorf("Error dialing TCP: %s", err.Error())
+		back <- err.Error()
+		back <- "error"
+		return
+	}
+
+	// Type assert to *net.TCPConn and set NoDelay
+	tcpTCPConn, ok := tcpConn.(*net.TCPConn)
+	if !ok {
+		log.Errorf("Failed to assert net.Conn to *net.TCPConn")
+		back <- err.Error()
+		back <- "error"
+		return
+	}
+	err = tcpTCPConn.SetNoDelay(true)
+	if err != nil {
+		log.Errorf("Error setting TCP_NODELAY: %s", err.Error())
+		back <- err.Error()
+		back <- "error"
+		return
+	}
+
+	egress := tls.Client(tcpConn, config)
+
 	if err != nil {
 		log.Errorf("Error in tls.Dial: %s", err.Error())
 		// back <- err.Error()

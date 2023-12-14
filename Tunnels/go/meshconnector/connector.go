@@ -10,7 +10,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/gob"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -59,6 +58,9 @@ type Virtcon struct {
 var pingCounter = 0
 var ackCounter = 0
 var pingLock sync.RWMutex
+
+var messagesCapacity = 16
+var readBufferSize = 16 * 4096
 
 func DoUpdate(portalUrl string) error {
 
@@ -236,8 +238,11 @@ func pipe(conmap map[int]*Virtcon,
 		}
 	}()
 	// start a goroutine that writes into socket from conn.inbound
+	arena := make([]byte, readBufferSize*(4 + messagesCapacity))
+	index := 0
 	for {
-		buff := make([]byte, 4096)
+		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
+		index = (index + 1) % (4 +  messagesCapacity)
 		n, err := egress.Read(buff)
 		mu.RLock()
 		conn, ok := conmap[id]
@@ -277,7 +282,7 @@ func pipe(conmap map[int]*Virtcon,
 }
 
 func MultiplexWriter(messages chan protocol.TransmissionUnit,
-	enc *gob.Encoder, ingress net.Conn) {
+	ingress net.Conn) {
 	for {
 		buff, ok := <-messages
 		if !ok {
@@ -285,7 +290,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 			return
 		}
 
-		err := enc.Encode(buff)
+		err := protocol.WriteToTunnel(&buff, ingress)
 		if err != nil {
 			log.Errorf("Error in encoder: %s", err.Error())
 			if ingress != nil {
@@ -294,7 +299,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 		}
 	}
 }
-func Pinger(enc *gob.Encoder, ingress net.Conn, wake chan int) {
+func Pinger(ingress net.Conn, wake chan int) {
 	var ping protocol.TransmissionUnit
 	// log.Infof("In Pinger")
 	ping.Action = protocol.Ping
@@ -322,7 +327,7 @@ func Pinger(enc *gob.Encoder, ingress net.Conn, wake chan int) {
 
 		log.Debugf("Ping %d", curr)
 
-		err := enc.Encode(ping)
+		err := protocol.WriteToTunnel(&ping, ingress)
 		if err != nil {
 			ingress.Close()
 			if !strings.Contains(err.Error(), "closed network connection ") {
@@ -344,19 +349,18 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 	var mu sync.RWMutex
 	defer ingress.Close()
 
-	dec := gob.NewDecoder(ingress)
-	enc := gob.NewEncoder(ingress)
-
-	messages := make(chan protocol.TransmissionUnit, 100)
-	go MultiplexWriter(messages, enc, ingress)
+	messages := make(chan protocol.TransmissionUnit, messagesCapacity)
+	go MultiplexWriter(messages, ingress)
 
 	wake := make(chan int, 1)
-	go Pinger(enc, ingress, wake)
+	go Pinger(ingress, wake)
 
+	st := make([]byte, protocol.ProtocolChunkSize)
 	for {
 		var buff protocol.TransmissionUnit
-		//		log.Info("Wait in Decode")
-		err := dec.Decode(&buff)
+		_,  err := protocol.ReadFull(ingress, st, 9)
+
+		protocol.GetTransmissionUnit(st, &buff, ingress)
 
 		if err != nil {
 
@@ -377,6 +381,8 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			for key := range conmap {
 				conmap[key].sock.Close()
 				conmap[key].sock = nil
+			}
+			for key := range conmap {
 				delete(conmap, key)
 			}
 			mu.Unlock()

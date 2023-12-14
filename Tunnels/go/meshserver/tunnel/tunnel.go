@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
-	"encoding/gob"
 	"encoding/pem"
 	"fmt"
 	"io"
@@ -14,7 +13,9 @@ import (
 	"strings"
 	"sync"
 	"time"
-
+	"net/http"
+	_ "net/http/pprof"
+	_"github.com/felixge/fgprof"
 	"dymium.com/dymium/log"
 	"dymium.com/meshserver/types"
 	"dymium.com/server/protocol"
@@ -24,7 +25,8 @@ import (
 
 var psqlInfo string
 var db *sql.DB
-
+var messagesCapacity = 16
+var readBufferSize = 16 * 4096
 const (
 	CloseTimeout = iota
 	UpdateTimeout
@@ -109,7 +111,7 @@ func printCode(code int) string {
 	default: return "Unknown"
 	}
 }
-func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *gob.Encoder, dec *gob.Decoder,
+func remotepipe(customer string, messages chan protocol.TransmissionUnit,
 	egress net.Conn, conmap map[int]*Virtcon, counter chan int, mu *sync.RWMutex,
 	listeners []*net.TCPListener) {
 
@@ -145,12 +147,12 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 		}
 	}(updates)
 
-	go func(messages chan protocol.TransmissionUnit, enc *gob.Encoder) {
+	go func(messages chan protocol.TransmissionUnit, egress net.Conn) {
 		for {
 			tosend := <-messages
 			//displayBuff( fmt.Sprintf("Send to connection %d: ", tosend.Id), tosend.Data)
 			//log.Debugf("Id: %d, Action: %s", tosend.Id, printCode(tosend.Action))
-			err := enc.Encode(tosend)
+			err := protocol.WriteToTunnel(&tosend, egress)
 			if err != nil {
 				log.ErrorTenantf(customer, "Error in Encode: %s", err.Error())
 				return
@@ -161,10 +163,13 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit, enc *g
 			} */
 		}
 
-	}(messages, enc)
+	}(messages, egress)
+	st := make([]byte, protocol.ProtocolChunkSize)
 	for {
 		var buff protocol.TransmissionUnit
-		err := dec.Decode(&buff)
+		_,  err := protocol.ReadFull(egress, st, 9)
+
+		protocol.GetTransmissionUnit(st, &buff, egress)
 
 		if err != nil {
 			if err == io.EOF {
@@ -247,9 +252,11 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 	log.Infof("send open to id=%d for %s", id, connectionString)
 	out := protocol.TransmissionUnit{Action: protocol.Open, Id: id, Data: []byte(connectionString)}
 	messages <- out
-
+	arena := make([]byte, readBufferSize*(4 + messagesCapacity))
+	index := 0
 	for {
-		buff := make([]byte, 4096)
+		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
+		index = (index + 1) % (4 +  messagesCapacity)
 		n, err := ingress.Read(buff)
 		mu.RLock()
 		conn, ok := conmap[id]
@@ -322,10 +329,7 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 	var conmap = make(map[int]*Virtcon)
 	var mu sync.RWMutex
 
-	messages := make(chan protocol.TransmissionUnit, 50)
-
-	dec := gob.NewDecoder(egress)
-	enc := gob.NewEncoder(egress)
+	messages := make(chan protocol.TransmissionUnit, messagesCapacity)
 
 	counter := make(chan int, 1)
 	go func(counter chan int) {
@@ -348,7 +352,7 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 		if err != nil {
 			log.ErrorTenantf(customer, "Error creating listener for %s %s, connector %s, tunnel %s; %s", tg[0], tg[1], tg[2], tg[3], err.Error())
 			e := protocol.TransmissionUnit{Action: protocol.Error, Id: 0, Data: []byte("Could not create a listener, probably another connector running")}
-			enc.Encode(e)
+			protocol.WriteToTunnel(&e, egress)
 			time.Sleep(2 * time.Second)
 			for _, l := range listeners {
 				l.Close()
@@ -369,7 +373,7 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 	}
 
 	// read and write from and to connector over tls
-	go remotepipe(customer, messages, enc, dec, egress, conmap, counter, &mu, listeners)
+	go remotepipe(customer, messages,  egress, conmap, counter, &mu, listeners)
 
 }
 
@@ -595,6 +599,10 @@ func Server(address string, port int, customer string,
 	var pkey []byte
 	initDB(dbDomain, dbPort, dbUsername, dbPassword, dbName, usetls)
 	//go logBandwidth(customer)
+	//http.DefaultServeMux.Handle("/debug/fgprof", fgprof.Handler())
+	go func() {
+		http.ListenAndServe(":6060", nil)
+	}()
 
 	pipes = make(map[string]*TunnelPipe)
 

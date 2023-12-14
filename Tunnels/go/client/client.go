@@ -287,7 +287,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 	mu.RUnlock()
 	//write out result
 	messages <- out
-	arena := make([]byte, readBufferSize*(2 * messagesCapacity))
+	arena := make([]byte, readBufferSize*(4 +  messagesCapacity))
 	index := 0
 
 	for {
@@ -501,7 +501,7 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 
 	connectionCounter := 0
 
-	messages := make(chan protocol.TransmissionUnit)
+	messages := make(chan protocol.TransmissionUnit, messagesCapacity)
 	go MultiplexWriter(messages, egress)
 	go MultiplexReader(egress, conmap, messages, &mu)
 
