@@ -238,11 +238,11 @@ func pipe(conmap map[int]*Virtcon,
 		}
 	}()
 	// start a goroutine that writes into socket from conn.inbound
-	arena := make([]byte, readBufferSize*(4 + messagesCapacity))
+	arena := make([]byte, readBufferSize*(4+messagesCapacity))
 	index := 0
 	for {
 		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
-		index = (index + 1) % (4 +  messagesCapacity)
+		index = (index + 1) % (4 + messagesCapacity)
 		n, err := egress.Read(buff)
 		mu.RLock()
 		conn, ok := conmap[id]
@@ -309,15 +309,15 @@ func Pinger(ingress net.Conn, wake chan int) {
 		case <-wake:
 			log.Debug("Pinger exited")
 			return
-		case <-time.After(20 * time.Second):
+		case <-time.After(120 * time.Second):
 		}
 		pingLock.RLock()
 		diff := pingCounter - ackCounter
 		pingLock.RUnlock()
-		if diff > 2 {
+		if diff > 20 {
 			log.Errorf("Ping ack missing: %d %d, close ingress", pingCounter, ackCounter)
-			ingress.Close()
-			continue
+			//ingress.Close()
+			//continue
 		}
 		pingLock.Lock()
 		ping.Id = pingCounter
@@ -325,7 +325,7 @@ func Pinger(ingress net.Conn, wake chan int) {
 		pingCounter++
 		pingLock.Unlock()
 
-		log.Debugf("Ping %d", curr)
+		log.Debugf("Send Ping %d", curr)
 
 		err := protocol.WriteToTunnel(&ping, ingress)
 		if err != nil {
@@ -353,12 +353,12 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 	go MultiplexWriter(messages, ingress)
 
 	wake := make(chan int, 1)
-	go Pinger(ingress, wake)
+	//go Pinger(ingress, wake)
 
 	st := make([]byte, protocol.ProtocolChunkSize)
 	for {
 		var buff protocol.TransmissionUnit
-		_,  err := protocol.ReadFull(ingress, st, 9)
+		_, err := protocol.ReadFull(ingress, st, 9)
 
 		protocol.GetTransmissionUnit(st, &buff, ingress)
 
@@ -379,8 +379,10 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			log.Debug("Sent wake to pinger")
 			mu.Lock()
 			for key := range conmap {
-				conmap[key].sock.Close()
-				conmap[key].sock = nil
+				if conmap[key].sock != nil {
+					conmap[key].sock.Close()
+					conmap[key].sock = nil
+				}
 			}
 			for key := range conmap {
 				delete(conmap, key)
@@ -395,8 +397,10 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			log.Errorf("Server returned error: %s", string(buff.Data))
 			mu.Lock()
 			for key := range conmap {
-				conmap[key].sock.Close()
-				conmap[key].sock = nil
+				if conmap[key].sock != nil {
+					conmap[key].sock.Close()
+					conmap[key].sock = nil
+				}
 				delete(conmap, key)
 			}
 			mu.Unlock()
@@ -459,13 +463,33 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 		}
 	}
 
+	host, _, err := net.SplitHostPort(tunnelserver)
 	config := &tls.Config{
 		RootCAs:      caCertPool,
 		Certificates: []tls.Certificate{*clientCert},
+		ServerName:   host,
 	}
 
-	log.Infof("tls.Dial %s", tunnelserver)
-	egress, err := tls.Dial("tcp", tunnelserver, config) // *Conn
+	tcpConn, err := net.Dial("tcp", tunnelserver)
+	if err != nil {
+		log.Errorf("Error dialing TCP: %s", err.Error())
+		return nil, err
+	}
+
+	// Type assert to *net.TCPConn and set NoDelay
+	tcpTCPConn, ok := tcpConn.(*net.TCPConn)
+	if !ok {
+		log.Errorf("Failed to assert net.Conn to *net.TCPConn")
+		return nil, err
+	}
+	err = tcpTCPConn.SetNoDelay(true)
+	if err != nil {
+		log.Errorf("Error setting TCP_NODELAY: %s", err.Error())
+		return nil, err
+	}
+
+	egress := tls.Client(tcpConn, config)
+
 	if err != nil {
 		log.Errorf("Error connecting to %s: %s", tunnelserver, err.Error())
 		return nil, err

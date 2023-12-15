@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export LOG_LEVEL=Info
+export LOG_LEVEL=Debug
 export PORTAL=https://portal.dymium.local:3001/
 export CONNECTOR=4a87fb02-f76c-4a0d-82b1-cfdcc23bdb6b
 export KEY=QtWHYSxMFeXG

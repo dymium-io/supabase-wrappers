@@ -8,17 +8,18 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"net/http"
-	_ "net/http/pprof"
-	_"github.com/felixge/fgprof"
+
 	"dymium.com/dymium/log"
 	"dymium.com/meshserver/types"
 	"dymium.com/server/protocol"
+	_ "github.com/felixge/fgprof"
 	_ "github.com/lib/pq"
 	"golang.org/x/net/context"
 )
@@ -27,6 +28,7 @@ var psqlInfo string
 var db *sql.DB
 var messagesCapacity = 16
 var readBufferSize = 16 * 4096
+
 const (
 	CloseTimeout = iota
 	UpdateTimeout
@@ -36,6 +38,30 @@ type Virtcon struct {
 	sock   net.Conn
 	tenant string
 	target string
+	queue  chan *protocol.TransmissionUnit
+}
+
+func (vc *Virtcon) process(customer string) {
+	var buff *protocol.TransmissionUnit
+	for {
+		buff = <-vc.queue
+
+		switch buff.Action {
+
+		case protocol.Close:
+			log.Debugf("protocol.Close for id=%d", buff.Id)
+			vc.sock.Close()
+		case protocol.Send:
+			_, err := vc.sock.Write(buff.Data)
+			if err != nil {
+				log.ErrorTenantf(customer, "Write to local socket(%d) error: %s", buff.Id, err.Error())
+				vc.sock.Close()
+			} else {
+				// log.DebugTenantf(customer, "Wrote %d bytes to descriptor %d", len(buff.Data), buff.Id)
+			}
+		}
+	}
+
 }
 
 type TunnelPipe struct {
@@ -54,15 +80,15 @@ type TunnelUpdate struct {
 }
 
 /*
-func displayBuff(what string, buff []byte) {
-	if len(buff) > 32 {
-		head := buff[:16]
-		tail := buff[len(buff)-16:]
-		log.Debugf("%s head: %v, tail: %v", what, head, tail)
-	} else {
-		log.Debugf("%s buffer: %v", what, buff)
+	func displayBuff(what string, buff []byte) {
+		if len(buff) > 32 {
+			head := buff[:16]
+			tail := buff[len(buff)-16:]
+			log.Debugf("%s head: %v, tail: %v", what, head, tail)
+		} else {
+			log.Debugf("%s buffer: %v", what, buff)
+		}
 	}
-}
 */
 func initDB(host, nport, user, password, dbname, usetls string) error {
 	psqlInfo = fmt.Sprintf("host=%s port=%s user=%s "+
@@ -102,20 +128,26 @@ func createListener(customer, target, sport string) (*net.TCPListener, error) {
 
 func printCode(code int) string {
 	switch code {
-	case 	protocol.Close: return "Close"
-	case protocol.Open: return "Open"
-	case protocol.Send: return "Send"
-	case protocol.Ping: return "Ping"
-	case protocol.Error: return "Error"
-	case protocol.Version: return "Version"
-	default: return "Unknown"
+	case protocol.Close:
+		return "Close"
+	case protocol.Open:
+		return "Open"
+	case protocol.Send:
+		return "Send"
+	case protocol.Ping:
+		return "Ping"
+	case protocol.Error:
+		return "Error"
+	case protocol.Version:
+		return "Version"
+	default:
+		return "Unknown"
 	}
 }
 func remotepipe(customer string, messages chan protocol.TransmissionUnit,
 	egress net.Conn, conmap map[int]*Virtcon, counter chan int, mu *sync.RWMutex,
 	listeners []*net.TCPListener) {
-
-
+/*
 	updates := make(chan int, 10)
 
 	// timeout for no data from the connector
@@ -131,7 +163,6 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit,
 					log.DebugTenantf(customer, "Got update, close timeout")
 					return
 				}
-				log.DebugTenantf(customer, "Got update, reset timeout")
 				lasttime = time.Now()
 			case <-time.After(90 * time.Second):
 				if time.Since(lasttime) > 90*time.Second {
@@ -146,7 +177,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit,
 			}
 		}
 	}(updates)
-
+*/
 	go func(messages chan protocol.TransmissionUnit, egress net.Conn) {
 		for {
 			tosend := <-messages
@@ -167,7 +198,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit,
 	st := make([]byte, protocol.ProtocolChunkSize)
 	for {
 		var buff protocol.TransmissionUnit
-		_,  err := protocol.ReadFull(egress, st, 9)
+		_, err := protocol.ReadFull(egress, st, 9)
 
 		protocol.GetTransmissionUnit(st, &buff, egress)
 
@@ -189,55 +220,26 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit,
 			for i := 0; i < len(listeners); i++ {
 				listeners[i].Close()
 			}
-			updates <- CloseTimeout
+			// updates <- CloseTimeout
 			return
 		}
 
 		switch buff.Action {
 		case protocol.Ping:
 			out := protocol.TransmissionUnit{Action: protocol.Ping, Id: buff.Id, Data: []byte{}}
-			//log.Debugf("Got ping, return ack %d", buff.Id)
+			log.Debugf("Got ping, return ack %d", buff.Id)
 			messages <- out
-			updates <- UpdateTimeout
-
+			// updates <- UpdateTimeout
 		case protocol.Open:
 			log.Debugf("protocol.Open. Should not happen")
-			updates <- UpdateTimeout
-		case protocol.Close:
-			log.Debugf("protocol.Close for id=%d", buff.Id)
-			mu.RLock()
-			conn, ok := conmap[buff.Id]
-			var ll int
-			if ok {
-				ll = len(conmap)-1
-			}
-			mu.RUnlock()
-			if ok {
-				log.InfoTenantf(customer, "Connection #%d closing, %d left", buff.Id, ll)
-				conn.sock.Close()
-				mu.Lock()
-				delete(conmap, buff.Id)
-				mu.Unlock()
-			} else {
-				log.Errorf("Error finding the descriptor %d, %v", buff.Id, buff)
-			}
-			updates <- CloseTimeout
-		case protocol.Send:
+			// updates <- UpdateTimeout
+		case protocol.Close, protocol.Send:
 			mu.RLock()
 			conn, ok := conmap[buff.Id]
 			mu.RUnlock()
-			//displayBuff("To database: ", buff.Data)
-			log.Debugf("Conn %d, write %d bytes", buff.Id, len(buff.Data))
-			updates <- UpdateTimeout
+			// updates <- UpdateTimeout
 			if ok {
-				_, err = conn.sock.Write(buff.Data)
-
-				if err != nil {
-					log.ErrorTenantf(customer, "Write to local socket(%d) error: %s", buff.Id, err.Error())
-					conn.sock.Close()
-				} else {
-					//log.DebugTenantf(customer, "Wrote to local socket(%d) bytes: %d", buff.Id, len(buff.Data))
-				}
+				conn.queue <- &buff
 			} else {
 				log.ErrorTenantf(customer, "Error finding the descriptor %d, %v", buff.Id, buff)
 			}
@@ -252,12 +254,13 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 	log.Infof("send open to id=%d for %s", id, connectionString)
 	out := protocol.TransmissionUnit{Action: protocol.Open, Id: id, Data: []byte(connectionString)}
 	messages <- out
-	arena := make([]byte, readBufferSize*(4 + messagesCapacity))
+	arena := make([]byte, readBufferSize*(4+messagesCapacity))
 	index := 0
 	for {
 		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
-		index = (index + 1) % (4 +  messagesCapacity)
+		index = (index + 1) % (4 + messagesCapacity)
 		n, err := ingress.Read(buff)
+		log.Debugf("Conn %d, read %d bytes from local", id, n)
 		mu.RLock()
 		conn, ok := conmap[id]
 		mu.RUnlock()
@@ -283,7 +286,7 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 		}
 		if n == 0 {
 			log.Infof("Read returned 0 bytes")
-		}		
+		}
 		log.Debugf("Conn %d, send %d bytes", id, n)
 		b := buff[:n]
 		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
@@ -315,6 +318,8 @@ func listenLocally(egress net.Conn, listener *net.TCPListener, customer string,
 		v.sock = ingress
 		v.target = connectionString
 		v.tenant = customer
+		v.queue = make(chan *protocol.TransmissionUnit, messagesCapacity)
+		go v.process(customer)
 
 		connectionCounter := <-counter
 		mu.Lock()
@@ -324,6 +329,7 @@ func listenLocally(egress net.Conn, listener *net.TCPListener, customer string,
 
 	}
 }
+
 func requestConnections(egress net.Conn, customer string, connections []string) {
 	// per connector
 	var conmap = make(map[int]*Virtcon)
@@ -373,7 +379,7 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 	}
 
 	// read and write from and to connector over tls
-	go remotepipe(customer, messages,  egress, conmap, counter, &mu, listeners)
+	go remotepipe(customer, messages, egress, conmap, counter, &mu, listeners)
 
 }
 
@@ -535,11 +541,7 @@ func overseer(customer string) {
 
 		}
 		var tunnels []TunnelUpdate
-		/*
-			type TunnelUpdate struct {
-				Cid string
-				Tid string
-		   } */
+
 		for id, c := range pipes {
 			for i := 0; i < len(c.tunnelid); i++ {
 				a := TunnelUpdate{id, c.tunnelid[i]}
@@ -550,7 +552,6 @@ func overseer(customer string) {
 
 		// send update to mark tunnels as used
 		UpdateTunnels(customer, tunnels)
-
 	}
 }
 
@@ -651,7 +652,7 @@ func Server(address string, port int, customer string,
 	}
 	connect := fmt.Sprintf("%s:%d", address, port)
 	log.Debugf("TLS listen on %s", connect)
-	ln, err := tls.Listen("tcp", connect, config)
+	ln, err := net.Listen("tcp", connect)
 
 	if err != nil {
 		log.Errorf("Error in tls.Listen: %s", err.Error())
@@ -659,37 +660,62 @@ func Server(address string, port int, customer string,
 	}
 	defer ln.Close()
 	go overseer(customer)
+	timeoutDuration := 15 * time.Second
 	for {
 		// call from a connector
-		egress, err := ln.Accept()
+		conn, err := ln.Accept()
 		if err != nil {
 			log.Errorf("Error in tls.Accept: %s", err.Error())
 			continue
 		}
 		log.Infof("Accepted call from a connector!")
 		// get the underlying tls connection
-		tlsConn, ok := egress.(*tls.Conn)
+		tcpConn, ok := conn.(*net.TCPConn)
 		if !ok {
-			log.Errorf("server: erm, this is not a tls conn")
-			continue
-		}
-		// perform handshake
-		if err := tlsConn.Handshake(); err != nil {
-			log.Errorf("Error during handshake: %s", err.Error())
+			log.Errorf("Not a TCP connection")
+			conn.Close()
 			continue
 		}
 
-		var connections []string
-		// get connection state and print some stuff
-		state := tlsConn.ConnectionState()
-		for _, cert := range state.PeerCertificates {
-			log.Debugf("Subject %s", cert.Subject)
-			for _, name := range cert.DNSNames {
-				log.Infof("Remote Connector requested: %s", name)
-				connections = append(connections, name)
-			}
+		// Set TCP_NODELAY
+		err = tcpConn.SetNoDelay(true)
+		if err != nil {
+			log.Errorf("Error setting TCP_NODELAY: %s", err.Error())
+			conn.Close()
+			continue
 		}
-		log.Debugf("Go to requestConnections")
-		go requestConnections(egress, customer, connections)
+    	// Set keep-alive period
+    	tcpConn.SetKeepAlive(true)
+
+	    // Set the timeout
+    	tcpConn.SetKeepAlivePeriod(2 * time.Minute)
+
+		go func(tcpConn *net.TCPConn) {
+			// Wrap with TLS
+			egress := tls.Server(tcpConn, config)
+			// perform handshake
+			egress.SetDeadline(time.Now().Add(timeoutDuration))
+			err = egress.Handshake()
+			egress.SetDeadline(time.Time{})
+			if err != nil {
+				log.Errorf("client: error during handshake, error: %s", err.Error())
+				return
+			}
+
+			var connections []string
+			// get connection state and print some stuff
+			state := egress.ConnectionState()
+			for _, cert := range state.PeerCertificates {
+				log.Debugf("Subject %s", cert.Subject)
+				for _, name := range cert.DNSNames {
+					log.Infof("Remote Connector requested: %s", name)
+					connections = append(connections, name)
+				}
+			}
+			log.Debugf("Go to requestConnections")
+			go requestConnections(egress, customer, connections)
+
+		}(tcpConn)
+
 	}
 }
