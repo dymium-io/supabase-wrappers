@@ -451,26 +451,19 @@ func GetRestrictions(schema string) (int, int, int, int, int, int, int, error) {
 	if err != nil {
 		return connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels, err
 	}
-	sql = `select count(*) from ` + schema + `.tables where action='Block'`
+	sql = `select count(id) from ` + schema + `.tables where action='block'`
 	row = db.QueryRow(sql)
 	err = row.Scan(&blocked)
 	if err != nil {
 		return connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels, err
 	}
-	sql = `select count(*) from ` + schema + `.tables where action='Obfuscate'`
+	sql = `select count(id) from ` + schema + `.tables where action='obfuscate'`
 	row = db.QueryRow(sql)
 	err = row.Scan(&obfuscated)
 	if err != nil {
 		return connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels, err
 	}
-	sql = `select count(*) from ` + schema + `.tables where action='Redact'`
-	row = db.QueryRow(sql)
-	err = row.Scan(&redacted)
-	if err != nil {
-		return connections, datascopes, blocked, obfuscated, redacted, connectors, tunnels, err
-	}
-
-	sql = `select count(*) from ` + schema + `.tables where action='Redact'`
+	sql = `select count(id) from ` + schema + `.tables where action='redact'`
 	row = db.QueryRow(sql)
 	err = row.Scan(&redacted)
 	if err != nil {
