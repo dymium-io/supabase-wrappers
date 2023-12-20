@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type DbConnectDto struct {
@@ -149,6 +150,23 @@ var connTypesURL = map[types.ConnectionType]string{
 }
 
 func (cl *JdbcClient) sendRequest(path string) ([]byte, error) {
+	maxRetryAttempts := 3
+	var err error
+	for i := 0; i < maxRetryAttempts; i++ {
+		log.Infof("Sending request to %s", path)
+		var responseBytes []byte
+		responseBytes, err = cl.attemptSendRequest(path)
+		if err == nil {
+			return responseBytes, nil
+		}
+		time.Sleep(2 * time.Second) // Wait before retrying
+	}
+
+	// If the code reaches this point, all retry attempts have failed, so return the last error
+	return nil, fmt.Errorf("failed after %d retry attempts: %w", maxRetryAttempts, err)
+}
+
+func (cl *JdbcClient) attemptSendRequest(path string) ([]byte, error) {
 	postPayload := DbConnectDto{
 		DbType:     cl.SourceType,
 		Host:       cl.Host,
