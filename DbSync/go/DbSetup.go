@@ -256,26 +256,32 @@ func configureDatabase(db *sql.DB,
 		k1 string
 		k2 string
 	}
-	shortEntries := map[tuple]struct{}{}
+	shortEntries := make(map[tuple]int)
 	longSchemas := map[tuple]struct{}{}
-	shortSchemas := map[string]struct{}{}
 	for k := range datascope.Schemas {
 		s := &datascope.Schemas[k]
-		shortSchemas[s.Name] = struct{}{}
 		for m := range s.Tables {
 			t := s.Tables[m]
-			se := tuple{k1: s.Name, k2: t.Name}
-			if m > 0 && t.Name == s.Tables[m-1].Name {
-				delete(shortEntries, se)
-			} else {
-				shortEntries[se] = struct{}{}
-			}
+			se := tuple{k1: PostgresEscape(s.Name), k2: PostgresEscape(t.Name)}
+			shortEntries[se]++
 			c := connections[t.Connection].Name
 			longSchemas[tuple{k1: c, k2: s.Name}] = struct{}{}
-			if s.Name == "public" {
-				shortSchemas[c] = struct{}{}
+		}
+	}
+	{
+		toDel := make([]tuple, 0, len(longSchemas))
+		for se, n := range shortEntries {
+			if n > 0 {
+				toDel = append(toDel, se)
 			}
 		}
+		for _, se := range toDel {
+			delete(shortEntries, se)
+		}
+	}
+	shortSchemas := map[string]struct{}{}
+	for se := range shortEntries {
+		shortSchemas[se.k1] = struct{}{}
 	}
 
 	ctx := context.Background()
@@ -339,13 +345,13 @@ func configureDatabase(db *sql.DB,
 
 		opts := options(c.Database_type)
 
-		sql := `CREATE SERVER ` + c.Name + `_server FOREIGN DATA WRAPPER ` + e + ` OPTIONS (` +
+		sql := `CREATE SERVER ` + serverName(c.Name) + ` FOREIGN DATA WRAPPER ` + e + ` OPTIONS (` +
 			opts.server(c.Address, c.Port, c.Dbname) + `)`
 		if err := exec(sql); err != nil {
 			return err
 		}
-		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.servers (server) VALUES ( $1 )", c.Name+"_server"); err != nil {
-			return rollback(err, "Registering server "+c.Name+"_server failed")
+		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.servers (server) VALUES ( $1 )", serverName(c.Name)); err != nil {
+			return rollback(err, "Registering server "+serverName(c.Name)+" failed")
 		}
 		cred, ok := credentials[c.Id]
 		if !ok {
@@ -355,10 +361,10 @@ func configureDatabase(db *sql.DB,
 
 		{
 			// Don't use exec(), because sql contains password
-			sql := fmt.Sprintf(`CREATE USER MAPPING FOR public SERVER `+c.Name+`_server OPTIONS (%s)`,
+			sql := fmt.Sprintf(`CREATE USER MAPPING FOR public SERVER `+serverName(c.Name)+` OPTIONS (%s)`,
 				opts.userMapping(cred.User_name, cred.Password))
 			if _, err := tx.ExecContext(ctx, sql); err != nil {
-				errSql := fmt.Sprintf(`CREATE USER MAPPING FOR public SERVER `+c.Name+`_server OPTIONS (%s)`,
+				errSql := fmt.Sprintf(`CREATE USER MAPPING FOR public SERVER `+serverName(c.Name)+` OPTIONS (%s)`,
 					opts.userMapping(cred.User_name, "******"))
 				return rollback(err, "["+errSql+"] failed")
 			}
@@ -366,32 +372,33 @@ func configureDatabase(db *sql.DB,
 	}
 
 	for k := range shortSchemas {
-		if err := exec("CREATE SCHEMA IF NOT EXISTS " + PostgresEscape(strings.ToLower(k))); err != nil {
+		// k is already PostgresEscaped!
+		if err := exec("CREATE SCHEMA IF NOT EXISTS " + k); err != nil {
 			return err
 		}
-		if err := exec("GRANT USAGE ON SCHEMA " + PostgresEscape(strings.ToLower(k)) + " TO " + localUser); err != nil {
+		if err := exec("GRANT USAGE ON SCHEMA " + k + " TO " + localUser); err != nil {
 			return err
 		}
-		if err := exec("ALTER DEFAULT PRIVILEGES IN SCHEMA " + PostgresEscape(strings.ToLower(k)) + " GRANT SELECT ON TABLES TO " + localUser); err != nil {
+		if err := exec("ALTER DEFAULT PRIVILEGES IN SCHEMA " + k + " GRANT SELECT ON TABLES TO " + localUser); err != nil {
 			return err
 		}
-		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", PostgresEscape(strings.ToLower(k))); err != nil {
-			return rollback(err, "Registering schema "+strings.ToLower(k)+"_server failed")
+		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", k); err != nil {
+			return rollback(err, "Registering schema "+k+" failed")
 		}
 	}
 	for k := range longSchemas {
-		kk := strings.ToLower(k.k1 + "_" + k.k2)
-		if err := exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %q", kk)); err != nil {
+		kk := PostgresEscape(k.k1 + "_" + k.k2)
+		if err := exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", kk)); err != nil {
 			return err
 		}
-		if err := exec(fmt.Sprintf("GRANT USAGE ON SCHEMA %q TO %s", kk, localUser)); err != nil {
+		if err := exec(fmt.Sprintf("GRANT USAGE ON SCHEMA %s TO %s", kk, localUser)); err != nil {
 			return err
 		}
-		if err := exec(fmt.Sprintf("ALTER DEFAULT PRIVILEGES IN SCHEMA %q GRANT SELECT ON TABLES TO %s", kk, localUser)); err != nil {
+		if err := exec(fmt.Sprintf("ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT SELECT ON TABLES TO %s", kk, localUser)); err != nil {
 			return err
 		}
 		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", kk); err != nil {
-			return rollback(err, "Registering schema "+kk+"_server failed")
+			return rollback(err, "Registering schema "+kk+" failed")
 		}
 	}
 
@@ -401,9 +408,13 @@ func configureDatabase(db *sql.DB,
 			t := &s.Tables[m]
 			con := connections[t.Connection]
 			hiddenTblName := fmt.Sprintf("_dymium._%x_", sha256.Sum224([]byte(datascope.Name+s.Name+t.Name)))
-			// hiddenViewName := fmt.Sprintf("_dymium._%x_", sha256.Sum224([]byte(datascope.Name+s.Name+t.Name+"_VIEW")))
 			hiddenTblCols, viewDef := make([]string, 0, len(t.Columns)), make([]string, 0, len(t.Columns))
+			isDuplicate := findDuplicates(t.Columns, func(c types.Column) string { return c.Name })
 			for k := range t.Columns {
+				pesc := PostgresEscape
+				if isDuplicate[k] {
+					pesc = LiteralEscape
+				}
 				c := &t.Columns[k]
 				{
 					t := c.Typ
@@ -411,7 +422,7 @@ func configureDatabase(db *sql.DB,
 						t = "bytea"
 					}
 
-					v := `"` + c.Name + `" ` + t
+					v := LiteralEscape(c.Name) + ` ` + t
 					if !c.IsNullable {
 						v += " NOT NULL"
 					}
@@ -421,11 +432,11 @@ func configureDatabase(db *sql.DB,
 				case types.DH_Block:
 				case types.DH_Redact:
 					if c.IsNullable {
-						viewDef = append(viewDef, "CAST(NULL AS "+c.Typ+") AS "+SqlEscape(c.Name, con.Database_type))
+						viewDef = append(viewDef, "CAST(NULL AS "+c.Typ+") AS "+pesc(c.Name))
 					} else if strings.HasSuffix(c.Typ, "[]") {
-						viewDef = append(viewDef, "CAST('{}' AS "+c.Typ+") AS "+SqlEscape(c.Name, con.Database_type))
+						viewDef = append(viewDef, "CAST('{}' AS "+c.Typ+") AS "+pesc(c.Name))
 					} else {
-						viewDef = append(viewDef, "CAST("+redact_value(c.Typ)+" AS "+c.Typ+") AS "+SqlEscape(c.Name, con.Database_type))
+						viewDef = append(viewDef, "CAST("+redact_value(c.Typ)+" AS "+c.Typ+") AS "+pesc(c.Name))
 					}
 				case types.DH_Obfuscate:
 					var v string
@@ -433,16 +444,16 @@ func configureDatabase(db *sql.DB,
 						switch {
 						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
 							n, k := obf("obfuscate_text_array")
-							v = fmt.Sprintf(`_dymium.%s(%s,"%s",0,false) AS %s`,
-								n, k, c.Name, SqlEscape(c.Name, con.Database_type))
+							v = fmt.Sprintf(`_dymium.%s(%s,%s,0,false) AS %s`,
+								n, k, LiteralEscape(c.Name), pesc(c.Name))
 						case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
 							n, k := obf("obfuscate_text_array")
-							v = fmt.Sprintf(`_dymium.%s(%s,"%s",0,true) AS %s`,
-								n, k, c.Name, SqlEscape(c.Name, con.Database_type))
+							v = fmt.Sprintf(`_dymium.%s(%s,%s,0,true) AS %s`,
+								n, k, LiteralEscape(c.Name), pesc(c.Name))
 						case strings.HasPrefix(c.Typ, "uuid"):
 							n, k := obf("obfuscate_uuid_array")
-							v = fmt.Sprintf(`_dymium.%s(%s,"%s") AS %s`,
-								n, k, c.Name, SqlEscape(c.Name, con.Database_type))
+							v = fmt.Sprintf(`_dymium.%s(%s,%s) AS %s`,
+								n, k, LiteralEscape(c.Name), pesc(c.Name))
 						default:
 							panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
 						}
@@ -450,23 +461,23 @@ func configureDatabase(db *sql.DB,
 						switch {
 						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
 							n, k := obf("obfuscate_text")
-							v = fmt.Sprintf(`_dymium.%s(%s,"%s",0,false) AS %s`,
-								n, k, c.Name, SqlEscape(c.Name, con.Database_type))
+							v = fmt.Sprintf(`_dymium.%s(%s,%s,0,false) AS %s`,
+								n, k, LiteralEscape(c.Name), pesc(c.Name))
 						case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
 							n, k := obf("obfuscate_text")
-							v = fmt.Sprintf(`_dymium.%s(%s,"%s",0,true) AS %s`,
-								n, k, c.Name, SqlEscape(c.Name, con.Database_type))
+							v = fmt.Sprintf(`_dymium.%s(%s,%s,0,true) AS %s`,
+								n, k, LiteralEscape(c.Name), pesc(c.Name))
 						case strings.HasPrefix(c.Typ, "uuid"):
 							n, k := obf("obfuscate_uuid")
-							v = fmt.Sprintf(`_dymium.%s(%s,"%s") AS %s`,
-								n, k, c.Name, SqlEscape(c.Name, con.Database_type))
+							v = fmt.Sprintf(`_dymium.%s(%s,%s) AS %s`,
+								n, k, LiteralEscape(c.Name), pesc(c.Name))
 						default:
 							panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
 						}
 					}
 					viewDef = append(viewDef, v)
 				case types.DH_Allow:
-					viewDef = append(viewDef, `"`+c.Name+`" AS `+SqlEscape(c.Name, con.Database_type))
+					viewDef = append(viewDef, LiteralEscape(c.Name)+` AS `+pesc(c.Name))
 				}
 			}
 			//con := connections[t.Connection]
@@ -481,7 +492,7 @@ func configureDatabase(db *sql.DB,
 
 			hiddenTbl := "CREATE FOREIGN TABLE " + hiddenTblName + " (\n" +
 				strings.Join(hiddenTblCols, ",\n") +
-				"\n) SERVER " + con.Name + "_server OPTIONS(" + opts.table(schemaname, t.Name) + ");\n"
+				"\n) SERVER " + serverName(con.Name) + " OPTIONS(" + opts.table(schemaname, t.Name) + ");\n"
 			view :=
 				fmt.Sprintf("CREATE VIEW %%s.%s AS SELECT %s FROM %s;\n",
 					PostgresEscape(t.Name),
@@ -493,7 +504,7 @@ func configureDatabase(db *sql.DB,
 			}
 
 			schs := []string{con.Name + "_" + s.Name}
-			if _, ok := shortEntries[tuple{k1: s.Name, k2: t.Name}]; ok {
+			if _, ok := shortEntries[tuple{k1: PostgresEscape(s.Name), k2: PostgresEscape(t.Name)}]; ok {
 				if s.Name == "public" {
 					schs = append(schs, "public", con.Name)
 				} else {
@@ -501,7 +512,7 @@ func configureDatabase(db *sql.DB,
 				}
 			}
 			for _, sch := range schs {
-				if err := exec(fmt.Sprintf(view, PostgresEscape(strings.ToLower(sch)))); err != nil {
+				if err := exec(fmt.Sprintf(view, PostgresEscape(sch))); err != nil {
 					return err
 				}
 			}
@@ -516,17 +527,29 @@ func configureDatabase(db *sql.DB,
 }
 
 func esc(str string) string {
-	var buf strings.Builder
-	for _, char := range str {
-		switch char {
-		case '\\':
-			buf.WriteRune('\\')
-		case '\'':
-			buf.WriteRune('\\')
-		}
-		buf.WriteRune(char)
+	return ParamEscape(str)
+}
+
+func serverName(str string) string {
+	return str + "_server"
+}
+
+func findDuplicates[T any](items []T, getName func(T) string) []bool {
+	nameCount := make(map[string]int)
+	lowered := make([]string, len(items))
+
+	for k, item := range items {
+		name := getName(item)
+		lowered[k] = strings.ToLower(name)
+		nameCount[lowered[k]]++
 	}
-	return buf.String()
+
+	result := make([]bool, len(items))
+	for k := range result {
+		result[k] = nameCount[lowered[k]] > 1
+	}
+
+	return result
 }
 
 func gen_obf_func() {

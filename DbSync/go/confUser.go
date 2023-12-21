@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+
 	_ "github.com/lib/pq"
 
 	"fmt"
@@ -51,7 +52,7 @@ func confUser(
 		} else {
 			defer db.Close()
 			userExists := false
-			if rows, err := db.Query(`select true from pg_roles where lower(oid::regrole::text) = lower($1)`,
+			if rows, err := db.Query(`select true from pg_roles where oid::regrole::text = $1`,
 				userCnf.Name); err != nil {
 				return empty, fmt.Errorf("Getting role: %v", err)
 			} else {
@@ -63,7 +64,7 @@ func confUser(
 			if rows, err := db.Query(`select r.oid::regrole::text as rolename from pg_roles r
                                                   join pg_auth_members m on m.roleid = oid
                                                   join pg_roles u on u.oid = m.member
-                                                  and lower(u.oid::regrole::text) = lower($1)
+                                                  and u.oid::regrole::text = $1
                                                   ORDER BY rolename`,
 				userCnf.Name); err != nil {
 				return empty, err
