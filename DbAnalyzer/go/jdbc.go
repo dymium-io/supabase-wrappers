@@ -159,7 +159,7 @@ func (cl *JdbcClient) sendRequest(path string) ([]byte, error) {
 		if err == nil {
 			return responseBytes, nil
 		}
-		time.Sleep(2 * time.Second) // Wait before retrying
+		time.Sleep(4 * time.Second) // Wait before retrying
 	}
 
 	// If the code reaches this point, all retry attempts have failed, so return the last error
