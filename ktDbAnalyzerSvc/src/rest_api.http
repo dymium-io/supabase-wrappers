@@ -739,10 +739,68 @@ GET http://localhost:9200/nyc_restaurants/_settings
 Authorization: Basic ZWxhc3RpYzphZG1pbjEyMw==
 ###
 
-GET http://localhost:9200/_settings
-Authorization: Basic ZWxhc3RpYzphZG1pbjEyMw==
+GET http://localhost:9211/_settings
+Authorization: Basic ZWxhc3RpYzpJbG92ZWJ1bGJz
 ###
 
 GET http://localhost:9200/test_cluster/_settings
 Authorization: Basic ZWxhc3RpYzphZG1pbjEyMw==
+###
+
+
+
+POST http://localhost:8888/api/dbanalyzer/dbping
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbschemas
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/resturant_data
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbtables
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
 ###

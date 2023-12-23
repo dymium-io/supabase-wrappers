@@ -677,19 +677,19 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			}
 			possibleActions = allowable
 			sample[k] = dtk(true)
-		case "TIMESTAMP":
-			if d.cScale != nil && *d.cScale > 0 {
-				t = fmt.Sprintf("timestamp (%d) with time zone", *d.cScale)
-			} else {
-				t = "time with time zone"
-			}
-			possibleActions = allowable
-			sample[k] = dtk(true)
 		case "TIMESTAMP_WITH_TIMEZONE":
 			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 6 {
 				t = fmt.Sprintf("timestamp(%d) with time zone", *d.cLength)
 			} else {
 				t = "timestamp with time zone"
+			}
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "TIMESTAMP":
+			if d.cScale != nil && *d.cScale > 0 {
+				t = fmt.Sprintf("timestamp (%d) with time zone", *d.cScale)
+			} else {
+				t = "timestamp"
 			}
 			possibleActions = allowable
 			sample[k] = dtk(true)
