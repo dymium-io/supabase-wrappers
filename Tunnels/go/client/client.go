@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/rand"
@@ -14,10 +15,11 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
+	_ "net/http/pprof"
 	"os/signal"
 	"strings"
 	"syscall"
-	_ "net/http/pprof"
+
 	"dymium.com/client/ca"
 	"dymium.com/client/content"
 	"dymium.com/client/installer"
@@ -279,14 +281,14 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool, forceupdate
 	return back.LoginURL
 }
 
-func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[int]net.Conn, token string, id int, mu *sync.RWMutex) {
+func pipe(ingress net.Conn, messages chan *protocol.TransmissionUnit, conmap map[int]net.Conn, token string, id int, mu *sync.RWMutex) {
 	out := protocol.TransmissionUnit{Action: protocol.Open, Id: id, Data: []byte(token)}
 
 	mu.RLock()
 	log.Debugf("Create proxy connection %d, number of connections %d", id, len(conmap))
 	mu.RUnlock()
 	//write out result
-	messages <- out
+	messages <- &out
 	arena := make([]byte, readBufferSize*(4 +  messagesCapacity))
 	index := 0
 
@@ -311,7 +313,7 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 			ingress.Close()
 			// log.Debugf("Read %d bytes from local connection #%d", n, id)
 			back := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
-			messages <- back
+			messages <- &back
 			return
 		}
 		b := buff[:n]
@@ -319,11 +321,11 @@ func pipe(ingress net.Conn, messages chan protocol.TransmissionUnit, conmap map[
 
 		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
 		//write out result
-		messages <- out
+		messages <- &out
 	}
 }
 
-func MultiplexWriter(messages chan protocol.TransmissionUnit, egress net.Conn) {
+func MultiplexWriter(messages chan *protocol.TransmissionUnit, egress net.Conn) {
 	for {
 		buff, ok := <-messages
 		if !ok {
@@ -332,21 +334,28 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit, egress net.Conn) {
 			return
 		}
 		// log.Debugf("Action %d, Encode %d bytes into SSL channel", buff.Action, len(buff.Data))
-		err := protocol.WriteToTunnel(&buff, egress)
+		err := protocol.WriteToTunnel(buff, egress)
 
 		if err != nil {
 			log.Errorf("Error writing into tunnel %s", err.Error())
 		}
 	}
 }
-func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, messages chan protocol.TransmissionUnit, mu *sync.RWMutex) {
+func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, messages chan *protocol.TransmissionUnit, mu *sync.RWMutex) {
+	reader := bufio.NewReader(egress)
 	st := make([]byte, protocol.ProtocolChunkSize)
+	arena := make([]byte, readBufferSize*(4+messagesCapacity))
+	index := 0
+
 	for {
 		var buff protocol.TransmissionUnit
-		_,  err := protocol.ReadFull(egress, st, 9)
+		b := arena[index*readBufferSize : (index+1)*readBufferSize]
+		index = (index + 1) % (4 + messagesCapacity)
+
+		_,  err := io.ReadFull(reader, st)
 		
 		if err == nil {
-			err = protocol.GetTransmissionUnit(st, &buff, egress)
+			err = protocol.GetBufferedTransmissionUnit(st, &buff, b, reader)
 
 		}
 		// log.Debugf("Read from tunnel %d bytes, action: %d, buffer len %d", n, buff.Action, len(buff.Data))
@@ -359,7 +368,7 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, messages chan pro
 			mu.Lock()
 			for key := range conmap {
 				back := protocol.TransmissionUnit{Action: protocol.Close, Id: key, Data: nil}
-				messages <- back
+				messages <- &back
 				conmap[key].Close()
 				delete(conmap, key)
 			}
@@ -401,7 +410,7 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, messages chan pro
 					mu.Lock()
 					delete(conmap, buff.Id)
 					mu.Unlock()
-					messages <- back
+					messages <- &back
 				}
 			}
 		}
@@ -501,7 +510,7 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 
 	connectionCounter := 0
 
-	messages := make(chan protocol.TransmissionUnit, messagesCapacity)
+	messages := make(chan *protocol.TransmissionUnit, messagesCapacity)
 	go MultiplexWriter(messages, egress)
 	go MultiplexReader(egress, conmap, messages, &mu)
 

@@ -1,6 +1,7 @@
 package tunnel
 
 import (
+	"bufio"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -11,15 +12,16 @@ import (
 	"net"
 	_ "net/http"
 	_ "net/http/pprof"
-	_ "github.com/felixge/fgprof"
 	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
 	"dymium.com/dymium/log"
 	"dymium.com/server/gotypes"
 	"dymium.com/server/protocol"
+	_ "github.com/felixge/fgprof"
 	"github.com/golang-jwt/jwt"
 	"github.com/redis/go-redis/v9"
 )
@@ -272,7 +274,7 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 	}
 }
 
-func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.TransmissionUnit, id int, token string, mu *sync.RWMutex) {
+func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan *protocol.TransmissionUnit, id int, token string, mu *sync.RWMutex) {
 	arena := make([]byte, readBufferSize*(4 + messagesCapacity))
 	index := 0
 	for {
@@ -304,7 +306,7 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 			}
 			egress.Close()
 			out := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
-			messages <- out
+			messages <- &out
 
 			if ok {
 				conn.LogDownstream(0, true)
@@ -323,11 +325,11 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan protocol.Trans
 		//log.Printf("Send to client %d bytes, connection %d", n, id)
 		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
 		//write out result
-		messages <- out
+		messages <- &out
 	}
 }
 
-func MultiplexWriter(messages chan protocol.TransmissionUnit, 
+func MultiplexWriter(messages chan *protocol.TransmissionUnit, 
 	ingress net.Conn, conmap map[int]*Virtcon) {
 	for {
 		buff, ok := <-messages
@@ -336,7 +338,7 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 			return
 		}
 		// log.Debugf("In Write: Action: %d,\n%s\n", buff.Action, string(buff.Data) )
-		err := protocol.WriteToTunnel(&buff, ingress)
+		err := protocol.WriteToTunnel(buff, ingress)
 		if err != nil {
 			if strings.Contains(err.Error(), "closed network connection") {
 				log.Debugf("Error in writer: %s", err.Error())
@@ -352,20 +354,25 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 
 
 func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort string) {
+	reader := bufio.NewReader(ingress)
 	var conmap = make(map[int]*Virtcon)
 	var mu sync.RWMutex
 	claim := &gotypes.Claims{}
 
-	messages := make(chan protocol.TransmissionUnit, messagesCapacity)
+	messages := make(chan *protocol.TransmissionUnit, messagesCapacity)
 	go MultiplexWriter(messages, ingress, conmap)
 
 	// totalUpstream := 0
 	st := make([]byte, protocol.ProtocolChunkSize)
+	arena := make([]byte, readBufferSize*(4+messagesCapacity))
+	index := 0
 	for {
 		var buff protocol.TransmissionUnit
-		_,  err := protocol.ReadFull(ingress, st, 9)
+		b := arena[index*readBufferSize : (index+1)*readBufferSize]
+		index = (index + 1) % (4 + messagesCapacity)
+		_,  err := io.ReadFull(reader, st)
 
-		protocol.GetTransmissionUnit(st, &buff, ingress)
+		protocol.GetBufferedTransmissionUnit(st, &buff, b, reader)
 		
 
 		if err != nil {
@@ -423,7 +430,7 @@ func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort
 			egress, err := getTargetConnection(targetHost, customer, postgresPort)
 			if err != nil {
 				log.ErrorUserf(conn.tenant, conn.session, conn.email, conn.groups, conn.roles, "Error connecting to target %s", err.Error())
-				messages <- protocol.TransmissionUnit{Action: protocol.Close, Id: buff.Id, Data: nil}
+				messages <- &protocol.TransmissionUnit{Action: protocol.Close, Id: buff.Id, Data: nil}
 				return
 			}
 			conn.sock = egress

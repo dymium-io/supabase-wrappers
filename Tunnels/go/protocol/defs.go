@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"bufio"
 	"encoding/binary"
 	"io"
 	"net"
@@ -57,32 +58,32 @@ func ReadFull(conn net.Conn, buf []byte, length int) (int, error) {
 }
 
 func WriteToTunnel(buff *TransmissionUnit, conn net.Conn) error {
-	b := int8(buff.Action)
+    b := int8(buff.Action)
     err := binary.Write(conn, binary.BigEndian, &b ) 
 	if err != nil {
-		return err
-	}
-	i := int32(buff.Id)
+        return err
+    }
+i := int32(buff.Id)
     err = binary.Write(conn, binary.BigEndian, &i ) 
 	if err != nil {
-		return err
-	}
-	var l int32
-	d := buff.Data
+        return err
+    }
+var l int32
+    d := buff.Data
 	if d != nil {
-		l = int32(len(d))
-	}
-	err = binary.Write(conn, binary.BigEndian, &l ) 
+        l = int32(len(d))
+    }
+    err = binary.Write(conn, binary.BigEndian, &l ) 
 	if err != nil {
-		return err
-	}
-	if d != nil {
-		_, err := conn.Write(buff.Data)
+        return err
+    }
+if d != nil {
+        _, err := conn.Write(buff.Data)
 		if err != nil {
-			return err
-		}	
-	}
-	return nil
+            return err
+        }
+    }
+return nil
 }
 
 func GetTransmissionUnit(st []byte, buff *TransmissionUnit, ingress net.Conn) error {
@@ -92,6 +93,19 @@ func GetTransmissionUnit(st []byte, buff *TransmissionUnit, ingress net.Conn) er
 	if l > 0 {
 		buff.Data = make([]byte, l)
 		_, err := ReadFull(ingress, buff.Data, l)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func GetBufferedTransmissionUnit(st []byte, buff *TransmissionUnit, b []byte, ingress *bufio.Reader) error {
+	buff.Action = int(st[0])
+	buff.Id = int(binary.BigEndian.Uint32(st[1:5]))
+	l := int(binary.BigEndian.Uint32(st[5:9]))
+	if l > 0 {
+		buff.Data = b[:l]
+		_, err := io.ReadFull(ingress, buff.Data)
 		if err != nil {
 			return err
 		}

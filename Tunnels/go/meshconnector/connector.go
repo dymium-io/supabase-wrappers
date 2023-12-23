@@ -195,7 +195,7 @@ func generateCSR(customer string) ([]byte, error) {
 	return out, nil
 }
 
-func pipe(conmap map[int]*Virtcon,
+func ReaderFromDb(conmap map[int]*Virtcon,
 	messages chan protocol.TransmissionUnit, id int,
 	token string, mu *sync.RWMutex, customer string) {
 
@@ -205,7 +205,7 @@ func pipe(conmap map[int]*Virtcon,
 	//runtime.GC()
 	log.InfoTenantf(customer, "Creating connection #%d to db at %s, total #=%d", id, token, l)
 
-	egress, err := net.Dial("tcp", token)
+	dbside, err := net.Dial("tcp", token)
 
 	if err != nil {
 		log.ErrorTenantf(customer, "Error connecting to target:  %s, send close back", err.Error())
@@ -218,7 +218,7 @@ func pipe(conmap map[int]*Virtcon,
 	mu.Lock()
 	conn, ok := conmap[id] // todo process ok
 	if ok {
-		conn.sock = egress
+		conn.sock = dbside
 	}
 	mu.Unlock()
 	if !ok {
@@ -243,7 +243,7 @@ func pipe(conmap map[int]*Virtcon,
 	for {
 		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
 		index = (index + 1) % (4 + messagesCapacity)
-		n, err := egress.Read(buff)
+		n, err := dbside.Read(buff)
 		mu.RLock()
 		conn, ok := conmap[id]
 		mu.RUnlock()
@@ -267,7 +267,7 @@ func pipe(conmap map[int]*Virtcon,
 				conn.sock = nil
 			}
 			mu.Unlock()
-			egress.Close()
+			dbside.Close()
 			out := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 			messages <- out
 
@@ -281,8 +281,8 @@ func pipe(conmap map[int]*Virtcon,
 	}
 }
 
-func MultiplexWriter(messages chan protocol.TransmissionUnit,
-	ingress net.Conn) {
+func WriterToService(messages chan protocol.TransmissionUnit,
+	serviceside net.Conn) {
 	for {
 		buff, ok := <-messages
 		if !ok {
@@ -290,16 +290,16 @@ func MultiplexWriter(messages chan protocol.TransmissionUnit,
 			return
 		}
 
-		err := protocol.WriteToTunnel(&buff, ingress)
+		err := protocol.WriteToTunnel(&buff, serviceside)
 		if err != nil {
 			log.Errorf("Error in encoder: %s", err.Error())
-			if ingress != nil {
-				ingress.Close()
+			if serviceside != nil {
+				serviceside.Close()
 			}
 		}
 	}
 }
-func Pinger(ingress net.Conn, wake chan int) {
+func Pinger(serviceside net.Conn, wake chan int) {
 	var ping protocol.TransmissionUnit
 	// log.Infof("In Pinger")
 	ping.Action = protocol.Ping
@@ -315,8 +315,8 @@ func Pinger(ingress net.Conn, wake chan int) {
 		diff := pingCounter - ackCounter
 		pingLock.RUnlock()
 		if diff > 20 {
-			log.Errorf("Ping ack missing: %d %d, close ingress", pingCounter, ackCounter)
-			//ingress.Close()
+			log.Errorf("Ping ack missing: %d %d, close serviceside", pingCounter, ackCounter)
+			//serviceside.Close()
 			//continue
 		}
 		pingLock.Lock()
@@ -327,9 +327,9 @@ func Pinger(ingress net.Conn, wake chan int) {
 
 		log.Debugf("Send Ping %d", curr)
 
-		err := protocol.WriteToTunnel(&ping, ingress)
+		err := protocol.WriteToTunnel(&ping, serviceside)
 		if err != nil {
-			ingress.Close()
+			serviceside.Close()
 			if !strings.Contains(err.Error(), "closed network connection ") {
 				log.Errorf("Ping failed: %s", err.Error())
 			}
@@ -342,28 +342,27 @@ func InformParentOfUpdate() {
 	http.Get(":" + port + "/upgrade")
 	log.Info("Overseer contacted")
 }
-func PassTraffic(ingress *tls.Conn, customer string) {
+
+func ReaderServiceSide(serviceside *tls.Conn, customer string, messages chan protocol.TransmissionUnit) {
 	updateStatus("active")
 
 	var conmap = make(map[int]*Virtcon)
 	var mu sync.RWMutex
-	defer ingress.Close()
+	defer serviceside.Close()
 
-	messages := make(chan protocol.TransmissionUnit, messagesCapacity)
-	go MultiplexWriter(messages, ingress)
+
 
 	wake := make(chan int, 1)
-	//go Pinger(ingress, wake)
+	//go Pinger(serviceside, wake)
 
 	st := make([]byte, protocol.ProtocolChunkSize)
 	for {
 		var buff protocol.TransmissionUnit
-		_, err := protocol.ReadFull(ingress, st, 9)
+		_, err := protocol.ReadFull(serviceside, st, 9)
 
-		protocol.GetTransmissionUnit(st, &buff, ingress)
+		protocol.GetTransmissionUnit(st, &buff, serviceside)
 
 		if err != nil {
-
 			if err == io.EOF {
 				log.Errorf("Customer %s, read from connector failed '%s', cleanup the proxy connection!",
 					customer, err.Error())
@@ -420,7 +419,7 @@ func PassTraffic(ingress *tls.Conn, customer string) {
 			conmap[buff.Id] = conn
 			mu.Unlock()
 
-			go pipe(conmap, messages, buff.Id, string(buff.Data), &mu, customer)
+			go ReaderFromDb(conmap, messages, buff.Id, string(buff.Data), &mu, customer)
 		case protocol.Close:
 			mu.RLock()
 			conn, ok := conmap[buff.Id]
@@ -463,7 +462,7 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 		}
 	}
 
-	host, _, err := net.SplitHostPort(tunnelserver)
+	host, _, _ := net.SplitHostPort(tunnelserver)
 	config := &tls.Config{
 		RootCAs:      caCertPool,
 		Certificates: []tls.Certificate{*clientCert},
@@ -488,7 +487,7 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 		return nil, err
 	}
 
-	egress := tls.Client(tcpConn, config)
+	dbside := tls.Client(tcpConn, config)
 
 	if err != nil {
 		log.Errorf("Error connecting to %s: %s", tunnelserver, err.Error())
@@ -496,7 +495,7 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 	}
 
 	log.Info("Connected to Dymium!")
-	state := egress.ConnectionState()
+	state := dbside.ConnectionState()
 
 	log.Debugf("Certificate chain:")
 
@@ -507,9 +506,9 @@ func CreateTunnel(tunnelserver string, clientCert *tls.Certificate) (*tls.Conn, 
 		log.Debugf("   i:/C=%v/ST=%v/L=%v/O=%v/OU=%v/CN=%s", issuer.Country, issuer.Province, issuer.Locality, issuer.Organization, issuer.OrganizationalUnit, issuer.CommonName)
 	}
 	log.Info("Tunnel created")
-	return egress, nil
+	return dbside, nil
 }
-func handleSignal(ingress *tls.Conn, x chan int) {
+func handleSignal(serviceside *tls.Conn, x chan int) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
 	select {
@@ -527,7 +526,7 @@ func handleSignal(ingress *tls.Conn, x chan int) {
 		}
 		interrupted = true
 
-		ingress.Close()
+		serviceside.Close()
 	case <-x:
 		return
 	}
@@ -553,7 +552,7 @@ func updateStatus(updown string) {
 	portal := os.Getenv("PORTAL")
 	urlStr := fmt.Sprintf("%sapi/connectorstatus", portal)
 
-	req, err := http.NewRequest("POST", urlStr, bytes.NewBuffer(js))
+	req, _ := http.NewRequest("POST", urlStr, bytes.NewBuffer(js))
 	req.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -564,7 +563,10 @@ func updateStatus(updown string) {
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
-
+	if err != nil {
+		log.Errorf("Update Status failed: %s", err.Error())
+		return
+	}
 	if resp.StatusCode != 200 {
 		log.Errorf("Update Status failed: Invalid response %d from %s: %s", resp.StatusCode, urlStr, string(body))
 		return
@@ -572,7 +574,7 @@ func updateStatus(updown string) {
 	log.Infof("Status updated %s", updown)
 
 }
-func DoConnect() {
+func ConnectToService() {
 	// -------------------
 	customer := os.Getenv("CUSTOMER")
 	pingLock.Lock()
@@ -682,14 +684,17 @@ func DoConnect() {
 
 	tunnelserver := os.Getenv("TUNNELSERVER")
 
-	ingress, err := CreateTunnel(tunnelserver, &clientCert)
+	serviceside, err := CreateTunnel(tunnelserver, &clientCert)
 	if err != nil {
 		log.Infof("CreateTunnel failed, %s", err.Error())
 		return
 	}
 	x := make(chan int, 1)
-	go handleSignal(ingress, x)
-	PassTraffic(ingress, customer)
+	go handleSignal(serviceside, x)
+	messages := make(chan protocol.TransmissionUnit, messagesCapacity)
+	go WriterToService(messages, serviceside)
+
+	ReaderServiceSide(serviceside, customer, messages)
 	x <- 1
 	log.Debug("Woke up signal handler")
 	updateStatus("configured")
@@ -707,7 +712,7 @@ func main() {
 
 		for {
 			log.Infof("Worker started, version %s", protocol.MeshServerVersion)
-			DoConnect()
+			ConnectToService()
 			if interrupted {
 				log.Debug("Exiting on interrupt")
 				break

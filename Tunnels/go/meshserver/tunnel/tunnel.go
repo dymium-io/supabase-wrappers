@@ -38,13 +38,13 @@ type Virtcon struct {
 	sock   net.Conn
 	tenant string
 	target string
-	queue  chan *protocol.TransmissionUnit
+	messagesToDbGuardian  chan *protocol.TransmissionUnit
 }
 
-func (vc *Virtcon) process(customer string) {
+func (vc *Virtcon) sendToDbGuardian(customer string) {
 	var buff *protocol.TransmissionUnit
 	for {
-		buff = <-vc.queue
+		buff = <-vc.messagesToDbGuardian
 
 		switch buff.Action {
 
@@ -144,8 +144,25 @@ func printCode(code int) string {
 		return "Unknown"
 	}
 }
-func remotepipe(customer string, messages chan protocol.TransmissionUnit,
-	egress net.Conn, conmap map[int]*Virtcon, counter chan int, mu *sync.RWMutex,
+func WriterToConnector(messagesToConnector chan *protocol.TransmissionUnit, fromConnector net.Conn, customer string) {
+	for {
+		tosend := <-messagesToConnector
+		//displayBuff( fmt.Sprintf("Send to connection %d: ", tosend.Id), tosend.Data)
+		//log.Debugf("Id: %d, Action: %s", tosend.Id, printCode(tosend.Action))
+		err := protocol.WriteToTunnel(tosend, fromConnector)
+		if err != nil {
+			log.ErrorTenantf(customer, "Error in Encode: %s", err.Error())
+			return
+		} /* else {
+			if len(tosend.Data) > 0 {
+				//log.Debugf("sent %d bytes to connector", len(tosend.Data))
+			}
+		} */
+	}
+}
+
+func ReaderFromConnector(customer string, messagesToConnector chan *protocol.TransmissionUnit,
+	fromConnector net.Conn, conmap map[int]*Virtcon, counter chan int, mu *sync.RWMutex,
 	listeners []*net.TCPListener) {
 /*
 	updates := make(chan int, 10)
@@ -166,7 +183,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit,
 				lasttime = time.Now()
 			case <-time.After(90 * time.Second):
 				if time.Since(lasttime) > 90*time.Second {
-					egress.Close()
+					fromConnector.Close()
 					for range updates {
 						// Do nothing. Just clear the channel
 					}
@@ -178,29 +195,12 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit,
 		}
 	}(updates)
 */
-	go func(messages chan protocol.TransmissionUnit, egress net.Conn) {
-		for {
-			tosend := <-messages
-			//displayBuff( fmt.Sprintf("Send to connection %d: ", tosend.Id), tosend.Data)
-			//log.Debugf("Id: %d, Action: %s", tosend.Id, printCode(tosend.Action))
-			err := protocol.WriteToTunnel(&tosend, egress)
-			if err != nil {
-				log.ErrorTenantf(customer, "Error in Encode: %s", err.Error())
-				return
-			} /* else {
-				if len(tosend.Data) > 0 {
-					//log.Debugf("sent %d bytes to connector", len(tosend.Data))
-				}
-			} */
-		}
-
-	}(messages, egress)
 	st := make([]byte, protocol.ProtocolChunkSize)
 	for {
 		var buff protocol.TransmissionUnit
-		_, err := protocol.ReadFull(egress, st, 9)
+		_, err := protocol.ReadFull(fromConnector, st, 9)
 
-		protocol.GetTransmissionUnit(st, &buff, egress)
+		protocol.GetTransmissionUnit(st, &buff, fromConnector)
 
 		if err != nil {
 			if err == io.EOF {
@@ -216,7 +216,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit,
 				delete(conmap, key)
 			}
 			mu.Unlock()
-			egress.Close()
+			fromConnector.Close()
 			for i := 0; i < len(listeners); i++ {
 				listeners[i].Close()
 			}
@@ -228,7 +228,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit,
 		case protocol.Ping:
 			out := protocol.TransmissionUnit{Action: protocol.Ping, Id: buff.Id, Data: []byte{}}
 			log.Debugf("Got ping, return ack %d", buff.Id)
-			messages <- out
+			messagesToConnector <- &out
 			// updates <- UpdateTimeout
 		case protocol.Open:
 			log.Debugf("protocol.Open. Should not happen")
@@ -239,7 +239,7 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit,
 			mu.RUnlock()
 			// updates <- UpdateTimeout
 			if ok {
-				conn.queue <- &buff
+				conn.messagesToDbGuardian <- &buff
 			} else {
 				log.ErrorTenantf(customer, "Error finding the descriptor %d, %v", buff.Id, buff)
 			}
@@ -247,19 +247,19 @@ func remotepipe(customer string, messages chan protocol.TransmissionUnit,
 	}
 }
 
-func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.TransmissionUnit,
+func ReaderFromDbGuardian(fromDbGuardian net.Conn, fromConnector net.Conn, messagesToConnector chan *protocol.TransmissionUnit,
 	conmap map[int]*Virtcon, id int, connectionString string, mu *sync.RWMutex) {
 
 	// open connection on the other side
 	log.Infof("send open to id=%d for %s", id, connectionString)
 	out := protocol.TransmissionUnit{Action: protocol.Open, Id: id, Data: []byte(connectionString)}
-	messages <- out
+	messagesToConnector <- &out
 	arena := make([]byte, readBufferSize*(4+messagesCapacity))
 	index := 0
 	for {
 		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
 		index = (index + 1) % (4 + messagesCapacity)
-		n, err := ingress.Read(buff)
+		n, err := fromDbGuardian.Read(buff)
 		log.Debugf("Conn %d, read %d bytes from local", id, n)
 		mu.RLock()
 		conn, ok := conmap[id]
@@ -275,12 +275,12 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 					} else {
 						log.Errorf("Local read failed '%s', id:%d", err.Error(), id)
 					}
-					ingress.Close()
+					fromDbGuardian.Close()
 				}
 			}
-			//egress.Close()
+			//fromConnector.Close()
 			out := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
-			messages <- out
+			messagesToConnector <- &out
 			return
 
 		}
@@ -291,18 +291,18 @@ func localpipe(ingress net.Conn, egress net.Conn, messages chan protocol.Transmi
 		b := buff[:n]
 		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
 		//write out result
-		messages <- out
+		messagesToConnector <- &out
 	}
 }
 
-func listenLocally(egress net.Conn, listener *net.TCPListener, customer string,
-	connectionString string, messages chan protocol.TransmissionUnit,
+func ListenToDbGuardian(fromConnector *tls.Conn, listener *net.TCPListener, customer string,
+	connectionString string, messagesToConnector chan *protocol.TransmissionUnit,
 	conmap map[int]*Virtcon, counter chan int, mu *sync.RWMutex, localport string) {
 
 	listener.SetDeadline(time.Now().Add(30 * time.Second))
 	log.Infof("Listener waits for local connection for %s on :%s", connectionString, localport)
 	for {
-		ingress, err := listener.Accept() //*TCPConn
+		fromDbGuardian, err := listener.Accept() //*TCPConn
 		if err, ok := err.(*net.OpError); ok && err.Timeout() {
 			listener.SetDeadline(time.Now().Add(30 * time.Second))
 			continue
@@ -315,27 +315,27 @@ func listenLocally(egress net.Conn, listener *net.TCPListener, customer string,
 
 		log.Infof("accepted local connection for %s", connectionString)
 		v := Virtcon{}
-		v.sock = ingress
+		v.sock = fromDbGuardian
 		v.target = connectionString
 		v.tenant = customer
-		v.queue = make(chan *protocol.TransmissionUnit, messagesCapacity)
-		go v.process(customer)
+		v.messagesToDbGuardian = make(chan *protocol.TransmissionUnit, messagesCapacity)
+		go v.sendToDbGuardian(customer)
 
 		connectionCounter := <-counter
 		mu.Lock()
 		conmap[connectionCounter] = &v
 		mu.Unlock()
-		go localpipe(ingress, egress, messages, conmap, connectionCounter, connectionString, mu)
+		go ReaderFromDbGuardian(fromDbGuardian, fromConnector, messagesToConnector, conmap, connectionCounter, connectionString, mu)
 
 	}
 }
-
-func requestConnections(egress net.Conn, customer string, connections []string) {
+// Provision listener sockets on the network local to DbGuardian
+func RequestListeners(fromConnector *tls.Conn, customer string, connections []string) {
 	// per connector
 	var conmap = make(map[int]*Virtcon)
 	var mu sync.RWMutex
 
-	messages := make(chan protocol.TransmissionUnit, messagesCapacity)
+	messagesToConnector := make(chan *protocol.TransmissionUnit, messagesCapacity)
 
 	counter := make(chan int, 1)
 	go func(counter chan int) {
@@ -348,7 +348,7 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 
 	var listeners []*net.TCPListener
 	var pipe TunnelPipe
-	pipe.sock = egress
+	pipe.sock = fromConnector
 
 	for i := 0; i < len(connections); i++ {
 		tg := strings.Split(connections[i], ",")
@@ -358,7 +358,7 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 		if err != nil {
 			log.ErrorTenantf(customer, "Error creating listener for %s %s, connector %s, tunnel %s; %s", tg[0], tg[1], tg[2], tg[3], err.Error())
 			e := protocol.TransmissionUnit{Action: protocol.Error, Id: 0, Data: []byte("Could not create a listener, probably another connector running")}
-			protocol.WriteToTunnel(&e, egress)
+			protocol.WriteToTunnel(&e, fromConnector)
 			time.Sleep(2 * time.Second)
 			for _, l := range listeners {
 				l.Close()
@@ -375,11 +375,12 @@ func requestConnections(egress net.Conn, customer string, connections []string) 
 		pipes[tg[2]] = &pipe
 		mupipes.Unlock()
 
-		go listenLocally(egress, listen, customer, tg[0], messages, conmap, counter, &mu, tg[1])
+		go ListenToDbGuardian(fromConnector, listen, customer, tg[0], messagesToConnector, conmap, counter, &mu, tg[1])
 	}
 
 	// read and write from and to connector over tls
-	go remotepipe(customer, messages, egress, conmap, counter, &mu, listeners)
+	go WriterToConnector(messagesToConnector, fromConnector, customer)
+	go ReaderFromConnector(customer, messagesToConnector, fromConnector, conmap, counter, &mu, listeners)
 
 }
 
@@ -536,9 +537,7 @@ func overseer(customer string) {
 					delete(pipes, id)
 					continue
 				}
-
 			}
-
 		}
 		var tunnels []TunnelUpdate
 
@@ -692,11 +691,11 @@ func Server(address string, port int, customer string,
 
 		go func(tcpConn *net.TCPConn) {
 			// Wrap with TLS
-			egress := tls.Server(tcpConn, config)
+			fromConnector := tls.Server(tcpConn, config)
 			// perform handshake
-			egress.SetDeadline(time.Now().Add(timeoutDuration))
-			err = egress.Handshake()
-			egress.SetDeadline(time.Time{})
+			fromConnector.SetDeadline(time.Now().Add(timeoutDuration))
+			err = fromConnector.Handshake()
+			fromConnector.SetDeadline(time.Time{})
 			if err != nil {
 				log.Errorf("client: error during handshake, error: %s", err.Error())
 				return
@@ -704,7 +703,7 @@ func Server(address string, port int, customer string,
 
 			var connections []string
 			// get connection state and print some stuff
-			state := egress.ConnectionState()
+			state := fromConnector.ConnectionState()
 			for _, cert := range state.PeerCertificates {
 				log.Debugf("Subject %s", cert.Subject)
 				for _, name := range cert.DNSNames {
@@ -712,8 +711,8 @@ func Server(address string, port int, customer string,
 					connections = append(connections, name)
 				}
 			}
-			log.Debugf("Go to requestConnections")
-			go requestConnections(egress, customer, connections)
+			log.Debugf("Go to RequestListeners")
+			go RequestListeners(fromConnector, customer, connections)
 
 		}(tcpConn)
 
