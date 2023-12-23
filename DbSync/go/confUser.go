@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"strings"
 
 	_ "github.com/lib/pq"
 
@@ -52,8 +53,9 @@ func confUser(
 		} else {
 			defer db.Close()
 			userExists := false
-			if rows, err := db.Query(`select true from pg_roles where oid::regrole::text = $1`,
-				userCnf.Name); err != nil {
+			escName := PostgresEscape(userCnf.Name)
+			if rows, err := db.Query(`SELECT true FROM pg_roles WHERE LOWER(oid::regrole::text) = LOWER($1)`,
+				escName); err != nil {
 				return empty, fmt.Errorf("Getting role: %v", err)
 			} else {
 				defer rows.Close()
@@ -61,12 +63,12 @@ func confUser(
 					userExists = true
 				}
 			}
-			if rows, err := db.Query(`select r.oid::regrole::text as rolename from pg_roles r
-                                                  join pg_auth_members m on m.roleid = oid
-                                                  join pg_roles u on u.oid = m.member
-                                                  and u.oid::regrole::text = $1
+			if rows, err := db.Query(`SELECT r.oid::regrole::text AS rolename FROM pg_roles r
+                                                  JOIN pg_auth_members m ON m.roleid = oid
+                                                  JOIN pg_roles u ON u.oid = m.member
+                                                  AND LOWER(u.oid::regrole::text) = LOWER($1)
                                                   ORDER BY rolename`,
-				userCnf.Name); err != nil {
+				escName); err != nil {
 				return empty, err
 			} else {
 				defer rows.Close()
@@ -78,7 +80,7 @@ func confUser(
 					if err = rows.Scan(&d); err != nil {
 						return empty, fmt.Errorf("Getting role: %v", err)
 					}
-					if d == userCnf.Name {
+					if strings.EqualFold(d, escName) {
 						userExists = true
 						continue
 					}
@@ -104,39 +106,39 @@ func confUser(
 				// log.Println("toAdd:", toAdd, "toDelete:", toDelete)
 				if !userExists {
 					_, err = db.Exec(fmt.Sprintf("CREATE USER %s WITH ENCRYPTED PASSWORD '%s'",
-						PostgresEscape(userCnf.Name), esc(userCnf.Password)))
+						escName, esc(userCnf.Password)))
 					if err != nil {
 						return empty, err
 					}
-					log.Printf("CREATing USER %s", PostgresEscape(userCnf.Name))
+					log.Printf("CREATing USER %s", escName)
 				} else {
 					_, err = db.Exec(fmt.Sprintf("ALTER USER %s WITH ENCRYPTED PASSWORD '%s'",
-						PostgresEscape(userCnf.Name), esc(userCnf.Password)))
+						escName, esc(userCnf.Password)))
 					if err != nil {
 						return empty, err
 					}
-					log.Printf("ALTERing USER %s", PostgresEscape(userCnf.Name))
+					log.Printf("ALTERing USER %s", escName)
 				}
 				for _, d := range toDelete {
-					_, err = db.Exec(fmt.Sprintf("REVOKE %s FROM %s", d, PostgresEscape(userCnf.Name)))
+					_, err = db.Exec(fmt.Sprintf("REVOKE %s FROM %s", d, escName))
 					if err != nil {
 						return empty, err
 					}
-					log.Printf("REVOKE %s FROM %s", d, PostgresEscape(userCnf.Name))
+					log.Printf("REVOKE %s FROM %s", d, escName)
 				}
 				for _, a := range toAdd {
-					_, err = db.Exec(fmt.Sprintf(`GRANT %s TO %s`, a.u, PostgresEscape(userCnf.Name)))
+					_, err = db.Exec(fmt.Sprintf(`GRANT %s TO %s`, a.u, escName))
 					if err != nil {
 						return empty, err
 					}
 					/*
 						_, err = db.Exec(fmt.Sprintf(`ALTER ROLE %s IN DATABASE %s SET ROLE TO %s`,
-							PostgresEscape(userCnf.Name), a.db, a.u))
+							escName, a.db, a.u))
 						if err != nil {
 							return empty, err
 						}
 					*/
-					log.Printf(`GRANT %s TO %s`, a.u, PostgresEscape(userCnf.Name))
+					log.Printf(`GRANT %s TO %s`, a.u, escName)
 				}
 			}
 		}

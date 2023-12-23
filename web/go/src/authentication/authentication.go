@@ -132,7 +132,7 @@ func GenerateUsernameString(n int) (string, error) {
 			return "", err
 		}
 		if i == 0 {
-			ret[i] = letters[10:][ num.Int64()]
+			ret[i] = letters[10:][num.Int64()]
 		} else {
 			ret[i] = letters[num.Int64()]
 		}
@@ -628,27 +628,28 @@ func UsernameFromEmail(email string) string {
 	username := strings.Split(email, "@")[0]
 
 	//!#$%&'*+-/=?^_`{|}~
-	replacer := strings.NewReplacer(
-		"!", "_",
-		"#", "_",
-		"$", "_",
-		"%", "_",
-		"&", "_",
-		"'", "_",
-		".", "_",
-		"*", "_",
-		"+", "_",
-		"-", "_",
-		"/", "=",
-		"?", "_",
-		"^", "_",
-		"`", "_",
-		"{", "_",
-		"|", "_",
-		"}", "_",
-		"~", "_")
-
-	username = replacer.Replace(username)
+	/*
+		replacer := strings.NewReplacer(
+			"!", "_",
+			"#", "_",
+			"$", "_",
+			"%", "_",
+			"&", "_",
+			"'", "_",
+			".", "_",
+			"*", "_",
+			"+", "_",
+			"-", "_",
+			"/", "=",
+			"?", "_",
+			"^", "_",
+			"`", "_",
+			"{", "_",
+			"|", "_",
+			"}", "_",
+			"~", "_")
+		username = replacer.Replace(username)
+	*/
 	username = strings.ToLower(username)
 	return username
 }
@@ -2995,7 +2996,7 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 		log.Debugf("AuthenticateAndPrepareMachineTunnel, groups: %v", groups)
 		token, err := GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s",
 			schema, name, "N/A", groups, []string{gotypes.RoleUser}, "unknown")
-		if err!= nil {
+		if err != nil {
 			log.Errorf("AuthenticateAndPrepareMachineTunnel, generate token error: %s", err.Error())
 			return []string{}, "", err
 		}
