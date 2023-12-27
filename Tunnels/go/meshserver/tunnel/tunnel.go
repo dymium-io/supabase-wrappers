@@ -1,6 +1,7 @@
 package tunnel
 
 import (
+	"bufio"
 	"crypto/tls"
 	"crypto/x509"
 	"database/sql"
@@ -8,8 +9,10 @@ import (
 	"fmt"
 	"io"
 	"net"
+	/*
 	"net/http"
 	_ "net/http/pprof"
+	*/
 	"os"
 	"strconv"
 	"strings"
@@ -27,7 +30,7 @@ import (
 var psqlInfo string
 var db *sql.DB
 var messagesCapacity = 16
-var readBufferSize = 16 * 4096
+var readBufferSize = 16 * 4096 // for whatever reason this is the sweetspotfor large loads
 
 const (
 	CloseTimeout = iota
@@ -35,10 +38,10 @@ const (
 )
 
 type Virtcon struct {
-	sock   net.Conn
-	tenant string
-	target string
-	messagesToDbGuardian  chan *protocol.TransmissionUnit
+	sock                 net.Conn
+	tenant               string
+	target               string
+	messagesToDbGuardian chan *protocol.TransmissionUnit
 }
 
 func (vc *Virtcon) sendToDbGuardian(customer string) {
@@ -145,11 +148,13 @@ func printCode(code int) string {
 	}
 }
 func WriterToConnector(messagesToConnector chan *protocol.TransmissionUnit, fromConnector net.Conn, customer string) {
+	    // Wrap the connection with a buffered writer
+	bw := bufio.NewWriter(fromConnector)
 	for {
 		tosend := <-messagesToConnector
 		//displayBuff( fmt.Sprintf("Send to connection %d: ", tosend.Id), tosend.Data)
 		//log.Debugf("Id: %d, Action: %s", tosend.Id, printCode(tosend.Action))
-		err := protocol.WriteToTunnel(tosend, fromConnector)
+		err := protocol.WriteBufferedToTunnel(tosend, bw, fromConnector)
 		if err != nil {
 			log.ErrorTenantf(customer, "Error in Encode: %s", err.Error())
 			return
@@ -164,43 +169,52 @@ func WriterToConnector(messagesToConnector chan *protocol.TransmissionUnit, from
 func ReaderFromConnector(customer string, messagesToConnector chan *protocol.TransmissionUnit,
 	fromConnector net.Conn, conmap map[int]*Virtcon, counter chan int, mu *sync.RWMutex,
 	listeners []*net.TCPListener) {
-/*
-	updates := make(chan int, 10)
+	/*
+	   updates := make(chan int, 10)
 
-	// timeout for no data from the connector
-	go func(updates chan int) {
-		lasttime := time.Now()
-		for {
-			select {
-			case what := <-updates:
-				if what == CloseTimeout {
-					for range updates {
-						// Do nothing. Just clear the channel
-					}
-					log.DebugTenantf(customer, "Got update, close timeout")
-					return
-				}
-				lasttime = time.Now()
-			case <-time.After(90 * time.Second):
-				if time.Since(lasttime) > 90*time.Second {
-					fromConnector.Close()
-					for range updates {
-						// Do nothing. Just clear the channel
-					}
-					log.ErrorTenantf(customer, "Error: connection timed out")
-					return
-				}
-				log.InfoTenantf(customer, "check timeout, all good!")
-			}
-		}
-	}(updates)
-*/
+	   // timeout for no data from the connector
+
+	   	go func(updates chan int) {
+	   		lasttime := time.Now()
+	   		for {
+	   			select {
+	   			case what := <-updates:
+	   				if what == CloseTimeout {
+	   					for range updates {
+	   						// Do nothing. Just clear the channel
+	   					}
+	   					log.DebugTenantf(customer, "Got update, close timeout")
+	   					return
+	   				}
+	   				lasttime = time.Now()
+	   			case <-time.After(90 * time.Second):
+	   				if time.Since(lasttime) > 90*time.Second {
+	   					fromConnector.Close()
+	   					for range updates {
+	   						// Do nothing. Just clear the channel
+	   					}
+	   					log.ErrorTenantf(customer, "Error: connection timed out")
+	   					return
+	   				}
+	   				log.InfoTenantf(customer, "check timeout, all good!")
+	   			}
+	   		}
+	   	}(updates)
+	*/
+	reader := bufio.NewReaderSize(fromConnector, 2*readBufferSize)
 	st := make([]byte, protocol.ProtocolChunkSize)
+	arena := make([]byte, readBufferSize*(4+messagesCapacity))
+	index := 0
+
 	for {
 		var buff protocol.TransmissionUnit
-		_, err := protocol.ReadFull(fromConnector, st, 9)
+		b := arena[index*readBufferSize : (index+1)*readBufferSize]
+		index = (index + 1) % (4 + messagesCapacity)
 
-		protocol.GetTransmissionUnit(st, &buff, fromConnector)
+		_, err := io.ReadFull(reader, st)
+		if err == nil {
+			err = protocol.GetBufferedTransmissionUnit(st, &buff, b, reader)
+		}
 
 		if err != nil {
 			if err == io.EOF {
@@ -329,6 +343,7 @@ func ListenToDbGuardian(fromConnector *tls.Conn, listener *net.TCPListener, cust
 
 	}
 }
+
 // Provision listener sockets on the network local to DbGuardian
 func RequestListeners(fromConnector *tls.Conn, customer string, connections []string) {
 	// per connector
@@ -600,10 +615,11 @@ func Server(address string, port int, customer string,
 	initDB(dbDomain, dbPort, dbUsername, dbPassword, dbName, usetls)
 	//go logBandwidth(customer)
 	//http.DefaultServeMux.Handle("/debug/fgprof", fgprof.Handler())
+	/*
 	go func() {
 		http.ListenAndServe(":6060", nil)
 	}()
-
+*/
 	pipes = make(map[string]*TunnelPipe)
 
 	v, _ := pem.Decode(keyPEMBlock)
@@ -683,11 +699,11 @@ func Server(address string, port int, customer string,
 			conn.Close()
 			continue
 		}
-    	// Set keep-alive period
-    	tcpConn.SetKeepAlive(true)
+		// Set keep-alive period
+		tcpConn.SetKeepAlive(true)
 
-	    // Set the timeout
-    	tcpConn.SetKeepAlivePeriod(2 * time.Minute)
+		// Set the timeout
+		tcpConn.SetKeepAlivePeriod(2 * time.Minute)
 
 		go func(tcpConn *net.TCPConn) {
 			// Wrap with TLS

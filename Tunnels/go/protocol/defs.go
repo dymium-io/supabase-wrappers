@@ -58,32 +58,69 @@ func ReadFull(conn net.Conn, buf []byte, length int) (int, error) {
 }
 
 func WriteToTunnel(buff *TransmissionUnit, conn net.Conn) error {
-    b := int8(buff.Action)
-    err := binary.Write(conn, binary.BigEndian, &b ) 
-	if err != nil {
+    // Wrap the connection with a buffered writer
+    bw := bufio.NewWriter(conn)
+
+    // Write Action directly
+    if err := bw.WriteByte(byte(buff.Action)); err != nil {
         return err
     }
-i := int32(buff.Id)
-    err = binary.Write(conn, binary.BigEndian, &i ) 
-	if err != nil {
+
+    // Write Id
+    if err := binary.Write(bw, binary.BigEndian, int32(buff.Id)); err != nil {
         return err
     }
-var l int32
-    d := buff.Data
-	if d != nil {
-        l = int32(len(d))
+
+    // Write length of Data field
+    var dataLength int32
+    if buff.Data != nil {
+        dataLength = int32(len(buff.Data))
     }
-    err = binary.Write(conn, binary.BigEndian, &l ) 
-	if err != nil {
+    if err := binary.Write(bw, binary.BigEndian, dataLength); err != nil {
         return err
     }
-if d != nil {
-        _, err := conn.Write(buff.Data)
-		if err != nil {
+
+    // Write the data field if it exists
+    if buff.Data != nil {
+        if _, err := bw.Write(buff.Data); err != nil {
             return err
         }
     }
-return nil
+
+    // Flush the buffered writer to send the data to the connection
+    return bw.Flush()
+}
+
+func WriteBufferedToTunnel(buff *TransmissionUnit, bw *bufio.Writer, conn net.Conn) error {
+
+    // Write Action directly
+    if err := bw.WriteByte(byte(buff.Action)); err != nil {
+        return err
+    }
+
+    // Write Id
+    if err := binary.Write(bw, binary.BigEndian, int32(buff.Id)); err != nil {
+        return err
+    }
+
+    // Write length of Data field
+    var dataLength int32
+    if buff.Data != nil {
+        dataLength = int32(len(buff.Data))
+    }
+    if err := binary.Write(bw, binary.BigEndian, dataLength); err != nil {
+        return err
+    }
+
+    // Write the data field if it exists
+    if buff.Data != nil {
+        if _, err := bw.Write(buff.Data); err != nil {
+            return err
+        }
+    }
+
+    // Flush the buffered writer to send the data to the connection
+    return bw.Flush()
 }
 
 func GetTransmissionUnit(st []byte, buff *TransmissionUnit, ingress net.Conn) error {

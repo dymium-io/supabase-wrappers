@@ -145,11 +145,10 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, messages chan *pr
 		index = (index + 1) % (4 + messagesCapacity)
 
 		_,  err := io.ReadFull(reader, st)
-		
 		if err == nil {
 			err = protocol.GetBufferedTransmissionUnit(st, &buff, b, reader)
-
 		}
+		
 		if err != nil {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				log.Infof("Tunnel is closed, shutting down...")

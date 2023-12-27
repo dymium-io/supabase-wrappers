@@ -42,5 +42,6 @@ export SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE:-jsonmessage}
 
 #./meshserver 
 
-LOCAL_SEARCH= go run -race main.go
+#LOCAL_SEARCH= go run -race main.go
 
+LOCAL_SEARCH=  ./meshserver
