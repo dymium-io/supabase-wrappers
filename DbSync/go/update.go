@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+
 	_ "github.com/lib/pq"
 
 	"fmt"
@@ -40,39 +41,39 @@ func doUpdate(
 				defer rows.Close()
 
 				if !rows.Next() {
-					sql := fmt.Sprintf("CREATE DATABASE %s OWNER %s", datascope.Name, cnf.GuardianUser)
+					sql := fmt.Sprintf("CREATE DATABASE %s OWNER %s", LiteralEscape(datascope.Name), cnf.GuardianUser)
 					log.Println(sql)
 					if _, err = db.Exec(sql); err != nil {
-						return empty, fmt.Errorf("%s connection: Can not create database %q: %v", a, datascope.Name, err)
+						return empty, fmt.Errorf("%s connection: Can not create database %s: %v", a, LiteralEscape(datascope.Name), err)
 					}
-					sql = fmt.Sprintf("REVOKE CONNECT ON DATABASE %s FROM PUBLIC", datascope.Name)
+					sql = fmt.Sprintf("REVOKE CONNECT ON DATABASE %s FROM PUBLIC", LiteralEscape(datascope.Name))
 					log.Println(sql)
 					if _, err = db.Exec(sql); err != nil {
-						return empty, fmt.Errorf("%s connection: Can not revoke access to database %s: %v", a, datascope.Name, err)
+						return empty, fmt.Errorf("%s connection: Can not revoke access to database %s: %v", a, LiteralEscape(datascope.Name), err)
 					}
 					sql = fmt.Sprintf("CREATE ROLE %s", localUser)
 					log.Println(sql)
 					if _, err = db.Exec(sql); err != nil {
 						return empty, fmt.Errorf("%s connection: Can not create role %s: %v", a, localUser, err)
 					}
-					sql = fmt.Sprintf("GRANT CONNECT ON DATABASE %s TO %s", datascope.Name, localUser)
+					sql = fmt.Sprintf("GRANT CONNECT ON DATABASE %s TO %s", LiteralEscape(datascope.Name), localUser)
 					log.Println(sql)
 					if _, err = db.Exec(sql); err != nil {
 						return empty, fmt.Errorf("%s connection: Can not grant connect on %s to %s: %v",
-							a, datascope.Name, localUser, err)
+							a, LiteralEscape(datascope.Name), localUser, err)
 					}
 				}
 			}
 		}
-		if db, err := sql.Open("postgres", fmt.Sprintf(connectStr, a, datascope.Name)); err != nil {
-			return empty, fmt.Errorf("%s connection: Cannot open connection to %q: %v", a, datascope.Name, err)
+		if db, err := sql.Open("postgres", fmt.Sprintf(connectStr, a, esc(datascope.Name))); err != nil {
+			return empty, fmt.Errorf("%s connection: Cannot open connection to %s: %v", a, LiteralEscape(datascope.Name), err)
 		} else {
 			defer db.Close()
 			if err = clearDatabase(db); err != nil {
-				return empty, fmt.Errorf("%s connection: Clearing %q: %v", a, datascope.Name, err)
+				return empty, fmt.Errorf("%s connection: Clearing %s: %v", a, LiteralEscape(datascope.Name), err)
 			}
 			if err = configureDatabase(db, datascope, *connections, *credentials, false); err != nil {
-				return empty, fmt.Errorf("%s connection: Configuring %q: %v", a, datascope.Name, err)
+				return empty, fmt.Errorf("%s connection: Configuring %s: %v", a, LiteralEscape(datascope.Name), err)
 			}
 		}
 	}

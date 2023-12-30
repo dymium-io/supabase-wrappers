@@ -5,12 +5,14 @@ import (
 	"os"
 
 	"database/sql"
+
 	_ "github.com/lib/pq"
 
 	"crypto/sha256"
 
-	"dymium.com/dymium/log"
 	"fmt"
+
+	"dymium.com/dymium/log"
 
 	"aws"
 	"initializer/types"
@@ -49,7 +51,7 @@ func main() {
 		datascope := &customerData.Datascopes[k]
 		if db, err := sql.Open("postgres", fmt.Sprintf("host=/var/run/postgresql dbname='%s' user='%s' sslmode=disable",
 			esc(datascope.Name), esc(user))); err != nil {
-			log.Fatal(fmt.Sprintf("sql.Open(...,%s,%s): %v", datascope.Name, user, err))
+			log.Fatal(fmt.Sprintf("sql.Open(...,%s,%s): %v", LiteralEscape(datascope.Name), user, err))
 		} else {
 			defer db.Close()
 			if err = configureDatabase(db, datascope, connections, credentials, true); err != nil {
@@ -80,13 +82,13 @@ func createDatabases(datascopes []types.Scope) error {
 	}
 
 	for k := range datascopes {
-		sql := fmt.Sprintf("CREATE DATABASE %s OWNER %s", datascopes[k].Name, user)
+		sql := fmt.Sprintf("CREATE DATABASE %s OWNER %s", LiteralEscape(datascopes[k].Name), user)
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
 		log.Infof(sql)
 
-		sql = fmt.Sprintf("REVOKE CONNECT ON DATABASE %s FROM PUBLIC", datascopes[k].Name)
+		sql = fmt.Sprintf("REVOKE CONNECT ON DATABASE %s FROM PUBLIC", LiteralEscape(datascopes[k].Name))
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
@@ -100,7 +102,7 @@ func createDatabases(datascopes []types.Scope) error {
 		}
 		log.Info(sql)
 
-		sql = fmt.Sprintf("GRANT CONNECT ON DATABASE %s TO %s", datascopes[k].Name, localUser)
+		sql = fmt.Sprintf("GRANT CONNECT ON DATABASE %s TO %s", LiteralEscape(datascopes[k].Name), localUser)
 		if _, err = db.Exec(sql); err != nil {
 			return err
 		}
