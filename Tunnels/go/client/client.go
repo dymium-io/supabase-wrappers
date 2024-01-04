@@ -65,6 +65,7 @@ var (
 	ProtocolVersion string
 )
 
+/*
 func displayBuff(what string, buff []byte) {
 	if len(buff) > 100 {
 		head := buff[:60]
@@ -74,6 +75,7 @@ func displayBuff(what string, buff []byte) {
 		log.Debugf("\n%s buffer: \n%s\n", what, string(buff))
 	}
 }
+*/
 func restart() {
 
 	ex, _ := os.Executable()
@@ -667,10 +669,11 @@ func checkUpdateFlags(forcenoupdate, forceupdate bool) {
 }
 func main() {
 	log.SetHandler(cli.New(os.Stderr))
+	/*
 	go func() {
 		http.ListenAndServe("localhost:6060", nil)
 	}()
-
+*/
 	forcenoupdate := flag.Bool("r", false, "Don't update")
 	forceupdate := flag.Bool("u", false, "Force update")
 	verbose := flag.Bool("v", false, "Verbose")
@@ -707,9 +710,9 @@ func main() {
 	}).
 		Queries("error", "{error}").
 		Queries("error_description", "{error_description}").Methods("GET")
-	s := http.Server{Addr: "127.0.0.1:63000", Handler: p}
+		s := http.Server{Addr: "127.0.0.1:63000", Handler: p}
 
-	p.HandleFunc("/auth/redirect", func(w http.ResponseWriter, r *http.Request) {
+		p.HandleFunc("/auth/redirect", func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
 		if code == "" {
 			generateError(w, r, "Error: ", r.URL.Query().Get("error_description"))
