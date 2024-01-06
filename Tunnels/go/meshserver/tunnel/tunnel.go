@@ -9,9 +9,10 @@ import (
 	"fmt"
 	"io"
 	"net"
+
 	/*
-	"net/http"
-	_ "net/http/pprof"
+		"net/http"
+		_ "net/http/pprof"
 	*/
 	"os"
 	"strconv"
@@ -148,7 +149,7 @@ func printCode(code int) string {
 	}
 }
 func WriterToConnector(messagesToConnector chan *protocol.TransmissionUnit, fromConnector net.Conn, customer string) {
-	    // Wrap the connection with a buffered writer
+	// Wrap the connection with a buffered writer
 	bw := bufio.NewWriter(fromConnector)
 	for {
 		tosend := <-messagesToConnector
@@ -169,38 +170,25 @@ func WriterToConnector(messagesToConnector chan *protocol.TransmissionUnit, from
 func ReaderFromConnector(customer string, messagesToConnector chan *protocol.TransmissionUnit,
 	fromConnector net.Conn, conmap map[int]*Virtcon, counter chan int, mu *sync.RWMutex,
 	listeners []*net.TCPListener) {
-	/*
-	   updates := make(chan int, 10)
+	
+	updates := make(chan int, 10)
 
-	   // timeout for no data from the connector
+	// timeout for no data from the connector
 
-	   	go func(updates chan int) {
-	   		lasttime := time.Now()
-	   		for {
-	   			select {
-	   			case what := <-updates:
-	   				if what == CloseTimeout {
-	   					for range updates {
-	   						// Do nothing. Just clear the channel
-	   					}
-	   					log.DebugTenantf(customer, "Got update, close timeout")
-	   					return
-	   				}
-	   				lasttime = time.Now()
-	   			case <-time.After(90 * time.Second):
-	   				if time.Since(lasttime) > 90*time.Second {
-	   					fromConnector.Close()
-	   					for range updates {
-	   						// Do nothing. Just clear the channel
-	   					}
-	   					log.ErrorTenantf(customer, "Error: connection timed out")
-	   					return
-	   				}
-	   				log.InfoTenantf(customer, "check timeout, all good!")
-	   			}
-	   		}
-	   	}(updates)
-	*/
+	go func(updates chan int) {
+		for {
+			select {
+			case <-updates:
+				return
+			case <-time.After(30 * time.Second):
+				//log.DebugTenantf(customer, "Send Ping")
+				out := protocol.TransmissionUnit{Action: protocol.Ping, Id:0, Data: []byte{}}
+				messagesToConnector <- &out
+			}
+
+		}
+	}(updates)
+
 	reader := bufio.NewReaderSize(fromConnector, 2*readBufferSize)
 	st := make([]byte, protocol.ProtocolChunkSize)
 	arena := make([]byte, readBufferSize*(4+messagesCapacity))
@@ -240,9 +228,9 @@ func ReaderFromConnector(customer string, messagesToConnector chan *protocol.Tra
 
 		switch buff.Action {
 		case protocol.Ping:
-			out := protocol.TransmissionUnit{Action: protocol.Ping, Id: buff.Id, Data: []byte{}}
-			log.Debugf("Got ping, return ack %d", buff.Id)
-			messagesToConnector <- &out
+			//out := protocol.TransmissionUnit{Action: protocol.Ping, Id: buff.Id, Data: []byte{}}
+			//log.Debugf("Got ping, return ack %d", buff.Id)
+			// messagesToConnector <- &out
 			// updates <- UpdateTimeout
 		case protocol.Open:
 			log.Debugf("protocol.Open. Should not happen")
@@ -616,10 +604,10 @@ func Server(address string, port int, customer string,
 	//go logBandwidth(customer)
 	//http.DefaultServeMux.Handle("/debug/fgprof", fgprof.Handler())
 	/*
-	go func() {
-		http.ListenAndServe(":6060", nil)
-	}()
-*/
+		go func() {
+			http.ListenAndServe(":6060", nil)
+		}()
+	*/
 	pipes = make(map[string]*TunnelPipe)
 
 	v, _ := pem.Decode(keyPEMBlock)

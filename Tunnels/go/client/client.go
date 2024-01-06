@@ -36,7 +36,6 @@ import (
 	_ "path/filepath"
 	"runtime"
 	"sync"
-	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
@@ -76,6 +75,7 @@ func displayBuff(what string, buff []byte) {
 	}
 }
 */
+/*
 func restart() {
 
 	ex, _ := os.Executable()
@@ -106,6 +106,7 @@ func restart() {
 	}
 	os.Exit(0)
 }
+*/
 
 func generateError(w http.ResponseWriter, r *http.Request, header string, body string) error {
 	/*
@@ -291,17 +292,17 @@ func pipe(ingress net.Conn, messages chan *protocol.TransmissionUnit, conmap map
 	mu.RUnlock()
 	//write out result
 	messages <- &out
-	arena := make([]byte, readBufferSize*(4 +  messagesCapacity))
+	arena := make([]byte, readBufferSize*(4+messagesCapacity))
 	index := 0
 
 	for {
 		//buff := make([]byte, 16*4096)
 		//buff := make([]byte, 64)
 		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
-		index = (index + 1) % (2 *  messagesCapacity)
-		
+		index = (index + 1) % (2 * messagesCapacity)
+
 		n, err := ingress.Read(buff)
-		
+
 		if err != nil {
 			if err != io.EOF {
 				s := err.Error()
@@ -354,8 +355,8 @@ func MultiplexReader(egress net.Conn, conmap map[int]net.Conn, messages chan *pr
 		b := arena[index*readBufferSize : (index+1)*readBufferSize]
 		index = (index + 1) % (4 + messagesCapacity)
 
-		_,  err := io.ReadFull(reader, st)
-		
+		_, err := io.ReadFull(reader, st)
+
 		if err == nil {
 			err = protocol.GetBufferedTransmissionUnit(st, &buff, b, reader)
 
@@ -438,7 +439,7 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 	}
 
 	config := &tls.Config{
-		ServerName: lbaddress,
+		ServerName:   lbaddress,
 		RootCAs:      caCertPool,
 		Certificates: []tls.Certificate{clientCert}}
 	target := fmt.Sprintf("%s:%d", lbaddress, lbport)
@@ -479,14 +480,14 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 		back <- "error"
 		return
 	}
-/*
-	egress, err := tls.Dial("tcp", target, config) // *Conn
-	if err != nil {
-		back <- err.Error()
-		back <- "error"
-		return
-	}
-*/	
+	/*
+		egress, err := tls.Dial("tcp", target, config) // *Conn
+		if err != nil {
+			back <- err.Error()
+			back <- "error"
+			return
+		}
+	*/
 	back <- "Connected successfully"
 	log.Debugf("Wrote to back Connected")
 
@@ -533,7 +534,7 @@ func runProxy(listener *net.TCPListener, back chan string, port int, token strin
 			log.Errorf("Not a TCP connection")
 			panic(err)
 		}
-	
+
 		// Set TCP_NODELAY
 		err = tcpConn.SetNoDelay(true)
 		if err != nil {
@@ -670,10 +671,10 @@ func checkUpdateFlags(forcenoupdate, forceupdate bool) {
 func main() {
 	log.SetHandler(cli.New(os.Stderr))
 	/*
-	go func() {
-		http.ListenAndServe("localhost:6060", nil)
-	}()
-*/
+		go func() {
+			http.ListenAndServe("localhost:6060", nil)
+		}()
+	*/
 	forcenoupdate := flag.Bool("r", false, "Don't update")
 	forceupdate := flag.Bool("u", false, "Force update")
 	verbose := flag.Bool("v", false, "Verbose")
@@ -710,9 +711,9 @@ func main() {
 	}).
 		Queries("error", "{error}").
 		Queries("error_description", "{error_description}").Methods("GET")
-		s := http.Server{Addr: "127.0.0.1:63000", Handler: p}
+	s := http.Server{Addr: "127.0.0.1:63000", Handler: p}
 
-		p.HandleFunc("/auth/redirect", func(w http.ResponseWriter, r *http.Request) {
+	p.HandleFunc("/auth/redirect", func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
 		if code == "" {
 			generateError(w, r, "Error: ", r.URL.Query().Get("error_description"))

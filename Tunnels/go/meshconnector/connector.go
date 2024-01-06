@@ -24,7 +24,7 @@ import (
 	"sync"
 	"syscall"
 	"time"
-
+	"sync/atomic"
 	"dymium.com/dymium/log"
 	"dymium.com/meshconnector/ca"
 	"dymium.com/meshconnector/selfupdate"
@@ -55,12 +55,10 @@ type Virtcon struct {
 	inbound chan []byte
 }
 
-var pingCounter = 0
-var ackCounter = 0
-var pingLock sync.RWMutex
-
 var messagesCapacity = 16
 var readBufferSize = 16 * 4096
+
+var readCount int32 = 0
 
 func DoUpdate(portalUrl string) error {
 
@@ -196,7 +194,7 @@ func generateCSR(customer string) ([]byte, error) {
 }
 
 func ReaderFromDb(conmap map[int]*Virtcon,
-	messages chan protocol.TransmissionUnit, id int,
+	messages chan *protocol.TransmissionUnit, id int,
 	token string, mu *sync.RWMutex, customer string) {
 
 	mu.RLock()
@@ -209,7 +207,7 @@ func ReaderFromDb(conmap map[int]*Virtcon,
 
 	if err != nil {
 		log.ErrorTenantf(customer, "Error connecting to target:  %s, send close back", err.Error())
-		messages <- protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
+		messages <- &protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 		return
 	} else {
 		log.InfoTenantf(customer, "Created connection #%d to db at %s, total #=%d", id, token, l)
@@ -223,7 +221,7 @@ func ReaderFromDb(conmap map[int]*Virtcon,
 	mu.Unlock()
 	if !ok {
 		log.ErrorTenantf(customer, "Error finding the descriptor %d in pipe", id)
-		messages <- protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
+		messages <- &protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
 		return
 	}
 	go func() {
@@ -269,7 +267,7 @@ func ReaderFromDb(conmap map[int]*Virtcon,
 			mu.Unlock()
 			dbside.Close()
 			out := protocol.TransmissionUnit{Action: protocol.Close, Id: id, Data: nil}
-			messages <- out
+			messages <- &out
 
 			return
 		}
@@ -277,11 +275,11 @@ func ReaderFromDb(conmap map[int]*Virtcon,
 
 		out := protocol.TransmissionUnit{Action: protocol.Send, Id: id, Data: b}
 		//write out result
-		messages <- out
+		messages <- &out
 	}
 }
 
-func WriterToService(messages chan protocol.TransmissionUnit,
+func WriterToService(messages chan *protocol.TransmissionUnit,
 	serviceside net.Conn) {
 	for {
 		buff, ok := <-messages
@@ -290,7 +288,7 @@ func WriterToService(messages chan protocol.TransmissionUnit,
 			return
 		}
 
-		err := protocol.WriteToTunnel(&buff, serviceside)
+		err := protocol.WriteToTunnel(buff, serviceside)
 		if err != nil {
 			log.Errorf("Error in encoder: %s", err.Error())
 			if serviceside != nil {
@@ -299,42 +297,33 @@ func WriterToService(messages chan protocol.TransmissionUnit,
 		}
 	}
 }
-func Pinger(serviceside net.Conn, wake chan int) {
+func Pinger(serviceside net.Conn, messages chan *protocol.TransmissionUnit, wake chan int) {
 	var ping protocol.TransmissionUnit
 	// log.Infof("In Pinger")
 	ping.Action = protocol.Ping
-
+	counter := 0
 	for {
 		select {
 		case <-wake:
 			log.Debug("Pinger exited")
 			return
-		case <-time.After(120 * time.Second):
+		case <-time.After(30 * time.Second):
 		}
-		pingLock.RLock()
-		diff := pingCounter - ackCounter
-		pingLock.RUnlock()
-		if diff > 20 {
-			log.Errorf("Ping ack missing: %d %d, close serviceside", pingCounter, ackCounter)
-			//serviceside.Close()
-			//continue
-		}
-		pingLock.Lock()
-		ping.Id = pingCounter
-		curr := pingCounter
-		pingCounter++
-		pingLock.Unlock()
-
-		log.Debugf("Send Ping %d", curr)
-
-		err := protocol.WriteToTunnel(&ping, serviceside)
-		if err != nil {
-			serviceside.Close()
-			if !strings.Contains(err.Error(), "closed network connection ") {
-				log.Errorf("Ping failed: %s", err.Error())
+		if(counter != 0 && counter %4 == 0) {		
+			if atomic.LoadInt32(&readCount) == 0 {
+				// Do something if val is 0
+				log.Error("Server inactivity detected, close")
+				serviceside.Close()
+				continue
+			} else {
+				atomic.StoreInt32(&readCount, 0)
 			}
-			continue
 		}
+		counter++
+
+		// log.Debug("Send Ping ")
+		messages <- &ping
+
 	}
 }
 func InformParentOfUpdate() {
@@ -343,7 +332,7 @@ func InformParentOfUpdate() {
 	log.Info("Overseer contacted")
 }
 
-func ReaderServiceSide(serviceside *tls.Conn, customer string, messages chan protocol.TransmissionUnit) {
+func ReaderServiceSide(serviceside *tls.Conn, customer string, messages chan *protocol.TransmissionUnit) {
 	updateStatus("active")
 
 	var conmap = make(map[int]*Virtcon)
@@ -353,7 +342,7 @@ func ReaderServiceSide(serviceside *tls.Conn, customer string, messages chan pro
 
 
 	wake := make(chan int, 1)
-	//go Pinger(serviceside, wake)
+	go Pinger(serviceside, messages, wake)
 
 	st := make([]byte, protocol.ProtocolChunkSize)
 	for {
@@ -390,6 +379,7 @@ func ReaderServiceSide(serviceside *tls.Conn, customer string, messages chan pro
 			log.Debug("Cleaned up connection map")
 			return
 		}
+		atomic.AddInt32(&readCount, 1)
 
 		switch buff.Action {
 		case protocol.Error:
@@ -406,10 +396,7 @@ func ReaderServiceSide(serviceside *tls.Conn, customer string, messages chan pro
 			wake <- 0
 			return
 		case protocol.Ping:
-			pingLock.Lock()
-			ackCounter = buff.Id
-			//log.Debugf("Ack: %d", ackCounter)
-			pingLock.Unlock()
+			// log.Info("Ping received")
 
 		case protocol.Open:
 			conn := &Virtcon{}
@@ -577,10 +564,7 @@ func updateStatus(updown string) {
 func ConnectToService() {
 	// -------------------
 	customer := os.Getenv("CUSTOMER")
-	pingLock.Lock()
-	ackCounter = 0
-	pingCounter = 0
-	pingLock.Unlock()
+
 	csr, err := generateCSR(customer)
 	if err != nil {
 		log.Errorf("Error generating CSR %s", err.Error())
@@ -691,7 +675,7 @@ func ConnectToService() {
 	}
 	x := make(chan int, 1)
 	go handleSignal(serviceside, x)
-	messages := make(chan protocol.TransmissionUnit, messagesCapacity)
+	messages := make(chan *protocol.TransmissionUnit, messagesCapacity)
 	go WriterToService(messages, serviceside)
 
 	ReaderServiceSide(serviceside, customer, messages)

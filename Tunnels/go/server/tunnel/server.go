@@ -27,6 +27,7 @@ import (
 )
 
 var rdb *redis.Client
+var redisConnected = false
 var ctx = context.Background()
 var iprecords []net.IP
 var resolvemutex sync.RWMutex
@@ -95,7 +96,8 @@ func logBandwidth(customer string) {
 
 		case <-timer.C:
 			// Handle timer firing...
-			if bytesIn != 0 || bytesOut != 0 {
+			
+			if redisConnected && (bytesIn != 0 || bytesOut != 0) {
 				_, err := rdb.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 					pipe.IncrBy(ctx, customer+":bytesin", int64(bytesIn))
 					pipe.IncrBy(ctx, customer+":bytesout", int64(bytesOut))
@@ -124,6 +126,12 @@ func initRedis(redisAddress, redisPort, redisPassword string) {
 		o.Password = redisPassword
 	}
 	rdb = redis.NewClient(o)
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		log.Errorf("Error connecting to Redis: %s", err.Error())
+		redisConnected = false
+	} else {
+		redisConnected = true
+	}
 }
 func displayBuff(what string, buff []byte) {
 	if len(buff) > 100 {
@@ -315,7 +323,7 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan *protocol.Tran
 		}
 		b := buff[:n]
 
-		//bytesOutLog <- n
+		bytesOutLog <- n
 
 		if ok {
 			conn.LogDownstream(n, false)
