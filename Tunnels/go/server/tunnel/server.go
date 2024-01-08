@@ -156,28 +156,32 @@ func getTargetConnection(targetHost string, customer, postgresPort string) (net.
 	return net.Dial("tcp", target)
 }
 func backgroundResolve(targetHost string) {
+	log.Debug("backgroundResolve: targetHost " + targetHost)
 	for {
-		time.Sleep(2 * time.Minute)
+
 		addrs, _ := net.LookupIP(targetHost)
-		//for _, addr := range addrs {
-			// log.Debugf("Resolved %s to %s", targetHost, addr.String())
-		// }
+		for _, addr := range addrs {
+			log.Debugf("Resolved %s to %s", targetHost, addr.String())
+		}
 		resolvemutex.Lock()
 		iprecords = addrs
+
 		resolvemutex.Unlock()
+		time.Sleep(2 * time.Minute)
 	}
+
 }
 func Server(address string, port int, customer, postgressDomain, postgresPort string,
 	certPEMBlock, keyPEMBlock []byte, passphrase string, caCert []byte,
 	redisAddress, redisPort, redisPassword string) {
 	var err error
 	var pkey []byte
-/*
-	http.DefaultServeMux.Handle("/debug/fgprof", fgprof.Handler())
-	go func() {
-		http.ListenAndServe(":6060", nil)
-	}()
-*/
+	/*
+		http.DefaultServeMux.Handle("/debug/fgprof", fgprof.Handler())
+		go func() {
+			http.ListenAndServe(":6060", nil)
+		}()
+	*/
 	initRedis(redisAddress, redisPort, redisPassword)
 
 	go logBandwidth(customer)
@@ -186,6 +190,8 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 	resolvemutex.Lock()
 	iprecords, _ = net.LookupIP(targetHost)
 	resolvemutex.Unlock()
+
+	log.Info("Call background resolve")
 	go backgroundResolve(targetHost)
 
 	if err != nil {
@@ -240,14 +246,14 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 			log.Errorf("Error in Accept: %s", err.Error())
 			continue
 		}
-	
+
 		tcpConn, ok := conn.(*net.TCPConn)
 		if !ok {
 			log.Errorf("Not a TCP connection")
 			conn.Close()
 			continue
 		}
-	
+
 		// Set TCP_NODELAY
 		err = tcpConn.SetNoDelay(true)
 		if err != nil {
@@ -255,7 +261,7 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 			conn.Close()
 			continue
 		}
-	
+
 		// Wrap with TLS
 		tlsConn := tls.Server(tcpConn, config)
 
@@ -276,21 +282,21 @@ func Server(address string, port int, customer, postgressDomain, postgresPort st
 					log.Debugf("Group: %s", name)
 				}
 			}
-			
+
 			go proxyConnection(targetHost, tlsConn, customer, postgresPort)
 		}(tlsConn)
 	}
 }
 
 func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan *protocol.TransmissionUnit, id int, token string, mu *sync.RWMutex) {
-	arena := make([]byte, readBufferSize*(4 + messagesCapacity))
+	arena := make([]byte, readBufferSize*(4+messagesCapacity))
 	index := 0
 	for {
 		//buff := make([]byte, 4*4096)
 		// buff := make([]byte, 16*4096)
 		// buff := make([]byte, readBufferSize)
 		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
-		index = (index + 1) % (4 +  messagesCapacity)
+		index = (index + 1) % (4 + messagesCapacity)
 		n, err := egress.Read(buff)
 		//log.Debugf("Read from db %d bytes, connection %d", n, id)
 		mu.RLock()
@@ -337,7 +343,7 @@ func pipe(conmap map[int]*Virtcon, egress net.Conn, messages chan *protocol.Tran
 	}
 }
 
-func MultiplexWriter(messages chan *protocol.TransmissionUnit, 
+func MultiplexWriter(messages chan *protocol.TransmissionUnit,
 	ingress net.Conn, conmap map[int]*Virtcon) {
 	for {
 		buff, ok := <-messages
@@ -360,7 +366,6 @@ func MultiplexWriter(messages chan *protocol.TransmissionUnit,
 	}
 }
 
-
 func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort string) {
 	reader := bufio.NewReader(ingress)
 	var conmap = make(map[int]*Virtcon)
@@ -378,10 +383,9 @@ func proxyConnection(targetHost string, ingress net.Conn, customer, postgresPort
 		var buff protocol.TransmissionUnit
 		b := arena[index*readBufferSize : (index+1)*readBufferSize]
 		index = (index + 1) % (4 + messagesCapacity)
-		_,  err := io.ReadFull(reader, st)
+		_, err := io.ReadFull(reader, st)
 
 		protocol.GetBufferedTransmissionUnit(st, &buff, b, reader)
-		
 
 		if err != nil {
 			if err != io.EOF {
