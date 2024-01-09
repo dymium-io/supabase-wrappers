@@ -84,6 +84,9 @@ type MachineCSRResponse struct {
    Version string `json:"version"`
    Jwt string `json:"jwt"`
    Certificate string `json:"certificate"`
+   ProtocolVersion string `json:"protocolVersion"`
+   ClientMajorVersion string `json:"clientMajorVersion"`
+   ClientMinorVersion string `json:"clientMinorVersion"`
 }
 
 type RequestUpdate struct {

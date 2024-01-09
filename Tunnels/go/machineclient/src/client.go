@@ -429,22 +429,20 @@ func DoConnect() {
 		log.Errorf("Error unmarshaling response body: %s", err.Error())
 		return
 	}
-	version := string(back.Version)
-	token := string(back.Jwt)
-	if v := os.Getenv("VERSION"); v != "" {
-		version = v
-		log.Debugf("Imposed version %s", version)
-	}
 
-	vserver, _ := semver.Make(version)
-	vclient, _ := semver.Make(protocol.MeshServerVersion)
-	if vserver.GT(vclient) {
-		log.Infof("Server version incremented to %s, update itself!", version)
+	if ProtocolVersion < back.ProtocolVersion {
+		log.Infof("The tunneling utility must be updated!")
 		// DoUpdate(portal)
 		// os.Exit(0)
 	} else {
-		log.Infof("Server version: %s, client is up to date", version)
+		if ProtocolVersion >= back.ProtocolVersion {
+			log.Infof("A new version %s.%s is available",
+				back.ClientMajorVersion, back.ClientMinorVersion)
+			log.Infof("at %s/app/access?key=download", portalurl)
+		}
 	}
+
+	needsUpdate := ProtocolVersion < back.ProtocolVersion
 
 	keyBytes := x509.MarshalPKCS1PrivateKey(certKey)
 

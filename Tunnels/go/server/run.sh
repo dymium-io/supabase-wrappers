@@ -37,6 +37,6 @@ export LOCAL_SEARCH_PASSWD=${LOCAL_SEARCH_PASSWD:-admin123}
 export SEARCH_IN_PIPELINE=${SEARCH_IN_PIPELINE:-jsonmessage}
 
 export SESSION_SECRET="b<Qu9K)q}Ksh+R)JzlJJ'X1sHMp$UI@t&OCjDYTEmVe6WZe,rdJ}!I=4N[|yoTq"
-./server -p 15654 -a 127.0.0.1
-
+#./server -p 15654 -a 127.0.0.1
+LOCAL_SEARCH= ./server -p 15654
 

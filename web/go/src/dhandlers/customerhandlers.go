@@ -1716,6 +1716,10 @@ func GetMachineClientCertificate(w http.ResponseWriter, r *http.Request) {
 	var certout types.MachineCSRResponse
 	certout.Certificate = string(out)
 	certout.Jwt = token
+	certout.ProtocolVersion = os.Getenv("PROTOCOL_VERSION")
+	certout.ClientMajorVersion = os.Getenv("MAJOR_VERSION")
+	certout.ClientMinorVersion = os.Getenv("MINOR_VERSION")
+
 	js, err := json.Marshal(certout)
 	if err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
