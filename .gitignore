@@ -109,3 +109,5 @@ Tunnels/go/machineclient/src/output.txt
 setup/ktDbAnalyzerSvc-0.0.1.tar
 Tunnels/go/server/tunnel/server.mgo
 Tunnels/go/meshserver/profile001.svg
+Tunnels/go/machineclient/src/go.mod.old
+Tunnels/go/machineclient/src/meshconnector.1.0.1.bak

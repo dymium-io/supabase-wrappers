@@ -477,17 +477,13 @@ export class CustomerIDResponse {
   private '_loginURL': string
   private '_lbaddress': string
   private '_lbport': number
-  private '_protocolVersion': string
-  private '_clientMajorVersion': string
-  private '_clientMinorVersion': string
+  private '_version': string
 
   constructor() {
     this['_loginURL'] = ''
     this['_lbaddress'] = ''
     this['_lbport'] = 0
-    this['_protocolVersion'] = ''
-    this['_clientMajorVersion'] = ''
-    this['_clientMinorVersion'] = ''
+    this['_version'] = ''
   }
   get loginURL(): string { return this['_loginURL'] }
   set loginURL(__a__: any) {
@@ -513,28 +509,12 @@ export class CustomerIDResponse {
       this['_lbport'] = __v__
     }
   }
-  get protocolVersion(): string { return this['_protocolVersion'] }
-  set protocolVersion(__a__: any) {
+  get version(): string { return this['_version'] }
+  set version(__a__: any) {
     let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_protocolVersion'])) {
+    if(!_.isEqual(__v__,this['_version'])) {
       setDirtyFlag()
-      this['_protocolVersion'] = __v__
-    }
-  }
-  get clientMajorVersion(): string { return this['_clientMajorVersion'] }
-  set clientMajorVersion(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_clientMajorVersion'])) {
-      setDirtyFlag()
-      this['_clientMajorVersion'] = __v__
-    }
-  }
-  get clientMinorVersion(): string { return this['_clientMinorVersion'] }
-  set clientMinorVersion(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_clientMinorVersion'])) {
-      setDirtyFlag()
-      this['_clientMinorVersion'] = __v__
+      this['_version'] = __v__
     }
   }
 
@@ -547,9 +527,7 @@ export class CustomerIDResponse {
        cls.loginURL = __a__['loginURL']
        cls.lbaddress = __a__['lbaddress']
        cls.lbport = __a__['lbport']
-       cls.protocolVersion = __a__['protocolVersion']
-       cls.clientMajorVersion = __a__['clientMajorVersion']
-       cls.clientMinorVersion = __a__['clientMinorVersion']
+       cls.version = __a__['version']
     } else {
        doAlert(`CustomerIDResponse: an attempt to initialize from ${__a__}`)
     }
@@ -600,28 +578,14 @@ export class GetKeySecret {
 }
 
 export class MachineCSRResponse {
-  private '_version': string
   private '_jwt': string
   private '_certificate': string
-  private '_protocolVersion': string
-  private '_clientMajorVersion': string
-  private '_clientMinorVersion': string
+  private '_version': string
 
   constructor() {
-    this['_version'] = ''
     this['_jwt'] = ''
     this['_certificate'] = ''
-    this['_protocolVersion'] = ''
-    this['_clientMajorVersion'] = ''
-    this['_clientMinorVersion'] = ''
-  }
-  get version(): string { return this['_version'] }
-  set version(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_version'])) {
-      setDirtyFlag()
-      this['_version'] = __v__
-    }
+    this['_version'] = ''
   }
   get jwt(): string { return this['_jwt'] }
   set jwt(__a__: any) {
@@ -639,28 +603,12 @@ export class MachineCSRResponse {
       this['_certificate'] = __v__
     }
   }
-  get protocolVersion(): string { return this['_protocolVersion'] }
-  set protocolVersion(__a__: any) {
+  get version(): string { return this['_version'] }
+  set version(__a__: any) {
     let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_protocolVersion'])) {
+    if(!_.isEqual(__v__,this['_version'])) {
       setDirtyFlag()
-      this['_protocolVersion'] = __v__
-    }
-  }
-  get clientMajorVersion(): string { return this['_clientMajorVersion'] }
-  set clientMajorVersion(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_clientMajorVersion'])) {
-      setDirtyFlag()
-      this['_clientMajorVersion'] = __v__
-    }
-  }
-  get clientMinorVersion(): string { return this['_clientMinorVersion'] }
-  set clientMinorVersion(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_clientMinorVersion'])) {
-      setDirtyFlag()
-      this['_clientMinorVersion'] = __v__
+      this['_version'] = __v__
     }
   }
 
@@ -670,12 +618,9 @@ export class MachineCSRResponse {
     disableDF()
     let cls = new MachineCSRResponse()
     if(typeof __a__ === 'object' && __a__ != null) {
-       cls.version = __a__['version']
        cls.jwt = __a__['jwt']
        cls.certificate = __a__['certificate']
-       cls.protocolVersion = __a__['protocolVersion']
-       cls.clientMajorVersion = __a__['clientMajorVersion']
-       cls.clientMinorVersion = __a__['clientMinorVersion']
+       cls.version = __a__['version']
     } else {
        doAlert(`MachineCSRResponse: an attempt to initialize from ${__a__}`)
     }

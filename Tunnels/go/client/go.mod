@@ -21,6 +21,7 @@ require (
 	dymium.com/client/types v0.0.0-00010101000000-000000000000
 	dymium.com/server/protocol v0.0.0-00010101000000-000000000000
 	github.com/apex/log v1.9.0
+	github.com/blang/semver/v4 v4.0.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/mux v1.8.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8

@@ -9,9 +9,7 @@ CustomerIDResponse:
   - loginURL: string
   - lbaddress: string
   - lbport: int
-  - protocolVersion: string
-  - clientMajorVersion: string
-  - clientMinorVersion: string
+  - version: string
 
 AuthorizationCodeRequest:
   - customerid: string
@@ -38,9 +36,7 @@ CSRResponse:
 MachineCSRResponse:
   - jwt: string
   - certificate: string
-  - protocolVersion: string
-  - clientMajorVersion: string
-  - clientMinorVersion: string
+  - version: string
 
 RequestUpdate:
   - protocolVersion: string

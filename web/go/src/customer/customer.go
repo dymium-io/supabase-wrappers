@@ -82,6 +82,8 @@ func CustomerHandlers(p *mux.Router) {
 	
 	nonauthenticated.HandleFunc("/api/downloadupdate", dhandlers.DownloadUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")
 	nonauthenticated.HandleFunc("/api/downloadconnectorupdate", dhandlers.DownloadConnectorUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")
+	nonauthenticated.HandleFunc("/api/downloadmachineclientupdate", dhandlers.DownloadMachineClientUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")
+	
 	
 
 	nonauthenticated.HandleFunc("/api/datascopehelp", dhandlers.DatascopeHelp).Queries("token", "{token}", "port", "{port}").Methods("GET")

@@ -27,7 +27,7 @@ import (
 	"dymium.com/server/protocol"
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/cli"
-
+	"github.com/blang/semver/v4"
 	"io"
 	"net"
 	"net/http"
@@ -57,12 +57,6 @@ var connectionError = false
 var wg sync.WaitGroup
 var messagesCapacity = 16
 var readBufferSize = 16 * 4096
-
-var (
-	MajorVersion    string
-	MinorVersion    string
-	ProtocolVersion string
-)
 
 /*
 func displayBuff(what string, buff []byte) {
@@ -259,20 +253,25 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool, forceupdate
 	lbaddress = back.Lbaddress
 	lbport = back.Lbport
 
+	vserver, _ := semver.Make(back.Version)
+	vclient, _ := semver.Make(protocol.TunnelServerVersion )
+
 	if !forcenoupdate {
-		if ProtocolVersion < back.ProtocolVersion {
-			log.Infof("The tunneling utility must be updated!")
-			//log.Infof("Go to %s/app/access?key=download for the download.", portalurl)
-			//os.Exit(1)
+
+		if vserver.Major > vclient.Major  {
+			log.Infof("Server version incremented to %s, update itself!", back.Version)
+			// DoUpdate(portal)
+			os.Exit(0)
 		} else {
-			if ProtocolVersion >= back.ProtocolVersion {
-				log.Infof("A new version %s.%s is available",
-					back.ClientMajorVersion, back.ClientMinorVersion)
-				log.Infof("at %s/app/access?key=download", portalurl)
+			if vserver.GT(vclient) {
+				log.Infof("Server version incremented to %s, update recommended", back.Version)
+			} else {
+				log.Infof("Server version %s, client is up to date", back.Version)
 			}
 		}
 	}
-	needsUpdate := ProtocolVersion < back.ProtocolVersion
+	needsUpdate := vserver.Major > vclient.Major
+
 	if !forcenoupdate {
 		if forceupdate || needsUpdate {
 			installer.UpdateInstaller(portalurl)
@@ -661,7 +660,7 @@ func printAuthenticatedFeedback(w http.ResponseWriter) {
 }
 func checkUpdateFlags(forcenoupdate, forceupdate bool) {
 	if !forcenoupdate {
-		log.Infof("Dymium secure tunnel, version %s.%s, protocol iteration %s", MajorVersion, MinorVersion, ProtocolVersion)
+		log.Infof("Dymium secure tunnel, version %s", protocol.TunnelServerVersion)
 	}
 	if forcenoupdate && forceupdate {
 		log.Errorf("Can't force update and no update!")
@@ -683,7 +682,7 @@ func main() {
 	flag.Parse()
 	checkUpdateFlags(*forcenoupdate, *forceupdate)
 	if !*forcenoupdate {
-		log.Infof("Dymium secure tunnel, version %s.%s, protocol iteration %s", MajorVersion, MinorVersion, ProtocolVersion)
+		log.Infof("Dymium secure tunnel, version %s", protocol.TunnelServerVersion)
 	}
 	if *forcenoupdate && *forceupdate {
 		log.Errorf("Can't force update and no update!")

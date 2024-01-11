@@ -1380,12 +1380,12 @@ func RegenerateDatascopePassword(w http.ResponseWriter, r *http.Request) {
 
 func DownloadUpdate(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	os, _ := vars["os"]
-	arch, _ := vars["arch"]
+	os := vars["os"]
+	arch := vars["arch"]
 
-	fil := fmt.Sprintf("./customer/update/%s/%s/tunnel", os, arch)
-	log.Info("Api DownloadUpdate called")
-	http.ServeFile(w, r, fil)
+	fil := fmt.Sprintf("/%s/%s/tunnel", os, arch)
+
+	authentication.StreamFromS3(w, r, getClientBucket(), fil)
 }
 
 func DownloadConnectorUpdate(w http.ResponseWriter, r *http.Request) {
@@ -1393,10 +1393,20 @@ func DownloadConnectorUpdate(w http.ResponseWriter, r *http.Request) {
 	os := vars["os"]
 	arch := vars["arch"]
 
-	fil := fmt.Sprintf("./customer/connector/%s/%s/meshconnector", os, arch)
-	log.Infof("Api DownloadConnectorUpdate called for %s", fil)
-	w.Header().Set("Content-Disposition", "attachment; filename=meshconnector")
-	http.ServeFile(w, r, fil)
+	fil := fmt.Sprintf("/%s/%s/meshconnector", os, arch)
+
+	authentication.StreamFromS3(w, r, getConnectorBucket(), fil)
+
+}
+
+func DownloadMachineClientUpdate(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	os := vars["os"]
+	arch := vars["arch"]
+
+	fil := fmt.Sprintf("/%s/%s/machineclient", os, arch)
+log.Debugf("DownloadMachineClientUpdate, fil: %s", fil)
+	authentication.StreamFromS3(w, r, getMachineClientBucket(), fil)
 }
 
 func QueryTunnel(w http.ResponseWriter, r *http.Request) {
@@ -1447,9 +1457,7 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 	resp.Lbaddress = lbaddress
 	resp.Lbport = lbport
 
-	resp.ProtocolVersion = os.Getenv("PROTOCOL_VERSION")
-	resp.ClientMajorVersion = os.Getenv("MAJOR_VERSION")
-	resp.ClientMinorVersion = os.Getenv("MINOR_VERSION")
+	resp.Version = protocol.TunnelServerVersion
 
 	js, err := json.Marshal(resp)
 
@@ -1538,7 +1546,7 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
 
 	var certout types.CSRResponse
 	certout.Certificate = string(out)
-	certout.Version = protocol.MeshServerVersion
+	certout.Version = protocol.TunnelServerVersion
 	js, err := json.Marshal(certout)
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetClientCertificate, error: %s", err.Error())
@@ -1716,9 +1724,7 @@ func GetMachineClientCertificate(w http.ResponseWriter, r *http.Request) {
 	var certout types.MachineCSRResponse
 	certout.Certificate = string(out)
 	certout.Jwt = token
-	certout.ProtocolVersion = os.Getenv("PROTOCOL_VERSION")
-	certout.ClientMajorVersion = os.Getenv("MAJOR_VERSION")
-	certout.ClientMinorVersion = os.Getenv("MINOR_VERSION")
+	certout.Version = protocol.MeshServerVersion
 
 	js, err := json.Marshal(certout)
 	if err != nil {
@@ -2113,6 +2119,13 @@ func getConnectorBucket() string {
 	b :=  os.Getenv("CONNECTOR_BUCKET")
 	if b == "" {
 		return "dymium-dev-connectors"
+	}
+	return b
+}
+func getMachineClientBucket() string {
+	b :=  os.Getenv("MACHINE_CLIENT_BUCKET")
+	if b == "" {
+		return "dymium-dev-machine-clients"
 	}
 	return b
 }

@@ -10,6 +10,7 @@ require (
 require (
 	dymium.com/client/sockopts v0.0.0-00010101000000-000000000000
 	dymium.com/client/types v0.0.0-00010101000000-000000000000
+	dymium.com/meshconnector/selfupdate v0.0.0-00010101000000-000000000000
 	github.com/apex/log v1.9.0
 	github.com/blang/semver/v4 v4.0.0
 )
@@ -30,3 +31,5 @@ replace dymium.com/client/sockopts => ../../sockopts
 replace dymium.com/client/types => ../../client/types
 
 replace github.com/apex/log => ../../../../libs/go/log
+
+replace dymium.com/meshconnector/selfupdate => ../../selfupdate

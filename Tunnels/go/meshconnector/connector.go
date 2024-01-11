@@ -43,12 +43,6 @@ var certKey *rsa.PrivateKey
 var clientCert tls.Certificate
 var interrupted = false
 
-var (
-	MajorVersion    string
-	MinorVersion    string
-	ProtocolVersion string
-)
-
 type Virtcon struct {
 	sock    net.Conn
 	tenant  string

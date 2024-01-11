@@ -22,12 +22,10 @@ type TransmissionUnit struct {
 	Data   []byte
 }
 
-
-var MeshServerVersion = "0.1.5"
-var TunnelServerVersion = "0.1.5"
+var MeshServerVersion = "1.0.1"
+var TunnelServerVersion = "1.0.2"
 
 /*
-
 Protocol chunk:
 
 Action: byte
@@ -38,89 +36,89 @@ Length: int32
 const ProtocolChunkSize = 9
 
 func ReadFull(conn net.Conn, buf []byte, length int) (int, error) {
-    if len(buf) < length {
-        return 0, io.ErrShortBuffer
-    }
+	if len(buf) < length {
+		return 0, io.ErrShortBuffer
+	}
 
-    totalRead := 0
-    for totalRead < length {
-        n, err := conn.Read(buf[totalRead:length])
-        if err != nil {
-            if err == io.EOF && totalRead > 0 {
-                break // EOF is only OK if we read some bytes
-            }
-            return 0, err
-        }
-        totalRead += n
-    }
+	totalRead := 0
+	for totalRead < length {
+		n, err := conn.Read(buf[totalRead:length])
+		if err != nil {
+			if err == io.EOF && totalRead > 0 {
+				break // EOF is only OK if we read some bytes
+			}
+			return 0, err
+		}
+		totalRead += n
+	}
 
-    return totalRead, nil
+	return totalRead, nil
 }
 
 func WriteToTunnel(buff *TransmissionUnit, conn net.Conn) error {
-    // Wrap the connection with a buffered writer
-    bw := bufio.NewWriter(conn)
+	// Wrap the connection with a buffered writer
+	bw := bufio.NewWriter(conn)
 
-    // Write Action directly
-    if err := bw.WriteByte(byte(buff.Action)); err != nil {
-        return err
-    }
+	// Write Action directly
+	if err := bw.WriteByte(byte(buff.Action)); err != nil {
+		return err
+	}
 
-    // Write Id
-    if err := binary.Write(bw, binary.BigEndian, int32(buff.Id)); err != nil {
-        return err
-    }
+	// Write Id
+	if err := binary.Write(bw, binary.BigEndian, int32(buff.Id)); err != nil {
+		return err
+	}
 
-    // Write length of Data field
-    var dataLength int32
-    if buff.Data != nil {
-        dataLength = int32(len(buff.Data))
-    }
-    if err := binary.Write(bw, binary.BigEndian, dataLength); err != nil {
-        return err
-    }
+	// Write length of Data field
+	var dataLength int32
+	if buff.Data != nil {
+		dataLength = int32(len(buff.Data))
+	}
+	if err := binary.Write(bw, binary.BigEndian, dataLength); err != nil {
+		return err
+	}
 
-    // Write the data field if it exists
-    if buff.Data != nil {
-        if _, err := bw.Write(buff.Data); err != nil {
-            return err
-        }
-    }
+	// Write the data field if it exists
+	if buff.Data != nil {
+		if _, err := bw.Write(buff.Data); err != nil {
+			return err
+		}
+	}
 
-    // Flush the buffered writer to send the data to the connection
-    return bw.Flush()
+	// Flush the buffered writer to send the data to the connection
+	return bw.Flush()
 }
 
 func WriteBufferedToTunnel(buff *TransmissionUnit, bw *bufio.Writer, conn net.Conn) error {
 
-    // Write Action directly
-    if err := bw.WriteByte(byte(buff.Action)); err != nil {
-        return err
-    }
+	// Write Action directly
+	if err := bw.WriteByte(byte(buff.Action)); err != nil {
+		return err
+	}
 
-    // Write Id
-    if err := binary.Write(bw, binary.BigEndian, int32(buff.Id)); err != nil {
-        return err
-    }
+	// Write Id
+	if err := binary.Write(bw, binary.BigEndian, int32(buff.Id)); err != nil {
+		return err
+	}
 
-    // Write length of Data field
-    var dataLength int32
-    if buff.Data != nil {
-        dataLength = int32(len(buff.Data))
-    }
-    if err := binary.Write(bw, binary.BigEndian, dataLength); err != nil {
-        return err
-    }
+	// Write length of Data field
+	var dataLength int32
+	if buff.Data != nil {
+		dataLength = int32(len(buff.Data))
+	}
+	if err := binary.Write(bw, binary.BigEndian, dataLength); err != nil {
+		return err
+	}
 
-    // Write the data field if it exists
-    if buff.Data != nil {
-        if _, err := bw.Write(buff.Data); err != nil {
-            return err
-        }
-    }
+	// Write the data field if it exists
+	if buff.Data != nil {
+		if _, err := bw.Write(buff.Data); err != nil {
+			return err
+		}
+	}
 
-    // Flush the buffered writer to send the data to the connection
-    return bw.Flush()
+	// Flush the buffered writer to send the data to the connection
+	return bw.Flush()
 }
 
 func GetTransmissionUnit(st []byte, buff *TransmissionUnit, ingress net.Conn) error {

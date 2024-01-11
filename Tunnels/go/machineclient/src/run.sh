@@ -7,6 +7,6 @@ export CUSTOMER=spoofcorp
 export TUNNELSERVER=portal.dymium.local:15654
 export LOCAL_ENVIRONMENT=true
 export LISTENER_PORT=6666
-
-./machineclient 2>&1 | tee output.txt
+export HEALTHPORT=6667
+exec ./machineclient
 

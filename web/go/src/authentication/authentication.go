@@ -70,6 +70,7 @@ func StreamFromS3(w http.ResponseWriter, r *http.Request, bucketName, key string
 		Key:    awssdk.String(key),
 	}
 	name := filepath.Base(key)
+	log.Infof("Downloading %s%s", bucketName, key)
 	result, err := s3Client.GetObject(input)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to get object: %v", err), http.StatusInternalServerError)
@@ -91,6 +92,7 @@ func StreamFromS3(w http.ResponseWriter, r *http.Request, bucketName, key string
 
 	// Stream the object's content to the response body
 	defer result.Body.Close()
+	
 	_, err = io.Copy(w, result.Body)
 	if err != nil {
 		// You may want to handle this error differently depending on your application's needs

@@ -70,9 +70,7 @@ type CustomerIDResponse struct {
    LoginURL string `json:"loginURL"`
    Lbaddress string `json:"lbaddress"`
    Lbport int `json:"lbport"`
-   ProtocolVersion string `json:"protocolVersion"`
-   ClientMajorVersion string `json:"clientMajorVersion"`
-   ClientMinorVersion string `json:"clientMinorVersion"`
+   Version string `json:"version"`
 }
 
 type GetKeySecret struct {
@@ -81,12 +79,9 @@ type GetKeySecret struct {
 }
 
 type MachineCSRResponse struct {
-   Version string `json:"version"`
    Jwt string `json:"jwt"`
    Certificate string `json:"certificate"`
-   ProtocolVersion string `json:"protocolVersion"`
-   ClientMajorVersion string `json:"clientMajorVersion"`
-   ClientMinorVersion string `json:"clientMinorVersion"`
+   Version string `json:"version"`
 }
 
 type RequestUpdate struct {

@@ -5,6 +5,7 @@ go 1.20
 require (
 	dymium.com/dymium/log v0.0.0-00010101000000-000000000000
 	dymium.com/meshconnector/ca v0.0.0-00010101000000-000000000000
+	dymium.com/meshconnector/selfupdate v0.0.0-00010101000000-000000000000
 	dymium.com/server/protocol v0.0.0-00010101000000-000000000000
 	github.com/blang/semver/v4 v4.0.0
 	github.com/gorilla/mux v1.8.0
@@ -28,3 +29,5 @@ replace dymium.com/server/protocol => ../protocol
 replace github.com/apex/log => ../../../libs/go/log
 
 replace dymium.com/dymium/log => ../../../libs/go/dlog
+
+replace dymium.com/meshconnector/selfupdate => ../selfupdate
