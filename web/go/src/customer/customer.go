@@ -90,8 +90,8 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/api/getconnectorcertificate",  dhandlers.GetConnectorCertificate).Methods("POST").Name("getconnectorcertificate")
 	nonauthenticated.HandleFunc("/api/connectorstatus",  dhandlers.SetConnectorStatus).Methods("POST").Name("connectorstatus")
 	nonauthenticated.HandleFunc("/api/getmachineclientcertificate",  dhandlers.GetMachineClientCertificate).Methods("POST").Name("getmachineclientcertificate")
-	
-	
+	nonauthenticated.HandleFunc("/api/machineclientstatus", dhandlers.MachineClientStatus).Methods("POST")
+
 	
 	// For React to work properly, ensure that the URLs going into the React router return index.html
 	nonauthenticated.PathPrefix("/app/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

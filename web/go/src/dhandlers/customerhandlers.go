@@ -1937,6 +1937,12 @@ func GetConnectors(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(js))
 }
 
+func MachineClientStatus(w http.ResponseWriter, r *http.Request) {
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte("OK"))
+}
+
 func UpdateConnector(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
 	email := r.Context().Value(authenticatedEmailKey).(string)
