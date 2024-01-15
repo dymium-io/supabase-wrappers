@@ -24,6 +24,23 @@ import Modal from 'react-bootstrap/Modal'
 const { SearchBar, ClearSearchButton } = Search;
 
 function MachineTunnelHelp() {
+    const [registryid, setRegistryid] = useState("a9d3u0m7")
+    useEffect
+    (() => {
+        http.sendToServer("GET", "/api/getregistryid",
+            null, "",
+            resp => {
+                resp.json().then(js => {
+                    setRegistryid(js.id)
+                })
+            },
+            resp => {
+            },
+            error => {
+            })
+    }, [])
+
+
     return <>
 
         <div className="mb-3">
@@ -57,7 +74,7 @@ function MachineTunnelHelp() {
                     </div><div>
                         -p &lt;LOCAL_LISTENER&gt;:5432 \
                     </div><div>
-                        public.ecr.aws/a9d3u0m7/dymiummachinetunnel:latest
+                        public.ecr.aws/{registryid}/dymiummachinetunnel:latest
                     </div>
 
                 </div>
@@ -908,7 +925,7 @@ function MachineTunnelDownloads() {
     const [alert, setAlert] = useState<JSX.Element>(<></>)
     const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
     const [docker, setDocker] = useState("public.ecr.aws/a9d3u0m7/dymiummachinetunnel:latest")
-
+    const [registryid, setRegistryid] = useState("a9d3u0m7")
     useEffect(() => {
         http.sendToServer("GET", "/api/getdockers",
             null, "",
@@ -921,6 +938,20 @@ function MachineTunnelDownloads() {
             },
             error => {
             })
+
+            http.sendToServer("GET", "/api/getregistryid",
+            null, "",
+            resp => {
+                resp.json().then(js => {
+                    setRegistryid(js.id)
+                    setDocker("public.ecr.aws/"+js.id+"/dymiummachinetunnel:latest")
+                })
+            },
+            resp => {
+            },
+            error => {
+            })
+
     }, [])
 
     let copydocker = e => {
