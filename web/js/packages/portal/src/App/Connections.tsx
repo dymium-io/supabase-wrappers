@@ -323,7 +323,7 @@ function ConnectionForm(props) {
                 </Row> :
                 <Row>
                     <Col className="thickblue mt-2" xs="auto" style={{fontSize: '0.9em'}}>
-                    {tooltip('Data Source credentials',
+                    {props.cred  && tooltip('Data Source credentials',
                                 <div className="d-block">
                                     Username and password used to access the data source. We recommend to use admin-level credentials. They will be stored in Dymium customer configuration store in an encrypted form.
                                 </div>
@@ -590,6 +590,7 @@ export function EditConnections(props) {
     const [cred, setCred] = useState(false)
     const [alert, setAlert] = useState<JSX.Element>(<></>)
     const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
+    const [context, setContext] = useState("edit")
 
     let form = useRef<HTMLFormElement>(null)
 
@@ -607,7 +608,10 @@ export function EditConnections(props) {
         setValidated(true)
         event.stopPropagation();
         setShowedit(false)
-        updateConnection()
+        if(context === "edit")
+            updateConnection()
+        else
+            sendConnection()
 
         return false
 
@@ -622,7 +626,7 @@ export function EditConnections(props) {
                     conn = c
             })
             if (conn != null) {
-
+                setContext("edit")
                 setName(conn["name"])
                 setDBType(conn["dbtype"])
                 setDbName(conn["dbname"])
@@ -631,6 +635,38 @@ export function EditConnections(props) {
                 setUsername(conn["username"])
                 setPassword("")
                 setCred(false)
+                setUseTLS(conn["useTLS"])
+                setDescription(conn["description"])
+                setConnectorid(conn["connectorid"])
+                setConnectorName(conn["connectorname"])
+                setTunnelid(conn["tunnelid"])
+                setTunnelName(conn["tunnelname"])
+                setUsesconnector(conn["usesconnector"])
+
+            }
+            setValidated(false)
+            setShowedit(true)
+        }
+    }
+    let onDuplicate = id => {
+        return e => {
+            setSelectedId(id)
+            let conn = null
+            conns.forEach(c => {
+
+                if (c['id'] === id)
+                    conn = c
+            })
+            if (conn != null) {
+                setContext("clone")
+                setName("")
+                setDBType(conn["dbtype"])
+                setDbName(conn["dbname"])
+                setAddress(conn["address"])
+                setPort(conn["port"])
+                setUsername(conn["username"])
+                setPassword("")
+                setCred(true)
                 setUseTLS(conn["useTLS"])
                 setDescription(conn["description"])
                 setConnectorid(conn["connectorid"])
@@ -730,6 +766,19 @@ export function EditConnections(props) {
             align: 'center'
         },
         {
+            text: 'Clone',
+            dataField: 'duplicate',
+            isDummyField: true,
+            formatter: (cell, row, rowIndex, formatExtraData) => {
+
+                return <i className="fas fa-clone ablue" aria-label={"duplicate" + rowIndex} id={"duplicate" + rowIndex} onClick={onDuplicate(row["id"])} role="button"></i>
+            },
+            //formatExtraData: { hoverIdx: this.state.hoverIdx },
+            headerStyle: { width: '50px' },
+            style: { height: '30px' },
+            align: 'center'
+        },
+        {
             text: 'Delete',
             dataField: 'delete',
             isDummyField: true,
@@ -743,6 +792,71 @@ export function EditConnections(props) {
         }
 
     ]
+    // a copy from the previous component
+    let sendConnection = () => {
+        setSpinner(true)
+        let body = JSON.stringify({
+            name, dbtype, address, port: parseInt(port),
+            dbname, useTLS, username, password, description,
+            usesconnector: usesconnector, connectorname: connectorName,
+            connectorid, tunnelname: tunnelName, tunnelid
+        })
+        http.sendToServer("POST", "/api/createnewconnection",
+            null, body,
+            resp => {
+                resp.json().then(js => {
+                    if (js.status == "OK") {
+                        setName("")
+                        setDbName("")
+                        setDBType("")
+                        setAddress("")
+                        setPort("")
+                        setUseTLS(false)
+                        setUsername("")
+                        setPassword("")
+                        setDescription("")
+                        setConnectorid("")
+                        setConnectorName("")
+                        setTunnelid("")
+                        setTunnelName("")
+                        setUsesconnector(false)
+                        setAlert(
+                            <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                                Connection {name} created successfully!
+                            </Alert>
+                        )
+                    } else {
+                        setAlert(
+                            < Alert variant="danger" onClose={() => setAlert(<></>)} dismissible >
+                                Error: {com.stripHtmlTags(js.errormessage)} !
+                            </Alert >)
+                    }
+                    setTimeout(() => setSpinner(false), 500)
+                    capi.getConnections(setSpinner, setConns, setAlert, undefined, () => { })
+                }).catch((error) => {
+
+                })
+            },
+            resp => {
+                setSpinner(false)
+                resp != null && resp.text().then(t =>
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            Error creating connection: {com.stripHtmlTags(t)}
+                        </Alert>
+                    ))
+
+            },
+            error => {
+                console.log("on exception")
+                setSpinner(false)
+                setAlert(
+                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                        Error creating connection: {error.message} { }
+                    </Alert>
+                )
+            })
+    }
 
     let updateConnection = () => {
         let body = {
@@ -912,7 +1026,11 @@ export function EditConnections(props) {
             <Modal size="lg" show={showedit} onHide={() => setShowedit(false)} data-testid="modal-edit">
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                     <Modal.Header closeButton>
-                        <Modal.Title>Edit Data Source {connectionName()}</Modal.Title>
+                      <Modal.Title> { context === "edit" ? <>Edit Data Source {connectionName()}</> :
+                      <>Clone Data Source from {connectionName()}</>
+                    }
+                      
+                      </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <ConnectionForm
@@ -944,7 +1062,7 @@ export function EditConnections(props) {
                             setTunnelName={setTunnelName}
                             usesconnector={usesconnector}
                             setUsesconnector={setUsesconnector}
-                            context="edit"
+                            context={context}
                             cred={cred}
                             setCred={setCred}
                         />
