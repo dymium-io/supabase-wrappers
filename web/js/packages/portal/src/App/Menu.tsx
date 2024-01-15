@@ -59,7 +59,7 @@ function Menu() {
                 collapseOnSelect expand="lg" variant="light">
                 <Navbar.Brand className="text-left p-0 m-0 mr-2" >
 
-                    <Nav.Link className="p-1 m-0" style={{ width: '200px' }} href="/">
+                    <Nav.Link className="p-1 m-0" style={{ width: '200px' }} target="dymium" href="https://www.dymium.io">
                         <img src="/fullbrand.svg" style={{ width: '100%' }} alt="logo" />
                     </Nav.Link >
                 </Navbar.Brand>
