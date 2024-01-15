@@ -37,7 +37,8 @@ const databases = Object.keys(com.databaseTypes).map(key => {
 })
 
 function Downloads(props) {
-    const [docker, setDocker] = useState("public.ecr.aws/a9d3u0m7/dymiumconnector:latest")
+    const [registryid, setRegistryid] = useState("")
+    const [docker, setDocker] = useState("")
 
     useEffect(() => {
         http.sendToServer("GET", "/api/getdockers",
@@ -51,6 +52,18 @@ function Downloads(props) {
             },
             error => {
             })
+        http.sendToServer("GET", "/api/getregistryid",
+            null, "",
+            resp => {
+                resp.json().then(js => {
+                    setRegistryid(js.id)
+                    setDocker("public.ecr.aws/"+js.id+"/dymiumconnector:latest")
+                })
+            },
+            resp => {
+            },
+            error => {
+            })            
     }, [])
     let copydocker = e => {
         navigator.clipboard.writeText(docker);

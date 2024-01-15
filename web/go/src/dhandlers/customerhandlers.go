@@ -2135,7 +2135,13 @@ func getMachineClientBucket() string {
 	}
 	return b
 }
-
+func getRegistryID() string {
+	b :=  os.Getenv("REGISTRY_ID")
+	if b == "" {
+		return "t0k4e6u4" //dev
+	}
+	return b
+}
 func DymiumInstallerExe(w http.ResponseWriter, r *http.Request) {
 	authentication.StreamFromS3(w, r, getClientBucket(), "/windows/DymiumInstaller.exe")
 }
@@ -2170,6 +2176,21 @@ func GetDockers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	js, err := json.Marshal(dockers)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+func GetRegistryId(w http.ResponseWriter, r *http.Request) {
+	var id = types.RegistryID{}
+
+	id.Id = getRegistryID()
+
+	js, err := json.Marshal(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -221,6 +221,10 @@ type PIISuggestor struct {
    Detector PIIDetector `json:"detector"`
 }
 
+type RegistryID struct {
+   Id string `json:"id"`
+}
+
 type RequestById struct {
    Id string `json:"id"`
 }
