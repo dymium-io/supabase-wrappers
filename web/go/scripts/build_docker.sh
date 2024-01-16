@@ -104,6 +104,7 @@ mkdir $build_d/mallard
 unzstd -f ../../../bin/linux/mallard.zst -o $build_d/mallard/mallard
 cp -r ../../../DbConf/global $build_d/mallard/
 cp -r ../../../DbConf/customer $build_d/mallard/
+chmod a+x $build_d/mallard/mallard
 
 dymium=$(docker images dymium -q)
 [ -z "$dymium" ] || docker rmi -f "$dymium"
