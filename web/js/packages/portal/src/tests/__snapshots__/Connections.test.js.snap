@@ -254,6 +254,16 @@ exports[`test-connections 1`] = `
                 <th
                   style={
                     {
+                      "width": "50px",
+                    }
+                  }
+                  tabIndex={0}
+                >
+                  Clone
+                </th>
+                <th
+                  style={
+                    {
                       "width": "90px",
                     }
                   }
@@ -317,6 +327,22 @@ exports[`test-connections 1`] = `
                     aria-label="edit0"
                     className="fas fa-edit ablue"
                     id="edit0"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="duplicate0"
+                    className="fas fa-clone ablue"
+                    id="duplicate0"
                     onClick={[Function]}
                     role="button"
                   />
@@ -404,6 +430,22 @@ exports[`test-connections 1`] = `
                   }
                 >
                   <i
+                    aria-label="duplicate1"
+                    className="fas fa-clone ablue"
+                    id="duplicate1"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
                     aria-label="delete1"
                     className="fas fa-trash ablue"
                     id="delete1"
@@ -465,6 +507,22 @@ exports[`test-connections 1`] = `
                     aria-label="edit2"
                     className="fas fa-edit ablue"
                     id="edit2"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="duplicate2"
+                    className="fas fa-clone ablue"
+                    id="duplicate2"
                     onClick={[Function]}
                     role="button"
                   />
@@ -552,6 +610,22 @@ exports[`test-connections 1`] = `
                   }
                 >
                   <i
+                    aria-label="duplicate3"
+                    className="fas fa-clone ablue"
+                    id="duplicate3"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
                     aria-label="delete3"
                     className="fas fa-trash ablue"
                     id="delete3"
@@ -613,6 +687,22 @@ exports[`test-connections 1`] = `
                     aria-label="edit4"
                     className="fas fa-edit ablue"
                     id="edit4"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="duplicate4"
+                    className="fas fa-clone ablue"
+                    id="duplicate4"
                     onClick={[Function]}
                     role="button"
                   />
@@ -700,6 +790,22 @@ exports[`test-connections 1`] = `
                   }
                 >
                   <i
+                    aria-label="duplicate5"
+                    className="fas fa-clone ablue"
+                    id="duplicate5"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
                     aria-label="delete5"
                     className="fas fa-trash ablue"
                     id="delete5"
@@ -761,6 +867,22 @@ exports[`test-connections 1`] = `
                     aria-label="edit6"
                     className="fas fa-edit ablue"
                     id="edit6"
+                    onClick={[Function]}
+                    role="button"
+                  />
+                </td>
+                <td
+                  style={
+                    {
+                      "height": "30px",
+                      "textAlign": "center",
+                    }
+                  }
+                >
+                  <i
+                    aria-label="duplicate6"
+                    className="fas fa-clone ablue"
+                    id="duplicate6"
                     onClick={[Function]}
                     role="button"
                   />

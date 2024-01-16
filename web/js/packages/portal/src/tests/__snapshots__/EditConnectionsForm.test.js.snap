@@ -72,6 +72,7 @@ exports[`edit-connections-form 1`] = `
         <div
           class="modal-title h4"
         >
+           
           Edit Data Source 
           adventureworks
         </div>
@@ -391,6 +392,7 @@ exports[`edit-connections-form 1`] = `
               <input
                 class="form-control form-control-sm"
                 id="portnumber"
+                max="65535"
                 min="1"
                 placeholder="DB port number"
                 required=""
