@@ -261,6 +261,7 @@ function AddMachineTunnel() {
                             <Form.Label>Machine Tunnel Name:</Form.Label>
                             <Form.Control style={{ width: '25em' }} required type="text"
                                 value={name}
+                                pattern="^\S(.*\S)?$"
                                 onChange={e => setName(e.target.value)}
                                 placeholder="Human readable name" />
                             <Form.Control.Feedback type="invalid">
@@ -796,6 +797,7 @@ function EditMachineTunnels() {
                                 <Form.Control style={{ width: '25em' }} required type="text"
                                     value={name}
                                     size="sm"
+                                    pattern="^\S(.*\S)?$"
                                     onChange={e => setName(e.target.value)}
                                     placeholder="Human readable name" />
                                 <Form.Control.Feedback type="invalid">
@@ -815,7 +817,7 @@ function EditMachineTunnels() {
                                     /><i onClick={copykey} style={{ marginTop: '1px' }} className="fas fa-copy clipbtn"></i>
                                 </span>
                                 <Form.Control.Feedback type="invalid">
-                                    Please provide a valid machine tunnel name.
+                                    Please provide a valid access key.
                                 </Form.Control.Feedback>
                             </Form.Group>
 
@@ -840,7 +842,7 @@ function EditMachineTunnels() {
                                         size="sm" /><i onClick={copysecret} style={{ marginTop: '1px' }} className="fas fa-copy clipbtn"></i>
                                 </span>
                                 <Form.Control.Feedback type="invalid">
-                                    Please provide a valid machine tunnel name.
+                                    Please provide a valid access secret.
                                 </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
