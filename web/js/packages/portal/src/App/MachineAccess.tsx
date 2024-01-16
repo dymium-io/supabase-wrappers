@@ -24,7 +24,7 @@ import Modal from 'react-bootstrap/Modal'
 const { SearchBar, ClearSearchButton } = Search;
 
 function MachineTunnelHelp() {
-    const [registryid, setRegistryid] = useState("a9d3u0m7")
+    const [registryid, setRegistryid] = useState("t0k4e6u4")
     useEffect
     (() => {
         http.sendToServer("GET", "/api/getregistryid",
@@ -926,8 +926,8 @@ function MachineTunnelDownloads() {
     const [spinner, setSpinner] = useState(false)
     const [alert, setAlert] = useState<JSX.Element>(<></>)
     const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
-    const [docker, setDocker] = useState("public.ecr.aws/a9d3u0m7/dymiummachinetunnel:latest")
-    const [registryid, setRegistryid] = useState("a9d3u0m7")
+    const [docker, setDocker] = useState("public.ecr.aws/t0k4e6u4/dymiummachinetunnel:latest")
+    const [registryid, setRegistryid] = useState("t0k4e6u4")
     useEffect(() => {
         http.sendToServer("GET", "/api/getdockers",
             null, "",
