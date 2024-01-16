@@ -38,7 +38,7 @@ export default function PasswordField(props) {
     return (
         <InputGroup className={cn}>
 
-            <Form.Control className="no-background" {..._props} style={{ display: 'inline', width: '100%' }} ref={input} />
+            <Form.Control className="no-background" {..._props} style={{ display: 'inline', width: '100%', paddingRight:'2em' }} ref={input} />
 
            {eye ? <i onClick={toggle} className="blue fa fa-eye  fa-fw" style={{ background:'white', marginBottom: '2px', zIndex: '1000', marginTop: '6px', marginLeft: '-25px' }}/> : 
            <i onClick={toggle} className="blue fa fa-eye-slash  fa-fw" style={{ background:'white', marginBottom: '2px',  zIndex: '1000', marginTop: '6px', marginLeft: '-25px' }}/> }
