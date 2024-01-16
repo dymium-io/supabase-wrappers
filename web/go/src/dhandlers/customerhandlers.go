@@ -2169,10 +2169,10 @@ func GetDockers(w http.ResponseWriter, r *http.Request) {
 	dockers.Machineclient = os.Getenv("MACHINE_CLIENT_DOCKER")
 
 	if dockers.Meshconnector == "" {
-		dockers.Meshconnector = "public.ecr.aws/a9d3u0m7/dymiumconnector:latest"
+		dockers.Meshconnector = "public.ecr.aws/t0k4e6u4/dymiumconnector:latest"
 	}	
 	if dockers.Machineclient == "" {
-		dockers.Machineclient = "public.ecr.aws/a9d3u0m7/dymiummachinetunnel:latest"
+		dockers.Machineclient = "public.ecr.aws/t0k4e6u4/dymiummachinetunnel:latest"
 	}
 
 	js, err := json.Marshal(dockers)
