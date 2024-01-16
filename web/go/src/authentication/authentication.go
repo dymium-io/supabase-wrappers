@@ -129,7 +129,13 @@ func GenerateUsernameString(n int) (string, error) {
 	const letters = "0123456789abcdefghijklmnopqrstuvwxyz"
 	ret := make([]byte, n)
 	for i := 0; i < n; i++ {
-		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		var num *big.Int
+		var err error
+		if i == 0 {
+			num, err = rand.Int(rand.Reader, big.NewInt(int64(len(letters) - 10)))
+		} else {
+			num, err = rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		}
 		if err != nil {
 			return "", err
 		}
