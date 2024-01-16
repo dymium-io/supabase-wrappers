@@ -276,6 +276,7 @@ function ConnectionForm(props) {
                                 <Form.Control size="sm" type="number"
                                     required
                                     min={1}
+                                    max={65535}
                                     placeholder="DB port number"
                                     value={props.port}
                                     onChange={e => props.setPort(e.target.value)}
