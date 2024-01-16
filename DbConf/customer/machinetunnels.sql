@@ -30,7 +30,11 @@ CREATE TABLE machinetunnelgroups (
 ALTER TABLE machinetunnels ADD COLUMN username text NOT NULL DEFAULT '';
 ALTER TABLE machinetunnels ADD COLUMN password bytea NOT NULL DEFAULT '\x';
 
-
+-- #!migration
+-- name: "customer/make-names-unique",
+-- requires: ["customer/machinetunnels", "customer/add-machinetunnel-passwords"],
+-- description: "make names unique";
+ALTER TABLE machinetunnels ADD UNIQUE(username);
 
 
 
