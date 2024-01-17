@@ -669,6 +669,9 @@ function EditMachineTunnels() {
     const copykey = e => {
         navigator.clipboard.writeText(accesskey);
     }
+    const copypass  = e => {
+        navigator.clipboard.writeText(password);
+    }
     const nameFromId = (id) => {
         let t = data.find(x => x["id"] === id)
         if (t !== undefined) {
@@ -877,7 +880,7 @@ function EditMachineTunnels() {
                                             value={password}
                                             className="w-20em"
 
-                                            size="sm" /><i onClick={copysecret} style={{ marginTop: '1px' }} className="fas fa-copy clipbtn"></i>
+                                            size="sm" /><i onClick={copypass} style={{ marginTop: '1px' }} className="fas fa-copy clipbtn"></i>
                                     </span>
                                 }
                             </Form.Group>
