@@ -1618,7 +1618,7 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 		log.Errorf("UpdateDatascope Error 4: %s", err.Error())
 		return err
 	}
-	err = RefreshMachineTunnels(schema)
+
 	return err
 }
 
@@ -1880,7 +1880,7 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 		log.Errorf("SaveDatascope error 5: %s", err.Error())
 		return err
 	}
-	err = RefreshMachineTunnels(schema)
+
 	return err
 }
 func DeleteConnection(schema, id string) error {
@@ -2839,7 +2839,7 @@ func UpdateDbGuardian(schema string, username, password, email string, groups []
 
 	snc, _ := json.Marshal(rq)
 
-	log.Infof("UpdateDbGuardian json %s", string(snc))
+	log.Debugf("UpdateDbGuardian json %s", string(snc))
 
 	_, err = Invoke("DbSync", nil, snc)
 	if err != nil {
