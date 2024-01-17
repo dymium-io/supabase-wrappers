@@ -379,7 +379,7 @@ func DoUpdate(portalUrl string) error {
 	}
 	ex, _ := os.Executable()
 	log.Infof("Updating %s...", ex)
-	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, "meshconnector." + protocol.MeshServerVersion + ".bak"})
+	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, "machineclient." + protocol.MeshServerVersion + ".bak"})
 	if err != nil {
 		log.Infof("Error updating: %s", err.Error())
 		if rerr := selfupdate.RollbackError(err); rerr != nil {
