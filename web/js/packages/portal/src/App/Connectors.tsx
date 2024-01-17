@@ -57,13 +57,13 @@ function Downloads(props) {
             resp => {
                 resp.json().then(js => {
                     setRegistryid(js.id)
-                    setDocker("public.ecr.aws/"+js.id+"/dymiumconnector:latest")
+                    setDocker("public.ecr.aws/" + js.id + "/dymiumconnector:latest")
                 })
             },
             resp => {
             },
             error => {
-            })            
+            })
     }, [])
     let copydocker = e => {
         navigator.clipboard.writeText(docker);
@@ -200,11 +200,15 @@ function ConnectionForm(props) {
                             <Form.Label>Port:</Form.Label>
                             <Form.Control size="sm" type="number"
                                 required
+                                step={1}
                                 min={1}
                                 max={65535}
                                 placeholder="DB port number"
-                                value={props.tunnel[i].port}
-                                onChange={e => setPort(e.target.value)}
+                                value={parseInt(props.tunnel[i].port)}
+                                onChange={e => {
+                                        setPort( e.target.value)
+                                    }
+                                }
                             />
                             <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                             <Form.Control.Feedback type="invalid" >
@@ -1018,7 +1022,7 @@ export function EditConnectors(props) {
                 </>
             </Offcanvas>
 
-            <Modal  size="lg" centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
+            <Modal size="lg" centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
                 <Modal.Header closeButton>
                     <Modal.Title>Deprovision connector {connectionName()}?</Modal.Title>
                 </Modal.Header>
