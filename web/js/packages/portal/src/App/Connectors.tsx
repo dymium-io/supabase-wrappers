@@ -261,10 +261,10 @@ function ConnectionForm(props) {
 
                             </div>
                             , 'auto', '', false)}</Form.Label>
-                        <Form.Control size="sm" type="text" placeholder="alpha_num"
+                        <Form.Control size="sm" type="text" placeholder="Human readable"
                             required
 
-                            pattern="[a-zA-Z0-9_ '$#@]+"
+                            pattern="^\S(.*\S)?$"
                             value={props.name}
                             onChange={e => props.setName(e.target.value)}
                         />
