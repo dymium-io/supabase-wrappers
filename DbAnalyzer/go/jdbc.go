@@ -532,7 +532,11 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			possibleActions = allowable
 			sample[k] = dtk(true)
 		case "FLOAT", "REAL":
-			t = "real"
+			if d.cLength != nil && *d.cLength > 6 {
+				t = "double precision"
+			} else {
+				t = "float"
+			}
 			possibleActions = allowable
 			sample[k] = dtk(true)
 		case "INTEGER":
