@@ -37,5 +37,10 @@ ALTER TABLE machinetunnels ADD COLUMN password bytea NOT NULL DEFAULT '\x';
 ALTER TABLE machinetunnels ADD UNIQUE(username);
 
 
-
+-- #!migration
+-- name: "customer/make-names-unique-1",
+-- requires: ["customer/machinetunnels", "customer/make-names-unique"],
+-- description: "make names unique";
+ALTER TABLE machinetunnels DROP CONSTRAINT machinetunnels_username_key;
+ALTER TABLE machinetunnels ADD UNIQUE(name);
 
