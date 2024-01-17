@@ -2838,6 +2838,9 @@ func UpdateDbGuardian(schema string, username, password, email string, groups []
 	}
 
 	snc, _ := json.Marshal(rq)
+
+	log.Infof("UpdateDbGuardian json %s", string(snc))
+
 	_, err = Invoke("DbSync", nil, snc)
 	if err != nil {
 		log.Errorf("UpdateDbGuardian error: %s", err.Error())
