@@ -2161,7 +2161,18 @@ func DymiumLinuxConnector(w http.ResponseWriter, r *http.Request) {
 func DymiumWindowsConnector(w http.ResponseWriter, r *http.Request) {
 	authentication.StreamFromS3(w, r, getConnectorBucket(), "/windows/meshconnector_windows_amd64.zip")
 }
-
+func RefreshMachineTunnels(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	err := authentication.RefreshMachineTunnels(schema)
+	if(err != nil) {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	js := []byte(`{"status": "OK"}`)
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
 func GetDockers(w http.ResponseWriter, r *http.Request) {
 	var dockers = types.DockerDownloads{}
 

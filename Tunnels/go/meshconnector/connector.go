@@ -22,9 +22,10 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
-	"sync/atomic"
+
 	"dymium.com/dymium/log"
 	"dymium.com/meshconnector/ca"
 	"dymium.com/meshconnector/selfupdate"
@@ -303,7 +304,7 @@ func Pinger(serviceside net.Conn, messages chan *protocol.TransmissionUnit, wake
 			return
 		case <-time.After(30 * time.Second):
 		}
-		if(counter != 0 && counter %4 == 0) {		
+		if counter != 0 && counter%4 == 0 {
 			if atomic.LoadInt32(&readCount) == 0 {
 				// Do something if val is 0
 				log.Error("Server inactivity detected, close")
@@ -332,8 +333,6 @@ func ReaderServiceSide(serviceside *tls.Conn, customer string, messages chan *pr
 	var conmap = make(map[int]*Virtcon)
 	var mu sync.RWMutex
 	defer serviceside.Close()
-
-
 
 	wake := make(chan int, 1)
 	go Pinger(serviceside, messages, wake)
@@ -623,11 +622,11 @@ func ConnectToService() {
 	vserver, _ := semver.Make(version)
 	vclient, _ := semver.Make(protocol.MeshServerVersion)
 	if vserver.GT(vclient) {
-		log.Infof("Server version incremented to %s, update itself!", version)
+		log.Infof("Server version incremented to %s, current: %s, update itself!", version, protocol.MeshServerVersion)
 		DoUpdate(portal)
 		os.Exit(0)
 	} else {
-		log.Infof("Server version: %s, client is up to date", version)
+		log.Infof("Server version: %s, client %s is up to date", version, protocol.MeshServerVersion)
 	}
 
 	keyBytes := x509.MarshalPKCS1PrivateKey(certKey)

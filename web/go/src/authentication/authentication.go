@@ -169,7 +169,7 @@ func initRBAC() {
 		"getgroupsfordatascopes", "getusage", "getaccesskey", "createnewconnector",
 		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable",
 		"addmachinetunnel", "getmachinetunnels", "updatemachinetunnel", "deletemachinetunnel",
-		"regenmachinetunnel"}
+		"regenmachinetunnel", "refreshmachinetunnels"}
 
 	usernames := []string{"getmachineclientcertificate", "getclientcertificate", "getdatascopes",
 		"getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables",
@@ -1618,8 +1618,8 @@ func UpdateDatascope(schema string, dscope types.Datascope) error {
 		log.Errorf("UpdateDatascope Error 4: %s", err.Error())
 		return err
 	}
-
-	return nil
+	err = RefreshMachineTunnels(schema)
+	return err
 }
 
 func DeleteDatascope(schema string, id string) error {
@@ -1880,8 +1880,8 @@ func SaveDatascope(schema string, dscope types.Datascope) error {
 		log.Errorf("SaveDatascope error 5: %s", err.Error())
 		return err
 	}
-
-	return nil
+	err = RefreshMachineTunnels(schema)
+	return err
 }
 func DeleteConnection(schema, id string) error {
 	// Create a new context, and begin a transaction
@@ -2940,10 +2940,25 @@ func DeleteMachineTunnel(schema, id string) error {
 	sql := `delete from ` + schema + `.machinetunnelgroups where tunnel_id=$1;`
 	_, err := db.Exec(sql, id)
 	if err != nil {
+		log.Debugf("DeleteMachineTunnel error: %s", err.Error())
 		return err
 	}
-	sql = `delete from ` + schema + `.machinetunnels where id=$1;`
-	_, err = db.Exec(sql, id)
+
+	sql = `delete from ` + schema + `.machinetunnels where id=$1 returning id_auth;`
+	row := db.QueryRow(sql, id)
+	var id_auth string
+	err = row.Scan(&id_auth)
+	if err != nil {
+		log.Debugf("DeleteMachineTunnel error: %s", err.Error())
+		return err
+	}
+
+	sql = `delete from ` + schema + `.machinetunnelauth where id=$1;`
+	_, err = db.Exec(sql, id_auth)
+	if err != nil {
+		log.Debugf("DeleteMachineTunnel error: %s", err.Error())
+		return err
+	}
 	return err
 }
 
@@ -2960,6 +2975,39 @@ func RegenMachineTunnel(schema, id string) error {
 	}
 	sql := `update ` + schema + `.machinetunnels set password=$1,created_at=now() where id=$2;`
 	_, err = db.Exec(sql, enc, id)
+	return err
+}
+
+func RefreshMachineTunnels(schema string) error {
+	sql := `select accesskey, accesssecret from ` + schema + `.machinetunnelauth;`
+	rows, err := db.Query(sql)
+	log.Debugf("RefreshMachineTunnels(%s)", schema)
+
+	if nil == err {
+		defer rows.Close()
+		// do an inline type for a pair of strings
+		var keysecretpair []struct{	key, secret string	}
+		for rows.Next() {
+			var key, secret string
+			err = rows.Scan(&key, &secret)
+			if err != nil {
+				log.Errorf("RefreshMachineTunnels (sql=%s)  error: %s", sql, err.Error())
+				break
+			}
+			keysecretpair = append(keysecretpair, struct{key, secret string}{key, secret})
+		}
+		// now iterate over keysecretpair and call AuthenticateAndPrepareMachineTunnel
+		for i := 0; i < len(keysecretpair); i++ {
+			_, _, err := AuthenticateAndPrepareMachineTunnel(schema, keysecretpair[i].key, keysecretpair[i].secret)
+			if err != nil {
+				log.Errorf("RefreshMachineTunnels error calling AuthenticateAndPrepareMachineTunnel: %s", err.Error())
+			} else {
+				log.Debugf("RefreshMachineTunnels success calling AuthenticateAndPrepareMachineTunnel")
+			}
+		}
+	} else {
+		log.Errorf("RefreshMachineTunnels error retrieving %s: %s", sql, err.Error())
+	}
 	return err
 }
 
