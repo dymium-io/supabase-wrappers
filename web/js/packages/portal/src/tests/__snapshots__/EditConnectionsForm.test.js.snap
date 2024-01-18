@@ -396,6 +396,7 @@ exports[`edit-connections-form 1`] = `
                 min="1"
                 placeholder="DB port number"
                 required=""
+                step="1"
                 type="number"
                 value="5432"
               />

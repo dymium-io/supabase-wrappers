@@ -451,8 +451,9 @@ exports[`add-connection 1`] = `
               onChange={[Function]}
               placeholder="DB port number"
               required={true}
+              step={1}
               type="number"
-              value=""
+              value={NaN}
             />
             <div
               className="valid-feedback"
