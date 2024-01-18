@@ -237,7 +237,7 @@ class DbService(config: ApplicationConfig) {
         if (checkResult is Err) return checkResult
 
         val query = createQueryStatement(schema, table, sampleSize, columns)
-
+  
         return validator.validateRequestDbInfo(dbInfo).mapBoth(
             success = { dbInfo -> processDbRequest(query, dbInfo) },
             failure = { err -> validator.handleError(err.message) }
