@@ -32,3 +32,8 @@ and then:
 > git subtree add --prefix DbGuardian/foreign_data_wrappers/jdbc_fdw jdbc_fdw main --squash
 and then:
 > git subtree pull --prefix DbGuardian/foreign_data_wrappers/jdbc_fdw jdbc_fdw main --squash 
+
+> git remote add -f supabase_wrappers https://github.com/supabase/wrappers.git
+> git subtree add --prefix DbGuardian/foreign_data_wrappers/supabase_wrappers supabase_wrappers main --squash
+and then:
+> git subtree pull --prefix DbGuardian/foreign_data_wrappers/supabase_wrappers supabase_wrappers main --squash
