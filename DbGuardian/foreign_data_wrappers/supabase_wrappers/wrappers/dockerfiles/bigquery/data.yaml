@@ -1,0 +1,23 @@
+projects:
+- id: test_project
+  datasets:
+    - id: test_dataset
+      tables:
+        - id: test_table
+          columns:
+            - name: id
+              type: INTEGER
+              mode: REQUIRED
+            - name: name
+              type: STRING
+              mode: REQUIRED
+            - name: num
+              type: NUMERIC
+              mode: REQUIRED
+          data:
+            - id: 1
+              name: foo
+              num: 0.123
+            - id: 2
+              name: bar
+              num: 1234.56789
