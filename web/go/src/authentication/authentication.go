@@ -1460,7 +1460,7 @@ func GetDatascope(schema, id string) (types.Datascope, error) {
 	var counter int
 	sql = `select count(*) from ` + schema + `.groupsfordatascopes where datascope_id=$1;`
 	row = db.QueryRow(sql, id)
-	log.Infof("\n\nsql: %s, id: %s\n\n", sql, id)
+
 	err = row.Scan(&counter)
 	ds.Groupsconfigured = counter > 0
 	if err != nil {

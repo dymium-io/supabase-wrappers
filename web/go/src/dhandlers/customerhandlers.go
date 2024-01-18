@@ -877,7 +877,7 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateDatascope, RefreshMachineTunnels returned: %s", err.Error())
 	}
-	
+
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
@@ -1004,6 +1004,10 @@ func SaveGroups(w http.ResponseWriter, r *http.Request) {
 	}
 	if error == nil {
 		log.InfoUserArrayf(schema, session, email, groups, roles, "Api SaveGroups for Datascope %s, success", out, t.Name)
+	}
+	err = authentication.RefreshMachineTunnels(schema)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api SaveGroups, RefreshMachineTunnels returned: %s", err.Error())
 	}
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
