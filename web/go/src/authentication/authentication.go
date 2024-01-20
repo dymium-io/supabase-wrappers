@@ -909,13 +909,10 @@ func CreateNewConnection(schema string, con types.ConnectionRecord) (string, err
 	if err != nil {
 		return id, err
 	}
-	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
-	if hexkey == "" {
-		return id, errors.New("Api CreateNewConnection: No key found")
-	}
-	enc, err := AESencrypt([]byte(*con.Password), hexkey)
+
+	enc, err := EncryptString(schema, *con.Password) 
 	if err != nil {
-		return id, err
+		return  "", err
 	}
 
 	sqlI = `insert into ` + schema + `.passwords(id, password) values($1, $2)`
@@ -1265,7 +1262,7 @@ func GetClientIdFromSchema(schema string) (string, error) {
 	return clientid, err
 }
 
-func DecryptPassword(schema string, password []byte) (string, error) {
+func DecryptByteArray(schema string, password []byte) (string, error) {
 	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
 	plain, err := AESdecrypt(password, hexkey)
 
@@ -1273,6 +1270,16 @@ func DecryptPassword(schema string, password []byte) (string, error) {
 		return "", err
 	}
 	return string(plain), nil
+}
+
+func EncryptString(schema string, password string) ([]byte, error) {
+	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
+	enc, err := AESencrypt([]byte(password), hexkey)
+
+	if err != nil {
+		return nil, err
+	}
+	return enc, nil
 }
 
 func UpdateConnection(schema string, con types.ConnectionRecord) error {
@@ -1319,9 +1326,7 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 			log.Errorf("UpdateConnection 2: %s", err.Error())
 			return err
 		}
-		hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
-
-		enc, err := AESencrypt([]byte(*con.Password), hexkey)
+		enc, err := EncryptString(schema, *con.Password) 
 		if err != nil {
 			return err
 		}
@@ -1376,8 +1381,7 @@ func GetConnection(schema, id string) (types.ConnectionParams, bool, error) {
 		log.Errorf("GetConnection error 0: %s", err.Error())
 		return con, false, err
 	} else {
-		hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
-		plain, err := AESdecrypt(password, hexkey)
+		plain, err := DecryptByteArray(schema, password )
 
 		if err != nil {
 			fmt.Printf("GetConnection error X: %s\n", err.Error())
@@ -1957,11 +1961,13 @@ func GetFakeAuthentication() []byte {
 }
 
 func CheckConnectorAuth(schema, key, secret string) error {
-	sql := `select accesssecret from ` + schema + `.connectorauth where accesskey=$1;`
+	sql := `select accesssecretb from ` + schema + `.connectorauth where accesskey=$1;`
 	const norecord = "The record for this connector does not exist. Please check configuration in the portal."
 	row := db.QueryRow(sql, key)
-	var realsecret string
-	err := row.Scan(&realsecret)
+	var realsecretb []byte
+	err := row.Scan( &realsecretb)
+	
+
 	if err != nil {
 		var pqErr *pq.Error
 		if errors.As(err, &pqErr) {
@@ -1977,18 +1983,30 @@ func CheckConnectorAuth(schema, key, secret string) error {
 		}
 		return err
 	}
-	if secret != realsecret {
+	realsecret, err := DecryptByteArray(schema, realsecretb )
+	if err != nil {
+		return err
+	}
+
+	if secret != string(realsecret) {
 		return errors.New("Invalid shared secret, connection refused")
 	}
 	return nil
 }
 
 func GetTargets(schema, key, secret string) ([]string, error) {
+
+	encsycret, err := EncryptString(schema, secret) 
+	if err != nil {
+		return nil, err
+	}
+
 	var targets []string
 	sql := `select a.targetaddress, a.targetport, a.localport, b.id, a.id from ` + schema + `.connectors as a 
-	join ` + schema + `.connectorauth as b on a.id_connectorauth=b.id where b.accesskey=$1 and b.accesssecret=$2;`
+	join ` + schema + `.connectorauth as b on a.id_connectorauth=b.id where b.accesskey=$1 and b.accesssecretb=$2;`
 
-	rows, err := db.Query(sql, key, secret)
+
+	rows, err := db.Query(sql, key, encsycret)
 	if nil == err {
 		defer rows.Close()
 		for rows.Next() {
@@ -2319,10 +2337,15 @@ func CreateNewConnector(schema string, req *types.AddConnectorRequest) (string, 
 		return "", err
 	}
 
-	sql := `insert into ` + schema + `.connectorauth(name, accesskey, accesssecret) values($1,$2,$3) returning id;`
+	sql := `insert into ` + schema + `.connectorauth(name, accesskey, accesssecret, accesssecretb) values($1,$2,$3, $4) returning id;`
+
+	encsycret, err := EncryptString(schema, req.Secret) 
+	if err != nil {
+		return "", err
+	}
 
 	var id string
-	row := tx.QueryRowContext(ctx, sql, req.Name, req.Accesskey, req.Secret)
+	row := tx.QueryRowContext(ctx, sql, req.Name, req.Accesskey, "", encsycret)
 	err = row.Scan(&id)
 	if err != nil {
 		tx.Rollback()
@@ -2372,16 +2395,17 @@ func GetConnectors(schema string) ([]types.Connector, error) {
 	defer cancelfunc()
 
 	tx, err := db.BeginTx(ctx, nil)
-	sql := ` select a.id, a.name, a.accesskey, a.accesssecret, EXTRACT(epoch from (now() - a.createdat)), (select count(*) from ` + schema + `.connections where connector_id=a.id) from ` + schema + `.connectorauth as a;`
+	sql := ` select a.id, a.name, a.accesskey, a.accesssecretb, EXTRACT(epoch from (now() - a.createdat)), (select count(*) from ` + schema + `.connections where connector_id=a.id) from ` + schema + `.connectorauth as a;`
 	rows, err := tx.QueryContext(ctx, sql)
 	if nil == err {
 		defer rows.Close()
 		for rows.Next() {
-			var id, name, accesskey, accesssecret string
+			var id, name, accesskey string
+			var accesssecretb []byte
 			var nstatus int
 			var age float64
 
-			err = rows.Scan(&id, &name, &accesskey, &accesssecret, &age, &nstatus)
+			err = rows.Scan(&id, &name, &accesskey, &accesssecretb, &age, &nstatus)
 			if err != nil {
 				log.Errorf("GetConnectors error 0: %s", err.Error())
 				return out, err
@@ -2390,10 +2414,17 @@ func GetConnectors(schema string) ([]types.Connector, error) {
 			o.Name = name
 			o.Id = id
 			o.Accesskey = &accesskey
+
+			accesssecret, err := DecryptByteArray(schema, accesssecretb )
+			if err != nil {
+				return out, err
+			}
+
 			if age > 60*60*24 {
 				o.Secret = &pswd
 			} else {
-				o.Secret = &accesssecret
+				s := string(accesssecret)
+				o.Secret = &s
 			}
 			var st string
 			if nstatus == 0 {
@@ -2746,10 +2777,15 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error) {
 		log.Errorf("AddMachineTunnel error 1: %s", err.Error())
 		return "", err
 	}
-	sql := `insert into ` + schema + `.machinetunnelauth( accesskey, accesssecret ) values($1,$2) returning id;`
+	sql := `insert into ` + schema + `.machinetunnelauth( accesskey, accesssecretb, accesssecret ) values($1,$2,$3) returning id;`
+
+	accesssecretb, err := EncryptString(schema, accesssecret) 
+	if err != nil {
+		return "", err
+	}
 
 	// execute, and return a string id
-	res := tx.QueryRowContext(ctx, sql, accesskey, accesssecret)
+	res := tx.QueryRowContext(ctx, sql, accesskey, accesssecretb, "")
 	var id string
 	// get the string id of the inserted row
 	err = res.Scan(&id)
@@ -2761,13 +2797,10 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error) {
 	// generate username and password:
 	username, _ := GenerateUsernameString(16)
 	password, _ := GenerateRandomString(32)
-	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
-	if hexkey == "" {
-		return id, errors.New("Api CreateNewConnection: No key found")
-	}
-	enc, err := AESencrypt([]byte(password), hexkey)
+
+	enc, err := EncryptString(schema, password) 
 	if err != nil {
-		return id, err
+		return "", err
 	}
 
 	/* now create the tunnel record in the machinetunnels tablemachinetunnels
@@ -2849,7 +2882,7 @@ func UpdateDbGuardian(schema string, username, password, email string, groups []
 }
 
 func GetMachineTunnels(schema string) ([]types.MachineTunnel, error) {
-	sql := `select a.id, a.name, EXTRACT(epoch from (now() - a.created_at)), b.accesskey, b.accesssecret, a.username, a.password from ` + schema + `.machinetunnels as a
+	sql := `select a.id, a.name, EXTRACT(epoch from (now() - a.created_at)), b.accesskey, b.accesssecretb, a.username, a.password from ` + schema + `.machinetunnels as a
 	join ` + schema + `.machinetunnelauth as b on a.id_auth=b.id;`
 	var out = []types.MachineTunnel{}
 
@@ -2861,11 +2894,16 @@ func GetMachineTunnels(schema string) ([]types.MachineTunnel, error) {
 			var age float64
 			var tunnel = types.MachineTunnel{}
 			var bpass []byte
-			err = rows.Scan(&tunnel.Id, &tunnel.Name, &age, &tunnel.Accesskey, &tunnel.Secret, &tunnel.Username, &bpass)
+			var accesssecretb []byte
+			err = rows.Scan(&tunnel.Id, &tunnel.Name, &age, &tunnel.Accesskey, &accesssecretb, &tunnel.Username, &bpass)
 			if err != nil {
 				break
 			}
-			pass, _ := DecryptPassword(schema, bpass)
+			dc, _ := DecryptByteArray(schema, accesssecretb)
+			dcs := string(dc)
+			tunnel.Secret = &dcs
+
+			pass, _ := DecryptByteArray(schema, bpass)
 
 			tunnel.Password = &pass
 			if age > 60*60*24 {
@@ -2968,21 +3006,19 @@ func DeleteMachineTunnel(schema, id string) error {
 func RegenMachineTunnel(schema, id string) error {
 	// generate password:
 	password, _ := GenerateRandomString(32)
-	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
-	if hexkey == "" {
-		return errors.New("API RegenMachineTunnel: no key found")
-	}
-	enc, err := AESencrypt([]byte(password), hexkey)
+
+	enc, err := EncryptString(schema, password) 
 	if err != nil {
-		return err
+		return  err
 	}
+
 	sql := `update ` + schema + `.machinetunnels set password=$1,created_at=now() where id=$2;`
 	_, err = db.Exec(sql, enc, id)
 	return err
 }
 
 func RefreshMachineTunnels(schema string) error {
-	sql := `select accesskey, accesssecret from ` + schema + `.machinetunnelauth;`
+	sql := `select accesskey, accesssecretb from ` + schema + `.machinetunnelauth;`
 	rows, err := db.Query(sql)
 	log.Debugf("RefreshMachineTunnels(%s)", schema)
 
@@ -2991,12 +3027,14 @@ func RefreshMachineTunnels(schema string) error {
 		// do an inline type for a pair of strings
 		var keysecretpair []struct{	key, secret string	}
 		for rows.Next() {
+			var secretb []byte
 			var key, secret string
-			err = rows.Scan(&key, &secret)
+			err = rows.Scan(&key, &secretb)
 			if err != nil {
 				log.Errorf("RefreshMachineTunnels (sql=%s)  error: %s", sql, err.Error())
 				break
 			}
+			secret, _ = DecryptByteArray(schema, secretb)
 			keysecretpair = append(keysecretpair, struct{key, secret string}{key, secret})
 		}
 		// now iterate over keysecretpair and call AuthenticateAndPrepareMachineTunnel
@@ -3016,22 +3054,28 @@ func RefreshMachineTunnels(schema string) error {
 
 func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, string, error) {
 	// check if key and secret are valid against the machinetunnels table key and secret
-	sql := `select b.id, b.username, b.password, b.name from ` + schema + `.machinetunnelauth as a join ` + schema + `.machinetunnels as b 
-	on a.id=b.id_auth  where a.accesskey=$1 and a.accesssecret=$2;`
-	var id, username, password string
+	sql := `select b.id, b.username, b.passwordb, b.name from ` + schema + `.machinetunnelauth as a join ` + schema + `.machinetunnels as b 
+	on a.id=b.id_auth  where a.accesskey=$1 and a.accesssecretb=$2;`
+
+	secretb, err := EncryptString(schema, secret) 
+	if err != nil {
+		return  nil, "", err
+	}
+
+	var id, username string
+	var password []byte
 	var name string
-	row := db.QueryRow(sql, key, secret)
-	//fmt.Printf(`select b.id, b.username, b.password, b.name from ` + schema + `.machinetunnelauth as a join `+schema+`.machinetunnels as b
-	//on a.id=b.id_auth  where a.accesskey='%s' and a.accesssecret='%s';`, key, secret)
-	err := row.Scan(&id, &username, &password, &name)
+	row := db.QueryRow(sql, key, secretb)
+
+	err = row.Scan(&id, &username, &password, &name)
 
 	if err != nil {
 		log.Errorf("AuthenticateAndPrepareMachineTunnel error: %s", err.Error())
 		log.Infof("AuthenticateAndPrepareMachineTunnel error, sql: %s, schema: %s, key: %s, secret: %s", sql, schema, key, secret)
 		return []string{}, "", err
 	}
-	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
-	decpassword, err := AESdecrypt([]byte(password), hexkey)
+	
+	decpassword, err := DecryptByteArray(schema, password)
 	if err != nil {
 		return []string{}, "", err
 	}

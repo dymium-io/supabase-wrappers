@@ -44,3 +44,9 @@ ALTER TABLE machinetunnels ADD UNIQUE(username);
 ALTER TABLE machinetunnels DROP CONSTRAINT machinetunnels_username_key;
 ALTER TABLE machinetunnels ADD UNIQUE(name);
 
+
+-- #!migration
+-- name: "customer/machinetunnelauth-change-password",
+-- requires: ["customer/machinetunnels"],
+-- description: "Add accesssecretb field to hold encrypted password";
+ALTER TABLE machinetunnelauth ADD COLUMN accesssecretb bytea NOT NULL DEFAULT '\x';
