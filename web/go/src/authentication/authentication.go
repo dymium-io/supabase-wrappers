@@ -677,8 +677,14 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	rq.UserConf.Name = username
 	rq.UserConf.Password = password
 
-	sqlName := `update ` + schema + `.users set password=$1, lastchanged=now() where username=$2;`
-	_, err := db.Exec(sqlName, password, username)
+	enc, err := EncryptString(schema, password)
+	if err != nil {
+		log.Errorf("RegenerateDatascopePassword error: %s", err.Error())
+		return out, err
+	}
+
+	sqlName := `update ` + schema + `.users set passwordb=$1, lastchanged=now() where username=$2;`
+	_, err = db.Exec(sqlName, enc, username)
 	if err != nil {
 		log.Errorf("RegenerateDatascopePassword error: %s", err.Error())
 		return out, err
@@ -775,16 +781,23 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 
 	username := UsernameFromEmail(email)
 	var password string
+	var passwordb []byte
 	var age float32
-	sqlName := `select password, EXTRACT(epoch from (now() - lastchanged)) from ` + schema + `.users where username=$1;`
+	sqlName := `select passwordb, EXTRACT(epoch from (now() - lastchanged)) from ` + schema + `.users where username=$1;`
 	row := db.QueryRow(sqlName, username)
-	err := row.Scan(&password, &age)
+	err := row.Scan(&passwordb, &age)
+	if err != nil {
+		return out, err
+	}
+
+	password, err = DecryptByteArray(schema, passwordb)
 
 	if err != nil {
 		log.Errorf("GetDatascopesForGroups error: %s", err.Error())
 		password = generatePassword(10)
-		sqlName := `insert into ` + schema + `.users (username,password)  values($1, $2);`
-		_, err = db.Exec(sqlName, username, password)
+		passwordb, _ = EncryptString(schema, password)
+		sqlName := `insert into ` + schema + `.users (username,passwordb)  values($1, $2);`
+		_, err = db.Exec(sqlName, username, passwordb)
 
 		if err != nil {
 			log.Errorf("GetDatascopesForGroups error: %s", err.Error())
@@ -1274,8 +1287,8 @@ func DecryptByteArray(schema string, password []byte) (string, error) {
 
 func EncryptString(schema string, password string) ([]byte, error) {
 	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
-	enc, err := AESencrypt([]byte(password), hexkey)
-
+		enc, err := AESencrypt([]byte(password), hexkey)
+	
 	if err != nil {
 		return nil, err
 	}
@@ -3054,27 +3067,27 @@ func RefreshMachineTunnels(schema string) error {
 
 func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, string, error) {
 	// check if key and secret are valid against the machinetunnels table key and secret
-	sql := `select b.id, b.username, b.passwordb, b.name from ` + schema + `.machinetunnelauth as a join ` + schema + `.machinetunnels as b 
-	on a.id=b.id_auth  where a.accesskey=$1 and a.accesssecretb=$2;`
-
-	secretb, err := EncryptString(schema, secret) 
-	if err != nil {
-		return  nil, "", err
-	}
+	sql := `select b.id, b.username, b.password, b.name, a.accesssecretb from ` + schema + `.machinetunnelauth as a join ` + schema + `.machinetunnels as b 
+	on a.id=b.id_auth  where a.accesskey=$1 ;`
 
 	var id, username string
-	var password []byte
+	var password, ciphertext []byte
 	var name string
-	row := db.QueryRow(sql, key, secretb)
+	row := db.QueryRow(sql, key)
 
-	err = row.Scan(&id, &username, &password, &name)
+	err := row.Scan(&id, &username, &password, &name, &ciphertext)
 
 	if err != nil {
 		log.Errorf("AuthenticateAndPrepareMachineTunnel error: %s", err.Error())
-		log.Infof("AuthenticateAndPrepareMachineTunnel error, sql: %s, schema: %s, key: %s, secret: %s", sql, schema, key, secret)
 		return []string{}, "", err
 	}
-	
+	storedsecret, err := DecryptByteArray(schema, ciphertext)
+	if err != nil {
+		return []string{}, "", err
+	}
+	if(storedsecret != secret) {
+		return []string{}, "", fmt.Errorf("Tunnel authentication failure")
+	}
 	decpassword, err := DecryptByteArray(schema, password)
 	if err != nil {
 		return []string{}, "", err
