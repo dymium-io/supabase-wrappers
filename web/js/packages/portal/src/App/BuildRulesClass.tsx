@@ -299,12 +299,13 @@ export default class BuildRulesClass extends Component {
                 name: x.detector.name,
                 method: x.detector.method,
                 data: x.detector.data,
-                actions: []
+                actions: x.actions
               }
+              /*
               for (let i = 0; i < prep.actions.length; i++) {
                 out.actions[i] = JSON.parse(prep.actions[i].toJson())
               }
-
+*/
               return out
             })
             this.setState({ rules: suggs })
@@ -331,7 +332,7 @@ export default class BuildRulesClass extends Component {
     </Alert>
     this.setState({ spinner: true })
     let body = newpolicy.toJson()
-    debugger
+    
     let xx = JSON.parse(body)
     http.sendToServer("POST", "/api/savepolicies",
       null, body,
@@ -470,6 +471,9 @@ export default class BuildRulesClass extends Component {
     }
     return true
   }
+  handleTableChange = (type, { page, sizePerPage, sortField, sortOrder, searchText }) => {
+
+  };
   render() {
     return (
       <>
@@ -588,7 +592,7 @@ export default class BuildRulesClass extends Component {
 
                         pagination={paginationFactory()}
                         defaultSorted={defaultSortedBy}
-
+                        onTableChange={this.handleTableChange}
                         {...props.baseProps}
                       />
                     </div>
