@@ -2009,28 +2009,33 @@ func CheckConnectorAuth(schema, key, secret string) error {
 
 func GetTargets(schema, key, secret string) ([]string, error) {
 
-	encsycret, err := EncryptString(schema, secret) 
-	if err != nil {
-		return nil, err
-	}
-
 	var targets []string
-	sql := `select a.targetaddress, a.targetport, a.localport, b.id, a.id from ` + schema + `.connectors as a 
-	join ` + schema + `.connectorauth as b on a.id_connectorauth=b.id where b.accesskey=$1 and b.accesssecretb=$2;`
+	sql := `select a.targetaddress, a.targetport, a.localport, b.id, a.id, b.accesssecretb from ` + schema + `.connectors as a 
+	join ` + schema + `.connectorauth as b on a.id_connectorauth=b.id where b.accesskey=$1;`
 
 
-	rows, err := db.Query(sql, key, encsycret)
+	rows, err := db.Query(sql, key)
 	if nil == err {
 		defer rows.Close()
 		for rows.Next() {
 			var address string
 			var port, localport int
 			var connid, tunnelid string
-			err := rows.Scan(&address, &port, &localport, &connid, &tunnelid)
+			var secretb []byte
+			err := rows.Scan(&address, &port, &localport, &connid, &tunnelid, &secretb)
 			if err != nil {
 				log.Errorf("Error: %s\n", err.Error())
 				return nil, err
 			}
+			decsec, err := DecryptByteArray(schema, secretb)
+			if err != nil {
+				log.Errorf("Error: %s\n", err.Error())
+				return nil, err
+			}
+			if decsec != secret {
+				return nil, fmt.Errorf("Error: authentication failure, no such tunnel")
+			}
+
 			s := fmt.Sprintf("%s:%d,%d,%s,%s", address, port, localport, connid, tunnelid)
 			log.Infof("Add target %s", s)
 			targets = append(targets, s)
