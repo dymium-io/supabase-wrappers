@@ -170,7 +170,7 @@ function ConnectionForm(props) {
                             <Form.Label>Name:</Form.Label>
                             <Form.Control size="sm" type="text" placeholder="Tunnel name"
                                 required
-                                pattern="[a-zA-Z0-9_ '$#@]+"
+                                pattern="^\S(.*\S)?$"
                                 value={props.tunnel[i].name}
                                 onChange={e => setName(e.target.value)}
                             />
