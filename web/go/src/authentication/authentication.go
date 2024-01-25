@@ -2043,7 +2043,9 @@ func GetTargets(schema, key, secret string) ([]string, error) {
 	} else {
 		return nil, errors.New("Tunnels for the connector are not configured properly")
 	}
-
+	if len(targets) == 0 {
+		return nil, fmt.Errorf("Error: no tunnels are configured for this connector")
+	}
 	return targets, nil
 }
 

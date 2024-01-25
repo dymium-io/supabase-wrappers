@@ -655,6 +655,9 @@ func ConnectToService() {
 		for _, nm := range c.DNSNames {
 			log.Infof("Tunnel: %s", nm)
 		}
+		if len(c.DNSNames) == 0 {
+			log.Error("No tunnels are returned, connector parameters are probably misconfigured")
+		}
 	} else {
 		log.Infof("error parsing %s\n%s", e.Error(), back.Certificate)
 	}

@@ -22,11 +22,12 @@ func CustomerHandlers(p *mux.Router) {
 
 	authenticated.HandleFunc("/api/createnewconnection", dhandlers.CreateNewConnection).Methods("POST").Name("createnewconnection")
 	authenticated.HandleFunc("/api/queryconnection", dhandlers.QueryConnection).Methods("POST").Name("queryconnection")
+	// no test
 	authenticated.HandleFunc("/api/querytable", dhandlers.QueryTable).Methods("POST").Name("querytable")	
+
 	authenticated.HandleFunc("/api/updateconnection", dhandlers.UpdateConnection).Methods("POST").Name("updateconnection")
 	authenticated.HandleFunc("/api/deleteconnection", dhandlers.DeleteConnection).Methods("POST").Name("deleteconnection")
 	authenticated.HandleFunc("/api/getconnections", dhandlers.GetConnections).Methods("GET").Name("getconnections")
-
 	authenticated.HandleFunc("/api/savedatascope", dhandlers.SaveDatascope).Methods("POST").Name("savedatascope")
 	authenticated.HandleFunc("/api/updatedatascope", dhandlers.UpdateDatascope).Methods("POST").Name("updatedatascope")
 	authenticated.HandleFunc("/api/deletedatascope", dhandlers.DeleteDatascope).Methods("POST").Name("deletedatascope")
