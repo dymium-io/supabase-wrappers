@@ -2076,6 +2076,12 @@ func UpdateMachineTunnel(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	
+	err = authentication.RefreshMachineTunnels(schema)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
 	js := []byte(`{"status": "OK"}`)
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
