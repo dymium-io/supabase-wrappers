@@ -1,4 +1,4 @@
-FROM alpine:3.18.4
+FROM alpine:3.18.5
 LABEL com.dymium.vendor="Dymium" \
       version="0.1" \
       product="Dymium Tunneling Server"
