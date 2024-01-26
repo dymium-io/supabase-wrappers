@@ -891,4 +891,63 @@ func TestApiHandlers(t *testing.T) {
 		require.Equal(t, 1, len(mappings), fmt.Sprintf("Error in GetGroupsForDatascopes %s\n", status.Errormessage))
 
 	}()
+
+/*
+	// convert DER to PEM format
+	func pemCSR(derBytes []byte) []byte {
+		pemBlock := &pem.Block{
+			Type:    csrPEMBlockType,
+			Headers: nil,
+			Bytes:   derBytes,
+		}
+		out := pem.EncodeToMemory(pemBlock)
+		return out
+	}
+	func generateCSR(name string, groups []string) ([]byte, error) {
+		var err error
+		certKey, err = rsa.GenerateKey(rand.Reader, 4096)
+		if err != nil {
+			return []byte{}, err
+		}
+
+		template := &x509.CertificateRequest{
+			SignatureAlgorithm: x509.SHA256WithRSA,
+			PublicKeyAlgorithm: x509.RSA,
+			PublicKey:          &certKey.PublicKey,
+			Subject:            pkix.Name{CommonName: name},
+			DNSNames:           groups,
+		}
+		log.Infof("Generating certificate request...")
+		csrDER, err := x509.CreateCertificateRequest(rand.Reader, template, certKey)
+		if err != nil {
+			return []byte{}, err
+		}
+		out := pemCSR(csrDER)
+
+		return out, nil
+	}
+
+
+	func() {
+		var outbody types.CertificateRequest
+		outbody.Csr = string(csr)
+		js, err := json.Marshal(outbody)
+
+
+		rr, body := LoadAuthHandler("POST", "/api/getclientcertificate", bytes.NewBuffer([]byte(groupmapping_1)),
+		GetClientCertificate)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+
+		var back types.CSRResponse
+		err = json.Unmarshal(body, &back)
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		fmt.Println("Proper error is thrown for CreateMapping")
+	}()
+	*/
 }

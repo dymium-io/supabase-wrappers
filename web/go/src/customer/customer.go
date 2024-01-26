@@ -42,8 +42,9 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated.HandleFunc("/api/getmappings", dhandlers.GetMappings).Methods("GET").Name("getmappings")
 	authenticated.HandleFunc("/api/savegroups", dhandlers.SaveGroups).Methods("POST").Name("savegroups")
 
-	// no test
+
 	authenticated.HandleFunc("/api/getgroupsfordatascopes", dhandlers.GetGroupsForDatascopes).Methods("GET").Name("getgroupsfordatascopes")
+	// no test
 	authenticated.HandleFunc("/api/getclientcertificate", dhandlers.GetClientCertificate).Methods("POST").Name("getclientcertificate")
 	authenticated.HandleFunc("/api/getdatascopesaccess", dhandlers.GetDatascopesAccess).Methods("GET").Name("getdatascopesaccess")
 	authenticated.HandleFunc("/api/regenpassword", dhandlers.RegenerateDatascopePassword).Methods("GET").Name("regenpassword")

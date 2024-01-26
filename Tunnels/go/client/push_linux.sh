@@ -32,6 +32,6 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -a -tags netgo -ldflags '-w -extldflags "-static"' -o dymium
 
 tar cvzf tunnel.tar.gz -C ./ dymium
-aws s3  --profile $PROFILE --region us-west-2 cp dymium  s3://$S3_BUCKET/linux/tunnel.tar.gz
+aws s3  --profile $PROFILE --region us-west-2 cp tunnel.tar.gz  s3://$S3_BUCKET/linux/tunnel.tar.gz
 
 go build -a -tags netgo -ldflags '-w -extldflags "-static"' -o dymium
