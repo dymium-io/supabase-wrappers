@@ -83,13 +83,13 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/bin/meshconnector_linux_amd64.tgz", dhandlers.DymiumLinuxConnector).Methods("GET")
 	nonauthenticated.HandleFunc("/bin/meshconnector_windows_amd64.zip", dhandlers.DymiumWindowsConnector).Methods("GET")
 
-	
-
-	
+	//no test
 	nonauthenticated.HandleFunc("/api/fakelogin", dhandlers.FakeLogin).Methods("GET")
+
 	nonauthenticated.HandleFunc("/api/getlogin", dhandlers.GetLogin).Methods("GET")
 	nonauthenticated.HandleFunc("/api/logout", dhandlers.GetLogout).Methods("GET")
 	nonauthenticated.HandleFunc("/api/querytunnel", dhandlers.QueryTunnel).Methods("POST")
+	// no test
 	nonauthenticated.HandleFunc("/api/authenticatebycode", dhandlers.AuthByCode).Methods("POST")
 	
 	nonauthenticated.HandleFunc("/api/downloadupdate", dhandlers.DownloadUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")

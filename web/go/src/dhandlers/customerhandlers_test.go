@@ -1,6 +1,5 @@
 // Copyright (c) 2022 Dymium, Inc. All rights reserved.
 // written by igor@dymium.io
-//
 package dhandlers
 
 import (
@@ -8,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -244,7 +242,24 @@ func TestApiHandlers(t *testing.T) {
 		h := http.HandlerFunc(handler)
 		hh := AuthMiddleware(h)
 		hh.ServeHTTP(rr, req)
-		body, _ := ioutil.ReadAll(rr.Body)
+		body, _ := io.ReadAll(rr.Body)
+
+		return rr, body
+	}
+	LoadHandler := func(method string, url string, reader io.Reader,
+		handler func(http.ResponseWriter, *http.Request)) (*httptest.ResponseRecorder, []byte) {
+
+		req, err := http.NewRequest(method, url, reader)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+
+		h := http.HandlerFunc(handler)
+		h.ServeHTTP(rr, req)
+		body, _ := io.ReadAll(rr.Body)
 
 		return rr, body
 	}
@@ -516,18 +531,18 @@ func TestApiHandlers(t *testing.T) {
 
 		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
 
-		var status	types.OperationStatus
+		var status types.OperationStatus
 		err = json.Unmarshal(body, &status)
 		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in DeleteDatascope %s\n", status.Errormessage))
 	}
-	func()  {
+	func() {
 
 		rr, body := LoadAuthHandler("GET", "/api/getdatascopes", nil,
 			GetDatascopes)
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
+			return
 		}
 
 		var status types.DatascopesStatus
@@ -541,8 +556,64 @@ func TestApiHandlers(t *testing.T) {
 			}
 		}
 
+	}()
+
+	// get login
+	func() {
+
+		rr, body := LoadHandler("GET", "/api/getlogin", nil,
+			GetLogin)
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		tl := struct {
+			LoginURL string
+		}{}
+
+		err = json.Unmarshal(body, &tl)
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
 
 	}()
+
+	// get logout
+	func() {
+
+		rr, body := LoadHandler("GET", "/api/getlogout", nil,
+			GetLogout)
+		if s := rr.Code; s != http.StatusFound {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		fmt.Println(body)
+
+	}()
+
+	func(id string) {
+
+		var ds = types.CustomerIDRequest{Customerid: id}
+
+		js, err := json.Marshal(ds)
+		require.Equal(t, nil, err, fmt.Errorf("Error marshaling: %s\n", err))
+
+		rr, body := LoadHandler("POST", "/api/querytunnel", bytes.NewBuffer(js),
+			QueryTunnel)
+
+		require.Equal(t, nil, err, fmt.Errorf("Error reading body: %s\n", err))
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		var status types.CustomerIDResponse
+		err = json.Unmarshal(body, &status)
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+	}("spoofcorp")
 
 	//type Invoke_t func(string, *string, []byte) ([]byte, error)
 	authentication.InitInvoke(func(a string, b *string, data []byte) ([]byte, error) {
@@ -566,14 +637,14 @@ func TestApiHandlers(t *testing.T) {
 		require.Equal(t, 2, len(status.Records), "Error: the number of datascopes must be 2!")
 		return status.Records
 	}()
-	func()  {
+	func() {
 
 		rr, body := LoadAuthHandler("GET", "/api/getdatascopesfortestsql", nil,
 			GetDatascopesForTestSQL)
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
 				s, http.StatusOK)
-			return 
+			return
 		}
 
 		var status types.DatascopesStatus
@@ -582,7 +653,7 @@ func TestApiHandlers(t *testing.T) {
 		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
 		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in GetDatascopes %s\n", status.Errormessage))
 		require.Equal(t, 2, len(status.Records), "Error: the number of datascopes must be 2!")
-	
+
 	}()
 
 	func() {
