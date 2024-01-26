@@ -872,4 +872,23 @@ func TestApiHandlers(t *testing.T) {
 
 	}
 	AddGroupDatascopeMapping()
+	func() {
+		rr, body := LoadAuthHandler("GET", "/api/getgroupsfordatascopes", nil,
+			GetGroupsForDatascopes)
+
+		require.Equal(t, nil, err, fmt.Errorf("Error reading body: %s\n", err))
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		var mappings []types.DatascopeAndGroups
+		err = json.Unmarshal(body, &mappings)
+
+		fmt.Printf("%+v\n", mappings)
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, 1, len(mappings), fmt.Sprintf("Error in GetGroupsForDatascopes %s\n", status.Errormessage))
+
+	}()
 }
