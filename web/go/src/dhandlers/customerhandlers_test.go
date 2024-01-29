@@ -4,7 +4,12 @@ package dhandlers
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"net/http"
@@ -35,12 +40,16 @@ var datascope_update_test_1 = `{"name":"test1","id":"","records":[{"id":null,"co
 var edited_adventureworks = `{"id":"d057ee99-ff26-414a-9a46-467420cdb932","name":"adventureworks","dbtype":"PostgreSQL","address":"docker.for.mac.host.internal","port":5432,"dbname":"Adventureworks","Description":"edited test data base from Microsoft","usesconnector":false,"connectorid":"","tunnelid":""}`
 var edited_northwind = `{"Id":"57510719-2ca7-49e7-92bf-d174cf8f0e08","Name":"northwind","DbType":"PostgreSQL","Address":"docker.for.mac.host.internal","Port":5432,"Dbname":"northwind","Description":"another MS database edited with password","Username":"newusername","Password":"newpassword", "usesconnector":false,"connectorid":"","tunnelid":""}`
 
-var groupmapping_1 = `{"dymiumgroup":"dada","directorygroup":"production","comments":"test"}`
-var groupmapping_2 = `{"dymiumgroup":"admins","directorygroup":"admins","comments":"Admin group test"}`
+var groupmapping_1 = `{"dymiumgroup":"Users","directorygroup":"Users","comments":"test"}`
+var groupmapping_2 = `{"dymiumgroup":"Admins","directorygroup":"Admins","comments":"Admin group test"}`
 var groupmapping_3 = `{"dymiumgroup":"foo","directorygroup":"bar","comments":"Admin group fubar"}`
 
-var savegroups_1 = `{"name":"test1", "groups":[{"id":"ae5631a4-5947-42e7-8db9-22b5d2d6f22a","name":"foo"},{"id":"54688195-e574-462d-9c1b-267e9695a178","name":"dada"}]}`
+var savegroups_1 = `{"name":"test1", "groups":[{"id":"ae5631a4-5947-42e7-8db9-22b5d2d6f22a","name":"foo"},{"id":"54688195-e574-462d-9c1b-267e9695a178","name":"Users"}]}`
 var savegroups_2 = `{"name":"test2","groups":[{"id":"ae5631a4-5947-42e7-8db9-22b5d2d6f22a","name":"foo"}]}`
+
+const (
+	csrPEMBlockType = "CERTIFICATE REQUEST"
+)
 
 func TestApiHandlers(t *testing.T) {
 	///------------------ db setup start ------------------------
@@ -786,7 +795,7 @@ func TestApiHandlers(t *testing.T) {
 
 		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
 		require.Equal(t, "OK", status.Status, fmt.Sprintf("Error in CreateMapping %s\n", status.Errormessage))
-		return *status.Records[0].Id
+		return *status.Records[1].Id
 	}()
 
 	func(id string) {
@@ -892,9 +901,8 @@ func TestApiHandlers(t *testing.T) {
 
 	}()
 
-/*
 	// convert DER to PEM format
-	func pemCSR(derBytes []byte) []byte {
+	pemCSR := func(derBytes []byte) []byte {
 		pemBlock := &pem.Block{
 			Type:    csrPEMBlockType,
 			Headers: nil,
@@ -903,8 +911,10 @@ func TestApiHandlers(t *testing.T) {
 		out := pem.EncodeToMemory(pemBlock)
 		return out
 	}
-	func generateCSR(name string, groups []string) ([]byte, error) {
+	var certKey *rsa.PrivateKey
+	generateCSR := func(name string, groups []string) ([]byte, error) {
 		var err error
+
 		certKey, err = rsa.GenerateKey(rand.Reader, 4096)
 		if err != nil {
 			return []byte{}, err
@@ -927,15 +937,16 @@ func TestApiHandlers(t *testing.T) {
 		return out, nil
 	}
 
-
 	func() {
+		csr, _ := generateCSR("test", []string{"Admins", "Users"})
+
 		var outbody types.CertificateRequest
 		outbody.Csr = string(csr)
 		js, err := json.Marshal(outbody)
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
 
-
-		rr, body := LoadAuthHandler("POST", "/api/getclientcertificate", bytes.NewBuffer([]byte(groupmapping_1)),
-		GetClientCertificate)
+		rr, body := LoadAuthHandler("POST", "/api/getclientcertificate", bytes.NewBuffer(js),
+			GetClientCertificate)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
@@ -947,7 +958,41 @@ func TestApiHandlers(t *testing.T) {
 		err = json.Unmarshal(body, &back)
 
 		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
-		fmt.Println("Proper error is thrown for CreateMapping")
 	}()
-	*/
+
+	func() {
+		rr, body := LoadAuthHandler("GET", "/api/getdatascopesaccess", nil,
+			GetDatascopesAccess)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+
+		var out types.UserDatascopes
+		err = json.Unmarshal(body, &out)
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+	}()
+
+	func() {
+		rr, body := LoadAuthHandler("GET", "/api/regenpassword", nil,
+		RegenerateDatascopePassword)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+
+		var out types.UserDatascopes
+		err = json.Unmarshal(body, &out)
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+	
+	}()	
+
+	
+	
 }

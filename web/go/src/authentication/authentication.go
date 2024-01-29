@@ -786,23 +786,23 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 	sqlName := `select passwordb, EXTRACT(epoch from (now() - lastchanged)) from ` + schema + `.users where username=$1;`
 	row := db.QueryRow(sqlName, username)
 	err := row.Scan(&passwordb, &age)
+	if err == nil {
+
+		password, err = DecryptByteArray(schema, passwordb)
+
+	} else {
+		log.Debugf("GetDatascopesForGroups create new user record")
+		password = generatePassword(10)
+		passwordb, _ = EncryptString(schema, password)
+		sqlName := `insert into ` + schema + `.users (username,passwordb,password)  values($1, $2, '');`
+		_, err = db.Exec(sqlName, username, passwordb)
+
+	}
 	if err != nil {
+		log.Errorf("GetDatascopesForGroups error: %s", err.Error())
 		return out, err
 	}
 
-	password, err = DecryptByteArray(schema, passwordb)
-
-	if err != nil {
-		log.Errorf("GetDatascopesForGroups error: %s", err.Error())
-		password = generatePassword(10)
-		passwordb, _ = EncryptString(schema, password)
-		sqlName := `insert into ` + schema + `.users (username,passwordb)  values($1, $2);`
-		_, err = db.Exec(sqlName, username, passwordb)
-
-		if err != nil {
-			log.Errorf("GetDatascopesForGroups error: %s", err.Error())
-		}
-	}
 	sql := `select distinct a.name, a.id from ` + schema + `.datascopes as a  join ` + schema + `.groupsfordatascopes as b on a.id=b.datascope_id join ` + schema + `.groupmapping as c on c.id=b.group_id where c.outergroup = any ($1)`
 
 	out.Schema = schema
