@@ -1360,9 +1360,12 @@ func GetDatascopesAccess(w http.ResponseWriter, r *http.Request) {
 	roles := r.Context().Value(authenticatedRolesKey).([]string)
 	session := r.Context().Value(authenticatedSessionKey).(string)
 	//email, groups, _ := authentication.GetIdentityFromToken(token)
-
-	out, _ := authentication.GetDatascopesForGroups(schema, email, groups)
-
+fmt.Printf("schema %s, email %s, groups %s\n", schema, email, groups)
+	out, err := authentication.GetDatascopesForGroups(schema, email, groups)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api GetDatascopesAccess, error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 	js, _ := json.Marshal(out)
 	log.InfoUserf(schema, session, email, groups, roles, "Api GetDatascopesAccess, success")
 
