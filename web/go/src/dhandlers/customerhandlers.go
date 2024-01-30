@@ -400,7 +400,7 @@ func GetSelect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ds, err := authentication.GetSelect(schema, &t)
+	ds, err := authentication.GetSelect(schema, groups, roles, &t)
 
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetSelect, error %s", err.Error())
