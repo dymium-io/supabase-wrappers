@@ -259,7 +259,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
 
     }, [])
     useEffect(() => {
-        if (tablestructure.length !== 0)
+        if (tablestructure != null && tablestructure.length !== 0)
             setTableStructure(tables)
 
     }, [tables])
@@ -370,7 +370,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
     }
 
     useEffect(() => {
-        if (tablestructure.length == 0)
+        if (tablestructure == null || tablestructure.length == 0)
             return
         if (PIIs.length == 0)
             return
@@ -608,7 +608,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 <Col xs="auto" className="ml-0 pl-0"><Spinner show={spinner} style={{ marginTop: '26px', width: '28px' }}></Spinner></Col>
 
                 <Col>
-                    {schema !== "" && schema != undefined && table !== "" && table != undefined && tablestructure.length > 0 &&
+                    {schema !== "" && schema != undefined && table !== "" && table != undefined && tablestructure != null && tablestructure.length > 0 &&
                         <Form.Group className="mb-3" controlId="connection" >
                             <Form.Label >Select Access Level:</Form.Label>
                             <InputGroup>
@@ -650,7 +650,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
                 </Row>
             }
             {schema !== "" && schema != undefined && table !== "" && table != undefined &&
-                PIIs.length != 0 && tablestructure.length !== 0 && tabledef.length !== 0 &&
+                PIIs.length != 0 && tablestructure != null && tablestructure.length !== 0 && tabledef.length !== 0 &&
                 <>
                     <BootstrapTable id="schematable"
                         condensed

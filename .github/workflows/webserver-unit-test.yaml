@@ -101,6 +101,7 @@ jobs:
           CUSTOMER_HOST: 'portal.dymium.local'
           ADMIN_HOST: 'admin.dymium.local'
           FILESYSTEM_ROOT: '../../assets/'
+          MESH_PORT_RANGE: '30000-30064'
           AWS_LAMBDAS: '{ "DbAnalyzer": "localhost:9080", "DbSync": "localhost:9081" }'
           CA_PASSPHRASE: 'TestKeyB00'
           CA_AUTHORITY: '{
