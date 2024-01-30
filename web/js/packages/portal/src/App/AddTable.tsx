@@ -465,7 +465,7 @@ const AddTable: React.FC<AddTableProps> = (props) => {
             //    setTable(props.table.table)
         }
     }, [schema])
-    console.log(">>>", schema, PIIs.length, tablestructure.length, tabledef.length)
+    //console.log(">>>", schema, PIIs.length, tablestructure.length, tabledef.length)
     let getTables = () => {
         if (database["schemas"] === undefined)
             return []

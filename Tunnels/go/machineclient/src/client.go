@@ -78,7 +78,7 @@ func pipe(ingress net.Conn, messages chan *protocol.TransmissionUnit, conmap map
 	for {
 		// buff := make([]byte, 4096)
 		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
-		index = (index + 1) % (2 * messagesCapacity)
+		index = (index + 1) % (4 + messagesCapacity)
 
 		n, err := ingress.Read(buff)
 		if err != nil {
