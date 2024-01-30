@@ -41,14 +41,15 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated.HandleFunc("/api/getclientcertificate", dhandlers.GetClientCertificate).Methods("POST").Name("getclientcertificate")
 	authenticated.HandleFunc("/api/getdatascopesaccess", dhandlers.GetDatascopesAccess).Methods("GET").Name("getdatascopesaccess")
 	authenticated.HandleFunc("/api/regenpassword", dhandlers.RegenerateDatascopePassword).Methods("GET").Name("regenpassword")
-	
-	// no test
 	authenticated.HandleFunc("/api/getdatascopetables", dhandlers.GetDatascapeTables).Methods("POST").Name("getdatascopetables")
 	authenticated.HandleFunc("/api/getselect", dhandlers.GetSelect).Methods("POST").Name("getselect")
 	authenticated.HandleFunc("/api/getusage", dhandlers.GetUsage).Methods("POST").Name("getusage")
-	authenticated.HandleFunc("/api/getaccesskey", dhandlers.GetAccessKeys).Methods("GET").Name("getkeyaccess")
+
 	authenticated.HandleFunc("/api/createnewconnector", dhandlers.CreateNewConnector).Methods("POST").Name("createnewconnector")
 	authenticated.HandleFunc("/api/getconnectors", dhandlers.GetConnectors).Methods("GET").Name("getconnectors")
+
+	// no test
+	authenticated.HandleFunc("/api/getaccesskey", dhandlers.GetAccessKeys).Methods("GET").Name("getkeyaccess")
 	authenticated.HandleFunc("/api/updateconnector", dhandlers.UpdateConnector).Methods("POST").Name("updateconnector")
 	authenticated.HandleFunc("/api/deleteconnector", dhandlers.DeleteConnector).Methods("POST").Name("deleteconnector")
 	authenticated.HandleFunc("/api/getpolicies", dhandlers.GetPolicies).Methods("GET").Name("getpolicies")
