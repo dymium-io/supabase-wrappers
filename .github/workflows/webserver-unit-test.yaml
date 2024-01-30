@@ -97,7 +97,6 @@ jobs:
           AUTH0_PORTAL_REDIRECT_URL: 'https://portal.dymium.local:3001/auth/redirect'
           AUTH0_PORTAL_RETURN_URL: 'https://portal.dymium.local:3001/app/logout'
           AUTH0_PORTAL_AUDIENCE: 'https://portal.dymium.local/api/handler'
-
           MESH_PORT_RANGE: '30000-30050'
           SESSION_SECRET: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
           CUSTOMER_HOST: 'portal.dymium.local'
