@@ -725,7 +725,25 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	return out, nil
 }
 
-func GetSelect(schema string, ds *types.DatascopeTable) (types.SqlTestResult, error) {
+func IsDatascopeAllowed(schema string, groups []string, datascope string) (bool, error) {
+    // Combine the queries into one
+    sql := `SELECT COUNT(*)
+            FROM ` + schema + `.groupsfordatascopes gfd
+            JOIN ` + schema + `.datascopes d ON gfd.datascope_id = d.id
+            JOIN ` + schema + `.groupmapping gm ON gfd.group_id = gm.id
+            WHERE d.name = $1 AND gm.outergroup = ANY($2)`
+
+    var count int
+    err := db.QueryRow(sql, datascope, pq.Array(groups)).Scan(&count)
+    if err != nil {
+        return false, err
+    }
+
+    log.Debugf("IsDatascopeAllowed, count: %d", count)
+    return count > 0, nil
+}
+
+func GetSelect(schema string, groups, roles []string, ds *types.DatascopeTable) (types.SqlTestResult, error) {
 	var conf types.SqlTestConf
 	conf.Database = ds.Connection // this is connection... name?
 	conf.Schema = ds.Schema
@@ -737,9 +755,31 @@ func GetSelect(schema string, ds *types.DatascopeTable) (types.SqlTestResult, er
 	req.Customer = schema
 	req.Datascope = &ds.Datascope
 	snc, _ := json.Marshal(req)
-
-	data, err := Invoke("DbSync", nil, snc)
 	var out types.SqlTestResult
+
+	isadmin := false
+	for _, role := range roles {
+		if role == "admin" {
+			isadmin = true
+		}
+	}
+
+	if !isadmin {
+		// is datascope allowed?
+		log.Debugf("Check if this datascope is allowed")
+		allowed, err := IsDatascopeAllowed(schema, groups, ds.Datascope)
+		if err != nil {
+			log.Errorf("GetSelect error in IsDatascopeAllowed: %v", err)
+		}
+		if !allowed {
+			return out, fmt.Errorf("Access to the Ghost Database %s is not granted.", ds.Datascope)
+		}
+	} else {
+		log.Debugf("Admin, test datascopes is allowed")
+	}
+	
+	data, err := Invoke("DbSync", nil, snc)
+
 	if err != nil {
 		log.Errorf("GetSelect error from Invoke: %s", err.Error())
 		return out, err

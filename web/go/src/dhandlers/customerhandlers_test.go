@@ -960,7 +960,7 @@ func TestApiHandlers(t *testing.T) {
 		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
 	}()
 
-	func() {
+	getdatascopesaccess := func() {
 		rr, body := LoadAuthHandler("GET", "/api/getdatascopesaccess", nil,
 			GetDatascopesAccess)
 
@@ -974,8 +974,9 @@ func TestApiHandlers(t *testing.T) {
 		err = json.Unmarshal(body, &out)
 
 		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
-	}()
-
+	}
+	getdatascopesaccess()
+	getdatascopesaccess()
 	func() {
 		rr, body := LoadAuthHandler("GET", "/api/regenpassword", nil,
 		RegenerateDatascopePassword)
