@@ -621,7 +621,8 @@ func ConnectToService() {
 
 	vserver, _ := semver.Make(version)
 	vclient, _ := semver.Make(protocol.MeshServerVersion)
-	if vserver.GT(vclient) {
+	if vserver.Major > vclient.Major || ( (vserver.Major == vclient.Major) && 
+	(vserver.Minor > vclient.Minor) ) {
 		log.Infof("Server version incremented to %s, current: %s, update itself!", version, protocol.MeshServerVersion)
 		DoUpdate(portal)
 		os.Exit(0)

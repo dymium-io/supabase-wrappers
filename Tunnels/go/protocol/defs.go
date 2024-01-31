@@ -22,8 +22,8 @@ type TransmissionUnit struct {
 	Data   []byte
 }
 
-var MeshServerVersion = "1.0.1"
-var TunnelServerVersion = "1.0.2"
+var MeshServerVersion = "1.0.1-beta.1"
+var TunnelServerVersion = "1.1.0-beta.1"
 
 /*
 Protocol chunk:
