@@ -20,14 +20,6 @@ import (
 	"strings"
 	"syscall"
 
-	"dymium.com/client/ca"
-	"dymium.com/client/content"
-	"dymium.com/client/installer"
-	"dymium.com/client/types"
-	"dymium.com/server/protocol"
-	"github.com/apex/log"
-	"github.com/apex/log/handlers/cli"
-	"github.com/blang/semver/v4"
 	"io"
 	"net"
 	"net/http"
@@ -36,6 +28,15 @@ import (
 	_ "path/filepath"
 	"runtime"
 	"sync"
+
+	"dymium.com/client/ca"
+	"dymium.com/client/content"
+	"dymium.com/client/installer"
+	"dymium.com/client/types"
+	"dymium.com/server/protocol"
+	"github.com/apex/log"
+	"github.com/apex/log/handlers/plaintext"
+	"github.com/blang/semver/v4"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
@@ -254,11 +255,12 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool, forceupdate
 	lbport = back.Lbport
 
 	vserver, _ := semver.Make(back.Version)
-	vclient, _ := semver.Make(protocol.TunnelServerVersion )
+	vclient, _ := semver.Make(protocol.TunnelServerVersion)
 
 	if !forcenoupdate {
 
-		if vserver.Major > vclient.Major  {
+		if vserver.Major > vclient.Major || ( (vserver.Major == vclient.Major) && 
+			(vserver.Minor > vclient.Minor) ) {
 			log.Infof("Server version incremented to %s, update itself!", back.Version)
 			// DoUpdate(portal)
 			os.Exit(0)
@@ -298,7 +300,7 @@ func pipe(ingress net.Conn, messages chan *protocol.TransmissionUnit, conmap map
 		//buff := make([]byte, 16*4096)
 		//buff := make([]byte, 64)
 		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
-		index = (index + 1) % (2 * messagesCapacity)
+		index = (index + 1) % (4 + messagesCapacity)
 
 		n, err := ingress.Read(buff)
 
@@ -658,17 +660,9 @@ func printAuthenticatedFeedback(w http.ResponseWriter) {
 		f.Flush()
 	}
 }
-func checkUpdateFlags(forcenoupdate, forceupdate bool) {
-	if !forcenoupdate {
-		log.Infof("Dymium secure tunnel, version %s", protocol.TunnelServerVersion)
-	}
-	if forcenoupdate && forceupdate {
-		log.Errorf("Can't force update and no update!")
-		os.Exit(1)
-	}
-}
+
 func main() {
-	log.SetHandler(cli.New(os.Stderr))
+	log.SetHandler(plaintext.New(os.Stderr))
 	/*
 		go func() {
 			http.ListenAndServe("localhost:6060", nil)
@@ -680,7 +674,7 @@ func main() {
 	flag.StringVar(&customerid, "c", "", "Customer ID")
 	flag.StringVar(&portalurl, "p", "", "Portal URL")
 	flag.Parse()
-	checkUpdateFlags(*forcenoupdate, *forceupdate)
+
 	if !*forcenoupdate {
 		log.Infof("Dymium secure tunnel, version %s", protocol.TunnelServerVersion)
 	}

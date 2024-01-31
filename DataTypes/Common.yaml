@@ -227,3 +227,5 @@ DockerDownloads:
   - meshconnector: string
   - machineclient: string
 
+RegistryID:
+  - id: string

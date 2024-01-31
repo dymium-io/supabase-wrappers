@@ -12,7 +12,8 @@ data class DbConnectDto (
     val database: String? = null,
     val properties: String? = null,
     val user: String? = null,
-    val password: String? = null
+    val password: String? = null,
+    val columns: String? = null
 )
 
 

@@ -1,19 +1,40 @@
 #!/bin/bash
 
 set -e
-
-ARN="411064808315"
-PROFILE="dymium"
+set -x
 
 tag="latest"
-if [ -n "$1" ]
+if [ -n "$2" ]
 then
-  tag="$1"
+  tag="$2"
 fi
 
-docker tag dymiumconnector:latest public.ecr.aws/a9d3u0m7/dymiumconnector:${tag}
-docker tag dymiumconnector:latest public.ecr.aws/a9d3u0m7/dymiumconnector:latest 
-aws ecr-public get-login-password --region us-east-1 --profile dymium | docker login --username AWS --password-stdin public.ecr.aws/a9d3u0m7
+# Default to 'dev' if no argument is provided
+ENVIRONMENT=${1:-dev}
+PROFILE=dymium
+# Determine the S3 bucket based on the environment
+case $ENVIRONMENT in
+  dev)
+    ID="t0k4e6u4"
+    PROFILE="dymium-dev"
+    ;;
+  prod)
+    ID="b9j4u7x9"
+    PROFILE="dymium-prod"
+    ;;
+  stage)
+    ID="y9p2n4j2"
+    PROFILE="dymium-stage"
+    ;;
+  *)
+    echo "Invalid environment. Please specify 'dev', 'prod', or 'stage'."
+    exit 1
+    ;;
+esac
 
-docker push public.ecr.aws/a9d3u0m7/dymiumconnector:latest
-docker tag  public.ecr.aws/a9d3u0m7/dymiumconnector:latest public.ecr.aws/a9d3u0m7/dymiumconnector:${tag}
+docker tag dymiumconnector:latest public.ecr.aws/${ID}/dymiumconnector:${tag}
+docker tag dymiumconnector:latest public.ecr.aws/${ID}/dymiumconnector:latest 
+aws ecr-public get-login-password --region us-east-1 --profile ${PROFILE} | docker login --username AWS --password-stdin public.ecr.aws/${ID}
+
+docker push public.ecr.aws/${ID}/dymiumconnector:latest
+docker tag  public.ecr.aws/${ID}/dymiumconnector:latest public.ecr.aws/${ID}/dymiumconnector:${tag}

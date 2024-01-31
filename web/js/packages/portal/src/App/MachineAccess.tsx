@@ -24,6 +24,23 @@ import Modal from 'react-bootstrap/Modal'
 const { SearchBar, ClearSearchButton } = Search;
 
 function MachineTunnelHelp() {
+    const [registryid, setRegistryid] = useState("t0k4e6u4")
+    useEffect
+    (() => {
+        http.sendToServer("GET", "/api/getregistryid",
+            null, "",
+            resp => {
+                resp.json().then(js => {
+                    setRegistryid(js.id)
+                })
+            },
+            resp => {
+            },
+            error => {
+            })
+    }, [])
+
+
     return <>
 
         <div className="mb-3">
@@ -57,7 +74,7 @@ function MachineTunnelHelp() {
                     </div><div>
                         -p &lt;LOCAL_LISTENER&gt;:5432 \
                     </div><div>
-                        public.ecr.aws/a9d3u0m7/dymiummachinetunnel:latest
+                        public.ecr.aws/{registryid}/dymiummachinetunnel:latest
                     </div>
 
                 </div>
@@ -244,6 +261,7 @@ function AddMachineTunnel() {
                             <Form.Label>Machine Tunnel Name:</Form.Label>
                             <Form.Control style={{ width: '25em' }} required type="text"
                                 value={name}
+                                pattern="^\S(.*\S)?$"
                                 onChange={e => setName(e.target.value)}
                                 placeholder="Human readable name" />
                             <Form.Control.Feedback type="invalid">
@@ -651,6 +669,9 @@ function EditMachineTunnels() {
     const copykey = e => {
         navigator.clipboard.writeText(accesskey);
     }
+    const copypass  = e => {
+        navigator.clipboard.writeText(password);
+    }
     const nameFromId = (id) => {
         let t = data.find(x => x["id"] === id)
         if (t !== undefined) {
@@ -779,6 +800,7 @@ function EditMachineTunnels() {
                                 <Form.Control style={{ width: '25em' }} required type="text"
                                     value={name}
                                     size="sm"
+                                    pattern="^\S(.*\S)?$"
                                     onChange={e => setName(e.target.value)}
                                     placeholder="Human readable name" />
                                 <Form.Control.Feedback type="invalid">
@@ -798,7 +820,7 @@ function EditMachineTunnels() {
                                     /><i onClick={copykey} style={{ marginTop: '1px' }} className="fas fa-copy clipbtn"></i>
                                 </span>
                                 <Form.Control.Feedback type="invalid">
-                                    Please provide a valid machine tunnel name.
+                                    Please provide a valid access key.
                                 </Form.Control.Feedback>
                             </Form.Group>
 
@@ -823,7 +845,7 @@ function EditMachineTunnels() {
                                         size="sm" /><i onClick={copysecret} style={{ marginTop: '1px' }} className="fas fa-copy clipbtn"></i>
                                 </span>
                                 <Form.Control.Feedback type="invalid">
-                                    Please provide a valid machine tunnel name.
+                                    Please provide a valid access secret.
                                 </Form.Control.Feedback>
                             </Form.Group>
                         </Col>
@@ -858,7 +880,7 @@ function EditMachineTunnels() {
                                             value={password}
                                             className="w-20em"
 
-                                            size="sm" /><i onClick={copysecret} style={{ marginTop: '1px' }} className="fas fa-copy clipbtn"></i>
+                                            size="sm" /><i onClick={copypass} style={{ marginTop: '1px' }} className="fas fa-copy clipbtn"></i>
                                     </span>
                                 }
                             </Form.Group>
@@ -907,8 +929,8 @@ function MachineTunnelDownloads() {
     const [spinner, setSpinner] = useState(false)
     const [alert, setAlert] = useState<JSX.Element>(<></>)
     const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
-    const [docker, setDocker] = useState("public.ecr.aws/a9d3u0m7/dymiummachinetunnel:latest")
-
+    const [docker, setDocker] = useState("public.ecr.aws/t0k4e6u4/dymiummachinetunnel:latest")
+    const [registryid, setRegistryid] = useState("t0k4e6u4")
     useEffect(() => {
         http.sendToServer("GET", "/api/getdockers",
             null, "",
@@ -921,6 +943,20 @@ function MachineTunnelDownloads() {
             },
             error => {
             })
+
+            http.sendToServer("GET", "/api/getregistryid",
+            null, "",
+            resp => {
+                resp.json().then(js => {
+                    setRegistryid(js.id)
+                    setDocker("public.ecr.aws/"+js.id+"/dymiummachinetunnel:latest")
+                })
+            },
+            resp => {
+            },
+            error => {
+            })
+
     }, [])
 
     let copydocker = e => {

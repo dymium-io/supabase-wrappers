@@ -320,6 +320,11 @@ func SaveDatascope(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = authentication.RefreshMachineTunnels(schema)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api SaveDatascope, RefreshMachineTunnels returned: %s", err.Error())
+	}
+
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
@@ -395,7 +400,7 @@ func GetSelect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ds, err := authentication.GetSelect(schema, &t)
+	ds, err := authentication.GetSelect(schema, groups, roles, &t)
 
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetSelect, error %s", err.Error())
@@ -868,6 +873,11 @@ func UpdateDatascope(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	err = authentication.RefreshMachineTunnels(schema)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api UpdateDatascope, RefreshMachineTunnels returned: %s", err.Error())
+	}
+
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
@@ -994,6 +1004,10 @@ func SaveGroups(w http.ResponseWriter, r *http.Request) {
 	}
 	if error == nil {
 		log.InfoUserArrayf(schema, session, email, groups, roles, "Api SaveGroups for Datascope %s, success", out, t.Name)
+	}
+	err = authentication.RefreshMachineTunnels(schema)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api SaveGroups, RefreshMachineTunnels returned: %s", err.Error())
 	}
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -1346,9 +1360,12 @@ func GetDatascopesAccess(w http.ResponseWriter, r *http.Request) {
 	roles := r.Context().Value(authenticatedRolesKey).([]string)
 	session := r.Context().Value(authenticatedSessionKey).(string)
 	//email, groups, _ := authentication.GetIdentityFromToken(token)
-
-	out, _ := authentication.GetDatascopesForGroups(schema, email, groups)
-
+fmt.Printf("schema %s, email %s, groups %s\n", schema, email, groups)
+	out, err := authentication.GetDatascopesForGroups(schema, email, groups)
+	if err != nil {
+		log.ErrorUserf(schema, session, email, groups, roles, "Api GetDatascopesAccess, error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 	js, _ := json.Marshal(out)
 	log.InfoUserf(schema, session, email, groups, roles, "Api GetDatascopesAccess, success")
 
@@ -1466,7 +1483,7 @@ func QueryTunnel(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	log.Info("Api QueryTunnel called")
+	log.Info("Api QueryTunnel, success")
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
@@ -2062,6 +2079,12 @@ func UpdateMachineTunnel(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	
+	err = authentication.RefreshMachineTunnels(schema)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
 	js := []byte(`{"status": "OK"}`)
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -2135,7 +2158,13 @@ func getMachineClientBucket() string {
 	}
 	return b
 }
-
+func getRegistryID() string {
+	b :=  os.Getenv("REGISTRY_ID")
+	if b == "" {
+		return "t0k4e6u4" //dev
+	}
+	return b
+}
 func DymiumInstallerExe(w http.ResponseWriter, r *http.Request) {
 	authentication.StreamFromS3(w, r, getClientBucket(), "/windows/DymiumInstaller.exe")
 }
@@ -2155,7 +2184,18 @@ func DymiumLinuxConnector(w http.ResponseWriter, r *http.Request) {
 func DymiumWindowsConnector(w http.ResponseWriter, r *http.Request) {
 	authentication.StreamFromS3(w, r, getConnectorBucket(), "/windows/meshconnector_windows_amd64.zip")
 }
-
+func RefreshMachineTunnels(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	err := authentication.RefreshMachineTunnels(schema)
+	if(err != nil) {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	js := []byte(`{"status": "OK"}`)
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
 func GetDockers(w http.ResponseWriter, r *http.Request) {
 	var dockers = types.DockerDownloads{}
 
@@ -2163,13 +2203,28 @@ func GetDockers(w http.ResponseWriter, r *http.Request) {
 	dockers.Machineclient = os.Getenv("MACHINE_CLIENT_DOCKER")
 
 	if dockers.Meshconnector == "" {
-		dockers.Meshconnector = "public.ecr.aws/a9d3u0m7/dymiumconnector:latest"
+		dockers.Meshconnector = "public.ecr.aws/t0k4e6u4/dymiumconnector:latest"
 	}	
 	if dockers.Machineclient == "" {
-		dockers.Machineclient = "public.ecr.aws/a9d3u0m7/dymiummachinetunnel:latest"
+		dockers.Machineclient = "public.ecr.aws/t0k4e6u4/dymiummachinetunnel:latest"
 	}
 
 	js, err := json.Marshal(dockers)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+func GetRegistryId(w http.ResponseWriter, r *http.Request) {
+	var id = types.RegistryID{}
+
+	id.Id = getRegistryID()
+
+	js, err := json.Marshal(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

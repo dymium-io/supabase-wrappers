@@ -23,9 +23,3 @@ retval=$?
 
 spctl --assess -vv --type install ./DymiumInstaller.pkg
 
-aws s3  --profile dymium --region us-west-2 cp DymiumInstaller.pkg s3://dymium-installers/macos/
-retval=$?
-[ $retval -ne 0 ] && {
-    echo "copy to S3 failed with error code $retval"
-    exit $retval
-}

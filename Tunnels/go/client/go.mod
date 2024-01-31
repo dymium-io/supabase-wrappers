@@ -2,19 +2,15 @@ module dymium.com/client
 
 go 1.20
 
-require (
-	github.com/fatih/color v1.16.0 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
-
-)
+require github.com/pkg/errors v0.9.1 // indirect
 
 replace dymium.com/server/protocol => ../protocol
 
 replace dymium.com/client/ca => ../ca
 
 replace dymium.com/client/types => ./types
+
+replace github.com/apex/log => ../../../libs/go/log
 
 require (
 	dymium.com/client/ca v0.0.0-00010101000000-000000000000

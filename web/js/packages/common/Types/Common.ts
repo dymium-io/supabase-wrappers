@@ -1764,6 +1764,36 @@ export class PIISuggestor {
   }
 }
 
+export class RegistryID {
+  private '_id': string
+
+  constructor() {
+    this['_id'] = ''
+  }
+  get id(): string { return this['_id'] }
+  set id(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_id'])) {
+      setDirtyFlag()
+      this['_id'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
+
+  static fromJson(__a__: any): RegistryID {
+    disableDF()
+    let cls = new RegistryID()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.id = __a__['id']
+    } else {
+       doAlert(`RegistryID: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class RequestById {
   private '_id': string
 

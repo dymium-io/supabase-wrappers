@@ -730,8 +730,8 @@ Content-Type: application/json
 Authorization: Basic ZWxhc3RpYzphZG1pbjEyMw==
 
 {
-"query": "SELECT * FROM nyc_restaurants LIMIT 20",
-"field_multi_value_leniency": true
+  "query": "SELECT * FROM nyc_restaurants LIMIT 20",
+  "field_multi_value_leniency": true
 }
 ###
 
@@ -802,5 +802,171 @@ Content-Type: application/json
   "properties": "",
   "user": "elastic",
   "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/store
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/store5
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/store
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "host.docker.internal",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbsample?table=store&samplesize=9
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "host.docker.internal",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbsample?table=store&samplesize=9
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/store1
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/store4
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/store2
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/store2
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "host.docker.internal",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbsample?table=store2&samplesize=9
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "host.docker.internal",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs",
+  "columns": "double_field,date_field"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbsample?table=store2&samplesize=9
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "localhost",
+  "port": 9211,
+  "database": "http-es-cluster",
+  "properties": "",
+  "user": "elastic",
+  "password": "Ilovebubs",
+  "columns": "double_field,date_field"
+}
+###
+
+POST http://localhost:9211/_sql
+Content-Type: application/json
+Authorization: Basic elastic:Ilovebulbs
+
+{
+  "query": "SELECT * FROM store LIMIT 9",
+  "field_multi_value_leniency": true
 }
 ###

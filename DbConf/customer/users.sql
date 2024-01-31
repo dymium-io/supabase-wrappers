@@ -10,3 +10,8 @@ CREATE TABLE users (
 );
 
 
+-- #!migration
+-- name: "customer/users-change-password",
+-- requires: ["customer/users"],
+-- description: "Add passwordb field to hold encrypted password";
+ALTER TABLE users ADD COLUMN passwordb bytea NOT NULL DEFAULT '\x';

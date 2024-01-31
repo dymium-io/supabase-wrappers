@@ -226,17 +226,18 @@ class DbService(config: ApplicationConfig) {
         dbInfo: DbConnectDto,
         dbschema: String?,
         table: String?,
-        sampleSize: Int?
+        sampleSize: Int?,
     ): Result<DbSampleResponse, DbAnalyzerError> {
         val isElasticsearchDb = dbInfo.dbType in listOf("elasticsearch", "es")
         val defaultDb = "_defaultdb_"
         val schema = handleDefaultDbCase(isElasticsearchDb, dbschema, defaultDb)
+        val columns = dbInfo.columns ?: ""
 
         val checkResult = checkRequiredData(dbschema, table, sampleSize, isElasticsearchDb)
         if (checkResult is Err) return checkResult
 
-        val query = createQueryStatement(schema, table, sampleSize)
-
+        val query = createQueryStatement(schema, table, sampleSize, columns)
+  
         return validator.validateRequestDbInfo(dbInfo).mapBoth(
             success = { dbInfo -> processDbRequest(query, dbInfo) },
             failure = { err -> validator.handleError(err.message) }
@@ -304,11 +305,12 @@ class DbService(config: ApplicationConfig) {
         if (isElasticsearchDb && dbschema == defaultDb) null else dbschema
 
 
-    private fun createQueryStatement(schema: String?, table: String?, sampleSize: Int?): String {
+    private fun createQueryStatement(schema: String?, table: String?, sampleSize: Int?, columns: String?): String {
+        val cols = if (columns.isNullOrEmpty()) "*" else columns
         return if (schema.isNullOrEmpty()) {
-            "SELECT * FROM $table LIMIT $sampleSize"
+            "SELECT $cols FROM $table LIMIT $sampleSize"
         } else {
-            "SELECT * FROM $schema.$table LIMIT $sampleSize"
+            "SELECT $cols FROM $schema.$table LIMIT $sampleSize"
         }
     }
 

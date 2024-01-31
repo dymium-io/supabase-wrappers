@@ -30,8 +30,23 @@ CREATE TABLE machinetunnelgroups (
 ALTER TABLE machinetunnels ADD COLUMN username text NOT NULL DEFAULT '';
 ALTER TABLE machinetunnels ADD COLUMN password bytea NOT NULL DEFAULT '\x';
 
+-- #!migration
+-- name: "customer/make-names-unique",
+-- requires: ["customer/machinetunnels", "customer/add-machinetunnel-passwords"],
+-- description: "make names unique";
+ALTER TABLE machinetunnels ADD UNIQUE(username);
 
 
+-- #!migration
+-- name: "customer/make-names-unique-1",
+-- requires: ["customer/machinetunnels", "customer/make-names-unique"],
+-- description: "make names unique";
+ALTER TABLE machinetunnels DROP CONSTRAINT machinetunnels_username_key;
+ALTER TABLE machinetunnels ADD UNIQUE(name);
 
 
-
+-- #!migration
+-- name: "customer/machinetunnelauth-change-password",
+-- requires: ["customer/machinetunnels"],
+-- description: "Add accesssecretb field to hold encrypted password";
+ALTER TABLE machinetunnelauth ADD COLUMN accesssecretb bytea NOT NULL DEFAULT '\x';

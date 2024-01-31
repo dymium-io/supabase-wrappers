@@ -78,7 +78,7 @@ func pipe(ingress net.Conn, messages chan *protocol.TransmissionUnit, conmap map
 	for {
 		// buff := make([]byte, 4096)
 		buff := arena[index*readBufferSize : (index+1)*readBufferSize]
-		index = (index + 1) % (2 * messagesCapacity)
+		index = (index + 1) % (4 + messagesCapacity)
 
 		n, err := ingress.Read(buff)
 		if err != nil {
@@ -379,7 +379,7 @@ func DoUpdate(portalUrl string) error {
 	}
 	ex, _ := os.Executable()
 	log.Infof("Updating %s...", ex)
-	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, "meshconnector." + protocol.MeshServerVersion + ".bak"})
+	err = selfupdate.Apply(resp.Body, selfupdate.Options{ex, 0, nil, 0, "machineclient." + protocol.MeshServerVersion + ".bak"})
 	if err != nil {
 		log.Infof("Error updating: %s", err.Error())
 		if rerr := selfupdate.RollbackError(err); rerr != nil {
@@ -465,7 +465,8 @@ func DoConnect() {
 
 	vserver, _ := semver.Make(back.Version)
 	vclient, _ := semver.Make(protocol.TunnelServerVersion)
-	if vserver.Major > vclient.Major {
+	if vserver.Major > vclient.Major || ( (vserver.Major == vclient.Major) && 
+	(vserver.Minor > vclient.Minor) ) {
 		log.Infof("Server version incremented to %s, update itself!", back.Version)
 		err := DoUpdate(portal)
 		if err == nil {

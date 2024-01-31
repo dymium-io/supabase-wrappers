@@ -23,6 +23,7 @@ type DbConnectDto struct {
 	Properties string `json:"properties"`
 	User       string `json:"user"`
 	Password   string `json:"password"`
+	Columns    string `json:"columns"`
 }
 
 type DbConnectResponse struct {
@@ -149,13 +150,13 @@ var connTypesURL = map[types.ConnectionType]string{
 	types.CT_Elasticsearch: "elasticsearch",
 }
 
-func (cl *JdbcClient) sendRequest(path string) ([]byte, error) {
+func (cl *JdbcClient) sendRequest(path string, optionalParams map[string]string) ([]byte, error) {
 	maxRetryAttempts := 3
 	var err error
 	for i := 0; i < maxRetryAttempts; i++ {
 		log.Infof("Sending request to %s", path)
 		var responseBytes []byte
-		responseBytes, err = cl.attemptSendRequest(path)
+		responseBytes, err = cl.attemptSendRequest(path, optionalParams)
 		if err == nil {
 			return responseBytes, nil
 		}
@@ -166,7 +167,7 @@ func (cl *JdbcClient) sendRequest(path string) ([]byte, error) {
 	return nil, fmt.Errorf("failed after %d retry attempts: %w", maxRetryAttempts, err)
 }
 
-func (cl *JdbcClient) attemptSendRequest(path string) ([]byte, error) {
+func (cl *JdbcClient) attemptSendRequest(path string, optionalParams map[string]string) ([]byte, error) {
 	postPayload := DbConnectDto{
 		DbType:     cl.SourceType,
 		Host:       cl.Host,
@@ -175,6 +176,13 @@ func (cl *JdbcClient) attemptSendRequest(path string) ([]byte, error) {
 		Properties: cl.Properties, // TODO: add support for different connection types, TLS, etc.
 		User:       cl.User,
 		Password:   cl.Password,
+	}
+
+	if optionalParams != nil {
+		// placeholder for optional parameters - source specific and request specific (ex. list of sampleable columns)
+		if _, ok := optionalParams["columns"]; ok {
+			postPayload.Columns = optionalParams["columns"]
+		}
 	}
 
 	// Convert the payload to JSON
@@ -245,7 +253,7 @@ func (cl *JdbcClient) Connect(c *types.ConnectionParams) error {
 
 	log.Infof("Connecting to Host:%s Port:%d DB:%s", cl.Host, cl.Port, cl.Database)
 
-	responseBytes, err := cl.sendRequest("api/dbanalyzer/dbping")
+	responseBytes, err := cl.sendRequest("api/dbanalyzer/dbping", nil)
 	if err != nil {
 		log.Errorf("Error sending request: %s", err)
 		return err
@@ -274,7 +282,7 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 		Schemas: []types.Schema{},
 	}
 
-	responseBytes, err := cl.sendRequest("api/dbanalyzer/dbschemas")
+	responseBytes, err := cl.sendRequest("api/dbanalyzer/dbschemas", nil)
 	if err != nil {
 		log.Errorf("Error getting schema info: %s", err)
 		return nil, err
@@ -316,7 +324,7 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 		}
 
 		log.Debugf("Getting tables for schema: %s", schema.Name)
-		responseBytes, err := cl.sendRequest(reqURL)
+		responseBytes, err := cl.sendRequest(reqURL, nil)
 		if err != nil {
 			log.Errorf("Error getting table info: %s", err)
 			return nil, err
@@ -363,7 +371,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 	}
 	reqURL = fmt.Sprintf("%s/%s", reqURL, tip.Table)
 
-	responseBytes, err := cl.sendRequest(reqURL)
+	responseBytes, err := cl.sendRequest(reqURL, nil)
 	if err != nil {
 		log.Errorf("Error getting columns info: %s", err)
 		return nil, err
@@ -532,7 +540,11 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			possibleActions = allowable
 			sample[k] = dtk(true)
 		case "FLOAT", "REAL":
-			t = "real"
+			if d.cLength != nil && *d.cLength > 6 {
+				t = "double precision"
+			} else {
+				t = "float"
+			}
 			possibleActions = allowable
 			sample[k] = dtk(true)
 		case "INTEGER":
@@ -785,8 +797,12 @@ func (cl *JdbcClient) getSample(schema string, table string, sample []detect.Sam
 		reqUrl = fmt.Sprintf("%s&schema=%s", reqUrl, schema)
 	}
 
+	var optionalParams = make(map[string]string)
+	if colNames.Len() > 0 {
+		optionalParams["columns"] = colNames.String()
+	}
 	log.Infof("Getting sample for schema: %s, table: %s, sample: %d", schema, table, detect.SampleSize)
-	responseBytes, err := cl.sendRequest(reqUrl)
+	responseBytes, err := cl.sendRequest(reqUrl, optionalParams)
 	if err != nil {
 		log.Errorf("Error getting schema info: %s", err)
 		return err

@@ -60,3 +60,18 @@ ALTER TABLE connectorauth ALTER COLUMN status SET DEFAULT 'provisioned';
 -- requires: ["customer/connectors-change-default-status1"],
 -- description: "Change targetaddress length";
 ALTER TABLE connectors ALTER COLUMN targetaddress TYPE varchar (253);
+
+
+-- #!migration
+-- name: "customer/connectors-change-password",
+-- requires: ["customer/connectors-add-auth"],
+-- description: "Add accesssecretb field to hold encrypted password";
+ALTER TABLE connectorauth ADD COLUMN accesssecretb bytea NOT NULL DEFAULT '\x';
+
+-- #!migration
+-- name: "customer/connectors-unique-name",
+-- requires: ["customer/extend-connector-host"],
+-- description: "Force unique connector name etc";
+ALTER TABLE connectorauth add  unique(accesskey);
+ALTER TABLE connectorauth add  unique(name);
+

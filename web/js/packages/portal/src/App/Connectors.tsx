@@ -37,7 +37,8 @@ const databases = Object.keys(com.databaseTypes).map(key => {
 })
 
 function Downloads(props) {
-    const [docker, setDocker] = useState("public.ecr.aws/a9d3u0m7/dymiumconnector:latest")
+    const [registryid, setRegistryid] = useState("")
+    const [docker, setDocker] = useState("")
 
     useEffect(() => {
         http.sendToServer("GET", "/api/getdockers",
@@ -45,6 +46,18 @@ function Downloads(props) {
             resp => {
                 resp.json().then(js => {
                     setDocker(js.meshconnector)
+                })
+            },
+            resp => {
+            },
+            error => {
+            })
+        http.sendToServer("GET", "/api/getregistryid",
+            null, "",
+            resp => {
+                resp.json().then(js => {
+                    setRegistryid(js.id)
+                    setDocker("public.ecr.aws/" + js.id + "/dymiumconnector:latest")
                 })
             },
             resp => {
@@ -157,7 +170,7 @@ function ConnectionForm(props) {
                             <Form.Label>Name:</Form.Label>
                             <Form.Control size="sm" type="text" placeholder="Tunnel name"
                                 required
-                                pattern="[a-zA-Z0-9_ '$#@]+"
+                                pattern="^\S(.*\S)?$"
                                 value={props.tunnel[i].name}
                                 onChange={e => setName(e.target.value)}
                             />
@@ -187,10 +200,15 @@ function ConnectionForm(props) {
                             <Form.Label>Port:</Form.Label>
                             <Form.Control size="sm" type="number"
                                 required
+                                step={1}
                                 min={1}
+                                max={65535}
                                 placeholder="DB port number"
-                                value={props.tunnel[i].port}
-                                onChange={e => setPort(e.target.value)}
+                                value={parseInt(props.tunnel[i].port)}
+                                onChange={e => {
+                                        setPort( e.target.value)
+                                    }
+                                }
                             />
                             <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
                             <Form.Control.Feedback type="invalid" >
@@ -247,10 +265,10 @@ function ConnectionForm(props) {
 
                             </div>
                             , 'auto', '', false)}</Form.Label>
-                        <Form.Control size="sm" type="text" placeholder="alpha_num"
+                        <Form.Control size="sm" type="text" placeholder="Human readable"
                             required
 
-                            pattern="[a-zA-Z0-9_ '$#@]+"
+                            pattern="^\S(.*\S)?$"
                             value={props.name}
                             onChange={e => props.setName(e.target.value)}
                         />
@@ -1004,7 +1022,7 @@ export function EditConnectors(props) {
                 </>
             </Offcanvas>
 
-            <Modal  size="lg" centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
+            <Modal size="lg" centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
                 <Modal.Header closeButton>
                     <Modal.Title>Deprovision connector {connectionName()}?</Modal.Title>
                 </Modal.Header>
