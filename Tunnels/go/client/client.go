@@ -35,7 +35,7 @@ import (
 	"dymium.com/client/types"
 	"dymium.com/server/protocol"
 	"github.com/apex/log"
-	"github.com/apex/log/handlers/cli"
+	"github.com/apex/log/handlers/plaintext"
 	"github.com/blang/semver/v4"
 
 	"github.com/golang-jwt/jwt"
@@ -259,7 +259,8 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool, forceupdate
 
 	if !forcenoupdate {
 
-		if vserver.Major > vclient.Major {
+		if vserver.Major > vclient.Major || ( (vserver.Major == vclient.Major) && 
+			(vserver.Minor > vclient.Minor) ) {
 			log.Infof("Server version incremented to %s, update itself!", back.Version)
 			// DoUpdate(portal)
 			os.Exit(0)
@@ -659,17 +660,9 @@ func printAuthenticatedFeedback(w http.ResponseWriter) {
 		f.Flush()
 	}
 }
-func checkUpdateFlags(forcenoupdate, forceupdate bool) {
-	if !forcenoupdate {
-		log.Infof("Dymium secure tunnel, version %s", protocol.TunnelServerVersion)
-	}
-	if forcenoupdate && forceupdate {
-		log.Errorf("Can't force update and no update!")
-		os.Exit(1)
-	}
-}
+
 func main() {
-	log.SetHandler(cli.New(os.Stderr))
+	log.SetHandler(plaintext.New(os.Stderr))
 	/*
 		go func() {
 			http.ListenAndServe("localhost:6060", nil)
@@ -681,7 +674,7 @@ func main() {
 	flag.StringVar(&customerid, "c", "", "Customer ID")
 	flag.StringVar(&portalurl, "p", "", "Portal URL")
 	flag.Parse()
-	checkUpdateFlags(*forcenoupdate, *forceupdate)
+
 	if !*forcenoupdate {
 		log.Infof("Dymium secure tunnel, version %s", protocol.TunnelServerVersion)
 	}

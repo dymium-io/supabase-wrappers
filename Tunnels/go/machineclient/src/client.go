@@ -465,7 +465,8 @@ func DoConnect() {
 
 	vserver, _ := semver.Make(back.Version)
 	vclient, _ := semver.Make(protocol.TunnelServerVersion)
-	if vserver.Major > vclient.Major {
+	if vserver.Major > vclient.Major || ( (vserver.Major == vclient.Major) && 
+	(vserver.Minor > vclient.Minor) ) {
 		log.Infof("Server version incremented to %s, update itself!", back.Version)
 		err := DoUpdate(portal)
 		if err == nil {
