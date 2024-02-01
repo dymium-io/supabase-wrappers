@@ -50,6 +50,7 @@ var groupmapping_3 = `{"dymiumgroup":"foo","directorygroup":"bar","comments":"Ad
 var savegroups_1 = `{"name":"test1", "groups":[{"id":"ae5631a4-5947-42e7-8db9-22b5d2d6f22a","name":"foo"},{"id":"54688195-e574-462d-9c1b-267e9695a178","name":"Users"}]}`
 var savegroups_2 = `{"name":"test2","groups":[{"id":"ae5631a4-5947-42e7-8db9-22b5d2d6f22a","name":"foo"}]}`
 
+var policy_1 = `"{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"piisuggestions\":[{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0001\",\"name\":\"Address\",\"method\":\"comprehend\",\"data\":\"ADDRESS\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0002\",\"name\":\"Age\",\"method\":\"comprehend\",\"data\":\"AGE\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0003\",\"name\":\"CVV\",\"method\":\"comprehend\",\"data\":\"CREDIT_DEBIT_CVV\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0004\",\"name\":\"Credit Card Expiry\",\"method\":\"comprehend\",\"data\":\"CREDIT_DEBIT_EXPIRY\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0005\",\"name\":\"Credit Card Number\",\"method\":\"comprehend\",\"data\":\"CREDIT_DEBIT_NUMBER\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0006\",\"name\":\"Date/Time\",\"method\":\"comprehend\",\"data\":\"DATE_TIME\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0007\",\"name\":\"Driver License Number\",\"method\":\"comprehend\",\"data\":\"DRIVER_ID\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0008\",\"name\":\"Email\",\"method\":\"comprehend\",\"data\":\"EMAIL\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0009\",\"name\":\"International Bank Account Number\",\"method\":\"comprehend\",\"data\":\"INTERNATIONAL_BANK_ACCOUNT_NUMBER\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0010\",\"name\":\"IP Address\",\"method\":\"comprehend\",\"data\":\"IP_ADDRESS\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0011\",\"name\":\"License Plate Number\",\"method\":\"comprehend\",\"data\":\"LICENSE_PLATE\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0012\",\"name\":\"MAC Address\",\"method\":\"comprehend\",\"data\":\"MAC_ADDRESS\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0013\",\"name\":\"Name\",\"method\":\"comprehend\",\"data\":\"NAME\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0014\",\"name\":\"Password\",\"method\":\"comprehend\",\"data\":\"PASSWORD\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0015\",\"name\":\"Phone\",\"method\":\"comprehend\",\"data\":\"PHONE\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0016\",\"name\":\"Pin\",\"method\":\"comprehend\",\"data\":\"PIN\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0017\",\"name\":\"SWIFT Code\",\"method\":\"comprehend\",\"data\":\"SWIFT_CODE\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0018\",\"name\":\"URL\",\"method\":\"comprehend\",\"data\":\"URL\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0019\",\"name\":\"Username\",\"method\":\"comprehend\",\"data\":\"USERNAME\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0020\",\"name\":\"VIN\",\"method\":\"comprehend\",\"data\":\"VEHICLE_IDENTIFICATION_NUMBER\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0021\",\"name\":\"Bank Account Number\",\"method\":\"comprehend\",\"data\":\"BANK_ACCOUNT_NUMBER\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0022\",\"name\":\"Bank Routing Number\",\"method\":\"comprehend\",\"data\":\"BANK_ROUTING\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0023\",\"name\":\"Passport Number\",\"method\":\"comprehend\",\"data\":\"PASSPORT_NUMBER\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0024\",\"name\":\"Individual TIN\",\"method\":\"comprehend\",\"data\":\"US_INDIVIDUAL_TAX_IDENTIFICATION_NUMBER\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0025\",\"name\":\"SSN\",\"method\":\"comprehend\",\"data\":\"SSN\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0026\",\"name\":\"Processor or device serial number\",\"method\":\"columnregexp\",\"data\":\"(serial|serialnumber|serial_number)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0027\",\"name\":\"Device ID\",\"method\":\"columnregexp\",\"data\":\"(device_id|deviceid)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0028\",\"name\":\"Cookie\",\"method\":\"columnregexp\",\"data\":\"(cookie)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0029\",\"name\":\"Citizenship\",\"method\":\"columnregexp\",\"data\":\"(Citizenship|Nationality)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0030\",\"name\":\"Visa or immigration status\",\"method\":\"columnregexp\",\"data\":\"(visa|immigration)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0031\",\"name\":\"Ethnic background\",\"method\":\"columnregexp\",\"data\":\"(ethnic|race|hispanic)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0032\",\"name\":\"Religious affiliation\",\"method\":\"columnregexp\",\"data\":\"(Religi)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0033\",\"name\":\"Sexual orientation\",\"method\":\"columnregexp\",\"data\":\"(sexual|gender|male|female)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0034\",\"name\":\"Criminal history\",\"method\":\"columnregexp\",\"data\":\"(criminal|arrest|felony)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0035\",\"name\":\"Medical information\",\"method\":\"columnregexp\",\"data\":\"(medical|illness|patient)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0036\",\"name\":\"Authentication information\",\"method\":\"columnregexp\",\"data\":\"(authentication|login|username)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0037\",\"name\":\"Country\",\"method\":\"columnregexp\",\"data\":\"(country)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0038\",\"name\":\"State\",\"method\":\"columnregexp\",\"data\":\"(state)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0039\",\"name\":\"City\",\"method\":\"columnregexp\",\"data\":\"(city|town|locality)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0040\",\"name\":\"Zip code\",\"method\":\"columnregexp\",\"data\":\"(Zipcode|zip_code|postalcode|postal_code)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0041\",\"name\":\"Job position\",\"method\":\"columnregexp\",\"data\":\"(job|position)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0043\",\"name\":\"Company\",\"method\":\"columnregexp\",\"data\":\"(Company|Work_Place|workplace)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0044\",\"name\":\"Work Address\",\"method\":\"columnregexp\",\"data\":\"(Work_Address|WorkAddress|work_address)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0045\",\"name\":\"Vehicle Identification Number\",\"method\":\"columnregexp\",\"data\":\"(vin|VehicleIdentificationNumber|Vehicle_Identification_Number)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"0000-0000-0000-0046\",\"name\":\"Contact Info\",\"method\":\"columnregexp\",\"data\":\"(contact)\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"obfuscate\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"3fb92491-bedf-42a3-8854-8b6632b0d8f2\",\"name\":\"aaaa\",\"method\":\"columnregexp\",\"data\":\"aaa\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"4cf6c404-ab48-43f7-91f5-eafe505af3df\",\"name\":\"atest_test\",\"method\":\"columnregexp\",\"data\":\"asdasd\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"allow\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"allow\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"72db0ffa-62ab-43cd-a0ee-9be5619c638a\",\"name\":\"A\",\"method\":\"columnregexp\",\"data\":\"xxx\"}},{\"actions\":[{\"role\":\"Admin\",\"index\":0,\"handling\":\"block\"},{\"role\":\"Data Scientist\",\"index\":1,\"handling\":\"redact\"},{\"role\":\"Manager\",\"index\":2,\"handling\":\"obfuscate\"}],\"detector\":{\"id\":\"efa85d69-ea7c-48c1-b083-1e3553cf502c\",\"name\":\"aaa\",\"method\":\"columnregexp\",\"data\":\"ccc\"}}]}"`
 const (
 	csrPEMBlockType = "CERTIFICATE REQUEST"
 )
@@ -1097,4 +1098,111 @@ func TestApiHandlers(t *testing.T) {
 		fmt.Printf("Proper failure, returned code: %d\n", rr.Code)
 	}(connector_test_1)
 
+	connectors := func() []types.Connector {
+		rr, body := LoadAuthHandler("GET", "/api/getconnectors", nil,
+			GetConnectors)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return nil
+		}
+
+		var out []types.Connector
+		err = json.Unmarshal(body, &out)
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.NotEqual(t, 0, len(out), fmt.Errorf("Empty connector list\n"))
+		return out
+	}()
+
+	func(test types.Connector) {
+
+		test.Name = "updated connector"
+		js, err := json.Marshal(test)
+		require.Equal(t, nil, err, fmt.Errorf("Marshaling error: %s\n", err))
+
+		rr, body := LoadAuthHandler("POST", "/api/updateconnector", bytes.NewBuffer([]byte(js)),
+			UpdateConnector)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		var status types.OperationStatus
+		err = json.Unmarshal(body, &status)
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error: %s\n", err))
+
+	}(connectors[0])
+
+	func(test types.Connector) {
+		tt := types.DatascopeId{Id: test.Id}
+
+		js, err := json.Marshal(tt)
+		require.Equal(t, nil, err, fmt.Errorf("Marshaling error: %s\n", err))
+
+		rr, body := LoadAuthHandler("POST", "/api/deleteconnector", bytes.NewBuffer([]byte(js)),
+			DeleteConnector)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		var status types.OperationStatus
+		err = json.Unmarshal(body, &status)
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error: %s\n", err))
+
+	}(connectors[0])
+
+	func() {
+		rr, body := LoadAuthHandler("GET", "/api/getaccesskey", nil,
+			GetAccessKeys)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+
+		var out types.GetKeySecret
+		err = json.Unmarshal(body, &out)
+
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+
+	}()
+
+
+
+
+	func(policy string) {
+
+		rr, body := LoadAuthHandler("POST", "/api/savepolicies", bytes.NewBuffer([]byte(policy)),
+			SavePolicies)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		var status types.OperationStatus
+		err = json.Unmarshal(body, &status)
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error: %s\n", err))
+
+	}(policy_1)
+
+	func() {
+		rr, body := LoadAuthHandler("GET", "/api/getpolicies", nil,
+			GetPolicies)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		require.Equal(t, string(body), policy_1, fmt.Errorf("Policy corrupted"))
+	}()
 }

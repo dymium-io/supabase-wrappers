@@ -44,16 +44,16 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated.HandleFunc("/api/getdatascopetables", dhandlers.GetDatascapeTables).Methods("POST").Name("getdatascopetables")
 	authenticated.HandleFunc("/api/getselect", dhandlers.GetSelect).Methods("POST").Name("getselect")
 	authenticated.HandleFunc("/api/getusage", dhandlers.GetUsage).Methods("POST").Name("getusage")
-
 	authenticated.HandleFunc("/api/createnewconnector", dhandlers.CreateNewConnector).Methods("POST").Name("createnewconnector")
 	authenticated.HandleFunc("/api/getconnectors", dhandlers.GetConnectors).Methods("GET").Name("getconnectors")
-
-	// no test
-	authenticated.HandleFunc("/api/getaccesskey", dhandlers.GetAccessKeys).Methods("GET").Name("getkeyaccess")
 	authenticated.HandleFunc("/api/updateconnector", dhandlers.UpdateConnector).Methods("POST").Name("updateconnector")
 	authenticated.HandleFunc("/api/deleteconnector", dhandlers.DeleteConnector).Methods("POST").Name("deleteconnector")
+	authenticated.HandleFunc("/api/getaccesskey", dhandlers.GetAccessKeys).Methods("GET").Name("getkeyaccess")
 	authenticated.HandleFunc("/api/getpolicies", dhandlers.GetPolicies).Methods("GET").Name("getpolicies")
 	authenticated.HandleFunc("/api/savepolicies", dhandlers.SavePolicies).Methods("POST").Name("savepolicies")
+
+	// no test	
+
 	authenticated.HandleFunc("/api/deletemachinetunnel", dhandlers.DeleteMachineTunnel).Methods("POST").Name("deletemachinetunnel")			
 	authenticated.HandleFunc("/api/addmachinetunnel", dhandlers.AddMachineTunnel).Methods("POST").Name("addmachinetunnel")	
 	authenticated.HandleFunc("/api/getmachinetunnels", dhandlers.GetMachineTunnels).Methods("GET").Name("getmachinetunnels")	

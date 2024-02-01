@@ -1886,6 +1886,11 @@ func GetImages(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAccessKeys(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	session := r.Context().Value(authenticatedSessionKey).(string)
 	var out types.GetKeySecret
 	out.Accesskey, _ = authentication.GenerateRandomString(12)
 	out.Secret, _ = authentication.GenerateRandomString(128)
@@ -1895,6 +1900,7 @@ func GetAccessKeys(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	log.InfoUserf(schema, session, email, groups, roles, "Api GetAccessKeys, success")
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))
@@ -1932,6 +1938,10 @@ func CreateNewConnector(w http.ResponseWriter, r *http.Request) {
 
 func GetConnectors(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	session := r.Context().Value(authenticatedSessionKey).(string)
 
 	conns, err := authentication.GetConnectors(schema)
 
@@ -1948,6 +1958,7 @@ func GetConnectors(w http.ResponseWriter, r *http.Request) {
 	if len(conns) == 0 {
 		js = []byte("[]")
 	}
+	log.InfoUserf(schema, session, email, groups, roles, "Api GetConnectors success")
 
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -1983,7 +1994,9 @@ func UpdateConnector(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	status := types.OperationStatus{"OK", "Connector " + t.Name + " updated!"}
-	js, err := json.Marshal(status)
+	js, _ := json.Marshal(status)
+
+	log.InfoUserf(schema, session, email, groups, roles, "Api UpdateConnector success")
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))
@@ -2012,7 +2025,9 @@ func DeleteConnector(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		status = types.OperationStatus{"Error", err.Error()}
 	}
-	js, err := json.Marshal(status)
+	js, _ := json.Marshal(status)
+	log.InfoUserf(schema, session, email, groups, roles, "Api DeleteConnector success")
+
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(js))
