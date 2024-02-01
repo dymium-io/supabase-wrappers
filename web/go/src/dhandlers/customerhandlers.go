@@ -2035,6 +2035,10 @@ func DeleteConnector(w http.ResponseWriter, r *http.Request) {
 
 func AddMachineTunnel(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	session := r.Context().Value(authenticatedSessionKey).(string)
 
 	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -2051,6 +2055,7 @@ func AddMachineTunnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	js := []byte(`{"status": "OK", "id": "` + o + `"}`)
+	log.InfoUserf(schema, session, email, groups, roles, "Api AddMachineTunnel success")
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
@@ -2058,6 +2063,10 @@ func AddMachineTunnel(w http.ResponseWriter, r *http.Request) {
 
 func GetMachineTunnels(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	session := r.Context().Value(authenticatedSessionKey).(string)
 
 	tunnels, err := authentication.GetMachineTunnels(schema)
 	if err != nil {
@@ -2072,6 +2081,7 @@ func GetMachineTunnels(w http.ResponseWriter, r *http.Request) {
 	if len(tunnels) == 0 {
 		js = []byte("[]")
 	}
+	log.InfoUserf(schema, session, email, groups, roles, "Api GetMachineTunnels success")
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
@@ -2079,6 +2089,10 @@ func GetMachineTunnels(w http.ResponseWriter, r *http.Request) {
 
 func UpdateMachineTunnel(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	session := r.Context().Value(authenticatedSessionKey).(string)
 
 	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -2099,7 +2113,7 @@ func UpdateMachineTunnel(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
+	log.InfoUserf(schema, session, email, groups, roles, "Api UpdateMachineTunnel success")
 	js := []byte(`{"status": "OK"}`)
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
@@ -2108,7 +2122,11 @@ func UpdateMachineTunnel(w http.ResponseWriter, r *http.Request) {
 
 func DeleteMachineTunnel(w http.ResponseWriter, r *http.Request) {
 	schema := r.Context().Value(authenticatedSchemaKey).(string)
-
+	email := r.Context().Value(authenticatedEmailKey).(string)
+	groups := r.Context().Value(authenticatedGroupsKey).([]string)
+	roles := r.Context().Value(authenticatedRolesKey).([]string)
+	session := r.Context().Value(authenticatedSessionKey).(string)
+	
 	body, _ := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	t := types.DatascopeId{}
@@ -2123,6 +2141,7 @@ func DeleteMachineTunnel(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	log.InfoUserf(schema, session, email, groups, roles, "Api DeleteMachineTunnel success")
 	js := []byte(`{"status": "OK"}`)
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")

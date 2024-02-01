@@ -749,7 +749,7 @@ func TestApiHandlers(t *testing.T) {
 	AddGroup(groupmapping_3)
 
 	func() string {
-		rr, body := LoadAuthHandler("GET", "/api/updatemapping", nil, GetMappings)
+		rr, body := LoadAuthHandler("GET", "/api/getmappings", nil, GetMappings)
 
 		if s := rr.Code; s != http.StatusOK {
 			t.Errorf("handler returned wrong status code: got %v want %v",
@@ -1132,7 +1132,7 @@ func TestApiHandlers(t *testing.T) {
 		var status types.OperationStatus
 		err = json.Unmarshal(body, &status)
 		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
-		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error"))
 
 	}(connectors[0])
 
@@ -1153,7 +1153,7 @@ func TestApiHandlers(t *testing.T) {
 		var status types.OperationStatus
 		err = json.Unmarshal(body, &status)
 		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
-		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error"))
 
 	}(connectors[0])
 
@@ -1174,9 +1174,6 @@ func TestApiHandlers(t *testing.T) {
 
 	}()
 
-
-
-
 	func(policy string) {
 
 		rr, body := LoadAuthHandler("POST", "/api/savepolicies", bytes.NewBuffer([]byte(policy)),
@@ -1190,7 +1187,7 @@ func TestApiHandlers(t *testing.T) {
 		var status types.OperationStatus
 		err = json.Unmarshal(body, &status)
 		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
-		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error"))
 
 	}(policy_1)
 
@@ -1205,4 +1202,141 @@ func TestApiHandlers(t *testing.T) {
 		}
 		require.Equal(t, string(body), policy_1, fmt.Errorf("Policy corrupted"))
 	}()
+
+	addmachinetunnel := func(name string) string{
+		rr, body := LoadAuthHandler("GET", "/api/getmappings", nil, GetMappings)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return  ""
+		}
+
+		var ss types.GroupMappingStatus
+		err = json.Unmarshal(body, &ss)
+
+		id := ss.Records[0].Id
+		var tun types.MachineTunnel
+		tun.Name=name
+		tun.Groups = []string{*id}
+		js, _ := json.Marshal(tun)
+		rr, body = LoadAuthHandler("POST", "/api/addmachinetunnel", bytes.NewBuffer(js),
+		AddMachineTunnel)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return ""
+		}
+		var status struct {
+			Id string 
+			Status string
+		}
+		err = json.Unmarshal(body, &status)
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error"))
+		return status.Id
+	}
+
+	addmachinetunnel("Tunnel 0")
+	addmachinetunnel("Tunnel 1")
+	tunnels := func() []types.MachineTunnel {
+		rr, body := LoadAuthHandler("GET", "/api/getmachinetunnels", nil,
+			GetMachineTunnels)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return nil
+		}
+		var tunnels []types.MachineTunnel
+		err = json.Unmarshal(body, &tunnels)
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+
+		return tunnels
+	}()
+	
+	func() {
+		js, err := json.Marshal(tunnels[0])
+		require.Equal(t, nil, err, fmt.Errorf("Marshaling error: %s\n", err))
+
+		rr, body := LoadAuthHandler("POST", "/api/updatemachinetunnel", bytes.NewBuffer(js),
+			UpdateMachineTunnel)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		var status struct {
+			Status string
+		}
+		err = json.Unmarshal(body, &status)
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error"))
+	}()
+	
+	func() {
+		id := types.DatascopeId{Id: *tunnels[1].Id}
+
+		js, err := json.Marshal(id)
+		require.Equal(t, nil, err, fmt.Errorf("Marshaling error: %s\n", err))
+
+		rr, body := LoadAuthHandler("POST", "/api/deletemachinetunnel", bytes.NewBuffer(js),
+			DeleteMachineTunnel)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		var status struct {
+			Status string
+		}
+		err = json.Unmarshal(body, &status)
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error"))
+	}()
+
+	func()  {
+		rr, body := LoadAuthHandler("GET", "/api/refreshmachinetunnels", nil,
+		RefreshMachineTunnels)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return 
+		}
+	
+		var status struct {
+			Status string
+		}
+		err = json.Unmarshal(body, &status)
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error"))
+
+	}()
+
+	func() {
+		id := types.DatascopeId{Id: *tunnels[0].Id}
+
+		js, err := json.Marshal(id)
+		require.Equal(t, nil, err, fmt.Errorf("Marshaling error: %s\n", err))
+
+		rr, body := LoadAuthHandler("POST", "/api/regenmachinetunnel", bytes.NewBuffer(js),
+			RegenMachineTunnel)
+
+		if s := rr.Code; s != http.StatusOK {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				s, http.StatusOK)
+			return
+		}
+		var status struct {
+			Status string
+		}
+		err = json.Unmarshal(body, &status)
+		require.Equal(t, nil, err, fmt.Errorf("Unmarshaling error: %s\n", err))
+		require.Equal(t, "OK", status.Status, fmt.Errorf("Unmarshaling error"))
+	}()
+
 }

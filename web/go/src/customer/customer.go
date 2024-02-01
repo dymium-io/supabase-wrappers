@@ -19,7 +19,7 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated := nonauthenticated.Host(host).Subrouter()
 	authenticated.Use(dhandlers.AuthMiddleware)
 
-
+	// with unit test
 	authenticated.HandleFunc("/api/createnewconnection", dhandlers.CreateNewConnection).Methods("POST").Name("createnewconnection")
 	authenticated.HandleFunc("/api/queryconnection", dhandlers.QueryConnection).Methods("POST").Name("queryconnection")
 	authenticated.HandleFunc("/api/querytable", dhandlers.QueryTable).Methods("POST").Name("querytable")	
@@ -52,17 +52,15 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated.HandleFunc("/api/getpolicies", dhandlers.GetPolicies).Methods("GET").Name("getpolicies")
 	authenticated.HandleFunc("/api/savepolicies", dhandlers.SavePolicies).Methods("POST").Name("savepolicies")
 
-	// no test	
-
-	authenticated.HandleFunc("/api/deletemachinetunnel", dhandlers.DeleteMachineTunnel).Methods("POST").Name("deletemachinetunnel")			
 	authenticated.HandleFunc("/api/addmachinetunnel", dhandlers.AddMachineTunnel).Methods("POST").Name("addmachinetunnel")	
 	authenticated.HandleFunc("/api/getmachinetunnels", dhandlers.GetMachineTunnels).Methods("GET").Name("getmachinetunnels")	
+	authenticated.HandleFunc("/api/deletemachinetunnel", dhandlers.DeleteMachineTunnel).Methods("POST").Name("deletemachinetunnel")			
 	authenticated.HandleFunc("/api/updatemachinetunnel", dhandlers.UpdateMachineTunnel).Methods("POST").Name("updatemachinetunnel")
 	authenticated.HandleFunc("/api/regenmachinetunnel", dhandlers.RegenMachineTunnel).Methods("POST").Name("regenmachinetunnel")
-	authenticated.HandleFunc("/api/getdockers", dhandlers.GetDockers).Methods("GET").Name("getdockers")
 	authenticated.HandleFunc("/api/refreshmachinetunnels", dhandlers.RefreshMachineTunnels).Methods("GET").Name("refreshmachinetunnels")
-	
 
+	// no test	
+	authenticated.HandleFunc("/api/getdockers", dhandlers.GetDockers).Methods("GET").Name("getdockers")
 	nonauthenticated.HandleFunc("/bin/DymiumInstaller.exe", dhandlers.DymiumInstallerExe).Methods("GET")
 	nonauthenticated.HandleFunc("/bin/DymiumInstaller.pkg", dhandlers.DymiumInstallerPkg).Methods("GET")
 	nonauthenticated.HandleFunc("/bin/tunnel.tar.gz", dhandlers.DymiumInstallerGzip).Methods("GET")
@@ -75,6 +73,7 @@ func CustomerHandlers(p *mux.Router) {
 	//no test
 	nonauthenticated.HandleFunc("/api/fakelogin", dhandlers.FakeLogin).Methods("GET")
 
+	// tesst
 	nonauthenticated.HandleFunc("/api/getlogin", dhandlers.GetLogin).Methods("GET")
 	nonauthenticated.HandleFunc("/api/logout", dhandlers.GetLogout).Methods("GET")
 	nonauthenticated.HandleFunc("/api/querytunnel", dhandlers.QueryTunnel).Methods("POST")
