@@ -725,6 +725,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			sem = utils.Unsupported
 			sample[k] = dtk(false, sem)
 		}
+
 		c := types.Column{
 			Name:            d.cName,
 			Position:        d.pos,

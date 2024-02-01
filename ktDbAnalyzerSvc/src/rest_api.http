@@ -970,3 +970,60 @@ Authorization: Basic elastic:Ilovebulbs
   "field_multi_value_leniency": true
 }
 ###
+
+POST http://localhost:8888/api/dbanalyzer/dbtables
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "https://b579d9f0c1cd4aebb80a680add525195.us-west-2.aws.found.io",
+  "port": 443,
+  "database": "b579d9f0c1cd4aebb80a680add525195",
+  "properties": "",
+  "user": "elastic",
+  "password": "0yw2MvF9iUGMvDzF54IeCqmD"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/test_map
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "https://b579d9f0c1cd4aebb80a680add525195.us-west-2.aws.found.io",
+  "port": 443,
+  "database": "b579d9f0c1cd4aebb80a680add525195",
+  "properties": "",
+  "user": "elastic",
+  "password": "0yw2MvF9iUGMvDzF54IeCqmD"
+}
+###
+
+
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/data_range_field
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "https://b579d9f0c1cd4aebb80a680add525195.us-west-2.aws.found.io",
+  "port": 443,
+  "database": "b579d9f0c1cd4aebb80a680add525195",
+  "properties": "",
+  "user": "elastic",
+  "password": "0yw2MvF9iUGMvDzF54IeCqmD"
+}
+###
+
+POST http://localhost:8888/api/dbanalyzer/dbcolumns/test_map
+Content-Type: application/json
+
+{
+  "dbType": "elasticsearch",
+  "host": "https://b579d9f0c1cd4aebb80a680add525195.us-west-2.aws.found.io",
+  "port": 443,
+  "database": "b579d9f0c1cd4aebb80a680add525195",
+  "properties": "",
+  "user": "elastic",
+  "password": "0yw2MvF9iUGMvDzF54IeCqmD"
+}
+###
