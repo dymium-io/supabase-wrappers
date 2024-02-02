@@ -73,7 +73,7 @@ func CustomerHandlers(p *mux.Router) {
 	//no test
 	nonauthenticated.HandleFunc("/api/fakelogin", dhandlers.FakeLogin).Methods("GET")
 
-	// tesst
+	// tests available
 	nonauthenticated.HandleFunc("/api/getlogin", dhandlers.GetLogin).Methods("GET")
 	nonauthenticated.HandleFunc("/api/logout", dhandlers.GetLogout).Methods("GET")
 	nonauthenticated.HandleFunc("/api/querytunnel", dhandlers.QueryTunnel).Methods("POST")

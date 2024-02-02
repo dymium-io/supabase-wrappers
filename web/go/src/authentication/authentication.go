@@ -633,8 +633,7 @@ func GetSchemaRolesFromToken(token string) (string, []string, []string, string, 
 }
 
 func UsernameFromEmail(email string) string {
-	return email
-		/*
+	//return email
 	username := strings.Split(email, "@")[0]
 
 	//!#$%&'*+-/=?^_`{|}~
@@ -662,7 +661,6 @@ func UsernameFromEmail(email string) string {
 
 	username = strings.ToLower(username)
 	return username
-		*/
 }
 
 func RegenerateDatascopePassword(schema string, email string, groups []string) (types.UserDatascopes, error) {
