@@ -106,7 +106,6 @@ func QueryTable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Infof("ID: %s", t.ConnectionId)
 	// get the connection details
 	conn, _, err := authentication.GetConnection(schema, t.ConnectionId)
 	if err != nil {

@@ -160,8 +160,12 @@ func (g *Gui) Run() {
 	})
 	paste := widget.NewButtonWithIcon("", theme.ContentPasteIcon(),  func() {
 		text := w.Clipboard().Content()
-		g.input.SetText( text )
+
 		params := strings.Split(text, " ")
+		if len(params)	< 3 {
+			return
+		}
+		g.input.SetText( text )
 		if( ! strings.HasSuffix(params[2], "org_")){
 			g.name.SetText(params[2])
 			g.checkbox.SetChecked(true)
