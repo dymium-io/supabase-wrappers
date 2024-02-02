@@ -233,8 +233,8 @@ func (g *Gui) Run() {
     g.split.Offset = 0
     w.SetContent(g.split)
 
-    w.Resize(fyne.NewSize(660, 300))
-	//w.SetFixedSize(true)
+    w.Resize(fyne.NewSize(840, 500))
+	w.SetFixedSize(true)
     w.ShowAndRun()
 	if(g.pid != nil) {
 		g.pid.Kill()
