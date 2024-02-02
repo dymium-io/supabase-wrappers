@@ -1,7 +1,7 @@
 cd ..\..\go\client
-build.bat
+call build.bat
 cd ..\GUI
-build.bat
-..\..\installer\Windows
+call buildwin.bat
+cd ..\..\installer\Windows
 makensis /V4 tunnel.nsi
 
