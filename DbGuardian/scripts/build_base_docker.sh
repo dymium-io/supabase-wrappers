@@ -26,21 +26,21 @@ instantclients_all=($(${setup_d}/oracle.sh packages linux))
 
 declare -a instantclients
 for c in ${instantclients_all[@]}; do
-	[[ $c == *basic* ]] && {
-		instantclients+=($c)
-	}
+    [[ $c == *basic* ]] && {
+        instantclients+=($c)
+    }
 done
 
 for f in ${instantclients[@]}; do
-	[ -f ${setup_d}/oracle/$f ] || {
-		echo "Oracle instantclient file $f not found in ${setup_d}"
-		echo "Please use ${setup_d}/oracle.sh script to get them"
-		exit -1
-	}
+    [ -f ${setup_d}/oracle/$f ] || {
+        echo "Oracle instantclient file $f not found in ${setup_d}"
+        echo "Please use ${setup_d}/oracle.sh script to get them"
+        exit -1
+    }
 done
 
 for f in ${instantclients[@]}; do
-	unzip ${setup_d}/oracle/$f
+    unzip ${setup_d}/oracle/$f
 done
 
 #DB2 libs
@@ -63,67 +63,78 @@ cp $odbclibs .
 
 fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)
 (
-	cd $script_d/../foreign_data_wrappers
-	for f in ${fdws[@]}; do
-	    docker run -it --rm \
-		   -v $PWD:/fdw \
-		   postgres-dev \
-		   /bin/sh -c \
-		   "cd /fdw/$f; make USE_PGXS=true; DESTDIR=/fdw make USE_PGXS=true install"
-	done
-	docker run -it --rm \
-		   -e USER_ID=$UID \
-		   -e GROUP_ID=$GID \
-		   -v $PWD:/fdw \
-		   postgres-dev \
-		   /bin/sh -c \
-		   "cd /fdw; tar czv --owner=root --group=root -f usr.tar.gz usr; rm -rf usr"
+    cd $script_d/../foreign_data_wrappers
+    for f in ${fdws[@]}; do
+        docker run -it --rm \
+            -v $PWD:/fdw \
+            postgres-dev \
+            /bin/sh -c \
+            "cd /fdw/$f; make USE_PGXS=true; DESTDIR=/fdw make USE_PGXS=true install"
+    done
+    docker run -it --rm \
+        -e USER_ID=$UID \
+        -e GROUP_ID=$GID \
+        -v $PWD:/fdw \
+        postgres-dev \
+        /bin/sh -c \
+        "cd /fdw; tar czv --owner=root --group=root -f usr.tar.gz usr; rm -rf usr"
 )
 (
-	cd $script_d/../foreign_data_wrappers/mongo_fdw
-  docker run -it --rm \
-		   -v $PWD:/fdw \
-		   -e MONGO_FDW_SOURCE_DIR=/fdw \
-		   -e MONGOC_INSTALL_DIR=/fdw/mongo-c-driver \
-		   -e JSONC_INSTALL_DIR=/fdw/json-c \
-		   -e PKG_CONFIG_PATH=/fdw/mongo-c-driver/src/libmongoc/src:/fdw/mongo-c-driver/src/libbson/src \
-		   postgres-dev \
-		   /bin/bash -c \
-		   "cd /fdw; (./autogen.sh --with-master; \
+    cd $script_d/../foreign_data_wrappers/supabase_wrappers
+    docker run -it --rm \
+        -v $PWD:/fdw \
+        postgres-dev \
+        /bin/bash -c "cd /fdw/wrappers; \
+                    cargo pgrx package --out-dir .. --features pg14,all_fdws; \
+                    cd /fdw;
+		    tar czv --owner=root --group=root -f supabase_wrappers.tar.gz usr; rm -rf usr"
+)
+(
+    cd $script_d/../foreign_data_wrappers/mongo_fdw
+    docker run -it --rm \
+        -v $PWD:/fdw \
+        -e MONGO_FDW_SOURCE_DIR=/fdw \
+        -e MONGOC_INSTALL_DIR=/fdw/mongo-c-driver \
+        -e JSONC_INSTALL_DIR=/fdw/json-c \
+        -e PKG_CONFIG_PATH=/fdw/mongo-c-driver/src/libmongoc/src:/fdw/mongo-c-driver/src/libbson/src \
+        postgres-dev \
+        /bin/bash -c \
+        "cd /fdw; (./autogen.sh --with-master; \
                     make USE_PGXS=true; \
                     DESTDIR=. make USE_PGXS=true install) && \
                     tar czv --owner=root --group=root -f mongo.tar.gz usr; rm -rf usr && \
                     mkdir -p usr/local/libmongo; cp json-c/lib/* usr/local/libmongo; \
                     cp mongo-c-driver/lib/* usr/local/libmongo; \
-                    tar czv --owner=root --group=root -f mongo-lib.tar.gz usr; rm -rf lib; rm -rf json-c"
+        tar czv --owner=root --group=root -f mongo-lib.tar.gz usr; rm -rf lib; rm -rf json-c"
 )
 (
-	cd $script_d/../foreign_data_wrappers/jdbc_fdw
-  docker run -it --rm \
-		   -v $PWD:/fdw \
-		   postgres-dev \
-		   /bin/bash -c \
-		      "cd /fdw; \
+    cd $script_d/../foreign_data_wrappers/jdbc_fdw
+    docker run -it --rm \
+        -v $PWD:/fdw \
+        postgres-dev \
+        /bin/bash -c \
+        "cd /fdw; \
           make USE_PGXS=true clean; \
           DESTDIR=. make USE_PGXS=true install && \
           cp  /usr/lib/postgresql/14/lib/JDBC* usr/lib/postgresql/14/lib/ && \
           cp /usr/lib/postgresql/14/lib/resultSetInfo.class usr/lib/postgresql/14/lib/ &&\
-          tar czv --owner=root --group=root -f jdbc_fdw.tar.gz usr; rm -rf usr"
+        tar czv --owner=root --group=root -f jdbc_fdw.tar.gz usr; rm -rf usr"
 )
 
 
 (
     cd $script_d/../obfuscator
     docker run -it --rm \
-		   -v $PWD:/obfuscator \
-		   postgres-dev \
-		   /bin/sh -c \
-		   "cd /obfuscator; ( cargo pgx package --out-dir .  2>&1 | sed -u '/jemalloc/d' ) && \
-                    tar czv --owner=root --group=root -f obfuscator.tar.gz usr; rm -rf usr"
+        -v $PWD:/obfuscator \
+        postgres-dev \
+        /bin/sh -c \
+        "cd /obfuscator; ( cargo pgrx package --out-dir .  2>&1 | sed -u '/jemalloc/d' ) && \
+        tar czv --owner=root --group=root -f obfuscator.tar.gz usr; rm -rf usr"
 )
 
 
 mv ../../foreign_data_wrappers/usr.tar.gz .
+mv ../../foreign_data_wrappers/supabase_wrappers/supabase_wrappers.tar.gz .
 mv ../../obfuscator/obfuscator.tar.gz .
 mv ../../foreign_data_wrappers/mongo_fdw/mongo.tar.gz .
 mv ../../foreign_data_wrappers/mongo_fdw/mongo-lib.tar.gz .
@@ -151,12 +162,13 @@ RUN apt update &&                \
   mkdir -p /opt/oracle
 
 
-COPY usr.tar.gz obfuscator.tar.gz mongo.tar.gz mongo-lib.tar.gz jdbc_fdw.tar.gz /
-RUN tar xzvf /usr.tar.gz && rm /usr.tar.gz
-RUN tar xzvf /obfuscator.tar.gz && rm /obfuscator.tar.gz
-RUN tar xzvf /mongo.tar.gz && rm /mongo.tar.gz
-RUN tar xzvf /mongo-lib.tar.gz && rm /mongo-lib.tar.gz
-RUN tar xzvf /jdbc_fdw.tar.gz && rm /jdbc_fdw.tar.gz
+COPY usr.tar.gz obfuscator.tar.gz mongo.tar.gz mongo-lib.tar.gz jdbc_fdw.tar.gz supabase_wrappers.tar.gz /
+RUN tar xzvf /usr.tar.gz && rm /usr.tar.gz && \
+    tar xzvf /obfuscator.tar.gz && rm /obfuscator.tar.gz && \
+    tar xzvf /mongo.tar.gz && rm /mongo.tar.gz && \
+    tar xzvf /mongo-lib.tar.gz && rm /mongo-lib.tar.gz && \
+    tar xzvf /jdbc_fdw.tar.gz && rm /jdbc_fdw.tar.gz && \
+    tar xzvf /supabase_wrappers.tar.gz && rm /supabase_wrappers.tar.gz
 
 COPY ${instantclient_version}/ /opt/oracle/${instantclient_version}/
 RUN echo /opt/oracle/${instantclient_version} > /etc/ld.so.conf.d/oracle-instantclient.conf && \

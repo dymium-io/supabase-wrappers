@@ -105,7 +105,7 @@ ENV DB2_HOME=/opt/ibm/db2/V11.5
 RUN ln -s /usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/amd64/server/libjvm.so /usr/lib64/libjvm.so
 
 ENV PATH="/root/.cargo/bin:${PATH}"
-RUN cargo install cargo-pgx 2>&1 | sed -u '/jemalloc/d'
-RUN cargo pgx init --pg14 /usr/bin/pg_config 2>&1 | sed -u '/jemalloc/d'
+RUN cargo install cargo-pgrx 2>&1 | sed -u '/jemalloc/d'
+RUN cargo pgrx init --pg14 /usr/bin/pg_config 2>&1 | sed -u '/jemalloc/d'
 
 EOF

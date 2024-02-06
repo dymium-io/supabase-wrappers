@@ -8,11 +8,11 @@ crate-type = ["cdylib"]
 
 [features]
 default = ["pg14"]
-pg14 = ["pgx/pg14", "pgx-tests/pg14" ]
+pg14 = ["pgrx/pg14", "pgrx-tests/pg14" ]
 pg_test = []
 
 [dependencies]
-pgx = "^0.7.0"
+pgrx = "^0.11.0"
 lazy_static = "^1.4.0"
 aes = "*"
 typenum = "^1.16.0"
@@ -24,7 +24,7 @@ heapless = "*"
 itertools = "*"
 
 [dev-dependencies]
-pgx-tests = "=0.7.4"
+pgrx-tests = "^0.11.0"
 
 [profile.dev]
 panic = "unwind"
