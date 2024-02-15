@@ -15,7 +15,8 @@ import (
 	"dymium.com/dymium/log"
 
 	"aws"
-	"initializer/types"
+        . "DbSetup"
+	"DbSetup/types"
 )
 
 func main() {
@@ -54,7 +55,7 @@ func main() {
 			log.Fatal(fmt.Sprintf("sql.Open(...,%s,%s): %v", LiteralEscape(datascope.Name), user, err))
 		} else {
 			defer db.Close()
-			if err = configureDatabase(db, datascope, connections, credentials, true); err != nil {
+			if err = ConfigureDatabase(db, datascope, connections, credentials, true); err != nil {
 				log.Fatal(err.Error())
 			}
 		}
@@ -137,4 +138,8 @@ func getCustomerData() (*types.CustomerData, error) {
 	}
 
 	return &c, nil
+}
+
+func esc(str string) string {
+        return ParamEscape(str)
 }

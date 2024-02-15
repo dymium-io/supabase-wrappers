@@ -3,6 +3,7 @@ module DbSync
 go 1.20
 
 require (
+	DbSetup v0.0.0-00010101000000-000000000000
 	aws v0.0.0-00010101000000-000000000000
 	dymium.com/dymium/log v0.0.0-00010101000000-000000000000
 	github.com/aclements/go-gg v0.0.0-20170323211221-abd1f791f5ee
@@ -23,6 +24,8 @@ require (
 )
 
 replace aws => ../../libs/go/aws
+
+replace DbSetup => ../../libs/go/DbSetup
 
 replace github.com/apex/log => ../../libs/go/log
 

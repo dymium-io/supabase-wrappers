@@ -10,7 +10,8 @@ import (
 
 	"crypto/sha256"
 
-	"DbSync/types"
+        . "DbSetup"
+	"DbSetup/types"
 )
 
 func doUpdate(
@@ -72,7 +73,7 @@ func doUpdate(
 			if err = clearDatabase(db); err != nil {
 				return empty, fmt.Errorf("%s connection: Clearing %s: %v", a, LiteralEscape(datascope.Name), err)
 			}
-			if err = configureDatabase(db, datascope, *connections, *credentials, false); err != nil {
+			if err = ConfigureDatabase(db, datascope, *connections, *credentials, false); err != nil {
 				return empty, fmt.Errorf("%s connection: Configuring %s: %v", a, LiteralEscape(datascope.Name), err)
 			}
 		}

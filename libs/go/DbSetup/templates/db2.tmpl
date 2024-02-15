@@ -1,0 +1,9 @@
+DO $$
+BEGIN
+  CREATE SERVER {{.Server}} FOREIGN DATA WRAPPER db2_fdw OPTIONS (
+    dbserver 'Driver=/var/lib/postgresql/sqllib/lib64/libdb2o.so;Hostname={{.Addresss}};Port={{.Port}};Protocol=TCPIP;Database={{.Database}};'
+  );
+  CREATE USER MAPPING FOR public SERVER {{.Server}} OPTIONS (
+    user '{{.User}}', password '{{.Password}}'
+  );
+END $$;

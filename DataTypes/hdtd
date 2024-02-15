@@ -8,19 +8,10 @@ DbAnalyzer:
     - source: DbAnalyzer.yaml
     - source: Common.yaml
 
-DbSync:
+DbSetup:
   language: GoLang
-  path: ../DbSync/go/types
-  root-module: DbSync/types
-  modules:
-    - source: DbSync.yaml
-    - source: DbSyncCommon.yaml
-    - source: Common.yaml
-
-DbGuardian:
-  language: GoLang
-  path: ../DbGuardian/go/types
-  root-module: initializer/types
+  path: ../libs/go/DbSetup/types
+  root-module: DbSetup/types
   modules:
     - source: DbSync.yaml
     - source: DbSyncCommon.yaml

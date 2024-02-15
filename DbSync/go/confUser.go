@@ -12,7 +12,8 @@ import (
 
 	"crypto/sha256"
 
-	"DbSync/types"
+        . "DbSetup"
+	"DbSetup/types"
 )
 
 func confUser(

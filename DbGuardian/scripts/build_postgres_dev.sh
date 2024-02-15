@@ -21,7 +21,8 @@ done
 	rm -rf $build_d
 }
 
-mkdir $build_d
+build_d=$build_d/bld
+mkdir -p $build_d
 cd $build_d
 
 for f in ${instantclients[@]}; do
@@ -35,7 +36,7 @@ unzip ${setup_d}/db2/db2_home.zip
 PostgresDev=$(docker images postgres-dev -q)
 [ -z "$PostgresDev" ] || docker rmi -f "$PostgresDev"
 
-cat <<EOF | docker build --platform linux/amd64 --compress -t postgres-dev -f - .
+cat <<EOF | docker build --platform linux/amd64 --compress -t postgres-dev-tmp -f - .
 FROM ubuntu:jammy
 
 
@@ -57,6 +58,7 @@ RUN apt-get update &&            \
       flex                       \
       bison                      \
       openjdk-8-jdk              \
+      libsodium-dev              \
       pkg-config &&              \
     mkdir -p /opt/oracle
 
@@ -105,7 +107,18 @@ ENV DB2_HOME=/opt/ibm/db2/V11.5
 RUN ln -s /usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/amd64/server/libjvm.so /usr/lib64/libjvm.so
 
 ENV PATH="/root/.cargo/bin:${PATH}"
-RUN cargo install cargo-pgrx 2>&1 | sed -u '/jemalloc/d'
-RUN cargo pgrx init --pg14 /usr/bin/pg_config 2>&1 | sed -u '/jemalloc/d'
+ENV CARGO_TARGET_DIR="/root/.cargo/target"
 
 EOF
+
+docker run --name postgres-dev-tmp \
+       -v $build_d/../target:/root/.cargo/target \
+       postgres-dev-tmp \
+       /bin/bash -c "\
+              echo CARGO_TARGET_DIR=\$CARGO_TARGET_DIR; \
+              cargo install cargo-pgrx --version 0.11.2 2>&1 | sed -u '/jemalloc/d' && \
+              cargo pgrx init --pg14 /usr/bin/pg_config 2>&1 | sed -u '/jemalloc/d'; \
+        "
+docker commit postgres-dev-tmp postgres-dev
+docker rm postgres-dev-tmp
+docker rmi postgres-dev-tmp
