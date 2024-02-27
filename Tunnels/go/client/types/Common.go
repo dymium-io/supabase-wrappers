@@ -194,6 +194,11 @@ type GroupStatus struct {
    Admincount int `json:"admincount"`
 }
 
+type InviteCustomer struct {
+   Email string `json:"email"`
+   ContactName string `json:"contactName"`
+}
+
 type MachineTunnel struct {
    Id *string `json:"id"`
    Accesskey *string `json:"accesskey"`

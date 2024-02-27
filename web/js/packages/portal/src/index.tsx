@@ -15,6 +15,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 let persistor = persistStore(store);
 (function() {
   let name = com.getTokenProperty("name")
+  let schema = com.getTokenProperty("schema")
   let user = window.localStorage.getItem('User')
   if(user === undefined || user === null) {
     window.localStorage.setItem('User', name)
@@ -23,11 +24,12 @@ let persistor = persistStore(store);
   let session = sessionStorage.getItem('Session')
   if(session === undefined)
     return 
-
-
-  if(name != user)
+ 
+  if( (name != user) || (schema != window.localStorage.getItem('Schema')) || (schema === "") ) {
     persistor.purge()
+  }
   window.localStorage.setItem('User', name)
+  window.localStorage.setItem('Schema', schema)
 })()
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 root.render(

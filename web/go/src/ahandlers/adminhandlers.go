@@ -11,6 +11,7 @@ import (
 	"dymium.com/dymium/log"
 	"encoding/json"
 	"io/ioutil"
+	"io"
 	"net/http"
 )
 type contextKey int
@@ -145,6 +146,30 @@ func UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = authentication.UpdateCustomer(t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func InviteNewCustomer(w http.ResponseWriter, r *http.Request) {
+	status := types.OperationStatus{"OK", ""}
+
+	body, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.InviteCustomer{}
+	err := json.Unmarshal(body, &t)
+	
+	js, err := json.Marshal(status)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = authentication.InviteNewCustomer(t.Email, t.ContactName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

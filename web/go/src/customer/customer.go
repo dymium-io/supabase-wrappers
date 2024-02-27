@@ -19,6 +19,10 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated := nonauthenticated.Host(host).Subrouter()
 	authenticated.Use(dhandlers.AuthMiddleware)
 
+	invited := nonauthenticated.Host(host).Subrouter()
+	invited.Use(dhandlers.InviteMiddleware)
+
+	
 	// with unit test
 	authenticated.HandleFunc("/api/createnewconnection", dhandlers.CreateNewConnection).Methods("POST").Name("createnewconnection")
 	authenticated.HandleFunc("/api/queryconnection", dhandlers.QueryConnection).Methods("POST").Name("queryconnection")
@@ -59,6 +63,19 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated.HandleFunc("/api/regenmachinetunnel", dhandlers.RegenMachineTunnel).Methods("POST").Name("regenmachinetunnel")
 	authenticated.HandleFunc("/api/refreshmachinetunnels", dhandlers.RefreshMachineTunnels).Methods("GET").Name("refreshmachinetunnels")
 
+	invited.HandleFunc("/api/postinvitationjson", dhandlers.PostInvitationJson).Methods("POST").Name("postinvitationjson")
+	invited.HandleFunc("/api/getinvitationjson", dhandlers.GetInvitationJson).Methods("GET").Name("getinvitationjson")
+	invited.HandleFunc("/api/createfootprint", dhandlers.CreateFootprint).Methods("GET").Name("createfootprint")
+	invited.HandleFunc("/api/checkfootprintstatus", dhandlers.CheckFootprintStatus).Methods("GET").Name("checkfootprintstatus")
+	invited.HandleFunc("/api/resetinvitedtenant", dhandlers.ResetInvitedTenant).Methods("GET").Name("resetinvitedtenant")
+	invited.HandleFunc("/api/invitationstatus", dhandlers.InvitationStatus).Methods("GET").Name("invitationstatus")
+
+	
+
+	invited.HandleFunc("/api/testoidc", dhandlers.TestOIDC).Methods("POST").Name("testoidc")
+	invited.HandleFunc("/api/testnameandlogo", dhandlers.TestNameAndLogo).Methods("POST").Name("testnameandlogo")
+	
+
 	// no test	
 	authenticated.HandleFunc("/api/getdockers", dhandlers.GetDockers).Methods("GET").Name("getdockers")
 	nonauthenticated.HandleFunc("/bin/DymiumInstaller.exe", dhandlers.DymiumInstallerExe).Methods("GET")
@@ -91,7 +108,9 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/api/getmachineclientcertificate",  dhandlers.GetMachineClientCertificate).Methods("POST").Name("getmachineclientcertificate")
 	nonauthenticated.HandleFunc("/api/machineclientstatus", dhandlers.MachineClientStatus).Methods("POST")
 
-	
+	nonauthenticated.HandleFunc("/api/invitationsink", dhandlers.ProcessInvitation).Queries("inv", "{inv}").Methods("GET")
+
+
 	// For React to work properly, ensure that the URLs going into the React router return index.html
 	nonauthenticated.PathPrefix("/app/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		common.CommonCacheHeaders(w, r)

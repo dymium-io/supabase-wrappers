@@ -4,7 +4,6 @@ package authentication
 
 import (
 	"aws"
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -16,12 +15,14 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"math/big"
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -35,6 +36,7 @@ import (
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 	"github.com/lib/pq"
@@ -46,6 +48,7 @@ import (
 var pswd = `**********`
 
 var s3Client *s3.S3
+var smClient *secretsmanager.SecretsManager
 
 func InitS3() error {
 	r := os.Getenv("BUCKET_REGION")
@@ -60,7 +63,46 @@ func InitS3() error {
 	}
 
 	s3Client = s3.New(sess)
+
 	return nil
+}
+
+func InitSM() error {
+	r := os.Getenv("SECRETS_MANAGER_REGION")
+	if r == "" {
+		r = "us-west-2"
+	}
+	sess, err := session.NewSession(&awssdk.Config{
+		Region: awssdk.String(r),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create session: %v", err)
+	}
+
+	smClient = secretsmanager.New(sess)
+
+	return nil
+}
+
+func CreateSecret(name, secret string) error {
+	// Create the secret
+	_, err := smClient.CreateSecret(&secretsmanager.CreateSecretInput{
+		Name:         awssdk.String(name),
+		SecretString: awssdk.String(secret),
+	})
+
+	return err
+}
+
+func GetSecret(name string) (string, error) {
+	// Get the secret
+	result, err := smClient.GetSecretValue(&secretsmanager.GetSecretValueInput{
+		SecretId: awssdk.String(name),
+	})
+	if err != nil {
+		return "", err
+	}
+	return *result.SecretString, err
 }
 
 func StreamFromS3(w http.ResponseWriter, r *http.Request, bucketName, key string) {
@@ -92,7 +134,7 @@ func StreamFromS3(w http.ResponseWriter, r *http.Request, bucketName, key string
 
 	// Stream the object's content to the response body
 	defer result.Body.Close()
-	
+
 	_, err = io.Copy(w, result.Body)
 	if err != nil {
 		// You may want to handle this error differently depending on your application's needs
@@ -132,7 +174,7 @@ func GenerateUsernameString(n int) (string, error) {
 		var num *big.Int
 		var err error
 		if i == 0 {
-			num, err = rand.Int(rand.Reader, big.NewInt(int64(len(letters) - 10)))
+			num, err = rand.Int(rand.Reader, big.NewInt(int64(len(letters)-10)))
 		} else {
 			num, err = rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
 		}
@@ -159,6 +201,7 @@ func contains[T comparable](s []T, str T) bool {
 
 var admins = make(map[string]int)
 var users = make(map[string]int)
+var signers = make(map[string]int)
 var rdb *redis.Client
 var ctxrdb = context.Background()
 
@@ -175,11 +218,17 @@ func initRBAC() {
 		"getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables",
 		"getdatascopesfortestsql", "getdockers"}
 
+	signupnames := []string{"testoidc", "postinvitationjson", "getinvitationjson", "testnameandlogo", 
+	"createfootprint", "checkfootprintstatus", "resetinvitedtenant", "invitationstatus"}
+
 	for _, v := range adminnames {
 		admins["/api/"+v] = 1
 	}
 	for _, v := range usernames {
 		users["/api/"+v] = 1
+	}
+	for _, v := range signupnames {
+		signers["/api/"+v] = 1
 	}
 }
 func Authorized(r *http.Request, roles []string) bool {
@@ -195,6 +244,11 @@ func Authorized(r *http.Request, roles []string) bool {
 				return true
 			}
 		}
+		if v == "signer" {
+			if _, ok := signers[name]; ok {
+				return true
+			}
+		}
 	}
 	log.Errorf("Error:%s  not authorized", name)
 	return false
@@ -207,7 +261,9 @@ var DefaultPort = 24354
 const timeOut = 20
 
 var auth_admin_domain, auth_admin_client_id, auth_admin_client_secret,
-	auth_admin_redirect, auth_admin_organization, auth_admin_audience string
+	auth_admin_redirect, auth_admin_organization, auth_admin_audience,
+	auth_api_domain, auth_api_client_id, auth_api_client_secret, auth_api_audience string
+
 var auth_portal_domain, auth_portal_client_id, auth_portal_client_secret, auth_portal_redirect, auth_portal_audience string
 var ctx context.Context
 
@@ -366,6 +422,11 @@ func Init(host string, port, user, password, dbname, tls string) error {
 	auth_portal_redirect = os.Getenv("AUTH0_PORTAL_REDIRECT_URL")
 	auth_portal_audience = os.Getenv("AUTH0_PORTAL_AUDIENCE")
 
+	auth_api_domain = os.Getenv("AUTH0_API_DOMAIN")
+	auth_api_client_id = os.Getenv("AUTH0_API_CLIENT_ID")
+	auth_api_client_secret = os.Getenv("AUTH0_API_CLIENT_SECRET")
+	auth_api_audience = os.Getenv("AUTH0_API_AUDIENCE")
+
 	sports := os.Getenv("MESH_PORT_RANGE")
 	ports := strings.Split(sports, "-")
 	LowMeshport, _ = strconv.Atoi(ports[0])
@@ -418,7 +479,7 @@ func Init(host string, port, user, password, dbname, tls string) error {
 	}
 	rdb = redis.NewClient(o)
 	InitS3()
-
+	InitSM()
 	return nil
 }
 
@@ -638,26 +699,26 @@ func UsernameFromEmail(email string) string {
 
 	//!#$%&'*+-/=?^_`{|}~
 
-		replacer := strings.NewReplacer(
-			"!", "_",
-			"#", "_",
-			"$", "_",
-			"%", "_",
-			"&", "_",
-			"'", "_",
-			".", "_",
-			"*", "_",
-			"+", "_",
-			"-", "_",
-			"/", "=",
-			"?", "_",
-			"^", "_",
-			"`", "_",
-			"{", "_",
-			"|", "_",
-			"}", "_",
-			"~", "_")
-		username = replacer.Replace(username)
+	replacer := strings.NewReplacer(
+		"!", "_",
+		"#", "_",
+		"$", "_",
+		"%", "_",
+		"&", "_",
+		"'", "_",
+		".", "_",
+		"*", "_",
+		"+", "_",
+		"-", "_",
+		"/", "=",
+		"?", "_",
+		"^", "_",
+		"`", "_",
+		"{", "_",
+		"|", "_",
+		"}", "_",
+		"~", "_")
+	username = replacer.Replace(username)
 
 	username = strings.ToLower(username)
 	return username
@@ -727,21 +788,21 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 }
 
 func IsDatascopeAllowed(schema string, groups []string, datascope string) (bool, error) {
-    // Combine the queries into one
-    sql := `SELECT COUNT(*)
+	// Combine the queries into one
+	sql := `SELECT COUNT(*)
             FROM ` + schema + `.groupsfordatascopes gfd
             JOIN ` + schema + `.datascopes d ON gfd.datascope_id = d.id
             JOIN ` + schema + `.groupmapping gm ON gfd.group_id = gm.id
             WHERE d.name = $1 AND gm.outergroup = ANY($2)`
 
-    var count int
-    err := db.QueryRow(sql, datascope, pq.Array(groups)).Scan(&count)
-    if err != nil {
-        return false, err
-    }
+	var count int
+	err := db.QueryRow(sql, datascope, pq.Array(groups)).Scan(&count)
+	if err != nil {
+		return false, err
+	}
 
-    log.Debugf("IsDatascopeAllowed, count: %d", count)
-    return count > 0, nil
+	log.Debugf("IsDatascopeAllowed, count: %d", count)
+	return count > 0, nil
 }
 
 func GetSelect(schema string, groups, roles []string, ds *types.DatascopeTable) (types.SqlTestResult, error) {
@@ -778,7 +839,7 @@ func GetSelect(schema string, groups, roles []string, ds *types.DatascopeTable) 
 	} else {
 		log.Debugf("Admin, test datascopes is allowed")
 	}
-	
+
 	data, err := Invoke("DbSync", nil, snc)
 
 	if err != nil {
@@ -964,9 +1025,9 @@ func CreateNewConnection(schema string, con types.ConnectionRecord) (string, err
 		return id, err
 	}
 
-	enc, err := EncryptString(schema, *con.Password) 
+	enc, err := EncryptString(schema, *con.Password)
 	if err != nil {
-		return  "", err
+		return "", err
 	}
 
 	sqlI = `insert into ` + schema + `.passwords(id, password) values($1, $2)`
@@ -1126,13 +1187,14 @@ func GetRoles(schema string, groups []string, admin_group string) []string {
 	}
 	return roles
 }
-func GeneratePortalJWT(picture string, schema string, name string, email string, groups []string, roles []string, org_id string) (string, error) {
+func GeneratePortalJWT(picture string, schema string, name string, email string, groups []string, roles []string, org_id string, _timeOut int, session string) (string, error) {
 	// generate JWT right header
 	issueTime := time.Now()
-	expirationTime := issueTime.Add(timeOut * time.Minute)
+	expirationTime := issueTime.Add(time.Duration(_timeOut) * time.Minute)
 	p := hex.EncodeToString([]byte(picture))
-
-	session, _ := GenerateRandomString(32) //ignore the error for now
+	if session == "" {
+		session, _ = GenerateRandomString(32) //ignore the error for now
+	}
 	claim := &gotypes.Claims{
 		// TODO
 		Name:    name,
@@ -1169,7 +1231,10 @@ func refreshPortalToken(token string) (string, error) {
 
 	if err == nil && tkn.Valid {
 		// update token
-		expirationTime := timeNow.Add(timeOut * time.Minute)
+		delta := claim.ExpiresAt - claim.IssuedAt
+
+		// keep expiration
+		expirationTime := timeNow.Add(time.Duration(delta) * time.Second)
 		newclaim := &gotypes.Claims{
 			Name:    claim.Name,
 			Session: claim.Session,
@@ -1316,10 +1381,27 @@ func GetClientIdFromSchema(schema string) (string, error) {
 	return clientid, err
 }
 
+func GetCustomerSecret(schema string) (string, error) {
+	name := strings.ToUpper(schema) + "_KEY"
+	hexkey := os.Getenv(name)
+	if(hexkey != "") {
+		return hexkey, nil
+	}
+	var err error
+	hexkey, err = GetSecret(name)
+	if(err != nil) {
+		return "", err
+	}
+	os.Setenv(name, hexkey)
+	return hexkey, nil
+}
 func DecryptByteArray(schema string, password []byte) (string, error) {
-	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
-	plain, err := AESdecrypt(password, hexkey)
+	hexkey, err := GetCustomerSecret(schema)
+	if err != nil {
+		return "", err
+	}
 
+	plain, err := AESdecrypt(password, hexkey)
 	if err != nil {
 		return "", err
 	}
@@ -1327,9 +1409,11 @@ func DecryptByteArray(schema string, password []byte) (string, error) {
 }
 
 func EncryptString(schema string, password string) ([]byte, error) {
-	hexkey := os.Getenv(strings.ToUpper(schema) + "_KEY")
-		enc, err := AESencrypt([]byte(password), hexkey)
-	
+	hexkey, err := GetCustomerSecret(schema)
+	if err != nil {
+		return nil, err
+	}
+	enc, err := AESencrypt([]byte(password), hexkey)
 	if err != nil {
 		return nil, err
 	}
@@ -1380,7 +1464,7 @@ func UpdateConnection(schema string, con types.ConnectionRecord) error {
 			log.Errorf("UpdateConnection 2: %s", err.Error())
 			return err
 		}
-		enc, err := EncryptString(schema, *con.Password) 
+		enc, err := EncryptString(schema, *con.Password)
 		if err != nil {
 			return err
 		}
@@ -1435,7 +1519,7 @@ func GetConnection(schema, id string) (types.ConnectionParams, bool, error) {
 		log.Errorf("GetConnection error 0: %s", err.Error())
 		return con, false, err
 	} else {
-		plain, err := DecryptByteArray(schema, password )
+		plain, err := DecryptByteArray(schema, password)
 
 		if err != nil {
 			fmt.Printf("GetConnection error X: %s\n", err.Error())
@@ -1995,8 +2079,8 @@ func DeleteConnection(schema, id string) error {
 }
 func GetFakeAuthentication() []byte {
 
-	token, err := GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s",
-		"spoofcorp", "user@spoofcorp.com", "user", []string{"Admins", "Users"}, []string{"user", "admin"}, "org_nsEsSgfq3IYXe2pu")
+	token, err := GeneratePortalJWT("/avatar.png",
+		"spoofcorp", "user@spoofcorp.com", "user", []string{"Admins", "Users"}, []string{"user", "admin"}, "org_nsEsSgfq3IYXe2pu", timeOut, "")
 	if err != nil {
 		log.Errorf("Error: %s", err.Error())
 	}
@@ -2019,8 +2103,7 @@ func CheckConnectorAuth(schema, key, secret string) error {
 	const norecord = "The record for this connector does not exist. Please check configuration in the portal."
 	row := db.QueryRow(sql, key)
 	var realsecretb []byte
-	err := row.Scan( &realsecretb)
-	
+	err := row.Scan(&realsecretb)
 
 	if err != nil {
 		var pqErr *pq.Error
@@ -2037,7 +2120,7 @@ func CheckConnectorAuth(schema, key, secret string) error {
 		}
 		return err
 	}
-	realsecret, err := DecryptByteArray(schema, realsecretb )
+	realsecret, err := DecryptByteArray(schema, realsecretb)
 	if err != nil {
 		return err
 	}
@@ -2053,7 +2136,6 @@ func GetTargets(schema, key, secret string) ([]string, error) {
 	var targets []string
 	sql := `select a.targetaddress, a.targetport, a.localport, b.id, a.id, b.accesssecretb from ` + schema + `.connectors as a 
 	join ` + schema + `.connectorauth as b on a.id_connectorauth=b.id where b.accesskey=$1;`
-
 
 	rows, err := db.Query(sql, key)
 	if nil == err {
@@ -2122,7 +2204,7 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id,
 		return "", "", []string{}, "", "", []string{}, err
 	}
 
-	token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups, ""), org_id)
+	token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups, ""), org_id, timeOut, "")
 
 	session, _ := GetSessionFromToken(token)
 
@@ -2325,7 +2407,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 			return
 		}
 
-		token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups, admin_group), org_id)
+		token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups, admin_group), org_id, timeOut, "")
 		session, _ := GetSessionFromToken(token)
 		if err != nil {
 			log.ErrorUserf(schema, session, email, groups, GetRoles(schema, groups, admin_group), "Error in portal JWT generation: %s", err.Error())
@@ -2400,7 +2482,7 @@ func CreateNewConnector(schema string, req *types.AddConnectorRequest) (string, 
 
 	sql := `insert into ` + schema + `.connectorauth(name, accesskey, accesssecret, accesssecretb) values($1,$2,$3, $4) returning id;`
 
-	encsycret, err := EncryptString(schema, req.Secret) 
+	encsycret, err := EncryptString(schema, req.Secret)
 	if err != nil {
 		return "", err
 	}
@@ -2476,7 +2558,7 @@ func GetConnectors(schema string) ([]types.Connector, error) {
 			o.Id = id
 			o.Accesskey = &accesskey
 
-			accesssecret, err := DecryptByteArray(schema, accesssecretb )
+			accesssecret, err := DecryptByteArray(schema, accesssecretb)
 			if err != nil {
 				return out, err
 			}
@@ -2670,138 +2752,6 @@ func DeleteConnector(schema, Id string) error {
 	return nil
 }
 
-func CreateNewCustomer(customer types.Customer) error {
-	sql := `insert into global.customers(company_name, schema_name, organization, domain, admin_group)
-		values($1,$2,$3,$4,$5);`
-	_, err := db.Exec(sql, customer.Name, customer.Schema, customer.Orgid, customer.Domain, customer.Admingroup)
-	if err != nil {
-		return err
-	}
-	var mallard string
-	var where string
-	if "" == os.Getenv("LOCAL_ENVIRONMENT") {
-		// cloud, hence linux
-		mallard = "./mallard"
-		where = "/mallard"
-	} else {
-		// local Mac
-		mallard = "../bin/mallard"
-		where = "../../../dbConf"
-	}
-	dbhost := os.Getenv("DATABASE_HOST")
-	dbpassword := os.Getenv("DATABASE_PASSWORD")
-	dbport := os.Getenv("DATABASE_PORT")
-	dbuser := os.Getenv("DATABASE_USER")
-	dbname := os.Getenv("DATABASE_NAME")
-	if dbport == "" {
-		dbport = "5432"
-	}
-	if dbname == "" {
-		dbname = "dymium"
-	}
-	cmd := exec.Command(mallard, "migrate", "-s", customer.Schema, "-r", "customer",
-		"--host", dbhost,
-		"--port", dbport,
-		"--user", dbuser,
-		"--password", dbpassword,
-		"--database", dbname,
-		"--apply")
-
-	fmt.Printf("Run %s in dir: %s, port: %s\n", mallard, where, dbport)
-	fmt.Printf("args: %v\n", cmd.Args)
-	cmd.Dir = where
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err = cmd.Run()
-	if err != nil {
-		return errors.New(fmt.Sprintf("%s, mallard output: %s", err.Error(), stderr.String()))
-	} else {
-		return err
-	}
-}
-func GetCustomers() ([]types.Customer, error) {
-	var ret []types.Customer
-	sql := `select id, company_name, schema_name, organization, domain, admin_group from global.customers;`
-
-	rows, err := db.Query(sql)
-	if nil == err {
-		defer rows.Close()
-
-		for rows.Next() {
-			var id, company_name, schema_name, organization, domain, admin_group string
-			err = rows.Scan(&id, &company_name, &schema_name, &organization, &domain, &admin_group)
-			if err != nil {
-				break
-			}
-			c := types.Customer{&id, company_name, organization, schema_name, domain, admin_group}
-			ret = append(ret, c)
-		}
-	}
-	return ret, err
-}
-
-func DeleteCustomer(id string, schema string) error {
-	sql := `delete from global.customers where id=$1;`
-	_, err := db.Exec(sql, id)
-	if err != nil {
-		return err
-	}
-
-	var mallard, where string
-
-	if "" == os.Getenv("LOCAL_ENVIRONMENT") {
-		// cloud, hence linux
-		mallard = "./mallard"
-		where = "./mallard"
-	} else {
-		// local Mac
-		mallard = "../bin/mallard"
-		where = "../../../dbConf"
-	}
-	dbhost := os.Getenv("DATABASE_HOST")
-	dbpassword := os.Getenv("DATABASE_PASSWORD")
-	dbport := os.Getenv("DATABASE_PORT")
-	dbuser := os.Getenv("DATABASE_USER")
-	dbname := os.Getenv("DATABASE_NAME")
-	if dbport == "" {
-		dbport = "5432"
-	}
-	if dbname == "" {
-		dbname = "dymium"
-	}
-
-	cmd := exec.Command(mallard, "drop", "-s", schema,
-		"--host", dbhost,
-		"--port", dbport,
-		"--user", dbuser,
-		"--password", dbpassword,
-		"--database", dbname)
-	cmd.Dir = where
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err = cmd.Run()
-	if err != nil {
-		return errors.New(fmt.Sprintf("%s, mallard output: %s", err.Error(), stderr.String()))
-	} else {
-		return err
-	}
-
-}
-
-func UpdateCustomer(customer types.Customer) error {
-	sql := `update global.customers set organization=$1, domain=$2, admin_group=$3 where id=$4;`
-	_, err := db.Exec(sql, customer.Orgid, customer.Domain, customer.Admingroup, customer.Id)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
 func GetGlobalUsage() (types.GlobalUsage, error) {
 	var usage types.GlobalUsage
 	sql := `select count(*) from global.customers;`
@@ -2840,7 +2790,7 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error) {
 	}
 	sql := `insert into ` + schema + `.machinetunnelauth( accesskey, accesssecretb, accesssecret ) values($1,$2,$3) returning id;`
 
-	accesssecretb, err := EncryptString(schema, accesssecret) 
+	accesssecretb, err := EncryptString(schema, accesssecret)
 	if err != nil {
 		return "", err
 	}
@@ -2859,7 +2809,7 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error) {
 	username, _ := GenerateUsernameString(16)
 	password, _ := GenerateRandomString(32)
 
-	enc, err := EncryptString(schema, password) 
+	enc, err := EncryptString(schema, password)
 	if err != nil {
 		return "", err
 	}
@@ -3068,9 +3018,9 @@ func RegenMachineTunnel(schema, id string) error {
 	// generate password:
 	password, _ := GenerateRandomString(32)
 
-	enc, err := EncryptString(schema, password) 
+	enc, err := EncryptString(schema, password)
 	if err != nil {
-		return  err
+		return err
 	}
 
 	sql := `update ` + schema + `.machinetunnels set password=$1,created_at=now() where id=$2;`
@@ -3086,7 +3036,7 @@ func RefreshMachineTunnels(schema string) error {
 	if nil == err {
 		defer rows.Close()
 		// do an inline type for a pair of strings
-		var keysecretpair []struct{	key, secret string	}
+		var keysecretpair []struct{ key, secret string }
 		for rows.Next() {
 			var secretb []byte
 			var key, secret string
@@ -3096,7 +3046,7 @@ func RefreshMachineTunnels(schema string) error {
 				break
 			}
 			secret, _ = DecryptByteArray(schema, secretb)
-			keysecretpair = append(keysecretpair, struct{key, secret string}{key, secret})
+			keysecretpair = append(keysecretpair, struct{ key, secret string }{key, secret})
 		}
 		// now iterate over keysecretpair and call AuthenticateAndPrepareMachineTunnel
 		for i := 0; i < len(keysecretpair); i++ {
@@ -3133,7 +3083,7 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 	if err != nil {
 		return []string{}, "", err
 	}
-	if(storedsecret != secret) {
+	if storedsecret != secret {
 		return []string{}, "", fmt.Errorf("Tunnel authentication failure")
 	}
 	decpassword, err := DecryptByteArray(schema, password)
@@ -3158,8 +3108,8 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 			groups = append(groups, group)
 		}
 		log.Debugf("AuthenticateAndPrepareMachineTunnel, groups: %v", groups)
-		token, err := GeneratePortalJWT("https://media-exp2.licdn.com/dms/image/C5603AQGQMJOel6FJxw/profile-displayphoto-shrink_400_400/0/1570405959680?e=1661385600&v=beta&t=MDpCTJzRSVtovAHXSSnw19D8Tr1eM2hmB0JB63yLb1s",
-			schema, name, "N/A", groups, []string{gotypes.RoleUser}, "unknown")
+		token, err := GeneratePortalJWT("/avatar.png",
+			schema, name, "N/A", groups, []string{gotypes.RoleUser}, "unknown", timeOut, "")
 		if err != nil {
 			log.Errorf("AuthenticateAndPrepareMachineTunnel, generate token error: %s", err.Error())
 			return []string{}, "", err

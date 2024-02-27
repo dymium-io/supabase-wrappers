@@ -319,6 +319,7 @@ export default function AssignGroups() {
     }
     return (
         <div className=" text-left">
+             {alert}
             <h5 > Associate groups with Ghost Databases <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
             <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
                 <h5>Associate Groups</h5>
@@ -337,7 +338,7 @@ export default function AssignGroups() {
 
                 </div>
             </Offcanvas>
-            {alert}
+
             <Modal centered size="lg" show={show} onHide={() => setShow(false)} >
                 <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
                     <Modal.Header closeButton>

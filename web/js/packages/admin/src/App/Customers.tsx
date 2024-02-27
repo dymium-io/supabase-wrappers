@@ -128,46 +128,46 @@ function CustomerForm(props) {
                 </Col>
             </Row>
         </Col>
-        <Col>
-                            <h5>Onboarding a customer</h5>
-            <div>
-                This form only creates or updates a global database record for a customer, as well as a dedicated database schema.
-                Before Add New customer please create Auth0 configured either for  <a href="https://docs.google.com/document/d/1CYW7AFfZByBNDZdhWpAJcLD6uNtHfJuaFuXEQaMsl0o/edit?usp=sharing" target="okta">Okta</a> or <a href="https://docs.google.com/document/d/1U1YZ1xm5n89ch0oQKYhiqIAxzlPUmzlIw-uPlU4BlQM/edit?usp=sharing" target="azure">AzureAD</a> integration.
-            </div>
-            <div className="mt-3">
-                The following steps must be taken in addition, after Add New Customer is completed:
-                <ul>
-                    <li>
-                        <a href="https://docs.google.com/document/d/1LveztkbSUWUK6CFm08Nrsm5L7upOp7BsGz2NA3DT1kw/edit?usp=sharing" target="terraform">Terraform script executed</a> to bring up all the necessary microservices.
-                    </li>
-                    <li>
-                        <a href="https://docs.google.com/document/d/1yJWNfuAovcdQCAeSm-sThp8MQt5sm3AlK_1TZXqghPM/edit?usp=sharing" target="route53">Hostnames added</a> to Amazons Route53 in the dymium subaccount
-                    </li>
-                    <li>
-                      Group mapping set up for access control in the customer's portal. Unless there is a reason to change group names, just use 1:1 mapping
-                    </li>
-                    <li>
-                      Connectivity to the data sources provisioned either via <a href="https://aws.amazon.com/privatelink/" target="privatelink">PrivateLink </a> or <a href="https://docs.google.com/document/d/1U1YZ1xm5n89ch0oQKYhiqIAxzlPUmzlIw-uPlU4BlQM/edit?usp=sharing" target="route53">Dymium Connector</a>  in the customer's portal.
-                      Dymium Connector is easier to set up, and can be used with on-prem installations, as well as less supported clouds.
-                    </li>
-                    <li>
-                        Data Sources created in the customer's portal.
-                    </li>      
-                    <li>
-                       Access levels and Rules defined in the customer's portal.
-                    </li>                      
-                    <li>
-                        Ghost Databases defined in the customer's portal.
-                    </li>
-                    <li>
-                        Groups assigned to Ghost Databases.
-                    </li>
-                    <li>
-                        The customer provided with instruction on the proper use of the tunneling client.
-                    </li>
-                </ul>
-            </div>
-        </Col>
+            <Col>
+                <h5>Onboarding a customer</h5>
+                <div>
+                    This form only creates or updates a global database record for a customer, as well as a dedicated database schema.
+                    Before Add New customer please create Auth0 configured either for  <a href="https://docs.google.com/document/d/1CYW7AFfZByBNDZdhWpAJcLD6uNtHfJuaFuXEQaMsl0o/edit?usp=sharing" target="okta">Okta</a> or <a href="https://docs.google.com/document/d/1U1YZ1xm5n89ch0oQKYhiqIAxzlPUmzlIw-uPlU4BlQM/edit?usp=sharing" target="azure">AzureAD</a> integration.
+                </div>
+                <div className="mt-3">
+                    The following steps must be taken in addition, after Add New Customer is completed:
+                    <ul>
+                        <li>
+                            <a href="https://docs.google.com/document/d/1LveztkbSUWUK6CFm08Nrsm5L7upOp7BsGz2NA3DT1kw/edit?usp=sharing" target="terraform">Terraform script executed</a> to bring up all the necessary microservices.
+                        </li>
+                        <li>
+                            <a href="https://docs.google.com/document/d/1yJWNfuAovcdQCAeSm-sThp8MQt5sm3AlK_1TZXqghPM/edit?usp=sharing" target="route53">Hostnames added</a> to Amazons Route53 in the dymium subaccount
+                        </li>
+                        <li>
+                            Group mapping set up for access control in the customer's portal. Unless there is a reason to change group names, just use 1:1 mapping
+                        </li>
+                        <li>
+                            Connectivity to the data sources provisioned either via <a href="https://aws.amazon.com/privatelink/" target="privatelink">PrivateLink </a> or <a href="https://docs.google.com/document/d/1U1YZ1xm5n89ch0oQKYhiqIAxzlPUmzlIw-uPlU4BlQM/edit?usp=sharing" target="route53">Dymium Connector</a>  in the customer's portal.
+                            Dymium Connector is easier to set up, and can be used with on-prem installations, as well as less supported clouds.
+                        </li>
+                        <li>
+                            Data Sources created in the customer's portal.
+                        </li>
+                        <li>
+                            Access levels and Rules defined in the customer's portal.
+                        </li>
+                        <li>
+                            Ghost Databases defined in the customer's portal.
+                        </li>
+                        <li>
+                            Groups assigned to Ghost Databases.
+                        </li>
+                        <li>
+                            The customer provided with instruction on the proper use of the tunneling client.
+                        </li>
+                    </ul>
+                </div>
+            </Col>
         </Row>
         <Button variant="dymium" size="sm" className="mt-4" type="submit">
             Apply
@@ -322,7 +322,7 @@ function EditCustomers() {
                 )
                 setSpinner(false)
             })
-    },[fillDetails, rememberedSelection])
+    }, [fillDetails, rememberedSelection])
     let UpdateCustomer = () => {
         setSpinner(true)
         let uc = admin.Customer.fromJson({
@@ -393,8 +393,8 @@ function EditCustomers() {
     useEffect(() => {
 
         GetCustomers()
-    // starts looping if I add GetCustomers to the dependency list
-    // eslint-disable-next-line react-hooks/exhaustive-deps    
+        // starts looping if I add GetCustomers to the dependency list
+        // eslint-disable-next-line react-hooks/exhaustive-deps    
     }, [rememberedSelection])
 
     useEffect(() => {
@@ -637,8 +637,9 @@ function AddCustomer() {
         return false
     }
     return <>
-        <h5 >Add New Customer <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
         {alert}
+        <h5 >Add New Customer <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+
         <CustomerForm
             edit={false}
             handleSubmit={handleSubmit} form={form} validated={validated}
@@ -661,13 +662,149 @@ function Customers() {
 
     const appDispatch = useAppDispatch()
 
+    function InviteCustomer() {
+        const [spinner, setSpinner] = useState(false)
+        const [validated, setValidated] = useState(false)
+        const [email, setEmail] = useState("")
+        const [contactName, setContactName] = useState("")
+        const [alert, setAlert] = useState<JSX.Element>(<></>)
+        let form = useRef<HTMLFormElement>(null)
 
+        let sendInvite = () => {
+            let body = {
+                email,
+                contactName
+            }
+    
+            let sbody = JSON.stringify(body)
+            setSpinner(true)
+            http.sendToServer("POST", "/api/invitenewcustomer",
+                null, sbody,
+                resp => {
+    
+                    resp.json().then(_js => {
+                        let js = types.ConnectionResponse.fromJson(_js)
+                        if (js.status !== "OK") {
+                            setAlert(
+                                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                                    Error retrieving connections: {js.errormessage} { }
+                                </Alert>
+                            )
+                            setTimeout(() => setSpinner(false), 500)
+                            return
+                        } else {
+                            setAlert(
+                                <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                                    Sent email to {contactName} successfully
+                                </Alert>
+                            )
+                            setContactName("")
+                            setEmail("")
+
+                        }
+                        setTimeout(() => setSpinner(false), 500)
+                    })
+    
+    
+                },
+                resp => {
+                    console.log("on error")
+                    resp != null &&
+                        resp.text().then(t =>
+                            setAlert(
+                                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                                    Error: {t}
+                                </Alert>
+                            )
+                        )
+                    setSpinner(false)
+                },
+                error => {
+                    console.log("on exception: " + error)
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            {error.message}
+                        </Alert>
+                    )
+                    setSpinner(false)
+                })            
+        }
+        let handleSubmit = event => {
+            if (form.current == null) {
+                return false
+            }
+            if (form.current.reportValidity() === false) {
+                event.preventDefault();
+                setValidated(true)
+                return false
+            }
+            event.preventDefault();
+            setValidated(false)
+            event.stopPropagation();
+            sendInvite()
+            return false
+        }
+        return <>
+            {alert}        
+            <h5 >Invite New Customer for self sign up <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+
+            <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
+                <Row>
+                    <Col>
+                        <Form.Group>
+                            <Form.Label>Contact name:</Form.Label>
+                            <Form.Control size="sm" type="text"
+                                required placeholder="small cap alphanum"
+                                style={{ width: '40em' }}
+                                pattern="^\S(.*\S)?$"
+                                value={contactName}
+                                onChange={e => {
+                                    setContactName(e.target.value)
+                                }}
+                            />
+                            <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                            <Form.Control.Feedback type="invalid" >
+                                Enter orgid
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+                        <Form.Group>
+                            <Form.Label>Contact email:</Form.Label>
+                            <Form.Control size="sm" 
+                                required placeholder="email address"
+                                style={{ width: '40em' }}
+                                pattern="[^@]+@[^@]+\.[a-zA-Z]{2,}$"
+                                type="email"
+                                value={email}
+                                onChange={e => {
+                                    setEmail(e.target.value)
+                                }}
+                            />
+                            <Form.Control.Feedback >Looks good!</Form.Control.Feedback>
+                            <Form.Control.Feedback type="invalid" >
+                                Enter orgid
+                            </Form.Control.Feedback>
+                        </Form.Group>
+                    </Col>
+                </Row>            
+                <Button variant="dymium" size="sm" className="mt-4" type="submit">
+            Apply
+        </Button>    
+            </Form >
+        </>
+    }
     return (
         <Tabs
             activeKey={t}
             id="customers"
             onSelect={(k) => appDispatch(setActiveCustomersTab(k))}
             unmountOnExit={true} className="mb-3 text-left">
+            <Tab eventKey="invite" title="Invite" className="mx-4">
+                <InviteCustomer />
+            </Tab>
             <Tab eventKey="add" title="Add" className="mx-4">
                 <AddCustomer />
             </Tab>

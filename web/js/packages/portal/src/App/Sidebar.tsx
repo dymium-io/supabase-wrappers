@@ -20,10 +20,16 @@ export default function Sidebar() {
   }
   let isadmin = roles.includes("admin")
   let isuser = roles.includes("user")
+  let issigner = roles.includes("signer")
   if (!isadmin) {
-    if (["dashboard", "connections", "datascopes", "groups", "rules"].includes(selected)) {
-      selected = "access"
+    if (issigner) {
+      selected = "signup"
       appDispatch(setActiveMenu(selected))
+    } else {
+      if (["dashboard", "connections", "datascopes", "groups", "rules"].includes(selected)) {
+        selected = "access"
+        appDispatch(setActiveMenu(selected))
+      }
     }
   }
 
@@ -31,6 +37,13 @@ export default function Sidebar() {
 
 
     let items: any[] = []
+    if (issigner)
+      items.push(
+        {
+          item: <div className='darkblue'> <i className="fas fa-key mr-2 fa-fw "></i>Authentication</div>,
+          to: '/app/signup',
+          id: 'signup'
+        })
     if (isadmin)
       items.push(
         {
@@ -86,22 +99,22 @@ export default function Sidebar() {
           id: 'access'
         })
 
-      if (isadmin)
+    if (isadmin)
       items.push(
         {
           item: <div className='darkblue'><i className="fas fa-network-wired mr-2  fa-fw"></i>Machine Access</div>,
           to: '/app/machineaccess',
           id: 'machineaccess'
         })
+    if (!issigner)
+      items.push(
+        {
+          item: <div className='darkblue'>  <i className="fa-solid fa-vial mr-2 fa-fw"></i>Test SQL </div>,
+          to: '/app/test',
+          id: 'test'
+        }
 
-    items.push(
-      {
-        item: <div className='darkblue'>  <i className="fa-solid fa-vial mr-2 fa-fw"></i>Test SQL </div>,
-        to: '/app/test',
-        id: 'test'
-      }
-
-    )
+      )
 
     return items.map(ob => {
       let cl = 'hover-sidebar '
