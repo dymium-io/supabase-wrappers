@@ -212,11 +212,11 @@ func options(connectionType types.ConnectionType) iOptions {
 			server: func(host string, port int, dbname string) string {
 				if dbname != "" {
 					return fmt.Sprintf(
-						`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver', url 'jdbc:elasticsearch://%s:%d/?catalog=%s',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.10.4.jar',maxheapsize '600'`,
+						`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver', url 'jdbc:es://%s:%d/?catalog=%s',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.12.0.jar',maxheapsize '600'`,
 						esc(host), port, dbname)
 				}
 				return fmt.Sprintf(
-					`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver', url 'jdbc:elasticsearch://%s:%d',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.10.2.jar',maxheapsize '600'`,
+					`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver', url 'jdbc:es://%s:%d',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.12.0.jar',maxheapsize '600'`,
 					esc(host), port)
 			},
 			userMapping: func(user, password string) string {

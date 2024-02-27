@@ -44,9 +44,21 @@ for f in ${instantclients[@]}; do
 done
 
 #DB2 libs
-cp ${setup_d}/db2/v11.5.8_linuxx64_rtcl.tar.gz .
-#cp ${setup_d}/db2/odbcinst.ini .
-cp ${setup_d}/db2/v11.5.4_linuxx64_odbc_cli.tar.gz .
+rtcllibs=${setup_d}/db2/v11.5.8_linuxx64_rtcl.tar.gz
+[ -f $rtcllibs ] || {
+    echo "DB2 rtcl lib dependencies file not found in ${setup_d}"
+    echo "Please get them from S3"
+    exit -1
+  }
+cp $rtcllibs .
+
+odbclibs=${setup_d}/db2/v11.5.4_linuxx64_odbc_cli.tar.gz
+[ -f $rtcllibs ] || {
+    echo "DB2 odbc lib dependencies file not found in ${setup_d}"
+    echo "Please get them from S3"
+    exit -1
+  }
+cp $odbclibs .
 
 
 fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)

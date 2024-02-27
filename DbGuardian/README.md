@@ -37,3 +37,13 @@ and then:
 > git subtree add --prefix DbGuardian/foreign_data_wrappers/supabase_wrappers supabase_wrappers main --squash
 and then:
 > git subtree pull --prefix DbGuardian/foreign_data_wrappers/supabase_wrappers supabase_wrappers main --squash
+
+> git remote add -f pgsodium  https://github.com/michelp/pgsodium.git
+> git subtree add --prefix DbGuardian/foreign_data_wrappers/pgsodium pgsodium main --squash
+and then:
+> git subtree pull --prefix DbGuardian/foreign_data_wrappers/pgsodium pgsodium main --squash
+
+> git remote add -f vault https://github.com/supabase/vault.git
+> git subtree add --prefix DbGuardian/foreign_data_wrappers/vault vault main --squash
+and then:
+> git subtree pull --prefix DbGuardian/foreign_data_wrappers/vault vault main --squash
