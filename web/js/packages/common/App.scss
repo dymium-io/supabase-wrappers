@@ -1,4 +1,4 @@
-$light-gray: #bbbbbb;
+$light-gray: #cccccc;
 $dark-yellow: rgb(199, 124, 18);
 $main-yellow: #fc8f24;
 $main-blue: #0883ba;
@@ -8,7 +8,7 @@ $validation-red: #a41c2a;
 $thick-blue: #00527c;
 $dark-blue: rgb(4, 57, 84);
 $text-gray: rgb(75, 75, 75);
-$light-gray: rgb(89, 89, 89);
+
 
 $breakdown-width:900px;
 
@@ -202,7 +202,7 @@ input:-internal-autofill-selected {
   background-color: #cfd0d2;
   padding: 0.4em 0.8em;
   text-transform: uppercase !important;
-  color: $light-gray;
+  color: $text-gray;
 }
 
 #responsive-navbar-nav .nav-link {
@@ -586,4 +586,112 @@ pre {
 .modal-title {
   overflow-x: scroll;
   margin-right: 4px;
+}
+
+.w-50 {
+  width: 50% !important;
+}
+
+.w-75 {
+  width: 75% !important;
+}
+
+
+/* Static styles for your component */
+.progressContainer {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 16px;
+  font-size: 19px;
+
+}
+
+.stepBar {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  position: relative;
+  margin-bottom: 100px;
+}
+
+.stepBarBaseLine {
+  background: $light-gray;
+  height: 4px;
+  width: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  position: absolute;
+  left: 0;
+}
+
+.stepCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.stepCircleComplete {
+  border: 3px solid $thick-blue;
+  background-color: $main-blue;
+  cursor: pointer;
+}
+
+.stepCircleIncomplete {
+  border: 3px solid $light-gray;
+}
+.stepCircleCurrent {
+  border: 3px solid $thick-blue;
+  background-color: $light-blue;
+  color: white !important;
+}
+
+.stepLabel {
+  position: absolute;
+  top: 66px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 15px;
+  color: $thick-blue;
+  white-space: nowrap;
+}
+
+.stepCheckMark {
+  font-size: 26px;
+  font-weight: 600;
+  color: $thick-blue;
+  transform: scaleX(-1) rotate(-46deg);
+}
+
+.stepNumber {
+  font-size: 19px;
+  color: $light-gray ;
+}
+
+.stepConnector {
+  background: $thick-blue;
+  height: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  position: absolute;
+  left: 0;
+  transition: 0.4s ease;
+}
+
+.btn-link {
+  color: #00527c;
+  text-decoration: none;
+  &:hover {
+    color: $dark-blue;
+    text-decoration: none;
+  }
+  &:focus {
+    color: $dark-blue;
+    text-decoration: none;
+    border: none;
+  }
 }

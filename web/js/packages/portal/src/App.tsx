@@ -6,6 +6,7 @@ import Logout from "./Logout"
 import Error from "./Error"
 import Invitation from "./Invitation"
 import Sticky from "./App/Sticky"
+import Signup from "./App/Signup"
 import Dashboard from "./App/Dashboard"
 import Customers from "./App/Customers"
 import Connections from "./App/Connections"
@@ -38,6 +39,7 @@ function App() {
           <Route  path="/" element={<LandingPage />} />
 
           <Route path="/app/" element={<AuthenticatedApp />} >
+            <Route path="/app/signup" element={<Signup />} />
             <Route path="/app/dashboard" element={<Dashboard />} />
             <Route path="/app/connections" element={<Connections />} />     
             <Route path="/app/datascopes" element={<Datascopes />} />     

@@ -19,13 +19,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	"dymium.com/dymium/authentication"
 	"dymium.com/dymium/common"
+	"dymium.com/dymium/gotypes"
 	"dymium.com/dymium/log"
 	"dymium.com/dymium/types"
 	"dymium.com/server/protocol"
 	"github.com/Jeffail/gabs"
+	"github.com/golang-jwt/jwt"
 	"github.com/gorilla/mux"
 	_ "github.com/gorilla/mux"
 	"golang.org/x/net/context"
@@ -85,6 +86,52 @@ func AuthMiddleware(h http.Handler) http.Handler {
 			return
 		}
 		h.ServeHTTP(w, rWithSchema)
+	})
+}
+func InviteMiddleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// do stuff
+		token := common.TokenFromHTTPRequest(r)
+		if token == "" {
+			rr := "Auth Error: absent token"
+			log.Errorf(rr)
+			http.Error(w, rr, http.StatusForbidden)
+			return
+		}
+		jwtKey := []byte(os.Getenv("SESSION_SECRET"))
+		claim := &gotypes.Claims{}
+	
+		tkn, err := jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
+			return jwtKey, nil
+		})
+		if nil == err {
+			if !tkn.Valid {
+				rr := "Authentication failed"
+				log.Errorf(rr)
+				http.Error(w, rr, http.StatusForbidden)
+				return 
+			}
+		} else {
+			log.Errorf(err.Error())
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return 
+		}
+
+		use := authentication.Authorized(r, claim.Roles)
+		if !use {
+			status := types.OperationStatus{"AuthError", "Role is not authorized for this resource"}
+			js, err := json.Marshal(status)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			common.CommonNocacheHeaders(w, r)
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(js)
+			return
+		}
+		h.ServeHTTP(w, r)
 	})
 }
 
@@ -2266,4 +2313,229 @@ func GetRegistryId(w http.ResponseWriter, r *http.Request) {
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+}
+
+func ProcessInvitation(	w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	inv := vars["inv"]
+
+	str, nonce, err := authentication.ProcessInvitation(inv)
+	if err != nil {
+		out := `/app/error?header=Invitation%20Expired&body=`+ url.QueryEscape(err.Error())
+
+		http.Redirect(w, r, out, http.StatusTemporaryRedirect)
+		return
+	}
+	js := []byte(str)
+	common.CommonNocacheNocspHeaders(w, r)
+	w.Header().Set("Content-Security-Policy", "script-src 'nonce-"+nonce+"'")
+	w.Header().Set("Content-Type", "text/html")
+	w.Write(js)
+}
+
+func TestNameAndLogo(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := struct { 
+		Shortname string
+		Name string
+		Logo string
+	}{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = authentication.TestNameAndLogo(t.Shortname, t.Name, t.Logo)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"status": "OK"}`))
+}
+
+func TestOIDC(w http.ResponseWriter, r *http.Request) {
+
+	body, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := struct { 
+		Issuer string
+		Clientid string
+		Secret string
+	}{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	
+	client := &http.Client{}
+	urlStr := fmt.Sprintf("%s/.well-known/openid-configuration", t.Issuer)
+	
+
+	nr, err := http.NewRequest(http.MethodGet, urlStr, nil) // URL-encoded payload
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return 
+	}
+	nr.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := client.Do(nr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return 
+	}
+
+	defer resp.Body.Close()
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return 
+	}
+	log.Infof("TestOIDC, body: %s", string(body))
+
+	o := struct {
+		Issuer string
+		Authorization_endpoint string
+		Token_endpoint string
+		Userinfo_endpoint string
+		Jwks_uri string
+	} {}
+	err = json.Unmarshal(body, &o)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(body)
+}
+
+func GetInvitationJson(w http.ResponseWriter, r *http.Request) {
+	token := common.TokenFromHTTPRequest(r)
+	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
+	claim := &gotypes.Claims{}
+
+	_, _ = jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+
+	js, err := authentication.GetInvitationJson(claim.Session)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+func PostInvitationJson(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	
+	token := common.TokenFromHTTPRequest(r)
+	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
+	claim := &gotypes.Claims{}
+
+	_, _ = jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	err := authentication.PostInvitationJson( string(body), claim.Session)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	js := []byte(`{"status": "OK"}`)
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func CreateFootprint(w http.ResponseWriter, r *http.Request) {
+	token := common.TokenFromHTTPRequest(r)
+	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
+	claim := &gotypes.Claims{}
+
+	_, _ = jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	err := authentication.StartCreatingFootprint( claim.Session)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+
+	js := []byte(`{"status": "OK"}`)
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func CheckFootprintStatus(w http.ResponseWriter, r *http.Request) {
+	token := common.TokenFromHTTPRequest(r)
+	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
+	claim := &gotypes.Claims{}
+
+	_, _ = jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	js, err := authentication.CreatingFootprintStatus( claim.Session)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}	
+
+func ResetInvitedTenant(w http.ResponseWriter, r *http.Request) {
+	token := common.TokenFromHTTPRequest(r)
+	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
+	claim := &gotypes.Claims{}
+
+	_, _ = jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	err := authentication.ClearResetTenantFromInvite( claim.Session)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"status": "OK"}`))
+}	
+
+func InvitationStatus(w http.ResponseWriter, r *http.Request) {
+	token := common.TokenFromHTTPRequest(r)
+	jwtKey := []byte(os.Getenv("SESSION_SECRET"))
+	claim := &gotypes.Claims{}
+
+	_, _ = jwt.ParseWithClaims(token, claim, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	ret, err := authentication.CheckTenantInvitationStatus( claim.Session)
+	if err != nil || !ret {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"status": "OK"}`))
 }

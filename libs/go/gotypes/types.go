@@ -3,7 +3,9 @@ import "github.com/golang-jwt/jwt"
 
 const RoleUser = "user"
 const RoleAdmin = "admin"
+const RoleSuperAdmin = "superadmin"
 const RoleInstaller = "installer"
+const RoleInitialSigner = "signer"
 
 type Claims struct {
 	Name       string`json:"name"`
@@ -23,6 +25,13 @@ type AdminClaims struct {
 	Email       string`json:"email"`
 	Groups      []string `json:"groups"`
 	Picture    string `json:"picture"`
+	jwt.StandardClaims
+}
+
+type InvitationClaims struct {
+	Name       string`json:"name"`
+	Email       string`json:"email"`
+	Invitationid string`json:"invitationid"`
 	jwt.StandardClaims
 }
 

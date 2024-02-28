@@ -229,3 +229,7 @@ DockerDownloads:
 
 RegistryID:
   - id: string
+
+InviteCustomer:
+  - email: string
+  - contactName: string

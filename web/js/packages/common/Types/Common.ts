@@ -1490,6 +1490,47 @@ export class GroupStatus {
   }
 }
 
+export class InviteCustomer {
+  private '_email': string
+  private '_contactName': string
+
+  constructor() {
+    this['_email'] = ''
+    this['_contactName'] = ''
+  }
+  get email(): string { return this['_email'] }
+  set email(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_email'])) {
+      setDirtyFlag()
+      this['_email'] = __v__
+    }
+  }
+  get contactName(): string { return this['_contactName'] }
+  set contactName(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_contactName'])) {
+      setDirtyFlag()
+      this['_contactName'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
+
+  static fromJson(__a__: any): InviteCustomer {
+    disableDF()
+    let cls = new InviteCustomer()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.email = __a__['email']
+       cls.contactName = __a__['contactName']
+    } else {
+       doAlert(`InviteCustomer: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class MachineTunnel {
   private '_id': string | null
   private '_accesskey': string | null
