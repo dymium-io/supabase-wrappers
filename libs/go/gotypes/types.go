@@ -3,6 +3,7 @@ import "github.com/golang-jwt/jwt"
 
 const RoleUser = "user"
 const RoleAdmin = "admin"
+const RoleSuperAdmin = "superadmin"
 const RoleInstaller = "installer"
 const RoleInitialSigner = "signer"
 

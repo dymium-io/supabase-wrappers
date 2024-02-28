@@ -1,4 +1,4 @@
-$light-gray: #bbbbbb;
+$light-gray: #cccccc;
 $dark-yellow: rgb(199, 124, 18);
 $main-yellow: #fc8f24;
 $main-blue: #0883ba;
@@ -202,7 +202,7 @@ input:-internal-autofill-selected {
   background-color: #cfd0d2;
   padding: 0.4em 0.8em;
   text-transform: uppercase !important;
-  color: $light-gray;
+  color: $text-gray;
 }
 
 #responsive-navbar-nav .nav-link {

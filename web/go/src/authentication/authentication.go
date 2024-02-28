@@ -8,6 +8,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"database/sql"
 	"encoding/hex"
@@ -1119,13 +1120,38 @@ func CheckAndRefreshToken(token string, sport string) (string, error) {
 
 	return "", err
 }
-func GetRoles(schema string, groups []string, admin_group string) []string {
+func GetRoles(email, schema string, groups []string, admin_group string) []string {
 	var roles []string
+	sha := sha256.New()
+	sha.Write([]byte(email))
+
+	hashedEmail := hex.EncodeToString(sha.Sum(nil))
+	log.Infof("GetRoles: hashedEmail: %s\n", hashedEmail)
+
+	sql := `select count(*) from ` + schema + `.superadmins where username_hash=$1;`
+	row := db.QueryRow(sql, hashedEmail)
+	var count int
+	err := row.Scan(&count)
+	if err == nil && count > 0 {
+		roles = append(roles, gotypes.RoleSuperAdmin)
+		roles = append(roles, gotypes.RoleAdmin)
+		roles = append(roles, gotypes.RoleUser)
+
+		sql = `select count(*) from ` + schema + `.groupmapping;`
+		row = db.QueryRow(sql)
+		err = row.Scan(&count)
+		if err == nil && count == 0 {
+			roles = append(roles, gotypes.RoleInstaller)
+		}
+		log.Infof("GetRoles: superadmin detected: %s\n", email)
+		return roles
+	}
+
 	log.Infof("GetRoles: groups: %v\n", groups)
 	if len(groups) == 0 {
 		return roles
 	}
-	sql := `select outergroup, adminaccess from ` + schema + `.groupmapping where outergroup = any ($1);`
+	sql = `select outergroup, adminaccess from ` + schema + `.groupmapping where outergroup = any ($1);`
 
 	var hasadmin, hasuser bool
 
@@ -1185,6 +1211,7 @@ func GetRoles(schema string, groups []string, admin_group string) []string {
 		}
 		//		}
 	}
+
 	return roles
 }
 func GeneratePortalJWT(picture string, schema string, name string, email string, groups []string, roles []string, org_id string, _timeOut int, session string) (string, error) {
@@ -2199,12 +2226,12 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id,
 	err = row.Scan(&schema)
 
 	if err != nil {
-		log.ErrorUserf(schema, "", email, groups, GetRoles(schema, groups, ""), "Error in tunnel login: %s", err.Error())
+		log.ErrorUserf(schema, "", email, groups, GetRoles(email, schema, groups, ""), "Error in tunnel login: %s", err.Error())
 
 		return "", "", []string{}, "", "", []string{}, err
 	}
 
-	token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups, ""), org_id, timeOut, "")
+	token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(email, schema, groups, ""), org_id, timeOut, "")
 
 	session, _ := GetSessionFromToken(token)
 
@@ -2215,7 +2242,7 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id,
 	if err == nil {
 		log.InfoUserf(schema, session, email, groups, []string{}, "Successful tunnel login")
 	}
-	return token, name, groups, schema, email, GetRoles(schema, groups, ""), err
+	return token, name, groups, schema, email, GetRoles(email, schema, groups, ""), err
 }
 func AuthenticationAdminHandlers(h *mux.Router) error {
 	host := os.Getenv("ADMIN_HOST")
@@ -2407,14 +2434,14 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 			return
 		}
 
-		token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(schema, groups, admin_group), org_id, timeOut, "")
+		token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(email, schema, groups, admin_group), org_id, timeOut, "")
 		session, _ := GetSessionFromToken(token)
 		if err != nil {
-			log.ErrorUserf(schema, session, email, groups, GetRoles(schema, groups, admin_group), "Error in portal JWT generation: %s", err.Error())
+			log.ErrorUserf(schema, session, email, groups, GetRoles(email, schema, groups, admin_group), "Error in portal JWT generation: %s", err.Error())
 		}
 		recordLogin(schema)
 		if err == nil {
-			log.InfoUserf(schema, session, email, groups, GetRoles(schema, groups, admin_group), "Successful portal login, token: %s", token)
+			log.InfoUserf(schema, session, email, groups, GetRoles(email, schema, groups, admin_group), "Successful portal login, token: %s", token)
 		}
 		nonce, _ := GenerateRandomString(32)
 		common.CommonNocacheNocspHeaders(w, r)
