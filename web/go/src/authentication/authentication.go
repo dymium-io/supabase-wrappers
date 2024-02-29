@@ -213,9 +213,9 @@ func initRBAC() {
 		"getgroupsfordatascopes", "getusage", "getaccesskey", "createnewconnector",
 		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable",
 		"addmachinetunnel", "getmachinetunnels", "updatemachinetunnel", "deletemachinetunnel",
-		"regenmachinetunnel", "refreshmachinetunnels"}
+		"regenmachinetunnel", "refreshmachinetunnels", "getdatascopes"}
 
-	usernames := []string{"getmachineclientcertificate", "getclientcertificate", "getdatascopes",
+	usernames := []string{"getmachineclientcertificate", "getclientcertificate",
 		"getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables",
 		"getdatascopesfortestsql", "getdockers"}
 
