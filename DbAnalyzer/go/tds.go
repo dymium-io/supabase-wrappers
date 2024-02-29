@@ -30,7 +30,12 @@ func (da *SqlServer) Connect(c *types.ConnectionParams) error {
 	query := url.Values{}
 	query.Add("database", c.Database)
 	if c.Tls {
-		query.Add("encrypt", "true")
+		// the encrypt options:
+		//	- disable: No SSL encryption. Data sent between client and server is in plain text.
+		//	- false: SSL encryption is enabled, but the server certificate is not verified.
+		//	- true: SSL encryption is enabled and server certificates are verified.
+		query.Add("encrypt", "false")
+		//query.Add("encrypt", "true")
 	} else {
 		query.Add("encrypt", "disable")
 	}

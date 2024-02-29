@@ -33,7 +33,9 @@ func (da *MySQL) Connect(c *types.ConnectionParams) error {
 		c.User, c.Password, c.Address, c.Port,
 		func() string {
 			if c.Tls {
-				return "true"
+				// TODO: implement tls.config so we can veryfy the server's certificate
+				return "skip-verify"
+				//return "true"
 			} else {
 				return "false"
 			}

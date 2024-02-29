@@ -2,10 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"github.com/apex/log"
 	_ "github.com/sijms/go-ora/v2"
+	go_ora "github.com/sijms/go-ora/v2"
 
 	"fmt"
-	"net/url"
 	"strings"
 
 	"DbAnalyzer/detect"
@@ -26,26 +27,45 @@ func (da *OracleDB) Close() {
 }
 
 func (da *OracleDB) Connect(c *types.ConnectionParams) error {
-	query := url.Values{}
+	/*
+		query := url.Values{}
+		if c.Tls {
+			query.Add("ssl", "true")
+			query.Add("ssl verify", "false")
+		} else {
+			query.Add("ssl", "false")
+		}
+		u := &url.URL{
+			Scheme:   "oracle",
+			User:     url.UserPassword(c.User, c.Password),
+			Host:     fmt.Sprintf("%s:%d", c.Address, c.Port),
+			Path:     strings.ToUpper(c.Database),
+			RawQuery: query.Encode(),
+		}
+		oracleconn := u.String()
+	*/
+
+	//port := 2484
+	urlOptions := map[string]string{}
 	if c.Tls {
-		query.Add("SSL", "true")
+		urlOptions["ssl"] = "true"
+		urlOptions["SSL VERIFY"] = "false"
+		//"wallet": "path to folder that contains oracle wallet",
 	} else {
-		query.Add("SSL", "false")
+		urlOptions["ssl"] = "false"
 	}
-	u := &url.URL{
-		Scheme:   "oracle",
-		User:     url.UserPassword(c.User, c.Password),
-		Host:     fmt.Sprintf("%s:%d", c.Address, c.Port),
-		Path:     strings.ToUpper(c.Database),
-		RawQuery: query.Encode(),
-	}
-	oracleconn := u.String()
+
+	oracleconn := go_ora.BuildUrl(c.Address, c.Port, c.Database, c.User, c.Password, urlOptions)
+
+	log.Infof("Connecting to Oracle: %s", oracleconn)
 
 	db, err := sql.Open("oracle", oracleconn)
 	if err != nil {
+		log.Errorf("Error connecting to Oracle: %s", err.Error())
 		return err
 	}
 	if err := db.Ping(); err != nil {
+		log.Errorf("Error pinging Oracle: %s", err.Error())
 		return err
 	}
 
