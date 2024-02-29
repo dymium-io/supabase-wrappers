@@ -194,6 +194,14 @@ type GroupStatus struct {
    Admincount int `json:"admincount"`
 }
 
+type Invitation struct {
+   Id string `json:"id"`
+   Email string `json:"email"`
+   ContactName string `json:"contactName"`
+   Status string `json:"status"`
+   Created string `json:"created"`
+}
+
 type InviteCustomer struct {
    Email string `json:"email"`
    ContactName string `json:"contactName"`

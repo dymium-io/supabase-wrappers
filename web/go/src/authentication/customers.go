@@ -229,16 +229,8 @@ func sendEmailSESHtml(to, subject, htmlBody string) error {
 	return err
 }
 
-func InviteNewCustomer(email, contactName string) error {
-	// create a new customer record in global.customers
-	sql := ` insert into global.invitations(email, name)
-		values($1,$2) returning id;`
-	var id string
-	err := db.QueryRow(sql, email, contactName).Scan(&id)
-	if err != nil {
-		log.Errorf("Error creating seed of customer record: %s", err.Error())
-		return err
-	}
+func InviteCustomerById(id, email, contactName string ) error {
+
 	// create a JWT with the time, id and email
 	jwt, err := generateIntivationJWT(contactName, email, id)
 	if err != nil {
@@ -302,6 +294,18 @@ Dymium, Inc, PO Box; 481 N.Santa Cruz Suite 300 Los Gatos CA 95030, USA.
 		return err
 	}
 	return err
+}
+func InviteNewCustomer(email, contactName string) error {
+	// create a new customer record in global.customers
+	sql := ` insert into global.invitations(email, name)
+		values($1,$2) returning id;`
+	var id string
+	err := db.QueryRow(sql, email, contactName).Scan(&id)
+	if err != nil {
+		log.Errorf("Error creating seed of customer record: %s", err.Error())
+		return err
+	}
+	return InviteCustomerById(id, email, contactName)
 }
 
 func ProcessInvitation(token string) (string, string, error) {

@@ -585,7 +585,7 @@ func CheckTenantInvitationStatus(schema string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	
+
 	access_token, err := getToken()
 	if err != nil {
 		return false, err
@@ -616,4 +616,54 @@ func CheckTenantInvitationStatus(schema string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func GetInvitations() ([]byte, error) {
+	var ret []types.Invitation
+	sql := `select id, name, email, issued, progress from global.invitations;`
+	rows, err := db.Query(sql)
+	if nil == err {
+		defer rows.Close()
+
+		for rows.Next() {
+			var id, name, email, issued, status string
+		
+			err = rows.Scan(&id, &name, &email, &issued, &status)
+			if err != nil {
+				log.Errorf("GetInvitations error: %s", err.Error())
+				break
+			}
+			i := types.Invitation{Id:id, ContactName: name, Email:email, Created: issued,
+				Status: status}
+			ret = append(ret, i)
+		}
+	} else {
+		return []byte{}, err
+	}
+	// convert to json
+	js, err := json.Marshal(ret)
+	log.Infof("GetInvitations, js: %s", string(js)	)
+	return js, err
+}
+
+func DeleteInvitation(id string) error {
+	sql := `delete from global.invitations where id=$1;`
+	_, err := db.Exec(sql, id)
+	return err
+}
+
+func ReissueInvitation(id string) error {
+	sql := `update global.invitations set issued=now(), progress='Issued' where id=$1;`
+	_, err := db.Exec(sql, id)
+	if err != nil {
+		return err
+	}
+	sql  = `select email, name from global.invitations where id=$1;`
+	row := db.QueryRow(sql, id)
+	var email, name string
+	err = row.Scan(&email, &name)
+
+	// resend the email
+	InviteCustomerById(id, email, name ) 
+	return err
 }
