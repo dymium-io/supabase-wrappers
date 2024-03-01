@@ -2,12 +2,15 @@ package main
 
 import (
 	"database/sql"
+	"github.com/apex/log"
+
 	//_ "github.com/thda/tds"
 	"fmt"
 	"net/url"
 	"strings"
 
-	_ "github.com/denisenkom/go-mssqldb"
+	//_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/microsoft/go-mssqldb"
 
 	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
@@ -30,12 +33,19 @@ func (da *SqlServer) Connect(c *types.ConnectionParams) error {
 	query := url.Values{}
 	query.Add("database", c.Database)
 	if c.Tls {
-		// the encrypt options:
-		//	- disable: No SSL encryption. Data sent between client and server is in plain text.
-		//	- false: SSL encryption is enabled, but the server certificate is not verified.
-		//	- true: SSL encryption is enabled and server certificates are verified.
-		query.Add("encrypt", "false")
-		//query.Add("encrypt", "true")
+		// encrypt
+		//strict - Data sent between client and server is encrypted E2E using TDS8.
+		//disable - Data send between client and server is not encrypted.
+		//false/optional/no/0/f - Data sent between client and server is not encrypted beyond the login packet. (Default)
+		//true/mandatory/yes/1/t - Data sent between client and server is encrypted.
+		query.Add("encrypt", "true")
+		// TrustServerCertificate
+		//false - Server certificate is checked. Default is false if encrypt is specified.
+		//true - Server certificate is not checked. Default is true if encrypt is not
+		//specified. If trust server certificate is true, driver accepts any certificate
+		//presented by the server and any host name in that certificate. In this mode,
+		//TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.
+		query.Add("trustServerCertificate", "true")
 	} else {
 		query.Add("encrypt", "disable")
 	}
@@ -50,9 +60,11 @@ func (da *SqlServer) Connect(c *types.ConnectionParams) error {
 
 	db, err := sql.Open("sqlserver", tdsconn)
 	if err != nil {
+		log.Errorf("Error connecting to SQL Server: %s", err)
 		return err
 	}
 	if err := db.Ping(); err != nil {
+		log.Errorf("Error pinging SQL Server: %s", err)
 		return err
 	}
 

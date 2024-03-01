@@ -57,8 +57,6 @@ func (da *OracleDB) Connect(c *types.ConnectionParams) error {
 
 	oracleconn := go_ora.BuildUrl(c.Address, c.Port, c.Database, c.User, c.Password, urlOptions)
 
-	log.Infof("Connecting to Oracle: %s", oracleconn)
-
 	db, err := sql.Open("oracle", oracleconn)
 	if err != nil {
 		log.Errorf("Error connecting to Oracle: %s", err.Error())
