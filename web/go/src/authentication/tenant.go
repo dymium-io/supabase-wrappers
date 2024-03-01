@@ -270,6 +270,7 @@ func updateStatus(schema string, status []string) error {
 		log.Errorf("updateStatus error: %s", err.Error())
 		return err
 	}
+
 	return nil
 }
 
@@ -397,6 +398,8 @@ func CreateNewTenant(schema string) error {
 	}
 	out = append(out, "Success!")
 	updateStatus(schema, out)
+	sql := 	`update global.invitations set progress='Completed' where id=$1;`
+	_, _ = db.Exec(sql, schema)
 	return nil
 }
 

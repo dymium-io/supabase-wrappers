@@ -347,7 +347,7 @@ func ProcessInvitation(token string) (string, string, error) {
 }
 
 func PostInvitationJson(body, session string) error {
-	sql := `update global.invitations set config=$1 where id=$2;`
+	sql := `update global.invitations set config=$1, progress='In Progress' where id=$2;`
 	_, err := db.Exec(sql, body, session)
 	if err != nil {
 		return err

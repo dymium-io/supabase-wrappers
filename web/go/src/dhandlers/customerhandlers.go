@@ -2394,7 +2394,6 @@ func TestOIDC(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return 
 	}
-	log.Infof("TestOIDC, body: %s", string(body))
 
 	o := struct {
 		Issuer string
@@ -2530,11 +2529,14 @@ func InvitationStatus(w http.ResponseWriter, r *http.Request) {
 	})
 
 	ret, err := authentication.CheckTenantInvitationStatus( claim.Session)
-	if err != nil || !ret {
+	if err != nil  {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	if !ret  {
+		http.Error(w, "Invitation not finished", http.StatusInternalServerError)
+		return
+	}
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"status": "OK"}`))
