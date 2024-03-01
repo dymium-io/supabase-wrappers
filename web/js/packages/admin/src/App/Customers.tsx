@@ -669,6 +669,10 @@ function Customers() {
         const [contactName, setContactName] = useState("")
         const [alert, setAlert] = useState<JSX.Element>(<></>)
         const [invitations, setInvitations] = useState<any[]>([])
+        const [showdelete, setShowdelete] = useState(false)
+        const [customerName, setCustomerName] = useState("")
+        const [selectedId, setSelectedId] = useState("")
+        
         let form = useRef<HTMLFormElement>(null)
 
         let deleteInvitation = id => {
@@ -708,6 +712,11 @@ function Customers() {
                 null, JSON.stringify({ id }),
                 resp => {
                     resp.json().then(_js => {
+                        setAlert(
+                            <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                                Invitation resent.
+                            </Alert>
+                        )
                         getInvitations()
                     })
                 },
@@ -733,9 +742,11 @@ function Customers() {
                     setSpinner(false)
                 })
         }
-        let onDelete = id => {
+        let onDelete = (id, name) => {
             return e => {
-                deleteInvitation(id)
+                setCustomerName(name)
+                setSelectedId(id)
+                setShowdelete(true)
             }
         }
         let onResend = id => {
@@ -803,7 +814,7 @@ function Customers() {
                 dataField: 'delete',
                 isDummyField: true,
                 formatter: (cell, row, rowIndex, formatExtraData) => {
-                    return <i className="fas fa-trash ablue" aria-label={"delete" + rowIndex} id={"delete" + rowIndex} onClick={onDelete(row["id"])} role="button"></i>
+                    return <i className="fas fa-trash ablue" aria-label={"delete" + rowIndex} id={"delete" + rowIndex} onClick={onDelete(row["id"], row["contactName"])} role="button"></i>
                 },
                 //formatExtraData: { hoverIdx: this.state.hoverIdx },
                 headerStyle: { width: '90px' },
@@ -873,8 +884,6 @@ function Customers() {
                         }
                         setTimeout(() => setSpinner(false), 500)
                     })
-    
-    
                 },
                 resp => {
                     console.log("on error")
@@ -915,6 +924,24 @@ function Customers() {
         }
         return <>
             {alert}        
+            <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
+            <Modal.Header closeButton>
+                <Modal.Title>Delete invitation for <b>{customerName}</b>?</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>Are you sure you want to delete the invitation for <b>{customerName}</b>? This operation is irreversible.</Modal.Body>
+            <Modal.Footer>
+                <Button variant="danger" role="button" id="Delete" data-testid="Delete"
+                    aria-label={"Delete"}
+                    onClick={() => {
+                        deleteInvitation(selectedId)
+                        setShowdelete(false)
+                    }
+                    }>Delete</Button> <Button variant="dymium" onClick={() => {
+                        setShowdelete(false)
+                    }}>Cancel</Button>
+            </Modal.Footer>
+        </Modal>
+
             <h5 >Invite New Customer for self sign up <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
 
             <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
@@ -972,15 +999,13 @@ function Customers() {
             search >
             {
                 props => (<div className="text-left">
-                    {alert}
+
                     <div className="d-flex">
                         <h5 >Invitations  <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
-
 
                         <div style={{ marginLeft: "auto" }}>
                             <SearchBar size="sm" {...props.searchProps} />
                             <ClearSearchButton {...props.searchProps} />
-
                         </div>
                     </div>
                     <div className="d-block mb-3 w-100 testtable" style={{ overflow: "scroll" }}>
