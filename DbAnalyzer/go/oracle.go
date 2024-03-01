@@ -27,25 +27,6 @@ func (da *OracleDB) Close() {
 }
 
 func (da *OracleDB) Connect(c *types.ConnectionParams) error {
-	/*
-		query := url.Values{}
-		if c.Tls {
-			query.Add("ssl", "true")
-			query.Add("ssl verify", "false")
-		} else {
-			query.Add("ssl", "false")
-		}
-		u := &url.URL{
-			Scheme:   "oracle",
-			User:     url.UserPassword(c.User, c.Password),
-			Host:     fmt.Sprintf("%s:%d", c.Address, c.Port),
-			Path:     strings.ToUpper(c.Database),
-			RawQuery: query.Encode(),
-		}
-		oracleconn := u.String()
-	*/
-
-	//port := 2484
 	urlOptions := map[string]string{}
 	if c.Tls {
 		urlOptions["ssl"] = "true"
