@@ -668,8 +668,188 @@ function Customers() {
         const [email, setEmail] = useState("")
         const [contactName, setContactName] = useState("")
         const [alert, setAlert] = useState<JSX.Element>(<></>)
+        const [invitations, setInvitations] = useState<any[]>([])
+        const [showdelete, setShowdelete] = useState(false)
+        const [customerName, setCustomerName] = useState("")
+        const [selectedId, setSelectedId] = useState("")
+        
         let form = useRef<HTMLFormElement>(null)
 
+        let deleteInvitation = id => {
+            setSpinner(true)
+            http.sendToServer("POST", "/api/deleteinvitation",
+                null, JSON.stringify({ id }),
+                resp => {
+                    resp.json().then(_js => {
+                        getInvitations()
+                    })
+                },
+                resp => {
+                    console.log("on error")
+                    resp != null &&
+                        resp.text().then(t =>
+                            setAlert(
+                                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                                    Error: {t}
+                                </Alert>
+                            )
+                        )
+                    setSpinner(false)
+                },
+                error => {
+                    console.log("on exception: " + error)
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            {error.message}
+                        </Alert>
+                    )
+                    setSpinner(false)
+                })
+        }
+        let reissueInvitation = id => {
+            setSpinner(true)
+            http.sendToServer("POST", "/api/reissueinvitation",
+                null, JSON.stringify({ id }),
+                resp => {
+                    resp.json().then(_js => {
+                        setAlert(
+                            <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                                Invitation resent.
+                            </Alert>
+                        )
+                        getInvitations()
+                    })
+                },
+                resp => {
+                    console.log("on error")
+                    resp != null &&
+                        resp.text().then(t =>
+                            setAlert(
+                                <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                                    Error: {t}
+                                </Alert>
+                            )
+                        )
+                    setSpinner(false)
+                },
+                error => {
+                    console.log("on exception: " + error)
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            {error.message}
+                        </Alert>
+                    )
+                    setSpinner(false)
+                })
+        }
+        let onDelete = (id, name) => {
+            return e => {
+                setCustomerName(name)
+                setSelectedId(id)
+                setShowdelete(true)
+            }
+        }
+        let onResend = id => {
+            return e => {
+                reissueInvitation(id)
+            }
+        }
+        let columns = [
+            {
+                dataField: 'id',
+                text: 'id',
+                hidden: true,
+                searchable: false
+            },
+            {
+                dataField: 'contactName',
+                text: 'Name:',
+                headerStyle: { width: '20em' },
+                sort: true,
+            },
+            {
+                dataField: 'email',
+                text: 'Email:',
+                headerStyle: { width: '20em' },
+                sort: true,
+            },
+            {
+                dataField: 'created',
+                text: 'Created:',
+                headerStyle: { width: '20em' },
+                sort: true,
+                formatter: (cell, row, rowIndex, formatExtraData) => {
+                    return new Date(row["created"]).toLocaleString()
+                }
+            },
+            {
+                dataField: 'status',
+                text: 'Status:',
+                headerStyle: { width: '20em' },
+                sort: true,
+                formatter: (cell, row, rowIndex, formatExtraData) => {
+                    let d = new Date(row["created"])
+                    let now = new Date()
+                    let diff = now.getTime() - d.getTime()
+                    if (diff > 7 * 24 * 60 * 60 * 1000) {
+                        return <span style={{color: '#990000'}}>Expired</span>
+                    }
+                    return row["status"]
+                }
+            },
+            {
+                text: 'Resend',
+                dataField: 'resend',
+                isDummyField: true,
+                formatter: (cell, row, rowIndex, formatExtraData) => {
+                    return <i className="fas fa-repeat ablue" aria-label={"delete" + rowIndex} id={"reissue" + rowIndex} onClick={onResend(row["id"])} role="button"></i>
+                },
+                //formatExtraData: { hoverIdx: this.state.hoverIdx },
+                headerStyle: { width: '90px' },
+                style: { height: '30px' },
+                align: 'center'
+            },
+            {
+                text: 'Delete',
+                dataField: 'delete',
+                isDummyField: true,
+                formatter: (cell, row, rowIndex, formatExtraData) => {
+                    return <i className="fas fa-trash ablue" aria-label={"delete" + rowIndex} id={"delete" + rowIndex} onClick={onDelete(row["id"], row["contactName"])} role="button"></i>
+                },
+                //formatExtraData: { hoverIdx: this.state.hoverIdx },
+                headerStyle: { width: '90px' },
+                style: { height: '30px' },
+                align: 'center'
+            }
+        ]
+        let getInvitations = () => {
+            setSpinner(true)
+            http.sendToServer("GET", "/api/getinvitations",
+                null, "",
+                resp => {
+                    resp.json().then(_js => {
+                        setInvitations(_js)
+                        setSpinner(false)
+                    })
+                },
+                resp => {
+                    console.log("on error")
+                    throw new Error("Error getting invitations")
+                },
+                error => {
+                    console.log("on exception: " + error)
+                    setAlert(
+                        <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                            {error.message}
+                        </Alert>
+                    )
+                    setSpinner(false)
+                })                   
+        }
+        useEffect(() => {
+            getInvitations()
+        }, [])
+        
         let sendInvite = () => {
             let body = {
                 email,
@@ -704,8 +884,6 @@ function Customers() {
                         }
                         setTimeout(() => setSpinner(false), 500)
                     })
-    
-    
                 },
                 resp => {
                     console.log("on error")
@@ -746,6 +924,24 @@ function Customers() {
         }
         return <>
             {alert}        
+            <Modal centered show={showdelete} onHide={() => setShowdelete(false)} data-testid="modal-delete">
+            <Modal.Header closeButton>
+                <Modal.Title>Delete invitation for <b>{customerName}</b>?</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>Are you sure you want to delete the invitation for <b>{customerName}</b>? This operation is irreversible.</Modal.Body>
+            <Modal.Footer>
+                <Button variant="danger" role="button" id="Delete" data-testid="Delete"
+                    aria-label={"Delete"}
+                    onClick={() => {
+                        deleteInvitation(selectedId)
+                        setShowdelete(false)
+                    }
+                    }>Delete</Button> <Button variant="dymium" onClick={() => {
+                        setShowdelete(false)
+                    }}>Cancel</Button>
+            </Modal.Footer>
+        </Modal>
+
             <h5 >Invite New Customer for self sign up <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
 
             <Form onSubmit={handleSubmit} ref={form} noValidate validated={validated}>
@@ -794,6 +990,38 @@ function Customers() {
             Apply
         </Button>    
             </Form >
+            <div className="mt-3">
+            <ToolkitProvider
+            bootstrap4
+            keyField='id'
+            data={invitations}
+            columns={columns}
+            search >
+            {
+                props => (<div className="text-left">
+
+                    <div className="d-flex">
+                        <h5 >Invitations  <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
+
+                        <div style={{ marginLeft: "auto" }}>
+                            <SearchBar size="sm" {...props.searchProps} />
+                            <ClearSearchButton {...props.searchProps} />
+                        </div>
+                    </div>
+                    <div className="d-block mb-3 w-100 testtable" style={{ overflow: "scroll" }}>
+                        <BootstrapTable id="scaledtable"
+                            condensed
+                            keyField='id'
+                            striped bootstrap4 bordered={false}
+                            pagination={paginationFactory()}
+                            {...props.baseProps}
+                        />
+                    </div>
+                </div>
+                )
+            }
+        </ToolkitProvider>
+            </div>
         </>
     }
     return (

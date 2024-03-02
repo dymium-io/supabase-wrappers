@@ -233,3 +233,10 @@ RegistryID:
 InviteCustomer:
   - email: string
   - contactName: string
+
+Invitation:
+  - id: string
+  - email: string
+  - contactName: string
+  - status: string
+  - created: string

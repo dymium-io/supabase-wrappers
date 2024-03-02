@@ -1490,6 +1490,80 @@ export class GroupStatus {
   }
 }
 
+export class Invitation {
+  private '_id': string
+  private '_email': string
+  private '_contactName': string
+  private '_status': string
+  private '_created': string
+
+  constructor() {
+    this['_id'] = ''
+    this['_email'] = ''
+    this['_contactName'] = ''
+    this['_status'] = ''
+    this['_created'] = ''
+  }
+  get id(): string { return this['_id'] }
+  set id(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_id'])) {
+      setDirtyFlag()
+      this['_id'] = __v__
+    }
+  }
+  get email(): string { return this['_email'] }
+  set email(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_email'])) {
+      setDirtyFlag()
+      this['_email'] = __v__
+    }
+  }
+  get contactName(): string { return this['_contactName'] }
+  set contactName(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_contactName'])) {
+      setDirtyFlag()
+      this['_contactName'] = __v__
+    }
+  }
+  get status(): string { return this['_status'] }
+  set status(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_status'])) {
+      setDirtyFlag()
+      this['_status'] = __v__
+    }
+  }
+  get created(): string { return this['_created'] }
+  set created(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_created'])) {
+      setDirtyFlag()
+      this['_created'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
+
+  static fromJson(__a__: any): Invitation {
+    disableDF()
+    let cls = new Invitation()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.id = __a__['id']
+       cls.email = __a__['email']
+       cls.contactName = __a__['contactName']
+       cls.status = __a__['status']
+       cls.created = __a__['created']
+    } else {
+       doAlert(`Invitation: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class InviteCustomer {
   private '_email': string
   private '_contactName': string

@@ -22,3 +22,10 @@ ALTER TABLE global.invitations ADD COLUMN config jsonb NOT NULL DEFAULT '{}';
 -- requires: ["customer/save-json"],
 -- description: "Add status";
 ALTER TABLE global.invitations ADD COLUMN status jsonb NOT NULL DEFAULT '{"status": [], "progress": ""}';
+
+-- #!migration
+-- name: "global/status-json-1",
+-- requires: ["global/status-json"],
+-- description: "Change status, add progress";
+ALTER TABLE global.invitations ALTER COLUMN status SET DEFAULT '[]'::jsonb;
+ALTER TABLE global.invitations ADD COLUMN progress text NOT NULL DEFAULT 'Issued';
