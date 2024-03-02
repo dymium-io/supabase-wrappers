@@ -106,7 +106,6 @@ func init() {
 	define_rust_ext := func(e, h, v string) string {
 		return `DO $$
                         BEGIN
-                          CREATE EXTENSION IF NOT EXISTS wrappers WITH SCHEMA public;
 		          IF NOT EXISTS (
 			     SELECT 1
 			     FROM pg_catalog.pg_foreign_data_wrapper
@@ -281,6 +280,27 @@ func ConfigureDatabase(db *sql.DB,
 
 	if err = exec(`CREATE EXTENSION IF NOT EXISTS supabase_vault CASCADE`); err != nil {
 		return err
+	}
+	{
+		if err := exec("GRANT USAGE ON SCHEMA vault TO " + localUser); err != nil {
+			return err
+		}
+		if err := exec(`DO $$
+				DECLARE
+                                    uname text := '` + localUser + `';
+				    tbl_name text;
+				BEGIN
+                                    EXECUTE format('GRANT USAGE ON SCHEMA vault TO %I;', uname);
+                                    EXECUTE format('GRANT EXECUTE ON FUNCTION pgsodium.crypto_aead_det_decrypt(bytea, bytea, uuid, bytea) TO %I;',uname);
+                                    CREATE EXTENSION IF NOT EXISTS wrappers WITH SCHEMA public;
+                                    EXECUTE format('GRANT SELECT, INSERT, UPDATE ON wrappers_fdw_stats TO %I;',uname);
+				    FOR tbl_name IN SELECT table_name FROM information_schema.tables WHERE table_schema = 'vault'
+				    LOOP
+					EXECUTE format('GRANT SELECT ON vault.%I TO %I;', tbl_name, uname);
+				    END LOOP;
+				END$$;`); err != nil {
+			return err
+		}
 	}
 
 	if err = exec(`
