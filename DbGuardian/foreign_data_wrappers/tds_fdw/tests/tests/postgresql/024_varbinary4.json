@@ -1,9 +1,0 @@
-{
-    "test_desc" : "varbinary data type, 4 bytes size (bytea)",
-    "server" : {
-        "version" : {
-            "min" : "9.2.0",
-            "max" : ""
-        }
-    }
-}
