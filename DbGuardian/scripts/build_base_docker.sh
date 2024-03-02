@@ -81,6 +81,7 @@ build_db2() {
 
     local old_dir="$(pwd)"
 
+    rm -rf $build_d/db2
     mkdir $build_d/db2
     cd $build_d/db2
 
