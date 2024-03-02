@@ -48,6 +48,7 @@ pub enum Cell {
     Date(Date),
     Timestamp(Timestamp),
     Json(JsonB),
+    Bytea(Vec<u8>),
 }
 
 impl Clone for Cell {
@@ -65,6 +66,7 @@ impl Clone for Cell {
             Cell::Date(v) => Cell::Date(*v),
             Cell::Timestamp(v) => Cell::Timestamp(*v),
             Cell::Json(v) => Cell::Json(JsonB(v.0.clone())),
+            Cell::Bytea(v) => Cell::Bytea(v.clone()),
         }
     }
 }
@@ -98,6 +100,7 @@ impl fmt::Display for Cell {
                 write!(f, "'{}'", ts_cstr.to_str().unwrap())
             },
             Cell::Json(v) => write!(f, "{:?}", v),
+            Cell::Bytea(v) => write!(f, "{:?}", v),
         }
     }
 }
@@ -117,6 +120,7 @@ impl IntoDatum for Cell {
             Cell::Date(v) => v.into_datum(),
             Cell::Timestamp(v) => v.into_datum(),
             Cell::Json(v) => v.into_datum(),
+            Cell::Bytea(v) => v.into_datum(),
         }
     }
 
@@ -138,6 +142,7 @@ impl IntoDatum for Cell {
             || other == pg_sys::DATEOID
             || other == pg_sys::TIMESTAMPOID
             || other == pg_sys::JSONBOID
+            || other == pg_sys::BYTEAOID
     }
 }
 
@@ -186,6 +191,9 @@ impl FromDatum for Cell {
             )),
             PgOid::BuiltIn(PgBuiltInOids::JSONBOID) => {
                 Some(Cell::Json(JsonB::from_datum(datum, false).unwrap()))
+            }
+            PgOid::BuiltIn(PgBuiltInOids::BYTEAOID) => {
+                Some(Cell::Bytea(Vec::<u8>::from_datum(datum, false).unwrap()))
             }
             _ => None,
         }

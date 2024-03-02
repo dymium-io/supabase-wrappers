@@ -41,6 +41,15 @@ fn field_to_cell(src_row: &tiberius::Row, tgt_col: &Column) -> MssqlFdwResult<Op
         PgOid::BuiltIn(PgBuiltInOids::FLOAT8OID) => {
             src_row.try_get::<f64, &str>(col_name)?.map(Cell::F64)
         }
+        PgOid::BuiltIn(PgBuiltInOids::MONEYOID) => {
+            // report_warning(&format!(
+            //     "Money: {:#?}",
+            //     src_row.try_get::<f64, &str>(col_name)?
+            // ));
+            src_row
+                .try_get::<f64, &str>(col_name)?
+                .map(|v| Cell::I64((v * 100.0).round() as i64))
+        }
         PgOid::BuiltIn(PgBuiltInOids::INT8OID) => {
             src_row.try_get::<i64, &str>(col_name)?.map(Cell::I64)
         }
@@ -50,6 +59,12 @@ fn field_to_cell(src_row: &tiberius::Row, tgt_col: &Column) -> MssqlFdwResult<Op
             .map(pgrx::AnyNumeric::from)
             .map(Cell::Numeric),
         PgOid::BuiltIn(PgBuiltInOids::TEXTOID) => src_row
+            .try_get::<&str, &str>(col_name)?
+            .map(|v| Cell::String(v.to_owned())),
+        PgOid::BuiltIn(PgBuiltInOids::BPCHAROID) => src_row
+            .try_get::<&str, &str>(col_name)?
+            .map(|v| Cell::String(v.to_owned())),
+        PgOid::BuiltIn(PgBuiltInOids::VARCHAROID) => src_row
             .try_get::<&str, &str>(col_name)?
             .map(|v| Cell::String(v.to_owned())),
         PgOid::BuiltIn(PgBuiltInOids::DATEOID) => {
@@ -66,7 +81,14 @@ fn field_to_cell(src_row: &tiberius::Row, tgt_col: &Column) -> MssqlFdwResult<Op
                 Cell::Timestamp(ts.to_utc())
             })
         }
+        PgOid::BuiltIn(PgBuiltInOids::BYTEAOID) => src_row
+            .try_get::<&[u8], &str>(col_name)?
+            .map(|v| Cell::Bytea(v.to_owned())),
         _ => {
+            // report_warning(&format!(
+            //     "ColumnType: {}: {}",
+            //     &tgt_col.name, tgt_col.type_oid
+            // ));
             return Err(MssqlFdwError::UnsupportedColumnType(tgt_col.name.clone()));
         }
     };
@@ -109,7 +131,26 @@ impl MssqlFdw {
                 .join(", ")
         };
 
-        let mut sql = format!("select {} from {} as _wrappers_tbl", tgts, &self.table);
+        let mut sql = {
+            // push down limits
+            // Note: Postgres will take limit and offset locally after reading rows
+            // from remote, so we calculate the real limit and only use it without
+            // pushing down offset.
+            if let Some(limit) = limit {
+                let real_limit = limit.offset + limit.count;
+                // original, moved here from the end
+                //sql.push_str(&format!(
+                //    " offset 0 rows fetch next {} rows only",
+                //    real_limit
+                //))
+                format!(
+                    "select TOP({}) {} from {} as _wrappers_tbl",
+                    real_limit, tgts, &self.table
+                )
+            } else {
+                format!("select {} from {} as _wrappers_tbl", tgts, &self.table)
+            }
+        };
 
         if !quals.is_empty() {
             let cond = quals
@@ -141,18 +182,7 @@ impl MssqlFdw {
             sql.push_str(&format!(" order by {}", order_by));
         }
 
-        // push down limits
-        // Note: Postgres will take limit and offset locally after reading rows
-        // from remote, so we calculate the real limit and only use it without
-        // pushing down offset.
-        if let Some(limit) = limit {
-            let real_limit = limit.offset + limit.count;
-            sql.push_str(&format!(
-                " offset 0 rows fetch next {} rows only",
-                real_limit
-            ));
-        }
-
+        // report_warning(&sql);
         Ok(sql)
     }
 }
