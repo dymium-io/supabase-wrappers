@@ -86,7 +86,7 @@ fdws=(postgres_fdw mysql_fdw tds_fdw oracle_fdw db2_fdw)
 		   -e MONGO_FDW_SOURCE_DIR=/fdw \
 		   -e MONGOC_INSTALL_DIR=/fdw/mongo-c-driver \
 		   -e JSONC_INSTALL_DIR=/fdw/json-c \
-		   -e PKG_CONFIG_PATH=/fdw/mongo-c-driver/src/libmongoc/src:/fdw/mongo-c-driver/src/libbson/src \
+		   -e PKG_CONFIG_PATH=/fdw/mongo-c-driver/lib/pkgconfig:/fdw/json-c/lib/pkgconfig \
 		   postgres-dev \
 		   /bin/bash -c \
 		   "cd /fdw; (./autogen.sh --with-master; \
