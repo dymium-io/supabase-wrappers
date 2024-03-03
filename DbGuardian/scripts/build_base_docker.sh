@@ -160,7 +160,7 @@ build_mongo() {
         -e MONGO_FDW_SOURCE_DIR=/fdw \
         -e MONGOC_INSTALL_DIR=/mongo-lib/mongo-c-driver \
         -e JSONC_INSTALL_DIR=/mongo-lib/json-c \
-        -e PKG_CONFIG_PATH=/mongo-lib/mongo-c-driver/src/libmongoc/src:/mongo-lib/mongo-c-driver/src/libbson/src \
+        -e PKG_CONFIG_PATH=/mongo-lib/mongo-c-driver/lib/pkgconfig:/mongo-lib/json-c/lib/pkgconfig \
         postgres-dev \
         /bin/bash -c \
         "cd /fdw; \
