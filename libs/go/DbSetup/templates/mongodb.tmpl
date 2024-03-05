@@ -1,6 +1,6 @@
 DO $$
 BEGIN
-  CREATE SERVER {{.Server}} FOREIGN DATA WRAPPER mongodb_fdw OPTIONS (
+  CREATE SERVER {{.Server}} FOREIGN DATA WRAPPER mongo_fdw OPTIONS (
     address '{{.Address}}', port '{{.Port}}', authentication_database 'admin'
   );
   CREATE USER MAPPING FOR public SERVER {{.Server}} OPTIONS (
