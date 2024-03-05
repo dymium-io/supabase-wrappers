@@ -23,7 +23,7 @@ force_rebuild="true"
 main() {
     case "$1" in
         "") create_docker ;;
-        build)
+        finalize)
             force_rebuild="false"
             create_docker
             ;;
@@ -321,7 +321,7 @@ ENV IBM_DB_INCLUDE="/var/lib/postgresql/sqllib/include"
 ENV IBM_DB_LIB="/var/lib/postgresql/sqllib/lib"
 ENV INSTHOME="/var/lib/postgresql"
 ENV INST_DIR="/var/lib/postgresql/sqllib"
-ENV LD_LIBRARY_PATH="/lib64:/usr/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib64:/var/lib/postgresql/sqllib/lib64/gskit:/var/lib/postgresql/sqllib/lib32"
+ENV LD_LIBRARY_PATH="/lib64:/usr/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib64:/var/lib/postgresql/sqllib/lib64/gskit:/var/lib/postgresql/sqllib/lib32:/usr/local/libmongo"
 
 ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
 #ENV PATH="$PATH:/usr/lib/jvm/java-8-openjdk-amd64/bin"
@@ -332,7 +332,9 @@ COPY /oracle_fdw /
 COPY /db2_fdw /
 COPY /mysql_fdw /
 COPY /mongo_fdw /
-COPY /mongo_lib /
+RUN mkdir /usr/local/libmongo
+COPY /mongo_lib/mongo-c-driver/lib/* /usr/local/libmongo
+COPY /mongo_lib/json-c/lib/* /usr/local/libmongo
 COPY /jdbc_fdw /
 COPY /pgsodium /
 COPY /vault /
