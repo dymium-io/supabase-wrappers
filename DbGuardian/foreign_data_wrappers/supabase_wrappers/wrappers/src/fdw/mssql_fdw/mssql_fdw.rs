@@ -126,7 +126,7 @@ impl MssqlFdw {
         } else {
             columns
                 .iter()
-                .map(|c| c.name.clone())
+                .map(|c| format!("[{}]", &c.name))
                 .collect::<Vec<String>>()
                 .join(", ")
         };
