@@ -1,1 +1,0 @@
-SELECT * FROM @PSCHEMANAME.view_simple;

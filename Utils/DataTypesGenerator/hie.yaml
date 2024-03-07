@@ -1,6 +1,0 @@
-cradle:
-  stack:
-    - path: "./src"
-      component: "Gen:lib"
-    - path: "./app"
-      component: "Gen:exe:Gen-exe"

@@ -1,1 +1,0 @@
-README.oracle_fdw

@@ -1,6 +1,0 @@
-DROP USER MAPPING IF EXISTS FOR @PUSER
-	SERVER mssql_svr;
-
-CREATE USER MAPPING FOR @PUSER
-       SERVER mssql_svr 
-       OPTIONS (username '@MUSER', password '@MPASSWORD');

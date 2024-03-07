@@ -1,1 +1,0 @@
-sql/tds_fdw--2.0.2.sql
