@@ -183,8 +183,8 @@ func init() {
 		ext:        define_rust_ext("mssql_wrapper", "mssql_fdw_handler", "mssql_fdw_validator"),
 		server_def: define_server("mssql.tmpl"),
 		table: func(remoteSchema, remoteTable string) string {
-			return fmt.Sprintf("table '%s.%s'",
-				esc(remoteSchema), esc(remoteTable))
+			return fmt.Sprintf("table '[%s].[%s]'",
+				remoteSchema, remoteTable)
 		},
 	}
 	ct_options[types.CT_MongoDB] = ct_option{
