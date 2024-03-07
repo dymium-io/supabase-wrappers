@@ -7,13 +7,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/sha256"
-	"crypto/x509"
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	_ "image/gif"
@@ -31,6 +28,7 @@ import (
 
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/gotypes"
+	"dymium.com/dymium/certificates"
 	"dymium.com/dymium/log"
 	"dymium.com/dymium/types"
 	"github.com/Jeffail/gabs"
@@ -87,8 +85,19 @@ func InitSM() error {
 
 func CreateSecret(name, secret string) error {
 	// Create the secret
-	_, err := smClient.CreateSecret(&secretsmanager.CreateSecretInput{
-		Name:         awssdk.String(name),
+	_, err := smClient.GetSecretValue(&secretsmanager.GetSecretValueInput{
+		SecretId: awssdk.String(name),
+	})
+	if err != nil {
+		_, err := smClient.CreateSecret(&secretsmanager.CreateSecretInput{
+			Name:         awssdk.String(name),
+			SecretString: awssdk.String(secret),
+		})
+		return err
+	}
+
+	_, err = smClient.UpdateSecret(&secretsmanager.UpdateSecretInput{
+		SecretId:     awssdk.String(name),
 		SecretString: awssdk.String(secret),
 	})
 
@@ -144,52 +153,6 @@ func StreamFromS3(w http.ResponseWriter, r *http.Request, bucketName, key string
 	}
 }
 
-func GenerateRandomBytes(n int) ([]byte, error) {
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
-}
-
-func GenerateRandomString(n int) (string, error) {
-	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
-	ret := make([]byte, n)
-	for i := 0; i < n; i++ {
-		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
-		if err != nil {
-			return "", err
-		}
-		ret[i] = letters[num.Int64()]
-	}
-	return string(ret), nil
-}
-
-func GenerateUsernameString(n int) (string, error) {
-	const letters = "0123456789abcdefghijklmnopqrstuvwxyz"
-	ret := make([]byte, n)
-	for i := 0; i < n; i++ {
-		var num *big.Int
-		var err error
-		if i == 0 {
-			num, err = rand.Int(rand.Reader, big.NewInt(int64(len(letters)-10)))
-		} else {
-			num, err = rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
-		}
-		if err != nil {
-			return "", err
-		}
-		if i == 0 {
-			ret[i] = letters[10:][num.Int64()]
-		} else {
-			ret[i] = letters[num.Int64()]
-		}
-	}
-	return string(ret), nil
-}
 
 func contains[T comparable](s []T, str T) bool {
 	for _, v := range s {
@@ -273,8 +236,6 @@ var LowMeshport, HighMeshport int
 
 var Invoke gotypes.Invoke_t
 
-var CaKey *rsa.PrivateKey
-var CaCert *x509.Certificate
 
 var stdChars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$^&*()-_=+,.?:;{}[]")
 
@@ -344,44 +305,14 @@ func AESdecrypt(ciphertext []byte, keyhex string) ([]byte, error) {
 	return gcm.Open(nil, nonce, ciphertext, nil)
 }
 
-func ParsePEMPrivateKey(pemBytes []byte, passphrase string) (*rsa.PrivateKey, error) {
-	block, _ := pem.Decode(pemBytes)
-	if block == nil {
-		return nil, errors.New("no valid private key found")
-	}
 
-	switch block.Type {
-	case "RSA PRIVATE KEY":
-		var privKeyBytes []byte
-		var err error
-
-		if x509.IsEncryptedPEMBlock(block) {
-			privKeyBytes, err = x509.DecryptPEMBlock(block, []byte(passphrase))
-			if err != nil {
-				return nil, errors.New("could not decrypt private key")
-			}
-		} else {
-			privKeyBytes = block.Bytes
-		}
-
-		rsaPrivKey, err := x509.ParsePKCS1PrivateKey(privKeyBytes)
-		if err != nil {
-			return nil, fmt.Errorf("could not parse DER encoded key: %v", err)
-		}
-
-		return rsaPrivKey, nil
-
-	default:
-		return nil, fmt.Errorf("unsupported key type %q", block.Type)
-	}
-}
 func InitInvoke(i gotypes.Invoke_t) {
 	Invoke = i
 }
 
 // aws.Invoke("DbAnalyzer", nil, bconn)
 func Init(host string, port, user, password, dbname, tls string) error {
-	_, err := GenerateRandomString(32)
+	_, err := certificates.GenerateRandomString(32)
 	if err != nil {
 		log.Errorf("Error: crypto rand failed: %s", err.Error())
 		return nil
@@ -441,34 +372,11 @@ func Init(host string, port, user, password, dbname, tls string) error {
 		FilesystemRoot, _ = filepath.Abs(FilesystemRoot)
 	}
 	Invoke = aws.Invoke
-
-	ca_cert := os.Getenv("CA_AUTHORITY")
-	t := struct {
-		Key         string
-		Certificate string
-	}{}
-	err = json.Unmarshal([]byte(ca_cert), &t)
+	err = certificates.Init()
 	if err != nil {
-		log.Errorf("Cert unmarshaling error: %s", err.Error())
-		return nil
+		log.Errorf("Certificate initialization failed %s", err.Error())
+		return err
 	}
-
-	pemcert, _ := pem.Decode([]byte(t.Certificate))
-
-	CaCert, err = x509.ParseCertificate(pemcert.Bytes)
-	if err != nil {
-		log.Errorf("Cert parsing error: %s", err.Error())
-		return nil
-	}
-
-	passphrase := os.Getenv("CA_PASSPHRASE")
-	CaKey, err = ParsePEMPrivateKey([]byte(t.Key), passphrase)
-
-	if err != nil {
-		log.Errorf("Key parsing error: %s", err.Error())
-		return nil
-	}
-
 	redisAddress := os.Getenv("REDIS_HOST")
 	redisPort := os.Getenv("REDIS_PORT")
 	redisPassword := os.Getenv("REDIS_PASSWORD")
@@ -1220,7 +1128,7 @@ func GeneratePortalJWT(picture string, schema string, name string, email string,
 	expirationTime := issueTime.Add(time.Duration(_timeOut) * time.Minute)
 	p := hex.EncodeToString([]byte(picture))
 	if session == "" {
-		session, _ = GenerateRandomString(32) //ignore the error for now
+		session, _ = certificates.GenerateRandomString(32) //ignore the error for now
 	}
 	claim := &gotypes.Claims{
 		// TODO
@@ -1301,7 +1209,7 @@ func generateError(w http.ResponseWriter, r *http.Request, header string, body s
 		Failed to get userinfo: "+err.Error()
 	*/
 	log.Errorf("In generateError, Error %s: %s", header, body)
-	nonce, _ := GenerateRandomString(32)
+	nonce, _ := certificates.GenerateRandomString(32)
 	common.CommonNocacheNocspHeaders(w, r)
 	w.Header().Set("Content-Security-Policy", "script-src 'nonce-"+nonce+"'")
 	w.Header().Set("Content-Type", "text/html")
@@ -2313,7 +2221,7 @@ func AuthenticationAdminHandlers(h *mux.Router) error {
 		if err != nil {
 			log.Errorf("Redirect error: %s", err.Error())
 		}
-		nonce, _ := GenerateRandomString(32)
+		nonce, _ := certificates.GenerateRandomString(32)
 		common.CommonNocacheNocspHeaders(w, r)
 		w.Header().Set("Content-Type", "text/html")
 		w.Header().Set("Content-Security-Policy", "script-src 'self' 'nonce-"+nonce+"'")
@@ -2443,7 +2351,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		if err == nil {
 			log.InfoUserf(schema, session, email, groups, GetRoles(email, schema, groups, admin_group), "Successful portal login, token: %s", token)
 		}
-		nonce, _ := GenerateRandomString(32)
+		nonce, _ := certificates.GenerateRandomString(32)
 		common.CommonNocacheNocspHeaders(w, r)
 		w.Header().Set("Content-Type", "text/html")
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'nonce-"+nonce+"'")
@@ -2804,8 +2712,8 @@ func SetConnectorStatus(schema string, status string) {
 }
 
 func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error) {
-	accesskey, _ := GenerateRandomString(12)
-	accesssecret, _ := GenerateRandomString(128)
+	accesskey, _ := certificates.GenerateRandomString(12)
+	accesssecret, _ := certificates.GenerateRandomString(128)
 
 	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelfunc()
@@ -2833,8 +2741,8 @@ func AddMachineTunnel(schema string, t types.MachineTunnel) (string, error) {
 		return "", err
 	}
 	// generate username and password:
-	username, _ := GenerateUsernameString(16)
-	password, _ := GenerateRandomString(32)
+	username, _ := certificates.GenerateUsernameString(16)
+	password, _ := certificates.GenerateRandomString(32)
 
 	enc, err := EncryptString(schema, password)
 	if err != nil {
@@ -3043,7 +2951,7 @@ func DeleteMachineTunnel(schema, id string) error {
 
 func RegenMachineTunnel(schema, id string) error {
 	// generate password:
-	password, _ := GenerateRandomString(32)
+	password, _ := certificates.GenerateRandomString(32)
 
 	enc, err := EncryptString(schema, password)
 	if err != nil {
