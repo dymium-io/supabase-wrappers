@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 	"dymium.com/dymium/authentication"
+	"dymium.com/dymium/certificates"
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/gotypes"
 	"dymium.com/dymium/log"
@@ -1587,7 +1588,7 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
 		PublicKey:          clientCSR.PublicKey,
 
 		SerialNumber: big.NewInt(2),
-		Issuer:       authentication.CaCert.Subject,
+		Issuer:       certificates.CaCert.Subject,
 		Subject:      clientCSR.Subject,
 		NotBefore:    time.Now().Add(-GRACE * time.Second), // grace time
 		NotAfter:     time.Now().Add(GRACE * time.Second),  // REMOVE ME extra 0
@@ -1597,8 +1598,8 @@ func GetClientCertificate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create client certificate from template and CA public key
-	clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, authentication.CaCert,
-		clientCSR.PublicKey, authentication.CaKey)
+	clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, certificates.CaCert,
+		clientCSR.PublicKey, certificates.CaKey)
 
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetClientCertificate, error: %s", err.Error())
@@ -1677,7 +1678,7 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 		PublicKey:          clientCSR.PublicKey,
 
 		SerialNumber: big.NewInt(2),
-		Issuer:       authentication.CaCert.Subject,
+		Issuer:       certificates.CaCert.Subject,
 		Subject:      clientCSR.Subject,
 		NotBefore:    time.Now().Add(-GRACE * time.Second), // grace time
 		NotAfter:     time.Now().Add(GRACE * time.Second),  // DELETE ME
@@ -1687,8 +1688,8 @@ func GetConnectorCertificate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create client certificate from template and CA public key
-	clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, authentication.CaCert,
-		clientCSR.PublicKey, authentication.CaKey)
+	clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, certificates.CaCert,
+		clientCSR.PublicKey, certificates.CaKey)
 
 	if err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
@@ -1763,7 +1764,7 @@ func GetMachineClientCertificate(w http.ResponseWriter, r *http.Request) {
 		PublicKey:          clientCSR.PublicKey,
 
 		SerialNumber: big.NewInt(2),
-		Issuer:       authentication.CaCert.Subject,
+		Issuer:       certificates.CaCert.Subject,
 		Subject:      clientCSR.Subject,
 		NotBefore:    time.Now().Add(-GRACE * time.Second), // grace time
 		NotAfter:     time.Now().Add(GRACE * time.Second),  // DELETE ME
@@ -1773,8 +1774,8 @@ func GetMachineClientCertificate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create client certificate from template and CA public key
-	clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, authentication.CaCert,
-		clientCSR.PublicKey, authentication.CaKey)
+	clientCRTRaw, err := x509.CreateCertificate(rand.Reader, &clientCRTTemplate, certificates.CaCert,
+		clientCSR.PublicKey, certificates.CaKey)
 
 	if err != nil {
 		log.ErrorTenantf(schema, "Api GetConnectorCertificate, error: %s", err.Error())
@@ -1877,7 +1878,7 @@ func DatascopeHelp(w http.ResponseWriter, r *http.Request) {
 	sport, _ := vars["port"]
 
 	newtoken, error := authentication.CheckAndRefreshToken(token, sport)
-	nonce, _ := authentication.GenerateRandomString(32)
+	nonce, _ := certificates.GenerateRandomString(32)
 	common.CommonNocacheNocspHeaders(w, r)
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("x-content-type-options", "nosniff")
@@ -1938,8 +1939,8 @@ func GetAccessKeys(w http.ResponseWriter, r *http.Request) {
 	roles := r.Context().Value(authenticatedRolesKey).([]string)
 	session := r.Context().Value(authenticatedSessionKey).(string)
 	var out types.GetKeySecret
-	out.Accesskey, _ = authentication.GenerateRandomString(12)
-	out.Secret, _ = authentication.GenerateRandomString(128)
+	out.Accesskey, _ = certificates.GenerateRandomString(12)
+	out.Secret, _ = certificates.GenerateRandomString(128)
 
 	js, err := json.Marshal(out)
 	if err != nil {
