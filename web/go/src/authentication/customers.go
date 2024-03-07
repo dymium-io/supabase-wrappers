@@ -7,7 +7,6 @@ import (
 	"dymium.com/dymium/gotypes"
 	"dymium.com/dymium/log"
 	"dymium.com/dymium/types"
-	"dymium.com/dymium/certificates"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
@@ -332,7 +331,7 @@ func ProcessInvitation(token string) (string, string, error) {
 	newtoken, err := GeneratePortalJWT("/avatar.png", "", claim.Name, claim.Email, []string{}, []string{gotypes.RoleInitialSigner}, 
 	"", 600, claim.Invitationid)
 
-	nonce, _ := certificates.GenerateRandomString(32)
+	nonce, _ := GenerateRandomString(32)
 	return `<html>
 	<head>
 	<script nonce="` + nonce + `">

@@ -16,7 +16,6 @@ import (
 
 	"dymium.com/dymium/log"
 	"dymium.com/dymium/types"
-	`dymium.com/dymium/certificates`
 	"github.com/Jeffail/gabs"
 )
 
@@ -311,33 +310,6 @@ func populateSuperAdmin(shortname string, admins []string) error {
 	}
 	return nil
 }
-func CreateTunnelCerts(schema string) error {
-	cert_password, cert, err := certificates.GenerateCustomerTunnelServerCertificate(schema) 
-	if err != nil {
-		return err
-	}
-	name := "TUNNEL/" + strings.ToUpper(schema) + "/CERTIFICATE"
-	err = CreateSecret(name, cert)
-	if err != nil {
-		return err
-	}
-	name = "TUNNEL/" + strings.ToUpper(schema) + "/CERTIFICATE_KEY_PASSWORD"
-	err = CreateSecret(name, cert_password)
-	if err != nil {
-		return err
-	}
-	name = "GUARDIANS/" + strings.ToUpper(schema) + "/DYMIUM_PASSWORD"
-	p, _  := certificates.GenerateRandomString(16)
-	err = CreateSecret(name, p)
-	if err != nil {
-		return err
-	}
-	name = "GUARDIANS/" + strings.ToUpper(schema) + "/ADMIN_PASSWORD"
-	p, _  = certificates.GenerateRandomString(16)
-	err = CreateSecret(name, p)
-
-	return err
-}
 func CreateNewTenant(schema string) error {
 	// retrieve the json from the schema
 	var out []string
@@ -424,17 +396,6 @@ func CreateNewTenant(schema string) error {
 		updateStatus(schema, out)
 		return err
 	}
-	out = append(out, "Creating certificates...")
-	updateStatus(schema, out)
-	err = CreateTunnelCerts(shortname)
-	if err != nil {
-		log.Errorf("CreateNewTenant/CreateTunnelCerts error: %s", err.Error())
-		out = append(out, "Error: "+err.Error())
-		updateStatus(schema, out)
-		return err
-	}
-
-
 	out = append(out, "Success!")
 	updateStatus(schema, out)
 	sql := 	`update global.invitations set progress='Completed' where id=$1;`
@@ -682,8 +643,6 @@ func GetInvitations() ([]byte, error) {
 	} else {
 		return []byte{}, err
 	}
-
-
 	// convert to json
 	js, err := json.Marshal(ret)
 	log.Infof("GetInvitations, js: %s", string(js)	)
