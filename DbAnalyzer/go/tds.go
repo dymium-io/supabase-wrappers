@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+
 	"github.com/apex/log"
 
 	//_ "github.com/thda/tds"
@@ -206,7 +207,11 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			}
 		}
 		switch d.cTyp {
-		case "bit", "smallint", "tinyint":
+		case "bit":
+			t = "boolean"
+			possibleActions = allowable
+			sample[k] = dtk(true)
+		case "smallint", "tinyint":
 			t = "smallint"
 			possibleActions = allowable
 			sample[k] = dtk(true)
