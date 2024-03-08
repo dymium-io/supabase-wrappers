@@ -14,6 +14,7 @@ interface MenuState {
   activeGroupsTab: string,
   activeMachineTab: string,
   selectedTunnel: string,
+  activeSuperTab,
 }
 
 // Define the initial state using that type
@@ -28,7 +29,8 @@ const initialState: MenuState = {
   activeAccessTab: "datascopes",
   activeGroupsTab: "groups",  
   activeMachineTab: "add",
-  selectedTunnel: ""
+  selectedTunnel: "",
+  activeSuperTab: "secrets"
 }
 
 export const menuSlice = createSlice({
@@ -69,7 +71,9 @@ export const menuSlice = createSlice({
       setSelectedTunnel: (state, action) => {
         state.selectedTunnel = action.payload
       },   
-      
+      setActiveSuperTab: (state, action) => {
+        state.activeSuperTab = action.payload
+      },   
   },
 })
 
@@ -77,7 +81,7 @@ export const menuSlice = createSlice({
 export const { setActiveMenu, setActiveRuleTab, setActiveConnectionTab, 
   setActiveConnectorTab, setSelectedConnectorDefault, setActiveDatascopeTab, 
   setSelectedDatascopeDefault, setActiveAccessTab, setActiveGroupsTab, 
-  setActiveMachineTab, setSelectedTunnel } = menuSlice.actions
+  setActiveMachineTab, setSelectedTunnel, setActiveSuperTab } = menuSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectActiveMenu = (state: RootState) => state.activeMenu
@@ -89,5 +93,5 @@ export const selectActiveAccessTab = (state: RootState) => state.activeAccessTab
 export const selectActiveGroupsTab = (state: RootState) => state.activeGroupsTab
 export const selectSelectedDatascope = (state: RootState) => state.selectedDatascope
 export const selectSelectedConnector = (state: RootState) => state.selectedConnector
-
+export const selectActiveSuperTab = (state: RootState) => state.activeSuperTab
 export default menuSlice.reducer

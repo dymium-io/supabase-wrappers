@@ -2,10 +2,15 @@ import React, { useEffect, useState, useRef, FunctionComponent } from 'react';
 import Button from 'react-bootstrap/Button'
 import ListGroup from 'react-bootstrap/ListGroup'
 import Modal from 'react-bootstrap/Modal'
+import Spinner from '@dymium/common/Components/Spinner'
 import Alert from 'react-bootstrap/Alert'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
+import Tabs from 'react-bootstrap/Tabs'
+import Tab from 'react-bootstrap/Tab'
+import { useAppDispatch, useAppSelector } from './hooks'
+import { setActiveSuperTab } from '../Slices/menuSlice'
 import * as com from '../Common'
 
 let discovery_url = ""
@@ -33,6 +38,7 @@ interface StepProps {
     setState: React.Dispatch<React.SetStateAction<SetterState>>;
     onNext?: (i: () => Promise<boolean>) => void; // Optional because not all steps might use it
     onBack?: (i: () => Promise<boolean>) => void; // Optional because not all steps might use it
+    left?: boolean;
 }
 
 interface StepProgressBarProps {
@@ -88,7 +94,7 @@ const StepProgressBar: React.FC<StepProgressBarProps> = ({ steps, currentStep, o
     );
 };
 
-const StepThree: FunctionComponent<StepProps> = ({ onNext, state, setState }) => {
+const StepThree: FunctionComponent<StepProps> = ({ onNext, state, setState, left }) => {
     const [validated, setValidated] = useState(false)
     const [alert, setAlert] = useState<JSX.Element>(<></>)
 
@@ -146,9 +152,9 @@ const StepThree: FunctionComponent<StepProps> = ({ onNext, state, setState }) =>
 
     onNext!(test)
     return (
-        <div className="ml-3 mt-3 text-center">
+        <div className="ml-3 mt-3 ">
             {alert}
-            <div className="text-left" style={{ width: '41em', margin: 'auto' }}>
+            <div className="text-left" style={left ? { width: '41em' } : { width: '41em', margin: 'auto' }}>
                 <Row className="mt-2">
                     <Col>
                         <Form.Group controlId="issuer">
@@ -194,9 +200,9 @@ const StepThree: FunctionComponent<StepProps> = ({ onNext, state, setState }) =>
 // Example Step Components
 const StepOne: FunctionComponent<StepProps> = ({ onNext, state, setState }) => {
     return <>
-        <div className="ml-3 mt-3 text-center">
+        <div className="ml-3 mt-3">
             <div >
-                <Form.Group controlId="idp">
+                <Form.Group controlId="idp" >
                     <Form.Label>Please select which Identity Provider is used by your company</Form.Label>
                     <Form.Control size="sm"
                         as="select"
@@ -218,7 +224,7 @@ const StepOne: FunctionComponent<StepProps> = ({ onNext, state, setState }) => {
     </>
 };
 
-const StepFour: FunctionComponent<StepProps> = ({ onNext, state, setState }) => {
+const StepFour: FunctionComponent<StepProps> = ({ onNext, state, setState, left }) => {
     const [alert, setAlert] = useState<JSX.Element>(<></>)
 
     let checkNext = async () => {
@@ -273,38 +279,41 @@ const StepFour: FunctionComponent<StepProps> = ({ onNext, state, setState }) => 
     onNext!(checkNext)
     return <div style={{ width: '100%' }} className="mx-3 mt-2 ">
         {alert}
-        <div style={{ width: '42em', margin: 'auto' }}>
+        <div className="text-left" style={left ? { width: '42em' } : { width: '42em', margin: 'auto' }}>
+            {!left &&
+                <>
+                    <Row className="mt-1">
+                        <Col>
+                            <Form.Group controlId="formname">
+                                <Form.Label>Short company/group name. Must be globally unique.</Form.Label>
+                                <Form.Control size="sm" type="text" placeholder="alphanumeric" style={{ width: '40em' }}
+                                    value={state.shortname}
+                                    pattern="[a-z][a-z0-9]*"
+                                    onChange={e => setState({ ...state, shortname: e.target.value })}
+                                    required />
+                                <Form.Control.Feedback type="invalid">
+                                    Please provide a valid name.
+                                </Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                    <Row className="mt-2">
+                        <Col>
+                            <Form.Group controlId="humanreadablename">
+                                <Form.Label>Human readable company/group name. Must be globally unique.</Form.Label>
+                                <Form.Control size="sm" type="text" placeholder="" style={{ width: '40em' }}
+                                    value={state.name}
+                                    onChange={e => setState({ ...state, name: e.target.value })}
 
-            <Row className="mt-1">
-                <Col>
-                    <Form.Group controlId="formname">
-                        <Form.Label>Short company/group name. Must be globally unique.</Form.Label>
-                        <Form.Control size="sm" type="text" placeholder="alphanumeric" style={{ width: '40em' }}
-                            value={state.shortname}
-                            pattern="[a-z][a-z0-9]*"
-                            onChange={e => setState({ ...state, shortname: e.target.value })}
-                            required />
-                        <Form.Control.Feedback type="invalid">
-                            Please provide a valid name.
-                        </Form.Control.Feedback>
-                    </Form.Group>
-                </Col>
-            </Row>
-            <Row className="mt-2">
-                <Col>
-                    <Form.Group controlId="humanreadablename">
-                        <Form.Label>Human readable company/group name. Must be globally unique.</Form.Label>
-                        <Form.Control size="sm" type="text" placeholder="" style={{ width: '40em' }}
-                            value={state.name}
-                            onChange={e => setState({ ...state, name: e.target.value })}
-
-                            required />
-                        <Form.Control.Feedback type="invalid">
-                            Please provide a valid human readable name.
-                        </Form.Control.Feedback>
-                    </Form.Group>
-                </Col>
-            </Row>
+                                    required />
+                                <Form.Control.Feedback type="invalid">
+                                    Please provide a valid human readable name.
+                                </Form.Control.Feedback>
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                </>
+            }
             <Row className="mt-2">
                 <Col>
                     <Form.Group controlId="domain">
@@ -335,6 +344,7 @@ const StepFour: FunctionComponent<StepProps> = ({ onNext, state, setState }) => 
                         </Form.Control.Feedback>
                     </Form.Group>
                 </Col>
+                <Col><img src={state.logo} onError={e=>(e.currentTarget.style.display = 'none')} style={{height: '48px', position: 'absolute', bottom: '0px'}}></img></Col>
             </Row>
             <Row className="mt-2">
                 <Col xs="auto">
@@ -368,7 +378,7 @@ const StepFour: FunctionComponent<StepProps> = ({ onNext, state, setState }) => 
 
 const StepTwo: FunctionComponent<StepProps> = ({ state }) => {
     return <>
-        <div className="ml-3 mt-3 text-center">
+        <div className="ml-3 mt-3 ">
             <div className="text-left" style={{ width: '41em', margin: 'auto' }}>
                 Let's configure a new App on your Identity Provider.
             </div>
@@ -376,7 +386,7 @@ const StepTwo: FunctionComponent<StepProps> = ({ state }) => {
     </>
 };
 
-const AdminEmails: FunctionComponent<StepProps> = ({ state, setState }) => {
+const AdminEmails: FunctionComponent<StepProps> = ({ state, setState, left }) => {
     const [newEmail, setNewEmail] = useState<string>('');
     const [showModal, setShowModal] = useState<boolean>(false);
     const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -422,10 +432,10 @@ const AdminEmails: FunctionComponent<StepProps> = ({ state, setState }) => {
         return r.test(newEmail)
     }
     return (<div style={{ width: '100%' }} className="mx-3 mt-2 ">
-        <div style={{ width: '42em', margin: 'auto' }}>
+        <div className="text-left" style={left ? { width: '42em' } : { width: '42em', margin: 'auto' }}>
 
             <Row>
-                <Col xs="auto" className="pl-5 pr-0">
+                <Col xs="auto" className=" pr-0">
                     <Form.Group>
                         <Form.Label>Add Super Admin:</Form.Label>
                         <Form.Control size="sm"
@@ -446,7 +456,7 @@ const AdminEmails: FunctionComponent<StepProps> = ({ state, setState }) => {
             </Row>
 
 
-            <ListGroup className="mt-5 p-3">
+            <ListGroup className="mt-5 ">
                 <div style={{ marginBottom: '3px' }}>Super Admins:</div>
                 {state.admins.map((email, index) => (
                     <ListGroup.Item key={index} style={{ border: 'none', backgroundColor: (index % 2) ? 'rgba(210,223,240, 0.6)' : 'rgba(255,255,255, 0.7)' }} className="d-flex justify-content-between align-items-center p-1">
@@ -797,8 +807,9 @@ const Signup: FunctionComponent = () => {
                         </div>
 
                         <Form ref={formRef} noValidate validated={validated} onSubmit={handleNext}>
-                            <CurrentStepComponent onNext={nextCallback} state={state} setState={setState} />
-
+                            <div className="text-center">
+                                <CurrentStepComponent onNext={nextCallback} state={state} setState={setState} />
+                            </div>
                             <Row className="mt-5">
                                 <Col className="text-right" >
 
@@ -882,3 +893,379 @@ const Signup: FunctionComponent = () => {
 };
 
 export default Signup;
+
+
+
+export function IdP() {
+    const [alert, setAlert] = useState<JSX.Element>(<></>)
+    const [spinner, setSpinner] = useState<boolean>(false)
+    const [state, setState] = useState<SetterState>(
+        {
+            idp: "",
+            issuer: "",
+            clientid: "",
+            secret: "",
+            shortname: "",
+            name: "",
+            domain: "",
+            logo: "",
+            fore: "",
+            back: "",
+            admins: []
+        }
+    );
+    let getAdmins = () => {
+        let token = window.sessionStorage.getItem("Session");
+        setSpinner(true)
+        fetch("/api/getsuperadmins",
+            {
+                method: 'GET',
+                headers: {
+                    Authorization: "Bearer " + token,
+                    Cache: "no-cache",
+                    ContentType: 'application/json'
+                },
+            }
+        )
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                //types.AuthLogin{Domain: domain, Logo_url: logo_url, Primary: primary, Page_background: page_background}
+
+                setState(state => {
+                    return { ...state, admins: data }
+                })
+                setSpinner(false)
+                console.log(data)
+            })
+            .catch(error => {
+                console.error('There has been a problem with your fetch operation:', error);
+                setSpinner(false)
+            });
+    }
+    let getLogin = () => {
+        let token = window.sessionStorage.getItem("Session");
+        setSpinner(true)
+        fetch("/api/getlogindetails",
+            {
+                method: 'GET',
+                headers: {
+                    Authorization: "Bearer " + token,
+                    Cache: "no-cache",
+                    ContentType: 'application/json'
+                },
+            }
+        )
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                //types.AuthLogin{Domain: domain, Logo_url: logo_url, Primary: primary, Page_background: page_background}
+
+                setState(state => {
+                    return { ...state, domain: data.domain, logo: data.logo_url, fore: data.primary, back: data.page_background }
+                })
+                setSpinner(false)
+                getAdmins()
+                console.log(data)
+            })
+            .catch(error => {
+                console.error('There has been a problem with your fetch operation:', error);
+                setSpinner(false)
+            });
+    }
+    useEffect(() => {
+        let token = window.sessionStorage.getItem("Session");
+        setSpinner(true)
+        fetch("/api/getoidcconnection",
+            {
+                method: 'GET',
+                headers: {
+                    Authorization: "Bearer " + token,
+                    Cache: "no-cache",
+                    ContentType: 'application/json'
+                },
+            }
+        )
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                setState(state => { return { ...state, ...data } })
+                setSpinner(false)
+                getLogin()
+                console.log(data)
+
+            })
+            .catch(error => {
+                setSpinner(false)
+                console.error('There has been a problem with your fetch operation:', error);
+
+            });
+    }, []);
+
+    const SetSecrets: FunctionComponent<StepProps> = ({ state, setState }) => {
+        const [validated, setValidated] = useState(false);
+        const formRef = useRef<HTMLFormElement>(null);
+
+        let setIdpConnection = async () => {
+            let jsb = {
+                issuer: state.issuer,
+                clientid: state.clientid,
+                secret: state.secret
+            }
+            let token = window.sessionStorage.getItem("Session");
+            setSpinner(true)
+            let response = await fetch("/api/setoidcconnection",
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization: "Bearer " + token,
+                        Cache: "no-cache",
+                        ContentType: 'application/json'
+                    },
+                    body: JSON.stringify(jsb)
+                }
+            )
+            if (response.status !== 200) {
+                let t = await response.text()
+                setAlert(
+                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                        {t}
+                    </Alert>
+                )
+                setSpinner(false)
+                return false
+            }
+            if (!response.ok) {
+                setSpinner(false)
+                return false
+            }
+            let js = await response.json()
+            if (js.errorCode !== undefined) {
+                setSpinner(false)
+                return false
+            }
+            setAlert(
+                <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                    Connection to Identity Provider has been updated
+                </Alert>
+            )
+            setSpinner(false)
+            return true
+        }
+
+        let handleSubmit = e => {
+            e.preventDefault();
+            if (formRef.current?.checkValidity()) {
+                setIdpConnection()
+                setValidated(false);
+            } else {
+                formRef.current?.reportValidity();
+                setValidated(true);
+            }
+
+            e.stopPropagation();
+        }
+        return (
+            <div className="text-left pl-0 ml-0">
+                <h5>Connection to Identity Provider<Spinner show={spinner} style={{ width: '28px', marginLeft: '4px' }}></Spinner></h5>
+                {alert}
+                <Form className="p-0" ref={formRef} noValidate validated={validated} onSubmit={handleSubmit}>
+                    <StepThree onNext={onnextdefault}
+                        state={state} setState={setState} left={true} />
+                    <Button data-testid="apply-structure" variant="dymium" size="sm" className="mt-4 ml-3" type="submit">
+                        Apply
+                    </Button>
+                </Form>
+            </div >
+        )
+    }
+    const Login: FunctionComponent<StepProps> = ({ state, setState }) => {
+        const [validated, setValidated] = useState(false);
+        const formRef = useRef<HTMLFormElement>(null);
+
+        let setLoginDetails = async () => {
+            let jsb = {
+                domain: state.domain,
+                logo_url: state.logo,
+                primary: state.fore,
+                page_background: state.back
+            }
+            let token = window.sessionStorage.getItem("Session");
+            setSpinner(true)
+            let response = await fetch("/api/setlogindetails",
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization: "Bearer " + token,
+                        Cache: "no-cache",
+                        ContentType: 'application/json'
+                    },
+                    body: JSON.stringify(jsb)
+                }
+            )
+            if (response.status !== 200) {
+                let t = await response.text()
+                setAlert(
+                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                        {t}
+                    </Alert>
+                )
+                setSpinner(false)
+                return false
+            }
+            if (!response.ok) {
+                setSpinner(false)
+                return false
+            }
+            let js = await response.json()
+            if (js.errorCode !== undefined) {
+                setSpinner(false)
+                return false
+            }
+            setAlert(
+                <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                    Login page has been updated
+                </Alert>
+            )
+            setSpinner(false)
+            return true
+        }
+        let handleSubmit = e => {
+            e.preventDefault();
+            if (formRef.current?.checkValidity()) {
+                setLoginDetails()
+                setValidated(false);
+            } else {
+                formRef.current?.reportValidity();
+                setValidated(true);
+            }
+
+            e.stopPropagation();
+        }
+        return (
+            <div className="text-left">
+                <h5>Login Customization<Spinner show={spinner} style={{ width: '28px', marginLeft: '4px' }}></Spinner></h5>
+                {alert}
+
+                <Form ref={formRef} noValidate validated={validated} onSubmit={handleSubmit}>
+                    <StepFour state={state} setState={setState} onNext={onnextdefault} left={true} />
+                    <Button data-testid="apply-structure" variant="dymium" size="sm" className="mt-4 ml-3" type="submit">
+                        Apply
+                    </Button>
+                </Form>
+            </div >
+        )
+    }
+    const SuperAdmins: FunctionComponent<StepProps> = ({ state, setState }) => {
+        const [validated, setValidated] = useState(false);
+        const formRef = useRef<HTMLFormElement>(null);
+
+        let addSuperadmin = async () => {
+            let jsb = state.admins
+            let token = window.sessionStorage.getItem("Session");
+            setSpinner(true)
+            let response = await fetch("/api/setsuperadmins",
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization: "Bearer " + token,
+                        Cache: "no-cache",
+                        ContentType: 'application/json'
+                    },
+                    body: JSON.stringify(jsb)
+                }
+            )
+            if (response.status !== 200) {
+                let t = await response.text()
+                setAlert(
+                    <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>
+                        {t}
+                    </Alert>
+                )
+                setSpinner(false)
+                return false
+            }
+            if (!response.ok) {
+                setSpinner(false)
+                return false
+            }
+            let js = await response.json()
+            if (js.errorCode !== undefined) {
+                setSpinner(false)
+                return false
+            }
+            setAlert(
+                <Alert variant="success" onClose={() => setAlert(<></>)} dismissible>
+                    Connection to Identity Provider has been updated
+                </Alert>
+            )
+            setSpinner(false)
+            return true
+        }
+        let handleSubmit = e => {
+            e.preventDefault();
+            if (formRef.current?.checkValidity()) {
+                addSuperadmin()
+                setValidated(false);
+            } else {
+                formRef.current?.reportValidity();
+                setValidated(true);
+            }
+
+            e.stopPropagation();
+        }        
+        return (
+            <div className="text-left">
+                <h5>Superadmins <Spinner show={spinner} style={{ width: '28px', marginLeft: '4px' }}></Spinner></h5>
+                {alert}
+
+                <Form ref={formRef} noValidate validated={validated} onSubmit={handleSubmit}>
+                    <AdminEmails state={state} setState={setState} left={true} />
+                    {state.admins.length > 0 &&
+                    <Button data-testid="apply-structure" variant="dymium" size="sm" className="mt-4 ml-3" type="submit">
+                        Apply
+                    </Button>
+
+    }
+                </Form>
+            </div>
+        )
+    }
+    const t = useAppSelector((state) => {
+        return state.reducer.activeSuperTab
+    }
+    )
+    const appDispatch = useAppDispatch()
+
+    return (
+        <Tabs defaultActiveKey={t} id="superadmins"
+        onSelect={(k) => {
+            setAlert(<></> )
+            appDispatch(setActiveSuperTab(k))
+        }}
+            unmountOnExit={true} className="mb-3 text-left">
+            <Tab eventKey="secrets" title="Connection" className="mx-4">
+                <SetSecrets state={state} setState={setState} />
+            </Tab>
+            <Tab eventKey="login" title="Login" className="mx-4">
+                <Login state={state} setState={setState} />
+            </Tab>
+            <Tab eventKey="superadins" title="Super Admins" className="mx-4">
+                <SuperAdmins state={state} setState={setState} />
+            </Tab>
+
+        </Tabs>
+    );
+}

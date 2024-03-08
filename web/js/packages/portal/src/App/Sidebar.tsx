@@ -18,10 +18,13 @@ export default function Sidebar() {
   if (roles == null || roles.length == 0) {
     return <></>
   }
-  let isadmin = roles.includes("admin")
+
   let isuser = roles.includes("user")
   let issigner = roles.includes("signer")
-  if (!isadmin) {
+  let issuperadmin = roles.includes("superadmin")
+
+  let isadmin = issuperadmin || roles.includes("admin")
+  if (!isadmin ) {
     if (issigner) {
       selected = "signup"
       appDispatch(setActiveMenu(selected))
@@ -40,10 +43,11 @@ export default function Sidebar() {
     if (issigner)
       items.push(
         {
-          item: <div className='darkblue'> <i className="fas fa-key mr-2 fa-fw "></i>Authentication</div>,
+          item: <div className='darkblue'> <i className="fas fa-id-card mr-2 fa-fw "></i>Authentication</div>,
           to: '/app/signup',
           id: 'signup'
         })
+
     if (isadmin)
       items.push(
         {
@@ -51,7 +55,13 @@ export default function Sidebar() {
           to: '/app/dashboard',
           id: 'dashboard'
         })
-
+        if(issuperadmin)     
+        items.push(
+       {
+         item: <div className='darkblue'> <i className="fas fa-id-card mr-2 fa-fw "></i>IdP integration</div>,
+         to: '/app/idp',
+         id: 'idp'
+       })
     if (isadmin)
       items.push(
         {

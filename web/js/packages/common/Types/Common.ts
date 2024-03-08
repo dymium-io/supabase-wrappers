@@ -109,6 +109,139 @@ export class AccessLevels {
   }
 }
 
+export class Auth0Connection {
+  private '_id': string | null
+  private '_issuer': string
+  private '_clientid': string
+  private '_secret': string
+
+  constructor() {
+    this['_id'] = null
+    this['_issuer'] = ''
+    this['_clientid'] = ''
+    this['_secret'] = ''
+  }
+  get id(): string | null { return this['_id'] }
+  set id(__a__: any) {
+    if(__a__ == null) {
+      if(this['_id'] == null) { return }
+      setDirtyFlag()
+      this['_id'] = null
+      return
+    } else {
+      let __v__ = stringReader('')(__a__)
+      if(!_.isEqual(__v__,this['_id'])) {
+        setDirtyFlag()
+        this['_id'] = __v__
+      }
+    }
+  }
+  get issuer(): string { return this['_issuer'] }
+  set issuer(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_issuer'])) {
+      setDirtyFlag()
+      this['_issuer'] = __v__
+    }
+  }
+  get clientid(): string { return this['_clientid'] }
+  set clientid(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_clientid'])) {
+      setDirtyFlag()
+      this['_clientid'] = __v__
+    }
+  }
+  get secret(): string { return this['_secret'] }
+  set secret(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_secret'])) {
+      setDirtyFlag()
+      this['_secret'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
+
+  static fromJson(__a__: any): Auth0Connection {
+    disableDF()
+    let cls = new Auth0Connection()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.id = __a__['id'] == null ? null : __a__['id']
+       cls.issuer = __a__['issuer']
+       cls.clientid = __a__['clientid']
+       cls.secret = __a__['secret']
+    } else {
+       doAlert(`Auth0Connection: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
+export class AuthLogin {
+  private '_domain': string
+  private '_logo_url': string
+  private '_primary': string
+  private '_page_background': string
+
+  constructor() {
+    this['_domain'] = ''
+    this['_logo_url'] = ''
+    this['_primary'] = ''
+    this['_page_background'] = ''
+  }
+  get domain(): string { return this['_domain'] }
+  set domain(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_domain'])) {
+      setDirtyFlag()
+      this['_domain'] = __v__
+    }
+  }
+  get logo_url(): string { return this['_logo_url'] }
+  set logo_url(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_logo_url'])) {
+      setDirtyFlag()
+      this['_logo_url'] = __v__
+    }
+  }
+  get primary(): string { return this['_primary'] }
+  set primary(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_primary'])) {
+      setDirtyFlag()
+      this['_primary'] = __v__
+    }
+  }
+  get page_background(): string { return this['_page_background'] }
+  set page_background(__a__: any) {
+    let __v__ = stringReader('')(__a__)
+    if(!_.isEqual(__v__,this['_page_background'])) {
+      setDirtyFlag()
+      this['_page_background'] = __v__
+    }
+  }
+
+  toJson(): string { return JSON.stringify(removeLeadingUnderscore(this)); }
+
+  static fromJson(__a__: any): AuthLogin {
+    disableDF()
+    let cls = new AuthLogin()
+    if(typeof __a__ === 'object' && __a__ != null) {
+       cls.domain = __a__['domain']
+       cls.logo_url = __a__['logo_url']
+       cls.primary = __a__['primary']
+       cls.page_background = __a__['page_background']
+    } else {
+       doAlert(`AuthLogin: an attempt to initialize from ${__a__}`)
+    }
+    enableDF()
+    return cls
+  }
+}
+
 export class AuthStatus {
   private '_status': string
   private '_errormessage': string

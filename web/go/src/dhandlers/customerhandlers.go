@@ -89,6 +89,7 @@ func AuthMiddleware(h http.Handler) http.Handler {
 		h.ServeHTTP(w, rWithSchema)
 	})
 }
+
 func InviteMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// do stuff
@@ -2536,6 +2537,129 @@ func InvitationStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	if !ret  {
 		http.Error(w, "Invitation not finished", http.StatusInternalServerError)
+		return
+	}
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"status": "OK"}`))
+}
+
+func GetOIDCConnection(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	_, issuer, clientid, secret, err := authentication.GetOIDCConnection( schema )
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	co := types.Auth0Connection{Issuer: issuer, Clientid: clientid, Secret: secret}
+	js, err := json.Marshal(co)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}	
+
+func GetLoginDetails(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	domain, logo_url, primary, page_background, err := authentication.GetLoginDetails( schema )
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	out := types.AuthLogin{Domain: domain, Logo_url: logo_url, Primary: primary, Page_background: page_background}
+	js, err := json.Marshal(out)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func GetSuperAdmins(w http.ResponseWriter, r *http.Request) {
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	admins, err := authentication.GetSuperAdmins( schema )
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	js, err := json.Marshal(admins)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func SetOIDCConnection(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.Auth0Connection{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	err = authentication.SetOIDCConnection( schema, t.Issuer, t.Clientid, t.Secret)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"status": "OK"}`))
+}
+
+func SetLoginDetails(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.AuthLogin{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	err = authentication.SetLoginDetails( schema, t.Domain, t.Logo_url, t.Primary, t.Page_background)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"status": "OK"}`))
+}
+
+func SetSuperAdmins(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := []string{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		log.Errorf("Api SetSuperAdmins, error unmarshaling cert: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	err = authentication.SetSuperAdmins( schema, t)
+	if err != nil {
+		log.Errorf("Api SetSuperAdmins, error: %s", err.Error())	
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	common.CommonNocacheHeaders(w, r)
