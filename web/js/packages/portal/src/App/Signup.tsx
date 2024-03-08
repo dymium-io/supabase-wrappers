@@ -9,6 +9,7 @@ import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
+import Offcanvas from '@dymium/common/Components/Offcanvas'
 import { useAppDispatch, useAppSelector } from './hooks'
 import { setActiveSuperTab } from '../Slices/menuSlice'
 import * as com from '../Common'
@@ -1017,7 +1018,8 @@ export function IdP() {
     const SetSecrets: FunctionComponent<StepProps> = ({ state, setState }) => {
         const [validated, setValidated] = useState(false);
         const formRef = useRef<HTMLFormElement>(null);
-
+        const [showOffhelp, setShowOffhelp] = useState(false)
+        
         let setIdpConnection = async () => {
             let jsb = {
                 issuer: state.issuer,
@@ -1079,8 +1081,24 @@ export function IdP() {
         }
         return (
             <div className="text-left pl-0 ml-0">
-                <h5>Connection to Identity Provider<Spinner show={spinner} style={{ width: '28px', marginLeft: '4px' }}></Spinner></h5>
+                <h5>Connection to Identity Provider <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i><Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
                 {alert}
+                <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
+                <h5>Connection to IdP</h5>
+                <div className="mb-3">
+                    You typically need to use this screen if your IdP forces you to rotate your client secret.
+                </div>
+                <div className="mb-3">
+                    Please be super careful
+                </div>
+                <div className="mb-3">
+                    Record the old clientid and secret before you change them.
+                    </div>
+                <div>Test the new one in a different browser, or in an incognito window so that you can roll back.</div>
+                <div>
+
+                </div>
+            </Offcanvas>
                 <Form className="p-0" ref={formRef} noValidate validated={validated} onSubmit={handleSubmit}>
                     <StepThree onNext={onnextdefault}
                         state={state} setState={setState} left={true} />
@@ -1094,6 +1112,7 @@ export function IdP() {
     const Login: FunctionComponent<StepProps> = ({ state, setState }) => {
         const [validated, setValidated] = useState(false);
         const formRef = useRef<HTMLFormElement>(null);
+        const [showOffhelp, setShowOffhelp] = useState(false)
 
         let setLoginDetails = async () => {
             let jsb = {
@@ -1156,9 +1175,20 @@ export function IdP() {
         }
         return (
             <div className="text-left">
-                <h5>Login Customization<Spinner show={spinner} style={{ width: '28px', marginLeft: '4px' }}></Spinner></h5>
+                <h5>Login Customization <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i> <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
                 {alert}
+                <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
+                <h5>Login Customization</h5>
+                <div className="mb-3">
+                    You typically need to use this screen to change the login box colors, and the logo.
+                </div>
+                <div className="mb-3">
+                    The domain setting will have an effect on generation of the usernames for Ghost Databases. Users that come from outside of this domain will have a longer username.
+                    </div>
+                <div>
 
+                </div>
+            </Offcanvas>
                 <Form ref={formRef} noValidate validated={validated} onSubmit={handleSubmit}>
                     <StepFour state={state} setState={setState} onNext={onnextdefault} left={true} />
                     <Button data-testid="apply-structure" variant="dymium" size="sm" className="mt-4 ml-3" type="submit">
@@ -1171,6 +1201,7 @@ export function IdP() {
     const SuperAdmins: FunctionComponent<StepProps> = ({ state, setState }) => {
         const [validated, setValidated] = useState(false);
         const formRef = useRef<HTMLFormElement>(null);
+        const [showOffhelp, setShowOffhelp] = useState(false)
 
         let addSuperadmin = async () => {
             let jsb = state.admins
@@ -1228,9 +1259,20 @@ export function IdP() {
         }        
         return (
             <div className="text-left">
-                <h5>Superadmins <Spinner show={spinner} style={{ width: '28px', marginLeft: '4px' }}></Spinner></h5>
+                <h5>Superadmins <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i> <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
                 {alert}
+                <Offcanvas modal={false} width={300} show={showOffhelp} onClose={(e) => { setShowOffhelp(false) }}>
+                <h5>Login Customization</h5>
+                <div className="mb-3">
+                    If you see this screen, you are a superadmin.
+                </div>
+                <div className="mb-3">
+                    The list of superadmins should be very limited.
+                    </div>
+                <div>
 
+                </div>
+            </Offcanvas>
                 <Form ref={formRef} noValidate validated={validated} onSubmit={handleSubmit}>
                     <AdminEmails state={state} setState={setState} left={true} />
                     {state.admins.length > 0 &&
