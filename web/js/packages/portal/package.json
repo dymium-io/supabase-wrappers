@@ -55,7 +55,7 @@
     "test": "jest --silent",
     "eject": "react-scripts eject",
     "snyk-auth": "snyk auth",
-    "snyk-scan": "snyk test"    
+    "snyk-scan": "snyk test"
   },
   "resolutions": {
     "follow-redirects": "^1.15.5"
