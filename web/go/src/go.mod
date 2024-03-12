@@ -4,20 +4,20 @@ require (
 	aws v0.0.0-00010101000000-000000000000
 	dymium.com/server/protocol v0.0.0-00010101000000-000000000000
 	github.com/Jeffail/gabs v1.4.0
-	github.com/andybalholm/brotli v1.0.6
+	github.com/andybalholm/brotli v1.1.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.10.9
-	github.com/redis/go-redis/v9 v9.3.0
+	github.com/redis/go-redis/v9 v9.5.1
 	github.com/stretchr/testify v1.8.2
-	github.com/victorspringer/http-cache v0.0.0-20231006141456-6446fe59efba
-	golang.org/x/exp v0.0.0-20231127185646-65229373498e
-	golang.org/x/net v0.19.0
+	github.com/victorspringer/http-cache v0.0.0-20240130140836-2c4f8454e6e2
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
+	golang.org/x/net v0.22.0
 )
 
 require (
-	github.com/aws/aws-sdk-go v1.48.6 // indirect
+	github.com/aws/aws-sdk-go v1.50.36
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-http-utils/fresh v0.0.0-20161124030543-7231e26a4b27 // indirect
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a // indirect
