@@ -55,6 +55,9 @@
     "test": "jest --silent",
     "eject": "react-scripts eject"
   },
+  "resolutions": {
+    "follow-redirects": "^1.15.5"
+  },  
   "browserslist": {
     "production": [
       ">0.2%",

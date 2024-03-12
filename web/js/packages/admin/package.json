@@ -53,6 +53,9 @@
       "last 1 safari version"
     ]
   },
+  "resolutions": {
+    "follow-redirects": "^1.15.5"
+  },  
   "proxy": "http://admin.dymium.local",
   "devDependencies": {
     "@testing-library/jest-dom": "^5.14.1",
