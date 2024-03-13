@@ -1,6 +1,8 @@
 package main
 
 import (
+	"dymium.com/dymium/log"
+
 	"database/sql"
 
 	_ "github.com/lib/pq"
@@ -34,6 +36,7 @@ func sqlTest(
 	}
 
 	if len(cnf.GuardianAddress) == 0 {
+		log.Errorf("Can not connect to the Guardian DB: address not defined")
 		return nil, fmt.Errorf("Can not connect to the Guardian DB: address not defined")
 	}
 
@@ -44,11 +47,13 @@ func sqlTest(
 	var db *sql.DB
 
 	if db, err = sql.Open("postgres", connectStr); err != nil {
+		log.Errorf("Cannot open connection to %s. Ignoring error: %v", cnf.GuardianAddress[0], err)
 		return nil, fmt.Errorf("Cannot open connection to %s. Ignoring error: %v", cnf.GuardianAddress[0], err)
 	}
 	defer db.Close()
 
 	if _, err := db.Exec("SET SESSION AUTHORIZATION " + fmt.Sprintf("_%x_", sha256.Sum224([]byte(*datascope+"_dymium")))); err != nil {
+		log.Errorf("session authorization failed: %v", err)
 		return nil, fmt.Errorf("session authorization failed: %v", err)
 	}
 
@@ -63,11 +68,13 @@ func sqlTest(
 
 	var columns []string
 	if columns, err = rows.Columns(); err != nil {
+		log.Errorf("Can not get list of columns in the result of [%s]: %v", sql, err)
 		return nil, fmt.Errorf("Can not get list of columns in the result of [%s]: %v", sql, err)
 	}
 	columnTypes := make([]string, len(columns))
 	{
 		if cts, err := rows.ColumnTypes(); err != nil {
+			log.Errorf("Can not get list of column types in the result of [%s]: %v", sql, err)
 			return nil, fmt.Errorf("Can not get list of column types in the result of [%s]: %v", sql, err)
 		} else {
 			for k, ct := range cts {
@@ -92,6 +99,7 @@ func sqlTest(
 	}
 	for rows.Next() {
 		if err = rows.Scan(iCols...); err != nil {
+			log.Errorf("Scan error in [%s]: %v", sql, err)
 			return nil, fmt.Errorf("Scan error in [%s]: %v", sql, err)
 		}
 		rCols := make([]string, len(columns))

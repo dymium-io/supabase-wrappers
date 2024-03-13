@@ -26,6 +26,7 @@ func (da *DB2) Close() {
 }
 
 func (da *DB2) Connect(c *types.ConnectionParams) error {
+	log.Infof("Connecting to DB2: %s:%d/%s", c.Address, c.Port, c.Database)
 	db2conn := fmt.Sprintf("HOSTNAME=%s;PORT=%d;DATABASE=%s;UID=%s;PWD=%s;PROTOCOL=TCPIP;Driver=/var/lib/postgresql/sqllib/lib64/libdb2o.so",
 		c.Address, c.Port, c.Database, c.User, c.Password)
 
@@ -48,7 +49,7 @@ func (da *DB2) Connect(c *types.ConnectionParams) error {
 }
 
 func (da *DB2) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
-
+	log.Infof("Getting database info for %s", dbName)
 	rows, err :=
 		da.db.Query(`select tabschema, tabname, owner, ownertype 
 							from syscat.tables
@@ -68,6 +69,7 @@ func (da *DB2) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 		var schema, tblName, owner, ownertype string
 		err = rows.Scan(&schema, &tblName, &owner, &ownertype)
 		if err != nil {
+			log.Errorf("Error scanning: %v", err)
 			return nil, err
 		}
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
@@ -101,6 +103,7 @@ func (da *DB2) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 }
 
 func (da DB2) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
+	log.Infof("Getting table info for %s.%s", tip.Schema, tip.Table)
 	// TODO: add support for DEFAULT values.
 	// We need this to support write ops. For now, we'll just return NULLs for all columns.
 	// Current implementation returns "unsupported column type -99". DEFAULT type us CLOB.
@@ -145,6 +148,7 @@ func (da DB2) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Tabl
 			&d.cScale,
 			&isNullable_)
 		if err != nil {
+			log.Errorf("Error scanning: %v", err)
 			return nil, err
 		}
 
@@ -154,12 +158,11 @@ func (da DB2) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Tabl
 			d.isNullable = false
 		}
 		descr = append(descr, &d)
-		log.Infof("%+v\n", d)
-		//fmt.Printf("%+v\n", d)
 	}
 
 	detectors, err := detect.Compile(tip.Rules)
 	if err != nil {
+		log.Errorf("Error compiling detectors: %v", err)
 		return nil, err
 	}
 
@@ -324,6 +327,7 @@ func (da DB2) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Tabl
 	}
 
 	if err = detectors.FindSemantics(sample); err != nil {
+		log.Errorf("Error finding semantics: %v", err)
 		return nil, err
 	}
 
@@ -374,7 +378,7 @@ func (da *DB2) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) 
 }
 
 func (da *DB2) getSample(schema, table string, sample []detect.Sample) error {
-
+	log.Infof("Getting sample for %s.%s", schema, table)
 	nColumns := len(sample)
 
 	for _, s := range sample {
@@ -413,13 +417,14 @@ func (da *DB2) getSample(schema, table string, sample []detect.Sample) error {
 	log.Infof("sql: %s", sql)
 	r, err := da.db.Query(sql)
 	if err != nil {
-		log.Errorf("error: %v", err)
+		log.Errorf("Query error: %v", err)
 		return err
 	}
 	defer r.Close()
 
 	for r.Next() {
 		if err := r.Scan(i...); err != nil {
+			log.Errorf("Error scanning: %v", err)
 			return err
 		}
 

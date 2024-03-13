@@ -114,6 +114,7 @@ type iOptions struct {
 }
 
 func options(connectionType types.ConnectionType) iOptions {
+	log.Infof("Getting options for connection type: %v", connectionType)
 	switch connectionType {
 	case types.CT_PostgreSQL:
 		return iOptions{
@@ -233,6 +234,7 @@ func options(connectionType types.ConnectionType) iOptions {
 		}
 
 	}
+	log.Errorf("Connection type %v is not supported yet", connectionType)
 	panic("impossible")
 }
 
@@ -292,8 +294,10 @@ func configureDatabase(db *sql.DB,
 
 	rollback := func(err error, msg string) error {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			log.Errorf("Rollback error: %v\n", rollbackErr)
 			return fmt.Errorf("%s: %v, unable to rollback: %v\n", msg, err, rollbackErr)
 		} else {
+			log.Errorf("Rollback successful\n")
 			return fmt.Errorf("%s: %v", msg, err)
 		}
 	}
@@ -316,21 +320,26 @@ func configureDatabase(db *sql.DB,
 
 	if createDymiumTables {
 		if err := exec("CREATE SCHEMA _dymium"); err != nil {
+			log.Errorf("Creating schema _dymium failed: %v\n", err)
 			return err
 		}
 		if err := exec("CREATE TABLE _dymium.servers ( server text )"); err != nil {
+			log.Errorf("Creating table _dymium.servers failed: %v\n", err)
 			return err
 		}
 		if err := exec("CREATE TABLE _dymium.schemas ( \"schema\" text )"); err != nil {
+			log.Errorf("Creating table _dymium.schemas failed: %v\n", err)
 			return err
 		}
 	}
 
 	if err = exec("CREATE EXTENSION IF NOT EXISTS obfuscator WITH SCHEMA _dymium"); err != nil {
+		log.Errorf("Creating extension obfuscator failed: %v\n", err)
 		return err
 	}
 	for _, f := range obf_funcs() {
 		if err := exec("GRANT EXECUTE ON FUNCTION _dymium." + f + " TO " + localUser); err != nil {
+			log.Errorf("Granting execute on function _dymium.%s failed: %v\n", f, err)
 			return err
 		}
 	}
@@ -348,6 +357,7 @@ func configureDatabase(db *sql.DB,
 		sql := `CREATE SERVER ` + serverName(c.Name) + ` FOREIGN DATA WRAPPER ` + e + ` OPTIONS (` +
 			opts.server(c.Address, c.Port, c.Dbname) + `)`
 		if err := exec(sql); err != nil {
+			log.Errorf("Creating server %s failed: %v\n", serverName(c.Name), err)
 			return err
 		}
 		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.servers (server) VALUES ( $1 )", serverName(c.Name)); err != nil {
@@ -374,12 +384,15 @@ func configureDatabase(db *sql.DB,
 	for k := range shortSchemas {
 		// k is already PostgresEscaped!
 		if err := exec("CREATE SCHEMA IF NOT EXISTS " + k); err != nil {
+			log.Errorf("Creating schema %s failed: %v\n", k, err)
 			return err
 		}
 		if err := exec("GRANT USAGE ON SCHEMA " + k + " TO " + localUser); err != nil {
+			log.Errorf("Granting usage on schema %s failed: %v\n", k, err)
 			return err
 		}
 		if err := exec("ALTER DEFAULT PRIVILEGES IN SCHEMA " + k + " GRANT SELECT ON TABLES TO " + localUser); err != nil {
+			log.Errorf("Granting select on tables in schema %s failed: %v\n", k, err)
 			return err
 		}
 		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", k); err != nil {
@@ -389,12 +402,15 @@ func configureDatabase(db *sql.DB,
 	for k := range longSchemas {
 		kk := PostgresEscape(k.k1 + "_" + k.k2)
 		if err := exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", kk)); err != nil {
+			log.Errorf("Creating schema %s failed: %v\n", kk, err)
 			return err
 		}
 		if err := exec(fmt.Sprintf("GRANT USAGE ON SCHEMA %s TO %s", kk, localUser)); err != nil {
+			log.Errorf("Granting usage on schema %s failed: %v\n", kk, err)
 			return err
 		}
 		if err := exec(fmt.Sprintf("ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT SELECT ON TABLES TO %s", kk, localUser)); err != nil {
+			log.Errorf("Granting select on tables in schema %s failed: %v\n", kk, err)
 			return err
 		}
 		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", kk); err != nil {
@@ -520,6 +536,7 @@ func configureDatabase(db *sql.DB,
 	}
 
 	if err := tx.Commit(); err != nil {
+		log.Errorf("Configure database commit error: %v\n", err)
 		return fmt.Errorf("Configure database commit error: %v", err)
 	}
 

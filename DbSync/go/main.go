@@ -139,6 +139,7 @@ func getCredentials(db *sql.DB, infoSchema, customerAESKey string) (*map[string]
 			Password:      password,
 		}
 	}
+	log.Infof("Retrieved credentials")
 	return &creds, nil
 }
 
@@ -172,6 +173,7 @@ func getConnections(db *sql.DB, infoSchema, connectorDomain string) (*map[string
 		}
 		connections[c.Id] = c
 	}
+	log.Infof("Retrieved connections")
 	return &connections, nil
 }
 
@@ -330,7 +332,7 @@ func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]typ
 		slice.Sort(d.Connections)
 		d.Connections = slice.Nub(d.Connections).([]string)
 	}
-
+	log.Infof("Retrieved datascopes")
 	return &datascopes, nil
 }
 
