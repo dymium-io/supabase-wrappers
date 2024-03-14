@@ -8,11 +8,16 @@
     "@fortawesome/fontawesome-svg-core": "^6.1.1",
     "@fortawesome/free-solid-svg-icons": "^6.1.1",
     "@fortawesome/react-fontawesome": "^0.2.0",
+    "@popperjs/core": "^2.11.8",
+    "@testing-library/dom": "^9.3.4",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.4.3",
     "bootstrap": "5.2.3",
     "gsap": "^3.11.5",
     "http-proxy-middleware": "^2.0.6",
+    "postcss": "^8.4.35",
+    "prop-type": "^0.0.1",
+    "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.4",
     "react-bootstrap-table-next": "^4.0.3",
@@ -23,9 +28,12 @@
     "react-redux": "^8.0.5",
     "react-router-bootstrap": "^0.26.1",
     "react-router-dom": "^6.11.0",
+    "redux": "^5.0.1",
     "redux-persist": "^6.0.0",
+    "rxjs": "^7.8.1",
     "sass": "^1.62.1",
-    "web-vitals": "^3.3.1"
+    "web-vitals": "^3.3.1",
+    "webpack": "^5.90.3"
   },
   "scripts": {
     "start": "HTTPS=true DANGEROUSLY_DISABLE_HOST_CHECK=true SSL_CRT_FILE=../../../devcerts/dymium.crt SSL_KEY_FILE=../../../devcerts/dymium.key HOST=portal.dymium.local PORT=3000 react-app-rewired  start",
@@ -51,18 +59,13 @@
       "last 1 safari version"
     ]
   },
-  "resolutions": {
-    "follow-redirects": "^1.15.5",
-    "jxLoader/js-yaml": "^3.14.1",
-    "js-yaml": "^3.14.1"
-  },
   "proxy": "http://admin.dymium.local",
   "devDependencies": {
     "@testing-library/jest-dom": "^5.14.1",
     "@types/bootstrap": "^5.1.12",
     "html-loader": "^4.2.0",
     "react-app-rewired": "^2.2.1",
-    "react-scripts": "^0.0.0",
-    "typescript": "^5.0.4"
+    "react-scripts": "^5.0.1",
+    "typescript": "^4"
   }
 }
