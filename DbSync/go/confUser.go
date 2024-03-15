@@ -6,8 +6,8 @@ import (
 
 	_ "github.com/lib/pq"
 
+	"dymium.com/dymium/log"
 	"fmt"
-	"log"
 	"sort"
 
 	"crypto/sha256"
@@ -49,7 +49,7 @@ func confUser(
 
 	for _, a := range cnf.GuardianAddress {
 		if db, err := sql.Open("postgres", fmt.Sprintf(connectStr, a)); err != nil {
-			log.Printf("Cannot open connection to %s. Ignoring error: %v", a, err)
+			log.Errorf("Cannot open connection to %s. Ignoring error: %v", a, err)
 		} else {
 			defer db.Close()
 			userExists := false
@@ -108,27 +108,31 @@ func confUser(
 					_, err = db.Exec(fmt.Sprintf("CREATE USER %s WITH ENCRYPTED PASSWORD '%s'",
 						escName, esc(userCnf.Password)))
 					if err != nil {
+						log.Errorf("CREATing USER %s: %v", escName, err)
 						return empty, err
 					}
-					log.Printf("CREATing USER %s", escName)
+					log.Infof("CREATing USER %s", escName)
 				} else {
 					_, err = db.Exec(fmt.Sprintf("ALTER USER %s WITH ENCRYPTED PASSWORD '%s'",
 						escName, esc(userCnf.Password)))
 					if err != nil {
+						log.Errorf("ALTERing USER %s: %v", escName, err)
 						return empty, err
 					}
-					log.Printf("ALTERing USER %s", escName)
+					log.Infof("ALTERing USER %s", escName)
 				}
 				for _, d := range toDelete {
 					_, err = db.Exec(fmt.Sprintf("REVOKE %s FROM %s", d, escName))
 					if err != nil {
+						log.Errorf("REVOKE %s FROM %s: %v", d, escName, err)
 						return empty, err
 					}
-					log.Printf("REVOKE %s FROM %s", d, escName)
+					log.Infof("REVOKE %s FROM %s", d, escName)
 				}
 				for _, a := range toAdd {
 					_, err = db.Exec(fmt.Sprintf(`GRANT %s TO %s`, a.u, escName))
 					if err != nil {
+						log.Errorf("GRANT %s TO %s: %v", a.u, escName, err)
 						return empty, err
 					}
 					/*
@@ -138,7 +142,7 @@ func confUser(
 							return empty, err
 						}
 					*/
-					log.Printf(`GRANT %s TO %s`, a.u, escName)
+					log.Infof(`GRANT %s TO %s`, a.u, escName)
 				}
 			}
 		}

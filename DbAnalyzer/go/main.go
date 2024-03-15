@@ -84,6 +84,7 @@ func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 
 	da, err := connect(&c.Connection)
 	if err != nil {
+		log.Errorf("Error connecting to %v: %v\n", c.Connection, err)
 		return nil, err
 	}
 
@@ -119,7 +120,7 @@ func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 		}
 
 	}
-
+	log.Errorf("Unknown request type: %v\n", c.Dtype)
 	return nil, nil
 }
 
@@ -129,6 +130,7 @@ func connect(connectionParams *types.ConnectionParams) (DA, error) {
 	if con != nil {
 		if err := con.da.Ping(); err != nil {
 			cache.Pop().da.Close()
+			log.Errorf("Error pinging %v: %v\n", connectionParams, err)
 			return nil, err
 		} else {
 			return con.da, nil
@@ -137,6 +139,7 @@ func connect(connectionParams *types.ConnectionParams) (DA, error) {
 
 	da := dbAnalyzer(connectionParams.Typ)
 	if err := da.Connect(connectionParams); err != nil {
+		log.Errorf("Error connecting to %v: %v\n", connectionParams, err)
 		return da, err
 	} else {
 		con = &conT{

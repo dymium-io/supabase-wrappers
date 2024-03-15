@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	"github.com/apex/log"
+	"dymium.com/dymium/log"
 
 	//_ "github.com/thda/tds"
 	"fmt"
@@ -30,6 +30,7 @@ func (da *SqlServer) Close() {
 }
 
 func (da *SqlServer) Connect(c *types.ConnectionParams) error {
+	log.Infof("Connect: Address: %s, Port: %d, User: %s, Database: %s, Tls: %v", c.Address, c.Port, c.User, c.Database, c.Tls)
 	query := url.Values{}
 	query.Add("database", c.Database)
 	if c.Tls {
@@ -60,11 +61,11 @@ func (da *SqlServer) Connect(c *types.ConnectionParams) error {
 
 	db, err := sql.Open("sqlserver", tdsconn)
 	if err != nil {
-		log.Errorf("Error connecting to SQL Server: %s", err)
+		log.Errorf("Error connecting to SQL Server: %v", err)
 		return err
 	}
 	if err := db.Ping(); err != nil {
-		log.Errorf("Error pinging SQL Server: %s", err)
+		log.Errorf("Error pinging SQL Server: %v", err)
 		return err
 	}
 
@@ -73,7 +74,7 @@ func (da *SqlServer) Connect(c *types.ConnectionParams) error {
 }
 
 func (da *SqlServer) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
-
+	log.Infof("GetDbInfo: %s", dbName)
 	rows, err :=
 		da.db.Query(`SELECT table_schema, table_name
                              FROM information_schema.tables
@@ -93,6 +94,7 @@ func (da *SqlServer) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 		var schema, tblName string
 		err = rows.Scan(&schema, &tblName)
 		if err != nil {
+			log.Errorf("Error scanning: %s", err)
 			return nil, err
 		}
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
@@ -126,7 +128,7 @@ func (da *SqlServer) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 }
 
 func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
-
+	log.Infof("GetTblInfo: %s.%s.%s", dbName, tip.Schema, tip.Table)
 	rows, err :=
 		da.db.Query(`SELECT ordinal_position, column_name,
                                     data_type,
@@ -168,6 +170,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 			&d.dPrecision,
 			&isNullable_, &d.dflt)
 		if err != nil {
+			log.Errorf("Error scanning: %s", err)
 			return nil, err
 		}
 		if isNullable_ == "YES" {
@@ -180,6 +183,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 
 	detectors, err := detect.Compile(tip.Rules)
 	if err != nil {
+		log.Errorf("Error compiling rules: %s", err)
 		return nil, err
 	}
 
@@ -348,14 +352,17 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 	}
 
 	if err = da.resolveRefs(tip, &ti); err != nil {
+		log.Errorf("Error resolving references: %s", err)
 		return nil, err
 	}
 
 	if err = da.getSample(tip.Schema, tip.Table, sample); err != nil {
+		log.Errorf("Error getting sample: %s", err)
 		return nil, err
 	}
 
 	if err = detectors.FindSemantics(sample); err != nil {
+		log.Errorf("Error finding semantics: %s", err)
 		return nil, err
 	}
 
@@ -369,7 +376,7 @@ func (da SqlServer) GetTblInfo(dbName string, tip *types.TableInfoParams) (*type
 }
 
 func (da *SqlServer) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
-
+	log.Infof("resolveRefs: %s.%s.%s", ti.DbName, ti.Schema, ti.TblName)
 	rows, err := da.db.Query(`
 	  SELECT
               obj.name AS [constraint_name],
@@ -394,6 +401,7 @@ func (da *SqlServer) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfo
 	      ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id
           WHERE sch.name = @p1 and tab1.name = @p2`, tip.Schema, tip.Table)
 	if err != nil {
+		log.Errorf("Error querying foreign keys: %s", err)
 		return err
 	}
 	defer rows.Close()
@@ -429,7 +437,7 @@ func (da *SqlServer) isSysTable(tblName string) bool {
 }
 
 func (da *SqlServer) getSample(schema, table string, sample []detect.Sample) error {
-
+	log.Infof("getSample: %s.%s", schema, table)
 	nColumns := len(sample)
 
 	for _, s := range sample {
@@ -465,12 +473,14 @@ func (da *SqlServer) getSample(schema, table string, sample []detect.Sample) err
 		detect.SampleSize, detect.LimitSize, colNames.String(), schema, table)
 	r, err := da.db.Query(sql)
 	if err != nil {
+		log.Errorf("Error querying sample: %s", err)
 		return err
 	}
 	defer r.Close()
 
 	for r.Next() {
 		if err := r.Scan(i...); err != nil {
+			log.Errorf("Error scanning sample: %s", err)
 			return err
 		}
 

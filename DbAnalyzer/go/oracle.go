@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	"github.com/apex/log"
+	"dymium.com/dymium/log"
 	_ "github.com/sijms/go-ora/v2"
 	go_ora "github.com/sijms/go-ora/v2"
 
@@ -27,6 +27,7 @@ func (da *OracleDB) Close() {
 }
 
 func (da *OracleDB) Connect(c *types.ConnectionParams) error {
+	log.Infof("Connect: Address: %s, Port: %d, User: %s, Database: %s, Tls: %v", c.Address, c.Port, c.User, c.Database, c.Tls)
 	urlOptions := map[string]string{}
 	if c.Tls {
 		urlOptions["ssl"] = "true"
@@ -40,11 +41,11 @@ func (da *OracleDB) Connect(c *types.ConnectionParams) error {
 
 	db, err := sql.Open("oracle", oracleconn)
 	if err != nil {
-		log.Errorf("Error connecting to Oracle: %s", err.Error())
+		log.Errorf("Error connecting to Oracle: %v", err)
 		return err
 	}
 	if err := db.Ping(); err != nil {
-		log.Errorf("Error pinging Oracle: %s", err.Error())
+		log.Errorf("Error pinging Oracle: %v", err)
 		return err
 	}
 
@@ -53,6 +54,7 @@ func (da *OracleDB) Connect(c *types.ConnectionParams) error {
 }
 
 func (da *OracleDB) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
+	log.Infof("Getting database info for %s", dbName)
 	rows, err :=
 		da.db.Query(`SELECT OWNER, TABLE_NAME
                              FROM ALL_TABLES
@@ -79,6 +81,7 @@ func (da *OracleDB) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 							ORDER BY OWNER, TABLE_NAME`)
 
 	if err != nil {
+		log.Errorf("Error getting database info: %v", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -93,6 +96,7 @@ func (da *OracleDB) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 		var schema, tblName string
 		err = rows.Scan(&schema, &tblName)
 		if err != nil {
+			log.Errorf("Error scanning database info: %v", err)
 			return nil, err
 		}
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
@@ -125,7 +129,7 @@ func (da *OracleDB) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 }
 
 func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
-
+	log.Infof("Getting table info for %s.%s.%s", dbName, tip.Schema, tip.Table)
 	stmt, err :=
 		da.db.Prepare(`SELECT 
     							COLUMN_ID,
@@ -145,12 +149,14 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 							ORDER BY COLUMN_ID`)
 
 	if err != nil {
+		log.Errorf("Error preparing statement: %v", err)
 		return nil, err
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.Query(tip.Schema, tip.Table)
 	if err != nil {
+		log.Errorf("Error getting table info: %v", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -181,6 +187,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 			&d.cTyp, &d.cDataLen, &d.cCharMaxLen, &d.cPrecision, &d.cScale,
 			&isNullable_, &d.dLength, &d.cDflt)
 		if err != nil {
+			log.Errorf("Error scanning table info: %v", err)
 			return nil, err
 		}
 
@@ -194,6 +201,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 
 	detectors, err := detect.Compile(tip.Rules)
 	if err != nil {
+		log.Errorf("Error compiling detectors: %v", err)
 		return nil, err
 	}
 
@@ -392,14 +400,17 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 	}
 
 	if err = da.resolveRefs(tip, &ti); err != nil {
+		log.Errorf("Error resolving references: %v", err)
 		return nil, err
 	}
 
 	if err = da.getSample(tip.Schema, tip.Table, sample); err != nil {
+		log.Errorf("Error getting sample: %v", err)
 		return nil, err
 	}
 
 	if err = detectors.FindSemantics(sample); err != nil {
+		log.Errorf("Error finding semantics: %v", err)
 		return nil, err
 	}
 
@@ -413,6 +424,7 @@ func (da OracleDB) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types
 }
 
 func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
+	log.Infof("Resolving references for %s.%s.%s", ti.DbName, ti.Schema, ti.TblName)
 	stmt, err := da.db.Prepare(`
 	   SELECT a.CONSTRAINT_NAME, a.COLUMN_NAME,
 		  c.R_OWNER AS REF_OWNER, cpk.TABLE_NAME AS REF_TABLE,
@@ -432,6 +444,7 @@ func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 
 	rows, err := stmt.Query(tip.Schema, tip.Table)
 	if err != nil {
+		log.Errorf("Error getting references: %v", err)
 		return err
 	}
 	defer rows.Close()
@@ -440,6 +453,7 @@ func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 		var constraintName, columnName, fSchema, fTblName, fColumnName string
 		err := rows.Scan(&constraintName, &columnName, &fSchema, &fTblName, &fColumnName)
 		if err != nil {
+			log.Errorf("Error scanning references: %v", err)
 			return err
 		}
 		for k := range ti.Columns {
@@ -458,7 +472,7 @@ func (da *OracleDB) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 }
 
 func (da *OracleDB) getSample(schema, table string, sample []detect.Sample) error {
-
+	log.Infof("Getting sample for %s.%s", schema, table)
 	nColumns := len(sample)
 
 	r := da.db.QueryRow(fmt.Sprintf(`SELECT COUNT(*) FROM "%s"."%s"`, schema, table))
@@ -504,12 +518,14 @@ func (da *OracleDB) getSample(schema, table string, sample []detect.Sample) erro
 		colNames.String(), schema, table, detect.LimitSize, detect.SampleSize)
 	rows, err := da.db.Query(sql)
 	if err != nil {
+		log.Errorf("Error getting sample: %v", err)
 		return err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		if err := rows.Scan(i...); err != nil {
+			log.Errorf("Error scanning sample: %v", err)
 			return err
 		}
 		for k := range sample {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"dymium.com/dymium/log"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -29,6 +30,7 @@ func (da *MySQL) Close() {
 }
 
 func (da *MySQL) Connect(c *types.ConnectionParams) error {
+	log.Infof("Connect: Address: %s, Port: %d, User: %s, Database: %s, Tls: %v", c.Address, c.Port, c.User, c.Database, c.Tls)
 	mysqlconn := fmt.Sprintf("%s:%s@tcp(%s:%d)/?tls=%s",
 		c.User, c.Password, c.Address, c.Port,
 		func() string {
@@ -43,9 +45,11 @@ func (da *MySQL) Connect(c *types.ConnectionParams) error {
 
 	db, err := sql.Open("mysql", mysqlconn)
 	if err != nil {
+		log.Errorf("Error connecting to %v: %v\n", c, err)
 		return err
 	}
 	if err := db.Ping(); err != nil {
+		log.Errorf("Error pinging to %v: %v\n", c, err)
 		return err
 	}
 
@@ -54,7 +58,7 @@ func (da *MySQL) Connect(c *types.ConnectionParams) error {
 }
 
 func (da *MySQL) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
-
+	log.Infof("Get database info: %v\n", dbName)
 	rows, err := da.db.Query(`SELECT table_schema, table_name
                                   FROM information_schema.tables
                                   ORDER BY table_schema, table_name`)
@@ -73,6 +77,7 @@ func (da *MySQL) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 		var schema, tblName string
 		err = rows.Scan(&schema, &tblName)
 		if err != nil {
+			log.Errorf("Error scanning: %v\n", err)
 			return nil, err
 		}
 		if curSchema == -1 || schema != database.Schemas[curSchema].Name {
@@ -106,7 +111,7 @@ func (da *MySQL) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 }
 
 func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
-
+	log.Infof("Getting table info for %s.%s.%s", dbName, tip.Schema, tip.Table)
 	stmt, err :=
 		da.db.Prepare(`SELECT ordinal_position, column_name,
                                     data_type,
@@ -118,12 +123,14 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
                              WHERE table_schema = ? and table_name = ?
                              ORDER BY ordinal_position`)
 	if err != nil {
+		log.Errorf("Error preparing statement: %v\n", err)
 		return nil, err
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.Query(tip.Schema, tip.Table)
 	if err != nil {
+		log.Errorf("Error querying: %v\n", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -153,6 +160,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 			&d.dPrecision,
 			&isNullable_, &d.dflt)
 		if err != nil {
+			log.Errorf("Error scanning: %v\n", err)
 			return nil, err
 		}
 		if isNullable_ == "YES" {
@@ -165,6 +173,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 
 	detectors, err := detect.Compile(tip.Rules)
 	if err != nil {
+		log.Errorf("Error compiling rules: %v\n", err)
 		return nil, err
 	}
 
@@ -329,14 +338,17 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 	}
 
 	if err = da.resolveRefs(tip, &ti); err != nil {
+		log.Errorf("Error resolving references: %v\n", err)
 		return nil, err
 	}
 
 	if err = da.getSample(tip.Schema, tip.Table, sample); err != nil {
+		log.Errorf("Error getting sample: %v\n", err)
 		return nil, err
 	}
 
 	if err = detectors.FindSemantics(sample); err != nil {
+		log.Errorf("Error finding semantics: %v\n", err)
 		return nil, err
 	}
 
@@ -350,6 +362,7 @@ func (da MySQL) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.Ta
 }
 
 func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
+	log.Infof("Resolving references for %s.%s.%s", ti.DbName, ti.Schema, ti.TblName)
 	stmt, err := da.db.Prepare(`
            SELECT
 	       tc.constraint_name, 
@@ -365,12 +378,14 @@ func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData
 	   WHERE tc.table_schema = ? and tc.table_name = ? and tc.constraint_type = 'FOREIGN KEY'`)
 
 	if err != nil {
+		log.Errorf("Error preparing statement: %v\n", err)
 		return err
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.Query(tip.Schema, tip.Table)
 	if err != nil {
+		log.Errorf("Error querying: %v\n", err)
 		return err
 	}
 	defer rows.Close()
@@ -396,7 +411,7 @@ func (da *MySQL) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData
 }
 
 func (da *MySQL) getSample(schema, table string, sample []detect.Sample) error {
-
+	log.Infof("Getting sample for %s.%s", schema, table)
 	nColumns := len(sample)
 
 	var count int
@@ -445,6 +460,7 @@ func (da *MySQL) getSample(schema, table string, sample []detect.Sample) error {
 		colNames.String(), schema, table, detect.LimitSize)
 	r, err := da.db.Query(sql)
 	if err != nil {
+		log.Errorf("Error querying: %v\n", err)
 		return err
 	}
 	defer r.Close()
@@ -468,6 +484,7 @@ func (da *MySQL) getSample(schema, table string, sample []detect.Sample) error {
 		ks += 1
 
 		if err := r.Scan(i...); err != nil {
+			log.Errorf("Error scanning: %v\n", err)
 			return err
 		}
 

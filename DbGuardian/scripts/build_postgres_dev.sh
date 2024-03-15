@@ -17,6 +17,22 @@ for f in ${instantclients[@]}; do
 	}
 done
 
+#DB2 libs
+rtcllibs=${setup_d}/db2/v11.5.8_linuxx64_rtcl.tar.gz
+[ -f $rtcllibs ] || {
+    echo "DB2 rtcl lib dependencies file not found in ${setup_d}"
+    echo "Please get them from S3"
+    exit -1
+  }
+
+db2_home=${setup_d}/db2/db2_home.zip
+[ -f $db2_home ] || {
+    echo "DB2 home file not found in ${setup_d}"
+    echo "Please get them from S3"
+    exit -1
+  }
+
+
 [ -d $build_d ] && {
 	rm -rf $build_d
 }
@@ -29,8 +45,8 @@ for f in ${instantclients[@]}; do
 done
 
 #DB2 libs
-cp ${setup_d}/db2/v11.5.8_linuxx64_rtcl.tar.gz ${build_d}
-unzip ${setup_d}/db2/db2_home.zip
+cp $rtcllibs ${build_d}
+unzip $db2_home
 
 PostgresDev=$(docker images postgres-dev -q)
 [ -z "$PostgresDev" ] || docker rmi -f "$PostgresDev"
