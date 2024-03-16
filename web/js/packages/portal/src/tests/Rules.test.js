@@ -16,7 +16,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 
 
 import mockFetch from "../mocks/mockFetch";
-jest.mock('react-sortable-hoc')
+//jest.mock('react-sortable-hoc')
 
 beforeEach(() => {
   global.fetch = jest.fn().mockImplementation(() => mockFetch)();
