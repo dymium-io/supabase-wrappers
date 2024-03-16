@@ -21,7 +21,7 @@
     "plugins": []
   },
   "resolutions": {
-    "follow-redirects": "^1.15.5",
+    "follow-redirects": "^1.15.6",
     "jxLoader/js-yaml": "^3.14.1",
     "js-yaml": "^3.14.1"
   },
