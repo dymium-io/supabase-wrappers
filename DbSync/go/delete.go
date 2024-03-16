@@ -6,8 +6,8 @@ import (
 
 	"crypto/sha256"
 
+	"dymium.com/dymium/log"
 	"fmt"
-	"log"
 )
 
 func doDelete(datascope string, cnf *guardianConf) (empty struct{}, err error) {
@@ -23,15 +23,15 @@ func doDelete(datascope string, cnf *guardianConf) (empty struct{}, err error) {
 
 	for _, a := range cnf.GuardianAddress {
 		if db, err := sql.Open("postgres", fmt.Sprintf(connectStr, a)); err != nil {
-			log.Printf("Cannot open connection to %s. Ignoring error: %v", a, err)
+			log.Errorf("Cannot open connection to %s. Ignoring error: %v", a, err)
 		} else {
 			defer db.Close()
 			if _, err = db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %q WITH ( FORCE )", datascope)); err != nil {
-				log.Printf("Cannot drop database %q at %s. Ignoring error: %v",
+				log.Errorf("Cannot drop database %q at %s. Ignoring error: %v",
 					datascope, a, err)
 			}
 			if _, err = db.Exec(fmt.Sprintf("DROP ROLE IF EXISTS %s", localUser)); err != nil {
-				log.Printf("Cannot drop role %s. Ignoring error: %v",
+				log.Errorf("Cannot drop role %s. Ignoring error: %v",
 					localUser, err)
 			}
 		}

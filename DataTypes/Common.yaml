@@ -240,3 +240,15 @@ Invitation:
   - contactName: string
   - status: string
   - created: string
+
+Auth0Connection:
+  - id: ?string
+  - issuer: string
+  - clientid: string
+  - secret: string
+
+AuthLogin:
+  - domain: string
+  - logo_url: string
+  - primary: string
+  - page_background: string

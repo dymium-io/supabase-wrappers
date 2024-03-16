@@ -4,7 +4,11 @@ import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
-import { SortableContainer, SortableElement, SortableContainerProps, SortableElementProps, arrayMove } from 'react-sortable-hoc';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, } from '@dnd-kit/sortable';
+
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 import Offcanvas from '@dymium/common/Components/Offcanvas'
 
@@ -28,13 +32,57 @@ let handlingOptions = () => {
   })
 }
 
+export function SortableItem({ id, value, handling, onHandlingChange, onDelete, handlingOptions }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id });
+
+  debugger
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+  let onclick = () => {
+    onDelete(id)
+  }
+
+  return (
+    <li ref={setNodeRef} style={style} {...attributes} {...listeners} className="card licard">
+      <Row>
+        <Col><div style={{ marginTop: '4px' }}>{value}</div></Col>
+        <Col xs="auto">
+          <select onChange={onHandlingChange} value={handling} className="form-control form-control-sm mt-1">
+            {handlingOptions}
+          </select>
+        </Col>
+        <Col xs="auto">
+          <Button variant="outline"  id={"deletebutton" + id}   onPointerDown={onclick}>
+            <i className="fas fa-trash ablue" aria-label={"delete" + id} id={"delete" + id} ></i>
+          </Button>
+        </Col>
+      </Row>
+    </li>
+  );
+}
+
+export interface ExtendedDataAction {
+  id: string; // Using string for ID for consistency with dnd-kit requirements
+  role: string,
+  index: number,
+  handling: string
+}
+
 export default function AccessLevels() {
   const [spinner, setSpinner] = useState(false)
   const [alert, setAlert] = useState<JSX.Element>(<></>)
 
   const [name, setName] = useState("")
   const [level, setLevel] = useState("allow")
-  const [actions, setActions] = useState<types.DataAction[]>([])
+  const [actions, setActions] = useState<ExtendedDataAction[]>([])
   const [showOffhelp, setShowOffhelp] = useState(com.isInstaller())
 
   let policy = useRef(new types.DataPolicy())
@@ -43,8 +91,10 @@ export default function AccessLevels() {
   </Alert>
   let savePolicies = () => {
 
-    for (let i = 0; i < actions.length; i++) {
-      actions[i].index = i
+    let _actions = [...actions]
+    for (let i = 0; i < _actions.length; i++) {
+      _actions[i].index = i
+      delete _actions["id"]
     }
     policy.current.actions = actions
 
@@ -113,6 +163,10 @@ export default function AccessLevels() {
         setSpinner(false)
       })
   }
+  useEffect(() => {
+    console.log(actions);
+  }, [actions]);
+
   let initializePolicy = () => {
     policy.current = new types.DataPolicy()
 
@@ -141,13 +195,25 @@ export default function AccessLevels() {
             initializePolicy()
 
           } else {
+            js.actions = js.actions.map((action, index) => ({
+              role: action.role,
+              index: action.index !== null ? action.index : 0, // Assign a default value of 0 if index is null
+              handling: action.handling,
+            }));
             let prep = types.DataPolicy.fromJson(js)
             if (js.piisuggestions.length === 0) {
               initializePolicy()
             } else {
               policy.current = prep
             }
-            setActions(prep.actions)
+            let extendedActions: ExtendedDataAction[] = prep.actions.map((action, index) => ({
+              role: action.role,
+              index: action.index !== null ? action.index : 0, // Assign a default value of 0 if index is null
+              handling: action.handling,
+              id: index.toString(), // Assigning index as id for simplicity
+            }));
+
+            setActions(extendedActions); // Update state with actions including ids
           }
         }).catch((error) => {
           setAlert(
@@ -179,56 +245,32 @@ export default function AccessLevels() {
     getPolicies()
   }, [])
 
-  let onDelete = index => {
-    return e => {
-      let v = actions.splice(index, 1)
-      setActions(v)
-    }
-  }
-  const SortableItem: React.ComponentClass<SortableElementProps & { value: string, iindex: number }, any> = SortableElement(({ value, iindex }: { value: string, iindex: number }) => {
-    let onDelete = e => {
-      actions.splice(iindex, 1)
-      setActions([...actions])
-    }
-    let onChange = e => {
-      actions[iindex].handling = e.target.value
-      setActions([...actions])
-    }
-    return <li className="card licard">
-      <Row>
-        <Col><div style={{ marginTop: '4px' }}>
-          {value}</div>
-        </Col>
-        <Col xs="auto">
 
-          <select onChange={onChange} style={{ marginTop: '4px' }} value={actions[iindex].handling} className="form-control form-control-sm">
-            {handlingOptions()}
-          </select>
-        </Col>
-        <Col xs="auto">
-          <Button variant="outline" onClick={onDelete} ><i className="fas fa-trash ablue" aria-label={"delete" + iindex} id={"delete" + iindex} ></i></Button>
-        </Col>
-      </Row>
-
-    </li>
-  }
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
   );
 
-  const SortableList: React.ComponentClass<SortableContainerProps & { items: types.DataAction[] }, any> = SortableContainer(({ items }: { items: types.DataAction[] }) => {
-    return (
-      <ul style={{ listStyle: 'none', width: '50%' }} className="liouter">
-        {items.map((value: types.DataAction, index: number) => (
-          <SortableItem key={`item-${index}`} index={index} iindex={index} value={value.role} />
-        ))}
-      </ul>
-    );
-  });
+  const onDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = actions.findIndex(action => action.id === active.id);
+      const newIndex = actions.findIndex(action => action.id === over.id);
+
+      setActions((currentItems) => arrayMove(currentItems, oldIndex, newIndex));
+    }
+  };
 
 
   let addLevel = event => {
     //let x: types.DataHandling = 'allow <*> Allow'
-    let v: types.DataAction = new types.DataAction
-    v.role = name
+    let v: ExtendedDataAction = {} as ExtendedDataAction
+    v.role = name;
+    v.index = actions.length
+    v.id = actions.length.toString()
 
     switch (level) {
       case 'allow':
@@ -247,8 +289,8 @@ export default function AccessLevels() {
         v.handling = 'block'
         break
     }
-    for(let i = 0; i < actions.length; i++) {
-      if(actions[i].role === v.role) {
+    for (let i = 0; i < actions.length; i++) {
+      if (actions[i].role === v.role) {
         setAlert(
           <Alert variant="danger" onClose={() => setAlert(<></>)} dismissible>Access level already exists</Alert>
         )
@@ -259,6 +301,7 @@ export default function AccessLevels() {
         return
       }
     }
+    debugger
     actions.push(v)
     setActions([...actions])
 
@@ -280,6 +323,20 @@ export default function AccessLevels() {
     event.stopPropagation();
     savePolicies()
   }
+
+  const handleActionChange = (newHandling, id) => {
+    debugger
+    const updatedActions = actions.map(action =>
+      action.id === id ? { ...action, handling: newHandling } : action
+    );
+    setActions(updatedActions);
+  };
+
+  const handleActionDelete = (id) => {
+    debugger
+    const filteredActions = actions.filter(action => action.id !== id);
+    setActions(filteredActions);
+  };
 
   return <div>
     <h5 >Define Access Levels <i onClick={e => { setShowOffhelp(!showOffhelp) }} className="trash fa-solid fa-circle-info mr-1"></i> <Spinner show={spinner} style={{ width: '28px' }}></Spinner></h5>
@@ -349,7 +406,25 @@ export default function AccessLevels() {
 
         <>
           {actions.length > 0 &&
-            <SortableList distance={1} items={actions} onSortEnd={onSortEnd} />
+
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+              <SortableContext items={actions.map(action => action.id)} strategy={verticalListSortingStrategy}>
+
+
+
+                {actions.map((action, index) => (
+                  <SortableItem
+                    key={action.id}
+                    id={action.id}
+                    value={action.role}
+                    handling={action.handling}
+                    onHandlingChange={(e) => handleActionChange(e.target.value, action.id)}
+                    onDelete={() => handleActionDelete(action.id)}
+                    handlingOptions={handlingOptions()}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           }
           <Row className="mt-5">
             <Col xs="auto">

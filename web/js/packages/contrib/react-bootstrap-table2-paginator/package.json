@@ -38,13 +38,17 @@
   ],
   "peerDependencies": {
     "prop-types": "^15.0.0",
-    "react": "^16.3.0",
-    "react-dom": "^16.3.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.21.5",
     "clean-css-cli": "^5.6.2",
     "cssnano": "^6.0.1",
     "node-sass": "^8.0.0"
+  },
+  "dependencies": {
+    "@babel/core": "^7.24.0",
+    "postcss": "^8.4.35"
   }
 }

@@ -164,6 +164,7 @@ func contains[T comparable](s []T, str T) bool {
 }
 
 var admins = make(map[string]int)
+var superadmins = make(map[string]int)
 var users = make(map[string]int)
 var signers = make(map[string]int)
 var rdb *redis.Client
@@ -176,7 +177,8 @@ func initRBAC() {
 		"getgroupsfordatascopes", "getusage", "getaccesskey", "createnewconnector",
 		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable",
 		"addmachinetunnel", "getmachinetunnels", "updatemachinetunnel", "deletemachinetunnel",
-		"regenmachinetunnel", "refreshmachinetunnels", "getdatascopes"}
+		"regenmachinetunnel", "refreshmachinetunnels", "getdatascopes",
+		 /* "getoidcconnection", "getlogindetails", "getsuperadmins", "setoidcconnection", "setlogindetails", "setsuperadmins" */} // clean this up
 
 	usernames := []string{"getmachineclientcertificate", "getclientcertificate",
 		"getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables",
@@ -185,6 +187,7 @@ func initRBAC() {
 	signupnames := []string{"testoidc", "postinvitationjson", "getinvitationjson", "testnameandlogo", 
 	"createfootprint", "checkfootprintstatus", "resetinvitedtenant", "invitationstatus"}
 
+	superadminnames := []string{"getoidcconnection", "getlogindetails", "getsuperadmins", "setoidcconnection", "setlogindetails", "setsuperadmins"}
 	for _, v := range adminnames {
 		admins["/api/"+v] = 1
 	}
@@ -194,12 +197,20 @@ func initRBAC() {
 	for _, v := range signupnames {
 		signers["/api/"+v] = 1
 	}
+	for _, v := range superadminnames {
+		superadmins["/api/"+v] = 1
+	}
 }
 func Authorized(r *http.Request, roles []string) bool {
 	name := r.URL.Path
 	for _, v := range roles {
 		if v == "admin" {
 			if _, ok := admins[name]; ok {
+				return true
+			}
+		}
+		if v == "superadmin" {
+			if _, ok := superadmins[name]; ok {
 				return true
 			}
 		}

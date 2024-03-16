@@ -48,6 +48,20 @@ type AccessLevels struct {
    Levels []DataAction `json:"levels"`
 }
 
+type Auth0Connection struct {
+   Id *string `json:"id"`
+   Issuer string `json:"issuer"`
+   Clientid string `json:"clientid"`
+   Secret string `json:"secret"`
+}
+
+type AuthLogin struct {
+   Domain string `json:"domain"`
+   Logo_url string `json:"logo_url"`
+   Primary string `json:"primary"`
+   Page_background string `json:"page_background"`
+}
+
 type AuthStatus struct {
    Status string `json:"status"`
    Errormessage string `json:"errormessage"`

@@ -10,6 +10,7 @@ import (
 	"DbAnalyzer/detect"
 	"DbAnalyzer/types"
 	"DbAnalyzer/utils"
+	"dymium.com/dymium/log"
 )
 
 type Postgres struct {
@@ -25,6 +26,7 @@ func (da *Postgres) Close() {
 }
 
 func (da *Postgres) Connect(c *types.ConnectionParams) error {
+	log.Infof("Connect: Address: %s, Port: %d, User: %s, Database: %s, Tls: %v", c.Address, c.Port, c.User, c.Database, c.Tls)
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Address, c.Port, c.User, c.Password, c.Database,
 		func() string {
@@ -37,9 +39,11 @@ func (da *Postgres) Connect(c *types.ConnectionParams) error {
 
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
+		log.Errorf("Cannot open connection to %s. Error: %v", c.Address, err)
 		return err
 	}
 	if err := db.Ping(); err != nil {
+		log.Errorf("Cannot ping to %s. Error: %v", c.Address, err)
 		return err
 	}
 
@@ -48,7 +52,7 @@ func (da *Postgres) Connect(c *types.ConnectionParams) error {
 }
 
 func (da *Postgres) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
-
+	log.Infof("GetDbInfo: dbName: %s", dbName)
 	rows, err :=
 		da.db.Query(`SELECT table_schema, table_name
                             FROM information_schema.tables
@@ -103,7 +107,7 @@ func (da *Postgres) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
 }
 
 func (da *Postgres) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
-
+	log.Infof("GetTblInfo: dbName: %s, schema: %s, table: %s", dbName, tip.Schema, tip.Table)
 	rows, err :=
 		da.db.Query(`WITH base AS (
     SELECT
@@ -306,6 +310,7 @@ ORDER BY
 
 	detectors, err := detect.Compile(tip.Rules)
 	if err != nil {
+		log.Errorf("Error compiling rules: %v", err)
 		return nil, err
 	}
 
@@ -607,7 +612,7 @@ ORDER BY
 				possibleActions = allowable
 				sample[k] = dtk(false)
 			case "tsvector", "tsquery":
-				t = *d.eTyp+"[]"
+				t = *d.eTyp + "[]"
 				possibleActions = allowable
 				sample[k] = dtk(true)
 			default:
@@ -636,13 +641,16 @@ ORDER BY
 	}
 
 	if err = da.resolveRefs(tip, &ti); err != nil {
+		log.Errorf("Error resolving references: %v", err)
 		return nil, err
 	}
 
 	if err = da.getSample(tip.Schema, tip.Table, sample); err != nil {
+		log.Errorf("Error getting sample: %v", err)
 		return nil, err
 	}
 	if err = detectors.FindSemantics(sample); err != nil {
+		log.Errorf("Error finding semantics: %v", err)
 		return nil, err
 	}
 
@@ -656,6 +664,7 @@ ORDER BY
 }
 
 func (da *Postgres) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoData) error {
+	log.Infof("resolveRefs: schema: %s, table: %s", tip.Schema, tip.Table)
 	rows, err := da.db.Query(`
            SELECT
 	       tc.constraint_name, 
@@ -674,6 +683,7 @@ func (da *Postgres) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 	   WHERE tc.table_schema = $1 and tc.table_name = $2 and tc.constraint_type = 'FOREIGN KEY'`,
 		tip.Schema, tip.Table)
 	if err != nil {
+		log.Errorf("Error getting references: %v", err)
 		return err
 	}
 	defer rows.Close()
@@ -699,7 +709,7 @@ func (da *Postgres) resolveRefs(tip *types.TableInfoParams, ti *types.TableInfoD
 }
 
 func (da *Postgres) getSample(schema, table string, sample []detect.Sample) error {
-
+	log.Infof("getSample: schema: %s, table: %s", schema, table)
 	nColumns := len(sample)
 
 	for _, s := range sample {
@@ -734,12 +744,14 @@ func (da *Postgres) getSample(schema, table string, sample []detect.Sample) erro
 		colNames.String(), schema, table, detect.LimitSize, detect.SampleSize)
 	r, err := da.db.Query(sql)
 	if err != nil {
+		log.Errorf("Error getting sample: %v", err)
 		return err
 	}
 	defer r.Close()
 
 	for r.Next() {
 		if err := r.Scan(i...); err != nil {
+			log.Errorf("Error scanning sample: %v", err)
 			return err
 		}
 		for k := range sample {

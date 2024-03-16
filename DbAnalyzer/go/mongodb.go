@@ -29,6 +29,7 @@ func (cl *MongoClient) Close() {
 }
 
 func (cl *MongoClient) Connect(c *types.ConnectionParams) error {
+	log.Infof("Connecting to MongoDB at %s:%d", c.Address, c.Port)
 	// TODO: add support for different connection types, TLS, etc.
 	credential := options.Credential{
 		Username: c.User,
@@ -52,7 +53,7 @@ func (cl *MongoClient) Connect(c *types.ConnectionParams) error {
 }
 
 func (cl *MongoClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
-
+	log.Infof("Fetching database info for %s", dbName)
 	isSystem := false
 	switch dbName {
 	case "admin", "config", "local":
@@ -103,7 +104,7 @@ type cTypeData struct {
 }
 
 func getDocSchema(colmap *map[string]*cTypeData, prefix string, doc bson.M) error {
-
+	log.Infof("getDocSchema")
 	for k, v := range doc {
 		var d cTypeData
 		d.isNullable = true
@@ -153,6 +154,7 @@ func getDocSchema(colmap *map[string]*cTypeData, prefix string, doc bson.M) erro
 }
 
 func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
+	log.Infof("Fetching table info for %s.%s.%s", dbName, tip.Schema, tip.Table)
 	collection := cl.mcl.Database(tip.Schema).Collection(tip.Table)
 	ctx, _ := context.WithTimeout(context.Background(), 100*time.Second)
 
@@ -192,6 +194,7 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 
 	detectors, err := detect.Compile(tip.Rules)
 	if err != nil {
+		log.Errorf("cannot compile detectors, error: [%+v]", err)
 		return nil, err
 	}
 
@@ -318,10 +321,12 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 	}
 
 	if err = cl.getSample(tip.Schema, tip.Table, sample); err != nil {
+		log.Errorf("cannot fetch sample for %s.%s, error: [%+v]", tip.Schema, tip.Table, err)
 		return nil, err
 	}
 
 	if err = detectors.FindSemantics(sample); err != nil {
+		log.Errorf("cannot find semantics for %s.%s, error: [%+v]", tip.Schema, tip.Table, err)
 		return nil, err
 	}
 
@@ -334,7 +339,7 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 }
 
 func (cl *MongoClient) getSample(schema, table string, sample []detect.Sample) error {
-
+	log.Infof("Fetching sample for %s.%s", schema, table)
 	nColumns := len(sample)
 
 	for _, s := range sample {

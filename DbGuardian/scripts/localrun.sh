@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 
 LOG_MIN_MESSAGES=${LOG_MIN_MESSAGES-WARNING}

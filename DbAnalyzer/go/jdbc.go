@@ -160,10 +160,12 @@ func (cl *JdbcClient) sendRequest(path string, optionalParams map[string]string)
 		if err == nil {
 			return responseBytes, nil
 		}
+		log.Errorf("Error sending request: %s", err)
 		time.Sleep(4 * time.Second) // Wait before retrying
 	}
 
 	// If the code reaches this point, all retry attempts have failed, so return the last error
+	log.Errorf("Failed after %d retry attempts: %s", maxRetryAttempts, err)
 	return nil, fmt.Errorf("failed after %d retry attempts: %w", maxRetryAttempts, err)
 }
 
@@ -237,6 +239,7 @@ func (cl *JdbcClient) Close() {
 }
 
 func (cl *JdbcClient) Connect(c *types.ConnectionParams) error {
+	log.Infof("Connecting to %s", c.Typ)
 	// TODO: add support for different connection types, TLS, etc.
 	srcType, ok := connTypesURL[c.Typ]
 	if !ok {
@@ -273,6 +276,7 @@ func (cl *JdbcClient) Connect(c *types.ConnectionParams) error {
 }
 
 func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
+	log.Infof("Getting database info for: %s", dbName)
 	if dbName == "" {
 		// if no database name is specified (ex. there is no database name for given datasource), use the default database
 		dbName = "_defaultdb_"
@@ -743,11 +747,13 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 
 	log.Debugf("Sampling the table: %s", tip.Table)
 	if err = cl.getSample(tip.Schema, tip.Table, sample); err != nil {
+		log.Errorf("Error getting sample: %s", err)
 		return nil, err
 	}
 
 	log.Debugf("Detecting semantics for the table: %s", tip.Table)
 	if err = detectors.FindSemantics(sample); err != nil {
+		log.Errorf("Error detecting semantics: %s", err)
 		return nil, err
 	}
 
@@ -761,7 +767,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 }
 
 func (cl *JdbcClient) getSample(schema string, table string, sample []detect.Sample) error {
-
+	log.Infof("Getting sample for schema: %s, table: %s", schema, table)
 	nColumns := len(sample)
 
 	for _, s := range sample {

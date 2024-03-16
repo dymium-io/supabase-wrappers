@@ -1,16 +1,15 @@
-//
 // Copyright (c) 2022 Dymium, Inc. All rights reserved.
 // written by igor@dymium.io
-//
 package customer
 
 import (
-	"github.com/gorilla/mux"
+	_ "fmt"
 	"net/http"
 	"os"
+
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/dhandlers"
-	_ "fmt"
+	"github.com/gorilla/mux"
 )
 
 func CustomerHandlers(p *mux.Router) {
@@ -22,11 +21,10 @@ func CustomerHandlers(p *mux.Router) {
 	invited := nonauthenticated.Host(host).Subrouter()
 	invited.Use(dhandlers.InviteMiddleware)
 
-	
 	// with unit test
 	authenticated.HandleFunc("/api/createnewconnection", dhandlers.CreateNewConnection).Methods("POST").Name("createnewconnection")
 	authenticated.HandleFunc("/api/queryconnection", dhandlers.QueryConnection).Methods("POST").Name("queryconnection")
-	authenticated.HandleFunc("/api/querytable", dhandlers.QueryTable).Methods("POST").Name("querytable")	
+	authenticated.HandleFunc("/api/querytable", dhandlers.QueryTable).Methods("POST").Name("querytable")
 	authenticated.HandleFunc("/api/updateconnection", dhandlers.UpdateConnection).Methods("POST").Name("updateconnection")
 	authenticated.HandleFunc("/api/deleteconnection", dhandlers.DeleteConnection).Methods("POST").Name("deleteconnection")
 	authenticated.HandleFunc("/api/getconnections", dhandlers.GetConnections).Methods("GET").Name("getconnections")
@@ -56,12 +54,22 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated.HandleFunc("/api/getpolicies", dhandlers.GetPolicies).Methods("GET").Name("getpolicies")
 	authenticated.HandleFunc("/api/savepolicies", dhandlers.SavePolicies).Methods("POST").Name("savepolicies")
 
-	authenticated.HandleFunc("/api/addmachinetunnel", dhandlers.AddMachineTunnel).Methods("POST").Name("addmachinetunnel")	
-	authenticated.HandleFunc("/api/getmachinetunnels", dhandlers.GetMachineTunnels).Methods("GET").Name("getmachinetunnels")	
-	authenticated.HandleFunc("/api/deletemachinetunnel", dhandlers.DeleteMachineTunnel).Methods("POST").Name("deletemachinetunnel")			
+	authenticated.HandleFunc("/api/addmachinetunnel", dhandlers.AddMachineTunnel).Methods("POST").Name("addmachinetunnel")
+	authenticated.HandleFunc("/api/getmachinetunnels", dhandlers.GetMachineTunnels).Methods("GET").Name("getmachinetunnels")
+	authenticated.HandleFunc("/api/deletemachinetunnel", dhandlers.DeleteMachineTunnel).Methods("POST").Name("deletemachinetunnel")
 	authenticated.HandleFunc("/api/updatemachinetunnel", dhandlers.UpdateMachineTunnel).Methods("POST").Name("updatemachinetunnel")
 	authenticated.HandleFunc("/api/regenmachinetunnel", dhandlers.RegenMachineTunnel).Methods("POST").Name("regenmachinetunnel")
 	authenticated.HandleFunc("/api/refreshmachinetunnels", dhandlers.RefreshMachineTunnels).Methods("GET").Name("refreshmachinetunnels")
+
+	authenticated.HandleFunc("/api/getoidcconnection", dhandlers.GetOIDCConnection).Methods("GET").Name("getoidcconnection")
+	authenticated.HandleFunc("/api/getlogindetails", dhandlers.GetLoginDetails).Methods("GET").Name("getlogindetails")
+	authenticated.HandleFunc("/api/getsuperadmins", dhandlers.GetSuperAdmins).Methods("GET").Name("getsuperadmins")
+	authenticated.HandleFunc("/api/setoidcconnection", dhandlers.SetOIDCConnection).Methods("POST").Name("setoidcconnection")
+	
+	authenticated.HandleFunc("/api/setlogindetails", dhandlers.SetLoginDetails).Methods("POST").Name("setlogindetails")
+	authenticated.HandleFunc("/api/setsuperadmins", dhandlers.SetSuperAdmins).Methods("POST").Name("setsuperadmins")
+
+	
 
 	invited.HandleFunc("/api/postinvitationjson", dhandlers.PostInvitationJson).Methods("POST").Name("postinvitationjson")
 	invited.HandleFunc("/api/getinvitationjson", dhandlers.GetInvitationJson).Methods("GET").Name("getinvitationjson")
@@ -70,13 +78,10 @@ func CustomerHandlers(p *mux.Router) {
 	invited.HandleFunc("/api/resetinvitedtenant", dhandlers.ResetInvitedTenant).Methods("GET").Name("resetinvitedtenant")
 	invited.HandleFunc("/api/invitationstatus", dhandlers.InvitationStatus).Methods("GET").Name("invitationstatus")
 
-	
-
 	invited.HandleFunc("/api/testoidc", dhandlers.TestOIDC).Methods("POST").Name("testoidc")
 	invited.HandleFunc("/api/testnameandlogo", dhandlers.TestNameAndLogo).Methods("POST").Name("testnameandlogo")
-	
 
-	// no test	
+	// no test
 	authenticated.HandleFunc("/api/getdockers", dhandlers.GetDockers).Methods("GET").Name("getdockers")
 	nonauthenticated.HandleFunc("/bin/DymiumInstaller.exe", dhandlers.DymiumInstallerExe).Methods("GET")
 	nonauthenticated.HandleFunc("/bin/DymiumInstaller.pkg", dhandlers.DymiumInstallerPkg).Methods("GET")
@@ -100,12 +105,11 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/api/downloadupdate", dhandlers.DownloadUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")
 	nonauthenticated.HandleFunc("/api/downloadconnectorupdate", dhandlers.DownloadConnectorUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")
 	nonauthenticated.HandleFunc("/api/downloadmachineclientupdate", dhandlers.DownloadMachineClientUpdate).Queries("os", "{os}", "arch", "{arch}").Methods("GET")
-	
 
 	nonauthenticated.HandleFunc("/api/datascopehelp", dhandlers.DatascopeHelp).Queries("token", "{token}", "port", "{port}").Methods("GET")
-	nonauthenticated.HandleFunc("/api/getconnectorcertificate",  dhandlers.GetConnectorCertificate).Methods("POST").Name("getconnectorcertificate")
-	nonauthenticated.HandleFunc("/api/connectorstatus",  dhandlers.SetConnectorStatus).Methods("POST").Name("connectorstatus")
-	nonauthenticated.HandleFunc("/api/getmachineclientcertificate",  dhandlers.GetMachineClientCertificate).Methods("POST").Name("getmachineclientcertificate")
+	nonauthenticated.HandleFunc("/api/getconnectorcertificate", dhandlers.GetConnectorCertificate).Methods("POST").Name("getconnectorcertificate")
+	nonauthenticated.HandleFunc("/api/connectorstatus", dhandlers.SetConnectorStatus).Methods("POST").Name("connectorstatus")
+	nonauthenticated.HandleFunc("/api/getmachineclientcertificate", dhandlers.GetMachineClientCertificate).Methods("POST").Name("getmachineclientcertificate")
 	nonauthenticated.HandleFunc("/api/machineclientstatus", dhandlers.MachineClientStatus).Methods("POST")
 
 	nonauthenticated.HandleFunc("/api/invitationsink", dhandlers.ProcessInvitation).Queries("inv", "{inv}").Methods("GET")
@@ -125,11 +129,10 @@ func CustomerHandlers(p *mux.Router) {
 	nonauthenticated.HandleFunc("/{name:.*\\.ico}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.zip}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.gz}", dhandlers.GetImages)
-	nonauthenticated.HandleFunc("/{name:.*\\.tgz}", dhandlers.GetImages)	
+	nonauthenticated.HandleFunc("/{name:.*\\.tgz}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.exe}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.pkg}", dhandlers.GetImages)
 	nonauthenticated.HandleFunc("/{name:.*\\.json}", dhandlers.GetImages)
-
 
 	nonauthenticated.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		common.CommonCacheHeaders(w, r)
