@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 LOCAL_SEARCH=${LOCAL_SEARCH-http://elasticsearch.dymium.local:9200}
 LOCAL_SEARCH_USER=${LOCAL_SEARCH_USER:-elastic}
 LOCAL_SEARCH_PASSWD=${LOCAL_SEARCH_PASSWD:-admin123}

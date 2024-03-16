@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 set -e
 
@@ -113,14 +113,14 @@ ENV LD_LIBRARY_PATH="/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib
 #ENV PATH="/usr/local/bin:/usr/bin:/bin:/var/lib/postgresql/sqllib/bin:/var/lib/postgresql/sqllib/adm:/var/lib/postgresql/sqllib/misc:/var/lib/postgresql/sqllib/pd:/var/lib/postgresql/sqllib/gskit/bin"
 
 ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
-ENV PATH="$PATH:/usr/lib/jvm/java-8-openjdk-amd64/bin"
+ENV PATH="\$PATH:/usr/lib/jvm/java-8-openjdk-amd64/bin"
 
 COPY ./db2_home /opt/ibm/db2/V11.5
 ENV DB2_HOME=/opt/ibm/db2/V11.5
 
 RUN ln -s /usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/amd64/server/libjvm.so /usr/lib64/libjvm.so
 
-ENV PATH="/root/.cargo/bin:${PATH}"
+ENV PATH="/root/.cargo/bin:\${PATH}"
 RUN cargo install cargo-pgx 2>&1 | sed -u '/jemalloc/d'
 RUN cargo pgx init --pg14 /usr/bin/pg_config 2>&1 | sed -u '/jemalloc/d'
 

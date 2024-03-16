@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 fdws=(mysql_fdw postgres_fdw tds_fdw oracle_fdw)
 

@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 set -e
 
@@ -188,7 +188,7 @@ ENV INST_DIR="/var/lib/postgresql/sqllib"
 ENV LD_LIBRARY_PATH="/lib64:/usr/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib64:/var/lib/postgresql/sqllib/lib64/gskit:/var/lib/postgresql/sqllib/lib32"
 
 ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
-#ENV PATH="$PATH:/usr/lib/jvm/java-8-openjdk-amd64/bin"
+#ENV PATH="\$PATH:/usr/lib/jvm/java-8-openjdk-amd64/bin"
 RUN ln -s /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/libjvm.so /usr/lib64/libjvm.so
 
 EOF

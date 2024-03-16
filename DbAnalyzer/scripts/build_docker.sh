@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
@@ -43,8 +43,8 @@ unzip ${setup_d}/db2/db2_home.zip
 cp ${setup_d}/db2/v11.5.4_linuxx64_odbc_cli.tar.gz ${build_d}
 
 echo Building DbAnalyzer...
-/usr/bin/tar czf DbAnalyzer.tgz -C ../../.. DbAnalyzer/go
-/usr/bin/tar czf libs.tgz -C ../../.. libs/go
+tar czf DbAnalyzer.tgz -C ../../.. DbAnalyzer/go
+tar czf libs.tgz -C ../../.. libs/go
 docker run -it --rm \
                    -v ./:/src      \
                    -v $script_d/.go/:/go/ \
@@ -96,8 +96,8 @@ RUN mkdir /db2_cli_odbc_driver
 COPY ./v11.5.4_linuxx64_odbc_cli.tar.gz /db2_cli_odbc_driver
 RUN cd /db2_cli_odbc_driver && tar xvf v11.5.4_linuxx64_odbc_cli.tar.gz
 
-ENV LD_LIBRARY_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
-ENV LIBPATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:$LIBPATH"
+ENV LD_LIBRARY_PATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:/usr/lib/x86_64-linux-gnu:\$LD_LIBRARY_PATH"
+ENV LIBPATH="/db2_cli_odbc_driver/odbc_cli/clidriver/lib:\$LIBPATH"
 
 RUN mkdir /ktDbAnalyzerSvc
 COPY ./ktDbAnalyzerSvc-0.0.1.tar /ktDbAnalyzerSvc
