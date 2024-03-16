@@ -2166,7 +2166,7 @@ __metadata:
     sass: "npm:^1.62.1"
     snyk: "npm:^1.1283.0"
     typescript: "npm:^4"
-    underscore: "npm:^1.13.1"
+    underscore: "npm:^1.13.6"
     uuid: "npm:^9.0.0"
     web-vitals: "npm:^3.3.1"
     webpack: "npm:^5.90.3"
@@ -10883,13 +10883,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.15.5":
-  version: 1.15.5
-  resolution: "follow-redirects@npm:1.15.5"
+"follow-redirects@npm:^1.15.6":
+  version: 1.15.6
+  resolution: "follow-redirects@npm:1.15.6"
   peerDependenciesMeta:
     debug:
       optional: true
-  checksum: 10c0/418d71688ceaf109dfd6f85f747a0c75de30afe43a294caa211def77f02ef19865b547dfb73fde82b751e1cc507c06c754120b848fe5a7400b0a669766df7615
+  checksum: 10c0/9ff767f0d7be6aa6870c82ac79cf0368cd73e01bbc00e9eb1c2a16fbb198ec105e3c9b6628bb98e9f3ac66fe29a957b9645bcb9a490bb7aa0d35f908b6b85071
   languageName: node
   linkType: hard
 
@@ -19242,7 +19242,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.1.0, postcss@npm:^8.3.5, postcss@npm:^8.4.23, postcss@npm:^8.4.33, postcss@npm:^8.4.35, postcss@npm:^8.4.4":
+"postcss@npm:^8.1.0, postcss@npm:^8.3.5, postcss@npm:^8.4.23, postcss@npm:^8.4.33, postcss@npm:^8.4.34, postcss@npm:^8.4.35, postcss@npm:^8.4.4":
   version: 8.4.35
   resolution: "postcss@npm:8.4.35"
   dependencies:
@@ -19725,9 +19725,9 @@ __metadata:
     clean-css-cli: "npm:^5.6.2"
     cssnano: "npm:^6.0.1"
     node-sass: "npm:^8.0.0"
-    postcss: "npm:^8.4.23"
+    postcss: "npm:^8.4.34"
     react-transition-group: "npm:^4.2.0"
-    underscore: "npm:1.12.1"
+    underscore: "npm:1.13.6"
   peerDependencies:
     classnames: ^2.2.5
     prop-types: ^15.0.0
@@ -23391,7 +23391,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"underscore@npm:^1.13.1":
+"underscore@npm:1.13.6, underscore@npm:^1.13.6":
   version: 1.13.6
   resolution: "underscore@npm:1.13.6"
   checksum: 10c0/5f57047f47273044c045fddeb8b141dafa703aa487afd84b319c2495de2e685cecd0b74abec098292320d518b267c0c4598e45aa47d4c3628d0d4020966ba521
