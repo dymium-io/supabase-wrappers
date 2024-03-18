@@ -28,7 +28,7 @@ import (
 	_ "path/filepath"
 	"runtime"
 	"sync"
-
+	"html/template"
 	"dymium.com/client/ca"
 	"dymium.com/client/content"
 	"dymium.com/client/installer"
@@ -102,24 +102,47 @@ func restart() {
 	os.Exit(0)
 }
 */
-
+const errorPageTemplateString = `
+<html>
+<head>
+<script>
+ !function() {
+	window.location.href = "/app/error?header={{.HeaderEncoded}}&body={{.BodyEncoded}}"
+ }()
+</script>
+</head>
+<body>Callback arrived</body>
+</html>`
+type errorPageData struct {
+	HeaderEncoded string
+	BodyEncoded   string
+}
 func generateError(w http.ResponseWriter, r *http.Request, header string, body string) error {
-	/*
-		Failed to get userinfo: "+err.Error()
-	*/
+	// Create a new template
+	tmpl, err := template.New("errorPage").Parse(errorPageTemplateString)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+
+	// Data for the template
+	data := errorPageData{
+		HeaderEncoded: url.QueryEscape(header),
+		BodyEncoded:   url.QueryEscape(body),
+	}
+
+	// Use a bytes.Buffer to capture the output
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+
 
 	w.Header().Set("Cache-Control", Nocache)
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(`<html>
-		<head>
-		<script>
-		 !function() {
-			window.location.href = "/app/error?header=` + url.QueryEscape(header) + `&body=` + url.QueryEscape(body) + `"
-		 }()
-		</script>
-		</head>
-		<body>Callback arrived</body>
-		</html>`))
+
+	w.Write(buf.Bytes())
 
 	return nil
 }
