@@ -20,6 +20,7 @@ import (
 	"strings"
 	"syscall"
 
+	"html/template"
 	"io"
 	"net"
 	"net/http"
@@ -28,7 +29,7 @@ import (
 	_ "path/filepath"
 	"runtime"
 	"sync"
-	"html/template"
+
 	"dymium.com/client/ca"
 	"dymium.com/client/content"
 	"dymium.com/client/installer"
@@ -113,10 +114,12 @@ const errorPageTemplateString = `
 </head>
 <body>Callback arrived</body>
 </html>`
+
 type errorPageData struct {
 	HeaderEncoded string
 	BodyEncoded   string
 }
+
 func generateError(w http.ResponseWriter, r *http.Request, header string, body string) error {
 	// Create a new template
 	tmpl, err := template.New("errorPage").Parse(errorPageTemplateString)
@@ -137,7 +140,6 @@ func generateError(w http.ResponseWriter, r *http.Request, header string, body s
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return err
 	}
-
 
 	w.Header().Set("Cache-Control", Nocache)
 	w.Header().Set("Content-Type", "text/html")
@@ -282,8 +284,8 @@ func getTunnelInfo(customerid, portalurl string, forcenoupdate bool, forceupdate
 
 	if !forcenoupdate {
 
-		if vserver.Major > vclient.Major || ( (vserver.Major == vclient.Major) && 
-			(vserver.Minor > vclient.Minor) ) {
+		if vserver.Major > vclient.Major || ((vserver.Major == vclient.Major) &&
+			(vserver.Minor > vclient.Minor)) {
 			log.Infof("Server version incremented to %s, update itself!", back.Version)
 			// DoUpdate(portal)
 			os.Exit(0)
