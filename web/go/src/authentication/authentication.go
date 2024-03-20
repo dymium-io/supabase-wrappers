@@ -979,6 +979,7 @@ func GetConnections(schema string) ([]types.ConnectionRecord, error) {
 			err = rows.Scan(&conn.Id, &conn.Name, &conn.Address, &conn.Port, &conn.Dbname, &conn.Dbtype, &conn.UseTLS,
 				&conn.Description, &conn.Username, &conn.Credid, &conn.Usesconnector, &conn.Connectorid, &conn.Tunnelid,
 				&conn.Connectorname, &conn.Tunnelname)
+			conn.Username = nil // don't return the username
 			if nil != err {
 				log.Errorf("GetConnections error:  %s", err.Error())
 				return []types.ConnectionRecord{}, err
