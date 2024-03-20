@@ -330,7 +330,7 @@ func ProcessInvitation(token string) (string, string, error) {
 	}
 	// create a new token with the signer role, and redirect to the GUI portal
 	newtoken, err := GeneratePortalJWT("/avatar.png", "", claim.Name, claim.Email, []string{}, []string{gotypes.RoleInitialSigner}, 
-	"", 600, claim.Invitationid)
+	"", 600, claim.Invitationid, "")
 
 	nonce, _ := certificates.GenerateRandomString(32)
 	return `<html>

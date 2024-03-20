@@ -15,6 +15,7 @@ type Claims struct {
 	Roles      []string `json:"roles"`
 	Picture    string `json:"picture"`
 	Schema     string `json:"schema"`
+	Domain	   string `json:"domain"`
 	Port       int  `json:"port"`
 	Orgid      string `json:"orgid"`
 	jwt.StandardClaims

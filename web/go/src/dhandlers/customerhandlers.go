@@ -41,6 +41,7 @@ const authenticatedGroupsKey contextKey = 2
 const authenticatedOrgKey contextKey = 3
 const authenticatedRolesKey contextKey = 4
 const authenticatedSessionKey contextKey = 5
+const authenticatedDomainKey contextKey = 6
 
 const GRACE = 300 // +- seconds for the cert to be valid. 5 min is a little bit generous
 
@@ -68,6 +69,9 @@ func AuthMiddleware(h http.Handler) http.Handler {
 		ctxWithSchema = context.WithValue(ctxWithSchema, authenticatedOrgKey, orgid)
 		ctxWithSchema = context.WithValue(ctxWithSchema, authenticatedRolesKey, roles)
 		ctxWithSchema = context.WithValue(ctxWithSchema, authenticatedSessionKey, session)
+		ctxWithSchema = context.WithValue(ctxWithSchema, authenticatedDomainKey, session)
+
+
 		//create a new request using that new context
 		rWithSchema := r.WithContext(ctxWithSchema)
 
@@ -1407,9 +1411,11 @@ func GetDatascopesAccess(w http.ResponseWriter, r *http.Request) {
 	groups := r.Context().Value(authenticatedGroupsKey).([]string)
 	roles := r.Context().Value(authenticatedRolesKey).([]string)
 	session := r.Context().Value(authenticatedSessionKey).(string)
+	domain := r.Context().Value(authenticatedDomainKey).(string)
+
 	//email, groups, _ := authentication.GetIdentityFromToken(token)
 fmt.Printf("schema %s, email %s, groups %s\n", schema, email, groups)
-	out, err := authentication.GetDatascopesForGroups(schema, email, groups)
+	out, err := authentication.GetDatascopesForGroups(schema, email, groups, domain)
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api GetDatascopesAccess, error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1428,8 +1434,9 @@ func RegenerateDatascopePassword(w http.ResponseWriter, r *http.Request) {
 	groups := r.Context().Value(authenticatedGroupsKey).([]string)
 	roles := r.Context().Value(authenticatedRolesKey).([]string)
 	session := r.Context().Value(authenticatedSessionKey).(string)
-
-	out, err := authentication.RegenerateDatascopePassword(schema, email, groups)
+	domain := r.Context().Value(authenticatedDomainKey).(string)
+	
+	out, err := authentication.RegenerateDatascopePassword(schema, email, groups, domain)
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api RegenerateDatascopePassword, error: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)

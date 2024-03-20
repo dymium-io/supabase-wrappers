@@ -610,11 +610,14 @@ func GetSchemaRolesFromToken(token string) (string, []string, []string, string, 
 
 }
 
-func UsernameFromEmail(email string) string {
+func UsernameFromEmail(email, domain string) string {
 	//return email
-	username := strings.Split(email, "@")[0]
-
-	//!#$%&'*+-/=?^_`{|}~
+	var  username string
+	if strings.HasSuffix(email, "@"+domain) {
+		username = strings.Split(email, "@")[0]
+	} else {
+		username = email
+	}
 
 	replacer := strings.NewReplacer(
 		"!", "_",
@@ -634,6 +637,7 @@ func UsernameFromEmail(email string) string {
 		"{", "_",
 		"|", "_",
 		"}", "_",
+		"@", "_",
 		"~", "_")
 	username = replacer.Replace(username)
 
@@ -641,7 +645,7 @@ func UsernameFromEmail(email string) string {
 	return username
 }
 
-func RegenerateDatascopePassword(schema string, email string, groups []string) (types.UserDatascopes, error) {
+func RegenerateDatascopePassword(schema string, email string, groups []string, domain string) (types.UserDatascopes, error) {
 	var out types.UserDatascopes
 	var conf types.UserConf
 
@@ -650,7 +654,7 @@ func RegenerateDatascopePassword(schema string, email string, groups []string) (
 	rq.Customer = schema
 	rq.UserConf = &conf
 
-	username := UsernameFromEmail(email)
+	username := UsernameFromEmail(email, domain)
 	password := generatePassword(10)
 
 	rq.UserConf.Name = username
@@ -790,7 +794,7 @@ func GetDatascopeTables(schema, id string) ([]types.DatascopeTable, error) {
 	}
 	return out, err
 }
-func GetDatascopesForGroups(schema string, email string, groups []string) (types.UserDatascopes, error) {
+func GetDatascopesForGroups(schema string, email string, groups []string, domain string) (types.UserDatascopes, error) {
 	var out types.UserDatascopes
 	var conf types.UserConf
 	var rq types.Request
@@ -798,7 +802,7 @@ func GetDatascopesForGroups(schema string, email string, groups []string) (types
 	rq.Customer = schema
 	rq.UserConf = &conf
 
-	username := UsernameFromEmail(email)
+	username := UsernameFromEmail(email, domain)
 	var password string
 	var passwordb []byte
 	var age float32
@@ -1011,6 +1015,7 @@ func CheckAndRefreshToken(token string, sport string) (string, error) {
 			Roles:   claim.Roles,
 			Picture: claim.Picture,
 			Schema:  claim.Schema,
+			Domain:  claim.Domain,
 			Port:    nport,
 			Orgid:   claim.Orgid,
 			StandardClaims: jwt.StandardClaims{
@@ -1136,7 +1141,7 @@ func GetRoles(email, schema string, groups []string, admin_group string) []strin
 
 	return roles
 }
-func GeneratePortalJWT(picture string, schema string, name string, email string, groups []string, roles []string, org_id string, _timeOut int, session string) (string, error) {
+func GeneratePortalJWT(picture string, schema string, name string, email string, groups []string, roles []string, org_id string, _timeOut int, session, domain string) (string, error) {
 	// generate JWT right header
 	issueTime := time.Now()
 	expirationTime := issueTime.Add(time.Duration(_timeOut) * time.Minute)
@@ -1153,6 +1158,7 @@ func GeneratePortalJWT(picture string, schema string, name string, email string,
 		Email:   email,
 		Picture: p,
 		Schema:  schema,
+		Domain: domain,
 		Port:    DefaultPort,
 		Orgid:   org_id,
 		StandardClaims: jwt.StandardClaims{
@@ -1192,6 +1198,7 @@ func refreshPortalToken(token string) (string, error) {
 			Roles:   claim.Roles,
 			Picture: claim.Picture,
 			Schema:  claim.Schema,
+			Domain:  claim.Domain,
 			Port:    claim.Port,
 			Orgid:   claim.Orgid,
 			StandardClaims: jwt.StandardClaims{
@@ -2029,7 +2036,7 @@ func DeleteConnection(schema, id string) error {
 func GetFakeAuthentication() []byte {
 
 	token, err := GeneratePortalJWT("/avatar.png",
-		"spoofcorp", "user@spoofcorp.com", "user", []string{"Admins", "Users"}, []string{"user", "admin"}, "org_nsEsSgfq3IYXe2pu", timeOut, "")
+		"spoofcorp", "user@spoofcorp.com", "user", []string{"Admins", "Users"}, []string{"user", "admin"}, "org_nsEsSgfq3IYXe2pu", timeOut, "", "dymium.io")
 	if err != nil {
 		log.Errorf("Error: %s", err.Error())
 	}
@@ -2138,11 +2145,11 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id,
 	id_token, _ := jsonParsed.Path("id_token").Data().(string)
 	picture, name, email, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
 
-	sql := "select schema_name from global.customers where organization=$1;"
+	sql := "select schema_name, domain from global.customers where organization=$1;"
 
 	row := db.QueryRow(sql, org_id)
-	var schema string
-	err = row.Scan(&schema)
+	var schema, domain string
+	err = row.Scan(&schema, &domain)
 
 	if err != nil {
 		log.ErrorUserf(schema, "", email, groups, GetRoles(email, schema, groups, ""), "Error in tunnel login: %s", err.Error())
@@ -2150,7 +2157,7 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id,
 		return "", "", []string{}, "", "", []string{}, err
 	}
 
-	token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(email, schema, groups, ""), org_id, timeOut, "")
+	token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(email, schema, groups, ""), org_id, timeOut, "", domain)
 
 	session, _ := GetSessionFromToken(token)
 
@@ -2337,12 +2344,12 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 		log.Infof("Access Token: %s", access_token)
 		log.Infof("Name: %s, email %s", name, email)
 
-		sql := fmt.Sprintf("select schema_name, admin_group from global.customers where organization=$1;")
+		sql := fmt.Sprintf("select schema_name, admin_group, domain from global.customers where organization=$1;")
 
 		row := db.QueryRow(sql, org_id)
-		var schema string
+		var schema, domain string
 		var admin_group string
-		err = row.Scan(&schema, &admin_group)
+		err = row.Scan(&schema, &admin_group, &domain)
 
 		if err != nil {
 			log.Errorf("Redirect error 1: %s", err.Error())
@@ -2353,7 +2360,7 @@ func AuthenticationPortalHandlers(h *mux.Router) error {
 			return
 		}
 
-		token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(email, schema, groups, admin_group), org_id, timeOut, "")
+		token, err := GeneratePortalJWT(picture, schema, name, email, groups, GetRoles(email, schema, groups, admin_group), org_id, timeOut, "", domain)
 		session, _ := GetSessionFromToken(token)
 		if err != nil {
 			log.ErrorUserf(schema, session, email, groups, GetRoles(email, schema, groups, admin_group), "Error in portal JWT generation: %s", err.Error())
@@ -3055,7 +3062,7 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 		}
 		log.Debugf("AuthenticateAndPrepareMachineTunnel, groups: %v", groups)
 		token, err := GeneratePortalJWT("/avatar.png",
-			schema, name, "N/A", groups, []string{gotypes.RoleUser}, "unknown", timeOut, "")
+			schema, name, "N/A", groups, []string{gotypes.RoleUser}, "unknown", timeOut, "", "")
 		if err != nil {
 			log.Errorf("AuthenticateAndPrepareMachineTunnel, generate token error: %s", err.Error())
 			return []string{}, "", err
