@@ -148,7 +148,7 @@ func init() {
 
 	ct_options[types.CT_PostgreSQL] = ct_option{
 		ext:        define_ext("postgres_fdw"),
-		server_def: define_server("postgres.tmpl"),
+		server_def: define_server("postgres.sql"),
 		table: func(remoteSchema, remoteTable string) string {
 			return fmt.Sprintf("schema_name '%s', table_name '%s'",
 				esc(remoteSchema), esc(remoteTable))
@@ -156,7 +156,7 @@ func init() {
 	}
 	ct_options[types.CT_MySQL] = ct_option{
 		ext:        define_ext("mysql_fdw"),
-		server_def: define_server("mysql.tmpl"),
+		server_def: define_server("mysql.sql"),
 		table: func(remoteSchema, remoteTable string) string {
 			return fmt.Sprintf("dbname '%s', table_name '%s'",
 				esc(remoteSchema), esc(remoteTable))
@@ -165,7 +165,7 @@ func init() {
 	ct_options[types.CT_MariaDB] = ct_options[types.CT_MySQL]
 	ct_options[types.CT_OracleDB] = ct_option{
 		ext:        define_ext("oracle_fdw"),
-		server_def: define_server("oracle.tmpl"),
+		server_def: define_server("oracle.sql"),
 		table: func(remoteSchema, remoteTable string) string {
 			return fmt.Sprintf("schema '%s', table '%s'",
 				esc(remoteSchema), esc(remoteTable))
@@ -173,7 +173,7 @@ func init() {
 	}
 	ct_options[types.CT_DB2] = ct_option{
 		ext:        define_ext("db2_fdw"),
-		server_def: define_server("db2.tmpl"),
+		server_def: define_server("db2.sql"),
 		table: func(remoteSchema, remoteTable string) string {
 			return fmt.Sprintf("schema '%s', table '%s'",
 				esc(remoteSchema), esc(remoteTable))
@@ -181,7 +181,7 @@ func init() {
 	}
 	ct_options[types.CT_SqlServer] = ct_option{
 		ext:        define_rust_ext("mssql_wrapper", "mssql_fdw_handler", "mssql_fdw_validator"),
-		server_def: define_server("mssql.tmpl"),
+		server_def: define_server("mssql.sql"),
 		table: func(remoteSchema, remoteTable string) string {
 			return fmt.Sprintf("table '[%s].[%s]'",
 				remoteSchema, remoteTable)
@@ -189,7 +189,7 @@ func init() {
 	}
 	ct_options[types.CT_MongoDB] = ct_option{
 		ext:        define_ext("mongo_fdw"),
-		server_def: define_server("mongodb.tmpl"),
+		server_def: define_server("mongodb.sql"),
 		table: func(remoteSchema, remoteTable string) string {
 			return fmt.Sprintf("database '%s', collection '%s'",
 				esc(remoteSchema), esc(remoteTable))
@@ -197,7 +197,7 @@ func init() {
 	}
 	ct_options[types.CT_Elasticsearch] = ct_option{
 		ext:        define_ext("jdbc_fdw"),
-		server_def: define_server("es.tmpl"),
+		server_def: define_server("es.sql"),
 		table: func(remoteSchema, remoteTable string) string {
 			if remoteSchema == "_defaultdb_" {
 				return fmt.Sprintf("table_name '%s'", esc(remoteTable))
