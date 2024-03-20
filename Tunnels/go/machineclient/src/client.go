@@ -618,10 +618,8 @@ func restart() {
 
 	procAttr.Env = append(procAttr.Env, "WORKER=on")
 
-	for _, v := range os.Args {
-		args = append(args, v)
-	}
-	args[0] = ex
+
+	args = append(args, ex)
 	args = append(args, "-r")
 	time.Sleep(time.Second)
 	log.Infof("Restart process %s", ex)

@@ -26,9 +26,9 @@ import (
 	"strings"
 	"time"
 
+	"dymium.com/dymium/certificates"
 	"dymium.com/dymium/common"
 	"dymium.com/dymium/gotypes"
-	"dymium.com/dymium/certificates"
 	"dymium.com/dymium/log"
 	"dymium.com/dymium/types"
 	"github.com/Jeffail/gabs"
@@ -153,7 +153,6 @@ func StreamFromS3(w http.ResponseWriter, r *http.Request, bucketName, key string
 	}
 }
 
-
 func contains[T comparable](s []T, str T) bool {
 	for _, v := range s {
 		if v == str {
@@ -178,14 +177,14 @@ func initRBAC() {
 		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable",
 		"addmachinetunnel", "getmachinetunnels", "updatemachinetunnel", "deletemachinetunnel",
 		"regenmachinetunnel", "refreshmachinetunnels", "getdatascopes",
-		 /* "getoidcconnection", "getlogindetails", "getsuperadmins", "setoidcconnection", "setlogindetails", "setsuperadmins" */} // clean this up
+		/* "getoidcconnection", "getlogindetails", "getsuperadmins", "setoidcconnection", "setlogindetails", "setsuperadmins" */} // clean this up
 
 	usernames := []string{"getmachineclientcertificate", "getclientcertificate",
 		"getdatascopesaccess", "regenpassword", "getselect", "getdatascopetables",
 		"getdatascopesfortestsql", "getdockers"}
 
-	signupnames := []string{"testoidc", "postinvitationjson", "getinvitationjson", "testnameandlogo", 
-	"createfootprint", "checkfootprintstatus", "resetinvitedtenant", "invitationstatus"}
+	signupnames := []string{"testoidc", "postinvitationjson", "getinvitationjson", "testnameandlogo",
+		"createfootprint", "checkfootprintstatus", "resetinvitedtenant", "invitationstatus"}
 
 	superadminnames := []string{"getoidcconnection", "getlogindetails", "getsuperadmins", "setoidcconnection", "setlogindetails", "setsuperadmins"}
 	for _, v := range adminnames {
@@ -246,7 +245,6 @@ var FilesystemRoot string
 var LowMeshport, HighMeshport int
 
 var Invoke gotypes.Invoke_t
-
 
 var stdChars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$^&*()-_=+,.?:;{}[]")
 
@@ -315,7 +313,6 @@ func AESdecrypt(ciphertext []byte, keyhex string) ([]byte, error) {
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 	return gcm.Open(nil, nonce, ciphertext, nil)
 }
-
 
 func InitInvoke(i gotypes.Invoke_t) {
 	Invoke = i
@@ -1045,7 +1042,6 @@ func GetRoles(email, schema string, groups []string, admin_group string) []strin
 	sha.Write([]byte(email))
 
 	hashedEmail := hex.EncodeToString(sha.Sum(nil))
-	log.Infof("GetRoles: hashedEmail: %s\n", hashedEmail)
 
 	sql := `select count(*) from ` + schema + `.superadmins where username_hash=$1;`
 	row := db.QueryRow(sql, hashedEmail)
@@ -1070,12 +1066,29 @@ func GetRoles(email, schema string, groups []string, admin_group string) []strin
 	if len(groups) == 0 {
 		return roles
 	}
-	sql = `select outergroup, adminaccess from ` + schema + `.groupmapping where outergroup = any ($1);`
 
 	var hasadmin, hasuser bool
+	/*
+		log.Infof("GetRoles: sql: %s\n", sql)
+		rows, err := db.Query(sql, pq.Array(groups))
+	*/
+	// Start building the SQL query
+	sql = `SELECT outergroup, adminaccess FROM ` + schema + `.groupmapping WHERE outergroup IN (`
 
-	log.Infof("GetRoles: sql: %s\n", sql)
-	rows, err := db.Query(sql, pq.Array(groups))
+	// Add placeholders for each group item
+	placeholders := make([]string, len(groups))
+	params := make([]interface{}, len(groups))
+	for i, group := range groups {
+		placeholders[i] = "$" + strconv.Itoa(i+1)
+		params[i] = group
+	}
+
+	// Complete the SQL query construction
+	sql += strings.Join(placeholders, ", ") + ")"
+
+	// Execute the query with the dynamic parameters
+
+	rows, err := db.Query(sql, params...)
 	if err != nil {
 		log.Errorf("GetRoles error quering mapping: %s", err.Error())
 		return roles
@@ -1103,17 +1116,7 @@ func GetRoles(email, schema string, groups []string, admin_group string) []strin
 		}
 	}
 	if !hasadmin /* && !hasuser */ {
-		/*
-			// check if there are any group mappings
-			log.Infof("In GetRoles, not admin, not user")
-			sql := `select count(*) from ` + schema + `.groupmapping;`
-			row := db.QueryRow(sql)
-			var count int
-			err := row.Scan(&count)
-			log.Infof("In GetRoles, count: %d, err: %v", count, err)
 
-			if err == nil && count == 0 {
-		*/
 		// do the privilege elevation
 		log.Error("No admin group detected, using fallback group if present")
 		for _, gr := range groups {
@@ -1121,11 +1124,11 @@ func GetRoles(email, schema string, groups []string, admin_group string) []strin
 				roles = append(roles, gotypes.RoleAdmin)
 				roles = append(roles, gotypes.RoleUser)
 				roles = append(roles, gotypes.RoleInstaller)
-				log.Infof("No admin, but found fallback group: %s == %s", gr, admin_group)
+				log.Debugf("No admin, but found fallback group: %s == %s", gr, admin_group)
 
 				break
 			} else {
-				log.Infof("%s != %s", gr, admin_group)
+				// log.Debugf("%s != %s", gr, admin_group)
 			}
 		}
 		//		}
@@ -1330,12 +1333,12 @@ func GetClientIdFromSchema(schema string) (string, error) {
 func GetCustomerSecret(schema string) (string, error) {
 	name := strings.ToUpper(schema) + "_KEY"
 	hexkey := os.Getenv(name)
-	if(hexkey != "") {
+	if hexkey != "" {
 		return hexkey, nil
 	}
 	var err error
 	hexkey, err = GetSecret(name)
-	if(err != nil) {
+	if err != nil {
 		return "", err
 	}
 	os.Setenv(name, hexkey)
@@ -2134,9 +2137,6 @@ func GetTunnelToken(code, auth_portal_domain, auth_portal_client_id,
 	access_token, _ := jsonParsed.Path("access_token").Data().(string)
 	id_token, _ := jsonParsed.Path("id_token").Data().(string)
 	picture, name, email, groups, org_id, err := getUserInfoFromToken(auth_portal_domain, access_token, id_token)
-	log.Infof("ID Token: %s", id_token)
-	log.Infof("Access Token: %s", access_token)
-	log.Infof("Name: %s, email %s", name, email)
 
 	sql := "select schema_name from global.customers where organization=$1;"
 
