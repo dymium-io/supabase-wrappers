@@ -4,6 +4,7 @@ exports[`test-sql 1`] = `
 [
   <ul
     className="mb-3 text-left nav nav-tabs"
+    id="tabs"
     onKeyDown={[Function]}
     role="tablist"
   >

@@ -407,7 +407,7 @@ function Test() {
     onColumnToggle,
     toggles
   }) => (
-    <div className="btn-group btn-test  btn-sm btn-group-toggle btn-group-horizontal" data-toggle="buttons">
+    <div className="btn-group btn-test  btn-sm btn-group-toggle btn-group-horizontal" style={{zIndex: "0"}} data-toggle="buttons">
       {
         columns.slice(0, -1)
           .map(column => ({
