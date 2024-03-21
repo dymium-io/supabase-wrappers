@@ -1,19 +1,27 @@
-package main
+package DbSetup
 
 import (
 	"dymium.com/dymium/log"
+
+	"bytes"
+	"text/template"
 
 	"context"
 	"fmt"
 	"regexp"
 	"strings"
 
+	"embed"
+
 	"database/sql"
 
 	"crypto/sha256"
 
-	"DbSync/types"
+	"DbSetup/types"
 )
+
+//go:embed templates/*
+var templateFS embed.FS
 
 var obf_funcs func() []string
 var obf func(name string) (string, string)
@@ -80,165 +88,133 @@ func gen_redact_value_func() {
 	}
 }
 
+type ct_option struct {
+	ext        string
+	server_def func(server, address string, port int, database string, use_tls bool, user string, password string) (string, error)
+	table      func(remoteSchema, remoteTable string) string
+}
+
+var ct_options map[types.ConnectionType]ct_option
+
 func init() {
 	gen_obf_func()
 	gen_redact_value_func()
 
-}
-
-func extensionName(connectionType types.ConnectionType) (string, error) {
-	switch connectionType {
-	case types.CT_PostgreSQL:
-		return "postgres_fdw", nil
-	case types.CT_MySQL, types.CT_MariaDB:
-		return "mysql_fdw", nil
-	case types.CT_SqlServer:
-		return "tds_fdw", nil
-	case types.CT_OracleDB:
-		return "oracle_fdw", nil
-	case types.CT_DB2:
-		return "db2_fdw", nil
-	case types.CT_MongoDB:
-		return "mongo_fdw", nil
-	case types.CT_Elasticsearch:
-		return "jdbc_fdw", nil
-
+	define_ext := func(e string) string {
+		return "CREATE EXTENSION IF NOT EXISTS " + e + " WITH SCHEMA public"
 	}
-	return "", fmt.Errorf("Extension %v is not supported yet", connectionType)
-}
-
-type iOptions struct {
-	server      func(host string, port int, dbname string) string
-	userMapping func(user, password string) string
-	table       func(remoteSchema, remoteTable string) string
-}
-
-func options(connectionType types.ConnectionType) iOptions {
-	log.Infof("Getting options for connection type: %v", connectionType)
-	switch connectionType {
-	case types.CT_PostgreSQL:
-		return iOptions{
-			server: func(host string, port int, dbname string) string {
-				return fmt.Sprintf("host '%s', port '%d', dbname '%s'",
-					esc(host), port, esc(dbname))
-			},
-			userMapping: func(user, password string) string {
-				return fmt.Sprintf("user '%s', password '%s'",
-					esc(user), esc(password))
-			},
-			table: func(remoteSchema, remoteTable string) string {
-				return fmt.Sprintf("schema_name '%s', table_name '%s'",
-					esc(remoteSchema), esc(remoteTable))
-			},
-		}
-	case types.CT_MySQL, types.CT_MariaDB:
-		return iOptions{
-			server: func(host string, port int, dbname string) string {
-				return fmt.Sprintf("host '%s', port '%d'",
-					esc(host), port)
-			},
-			userMapping: func(user, password string) string {
-				return fmt.Sprintf("username '%s', password '%s'",
-					esc(user), esc(password))
-			},
-			table: func(remoteSchema, remoteTable string) string {
-				return fmt.Sprintf("dbname '%s', table_name '%s'",
-					esc(remoteSchema), esc(remoteTable))
-			},
-		}
-	case types.CT_SqlServer:
-		return iOptions{
-			server: func(host string, port int, dbname string) string {
-				return fmt.Sprintf("servername '%s', port '%d', database '%s'",
-					esc(host), port, esc(dbname))
-			},
-			userMapping: func(user, password string) string {
-				return fmt.Sprintf("username '%s', password '%s'",
-					esc(user), esc(password))
-			},
-			table: func(remoteSchema, remoteTable string) string {
-				return fmt.Sprintf("schema_name '%s', table_name '%s'",
-					esc(remoteSchema), esc(remoteTable))
-			},
-		}
-	case types.CT_OracleDB:
-		return iOptions{
-			server: func(host string, port int, dbname string) string {
-				return fmt.Sprintf("dbserver '//%s:%d/%s'",
-					esc(host), port, strings.ToUpper(dbname))
-			},
-			userMapping: func(user, password string) string {
-				return fmt.Sprintf("user '%s', password '%s'",
-					esc(user), esc(password))
-			},
-			table: func(remoteSchema, remoteTable string) string {
-				return fmt.Sprintf("schema '%s', table '%s'",
-					esc(remoteSchema), esc(remoteTable))
-			},
-		}
-	case types.CT_DB2:
-		return iOptions{
-			server: func(host string, port int, dbname string) string {
-				return fmt.Sprintf("dbserver 'Driver=/var/lib/postgresql/sqllib/lib64/libdb2o.so;Hostname=%s;Port=%d;Protocol=TCPIP;Database=%s;'",
-					esc(host), port, strings.ToUpper(dbname))
-			},
-			userMapping: func(user, password string) string {
-				return fmt.Sprintf("user '%s', password '%s'",
-					esc(user), esc(password))
-			},
-			table: func(remoteSchema, remoteTable string) string {
-				return fmt.Sprintf("schema '%s', table '%s'",
-					esc(remoteSchema), esc(remoteTable))
-			},
-		}
-	case types.CT_MongoDB:
-		return iOptions{
-			// TODO: add support for configurable authentication_database
-			server: func(host string, port int, dbname string) string {
-				return fmt.Sprintf("address '%s', port '%d', authentication_database 'admin'",
-					esc(host), port)
-			},
-			userMapping: func(user, password string) string {
-				return fmt.Sprintf("username '%s', password '%s'",
-					esc(user), esc(password))
-			},
-			table: func(remoteSchema, remoteTable string) string {
-				return fmt.Sprintf("database '%s', collection '%s'",
-					esc(remoteSchema), esc(remoteTable))
-			},
-		}
-	case types.CT_Elasticsearch:
-		return iOptions{
-			// TODO: add support for configurable authentication_database
-			server: func(host string, port int, dbname string) string {
-				if dbname != "" {
-					return fmt.Sprintf(
-						`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver', url 'jdbc:es://%s:%d/?catalog=%s',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.12.0.jar',maxheapsize '600'`,
-						esc(host), port, dbname)
-				}
-				return fmt.Sprintf(
-					`drivername 'org.elasticsearch.xpack.sql.jdbc.EsDriver', url 'jdbc:es://%s:%d',jarfile '/jdbc_drv/x-pack-sql-jdbc-8.12.0.jar',maxheapsize '600'`,
-					esc(host), port)
-			},
-			userMapping: func(user, password string) string {
-				return fmt.Sprintf("username '%s', password '%s'",
-					esc(user), esc(password))
-			},
-			table: func(remoteSchema, remoteTable string) string {
-				if remoteSchema == "_defaultdb_" {
-					return fmt.Sprintf("table_name '%s'", esc(remoteTable))
-				}
-				return fmt.Sprintf("schema_name '%s', table_name '%s'",
-					esc(remoteSchema), esc(remoteTable))
-			},
-		}
-
+	define_rust_ext := func(e, h, v string) string {
+		return `DO $$
+                        BEGIN
+		          IF NOT EXISTS (
+			     SELECT 1
+			     FROM pg_catalog.pg_foreign_data_wrapper
+			     WHERE fdwname = '` + e + `'
+		          ) THEN
+		             EXECUTE 'CREATE FOREIGN DATA WRAPPER ` + e + ` HANDLER ` + h + ` VALIDATOR ` + v + `;';
+		          END IF;
+                        END $$`
 	}
-	log.Errorf("Connection type %v is not supported yet", connectionType)
-	panic("impossible")
+
+	define_server := func(template_name string) func(server, address string, port int, database string, use_tls bool, user string, password string) (string, error) {
+		tmpl := template.Must(template.ParseFS(templateFS, "templates/"+template_name))
+		return func(server, address string, port int, database string, use_tls bool, user string, password string) (string, error) {
+			type server_params struct {
+				Server   string
+				Address  string
+				Port     int
+				Database string
+				Use_tls  bool
+				User     string
+				Password string
+			}
+			var buf bytes.Buffer
+			if err := tmpl.Execute(&buf, server_params{
+				Server:   esc(server),
+				Address:  esc(address),
+				Port:     port,
+				Database: esc(database),
+				Use_tls:  use_tls,
+				User:     esc(user),
+				Password: esc(password),
+			}); err != nil {
+				return "", err
+			}
+			return buf.String(), nil
+		}
+	}
+
+	ct_options = make(map[types.ConnectionType]ct_option)
+
+	ct_options[types.CT_PostgreSQL] = ct_option{
+		ext:        define_ext("postgres_fdw"),
+		server_def: define_server("postgres.sql"),
+		table: func(remoteSchema, remoteTable string) string {
+			return fmt.Sprintf("schema_name '%s', table_name '%s'",
+				esc(remoteSchema), esc(remoteTable))
+		},
+	}
+	ct_options[types.CT_MySQL] = ct_option{
+		ext:        define_ext("mysql_fdw"),
+		server_def: define_server("mysql.sql"),
+		table: func(remoteSchema, remoteTable string) string {
+			return fmt.Sprintf("dbname '%s', table_name '%s'",
+				esc(remoteSchema), esc(remoteTable))
+		},
+	}
+	ct_options[types.CT_MariaDB] = ct_options[types.CT_MySQL]
+	ct_options[types.CT_OracleDB] = ct_option{
+		ext:        define_ext("oracle_fdw"),
+		server_def: define_server("oracle.sql"),
+		table: func(remoteSchema, remoteTable string) string {
+			return fmt.Sprintf("schema '%s', table '%s'",
+				esc(remoteSchema), esc(remoteTable))
+		},
+	}
+	ct_options[types.CT_DB2] = ct_option{
+		ext:        define_ext("db2_fdw"),
+		server_def: define_server("db2.sql"),
+		table: func(remoteSchema, remoteTable string) string {
+			return fmt.Sprintf("schema '%s', table '%s'",
+				esc(remoteSchema), esc(remoteTable))
+		},
+	}
+	ct_options[types.CT_SqlServer] = ct_option{
+		ext:        define_ext("tds_fdw"),
+		server_def: define_server("tds.sql"),
+		table: func(remoteSchema, remoteTable string) string {
+			return fmt.Sprintf("schema_name '%s', table_name '%s'",
+				esc(remoteSchema), esc(remoteTable))
+		},
+		// ext:        define_rust_ext("mssql_wrapper", "mssql_fdw_handler", "mssql_fdw_validator"),
+		// server_def: define_server("mssql.sql"),
+		// table: func(remoteSchema, remoteTable string) string {
+		//	return fmt.Sprintf("table '[%s].[%s]'",
+		//		remoteSchema, remoteTable)
+		// },
+	}
+	ct_options[types.CT_MongoDB] = ct_option{
+		ext:        define_ext("mongo_fdw"),
+		server_def: define_server("mongodb.sql"),
+		table: func(remoteSchema, remoteTable string) string {
+			return fmt.Sprintf("database '%s', collection '%s'",
+				esc(remoteSchema), esc(remoteTable))
+		},
+	}
+	ct_options[types.CT_Elasticsearch] = ct_option{
+		ext:        define_ext("jdbc_fdw"),
+		server_def: define_server("es.sql"),
+		table: func(remoteSchema, remoteTable string) string {
+			if remoteSchema == "_defaultdb_" {
+				return fmt.Sprintf("table_name '%s'", esc(remoteTable))
+			}
+			return fmt.Sprintf("schema_name '%s', table_name '%s'",
+				esc(remoteSchema), esc(remoteTable))
+		},
+	}
 }
 
-func configureDatabase(db *sql.DB,
+func ConfigureDatabase(db *sql.DB,
 	datascope *types.Scope,
 	connections map[string]types.Connection,
 	credentials map[string]types.Credential,
@@ -294,10 +270,8 @@ func configureDatabase(db *sql.DB,
 
 	rollback := func(err error, msg string) error {
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			log.Errorf("Rollback error: %v\n", rollbackErr)
 			return fmt.Errorf("%s: %v, unable to rollback: %v\n", msg, err, rollbackErr)
 		} else {
-			log.Errorf("Rollback successful\n")
 			return fmt.Errorf("%s: %v", msg, err)
 		}
 	}
@@ -310,36 +284,80 @@ func configureDatabase(db *sql.DB,
 		return nil
 	}
 
+	if err = exec(`CREATE EXTENSION IF NOT EXISTS supabase_vault CASCADE`); err != nil {
+		return err
+	}
+	{
+		if err := exec("GRANT USAGE ON SCHEMA vault TO " + localUser); err != nil {
+			return err
+		}
+		if err := exec(`DO $$
+				DECLARE
+                                    uname text := '` + localUser + `';
+				    tbl_name text;
+				BEGIN
+                                    EXECUTE format('GRANT USAGE ON SCHEMA vault TO %I;', uname);
+                                    EXECUTE format('GRANT EXECUTE ON FUNCTION pgsodium.crypto_aead_det_decrypt(bytea, bytea, uuid, bytea) TO %I;',uname);
+                                    CREATE EXTENSION IF NOT EXISTS wrappers WITH SCHEMA public;
+                                    EXECUTE format('GRANT SELECT, INSERT, UPDATE ON wrappers_fdw_stats TO %I;',uname);
+				    FOR tbl_name IN SELECT table_name FROM information_schema.tables WHERE table_schema = 'vault'
+				    LOOP
+					EXECUTE format('GRANT SELECT ON vault.%I TO %I;', tbl_name, uname);
+				    END LOOP;
+				END$$;`); err != nil {
+			return err
+		}
+	}
+
+	if err = exec(`
+          CREATE OR REPLACE FUNCTION insert_secret(p_name text, p_secret text) RETURNS UUID AS $$
+          DECLARE
+              v_id UUID;
+          BEGIN
+             -- Attempt to update first and capture the id
+             UPDATE vault.secrets
+             SET secret = p_secret
+             WHERE name = p_name
+             RETURNING key_id INTO v_id;
+
+             -- If the update did not affect any rows, then insert
+             IF NOT FOUND THEN
+                 INSERT INTO vault.secrets (name, secret)
+                 VALUES (p_name, p_secret)
+                 RETURNING key_id INTO v_id;
+             END IF;
+
+             -- Return the id of the affected row
+             RETURN v_id;
+         END;
+         $$
+         LANGUAGE plpgsql`); err != nil {
+		return err
+	}
+
 	for ct := range connectionTypes {
-		if e, err := extensionName(ct); err != nil {
-			return rollback(err, "Configuring extention failed")
-		} else if err = exec("CREATE EXTENSION IF NOT EXISTS " + e + " WITH SCHEMA public"); err != nil {
+		if err = exec(ct_options[ct].ext); err != nil {
 			return err
 		}
 	}
 
 	if createDymiumTables {
 		if err := exec("CREATE SCHEMA _dymium"); err != nil {
-			log.Errorf("Creating schema _dymium failed: %v\n", err)
 			return err
 		}
 		if err := exec("CREATE TABLE _dymium.servers ( server text )"); err != nil {
-			log.Errorf("Creating table _dymium.servers failed: %v\n", err)
 			return err
 		}
 		if err := exec("CREATE TABLE _dymium.schemas ( \"schema\" text )"); err != nil {
-			log.Errorf("Creating table _dymium.schemas failed: %v\n", err)
 			return err
 		}
 	}
 
 	if err = exec("CREATE EXTENSION IF NOT EXISTS obfuscator WITH SCHEMA _dymium"); err != nil {
-		log.Errorf("Creating extension obfuscator failed: %v\n", err)
 		return err
 	}
 	for _, f := range obf_funcs() {
 		if err := exec("GRANT EXECUTE ON FUNCTION _dymium." + f + " TO " + localUser); err != nil {
-			log.Errorf("Granting execute on function _dymium.%s failed: %v\n", f, err)
 			return err
 		}
 	}
@@ -350,49 +368,32 @@ func configureDatabase(db *sql.DB,
 			return rollback(fmt.Errorf("misconfiguration!"),
 				fmt.Sprintf("Connection %s is not defined", datascope.Connections[k]))
 		}
-		e, _ := extensionName(c.Database_type)
-
-		opts := options(c.Database_type)
-
-		sql := `CREATE SERVER ` + serverName(c.Name) + ` FOREIGN DATA WRAPPER ` + e + ` OPTIONS (` +
-			opts.server(c.Address, c.Port, c.Dbname) + `)`
-		if err := exec(sql); err != nil {
-			log.Errorf("Creating server %s failed: %v\n", serverName(c.Name), err)
-			return err
-		}
-		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.servers (server) VALUES ( $1 )", serverName(c.Name)); err != nil {
-			return rollback(err, "Registering server "+serverName(c.Name)+" failed")
-		}
 		cred, ok := credentials[c.Id]
 		if !ok {
 			return rollback(fmt.Errorf("misconfiguration!"),
 				fmt.Sprintf("Can not find credentials for "+c.Id))
 		}
 
-		{
-			// Don't use exec(), because sql contains password
-			sql := fmt.Sprintf(`CREATE USER MAPPING FOR public SERVER `+serverName(c.Name)+` OPTIONS (%s)`,
-				opts.userMapping(cred.User_name, cred.Password))
-			if _, err := tx.ExecContext(ctx, sql); err != nil {
-				errSql := fmt.Sprintf(`CREATE USER MAPPING FOR public SERVER `+serverName(c.Name)+` OPTIONS (%s)`,
-					opts.userMapping(cred.User_name, "******"))
-				return rollback(err, "["+errSql+"] failed")
-			}
+		if sql, err := ct_options[c.Database_type].server_def(serverName(c.Name), c.Address, c.Port, c.Dbname, c.Use_tls, cred.User_name, cred.Password); err != nil {
+			return rollback(err, fmt.Sprintf("server_def(%q, %q, %d, %q, %v, %q, \"******\"", serverName(c.Name), c.Address, c.Port, c.Dbname, c.Use_tls, cred.User_name, cred.Password))
+		} else if _, err := tx.ExecContext(ctx, sql); err != nil {
+			return rollback(err, "["+sql+"] failed")
+		}
+
+		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.servers (server) VALUES ( $1 )", serverName(c.Name)); err != nil {
+			return rollback(err, "Registering server "+serverName(c.Name)+" failed")
 		}
 	}
 
 	for k := range shortSchemas {
 		// k is already PostgresEscaped!
 		if err := exec("CREATE SCHEMA IF NOT EXISTS " + k); err != nil {
-			log.Errorf("Creating schema %s failed: %v\n", k, err)
 			return err
 		}
 		if err := exec("GRANT USAGE ON SCHEMA " + k + " TO " + localUser); err != nil {
-			log.Errorf("Granting usage on schema %s failed: %v\n", k, err)
 			return err
 		}
 		if err := exec("ALTER DEFAULT PRIVILEGES IN SCHEMA " + k + " GRANT SELECT ON TABLES TO " + localUser); err != nil {
-			log.Errorf("Granting select on tables in schema %s failed: %v\n", k, err)
 			return err
 		}
 		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", k); err != nil {
@@ -402,15 +403,12 @@ func configureDatabase(db *sql.DB,
 	for k := range longSchemas {
 		kk := PostgresEscape(k.k1 + "_" + k.k2)
 		if err := exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", kk)); err != nil {
-			log.Errorf("Creating schema %s failed: %v\n", kk, err)
 			return err
 		}
 		if err := exec(fmt.Sprintf("GRANT USAGE ON SCHEMA %s TO %s", kk, localUser)); err != nil {
-			log.Errorf("Granting usage on schema %s failed: %v\n", kk, err)
 			return err
 		}
 		if err := exec(fmt.Sprintf("ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT SELECT ON TABLES TO %s", kk, localUser)); err != nil {
-			log.Errorf("Granting select on tables in schema %s failed: %v\n", kk, err)
 			return err
 		}
 		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", kk); err != nil {
@@ -504,7 +502,7 @@ func configureDatabase(db *sql.DB,
 			} else {
 				schemaname = s.Name
 			}
-			opts := options(con.Database_type)
+			opts := ct_options[con.Database_type]
 
 			hiddenTbl := "CREATE FOREIGN TABLE " + hiddenTblName + " (\n" +
 				strings.Join(hiddenTblCols, ",\n") +
@@ -536,7 +534,6 @@ func configureDatabase(db *sql.DB,
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.Errorf("Configure database commit error: %v\n", err)
 		return fmt.Errorf("Configure database commit error: %v", err)
 	}
 

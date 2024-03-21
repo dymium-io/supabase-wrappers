@@ -12,7 +12,8 @@ import (
 	"crypto/sha256"
 	b64 "encoding/base64"
 
-	"DbSync/types"
+        . "DbSetup"
+	"DbSetup/types"
 )
 
 func sqlTest(

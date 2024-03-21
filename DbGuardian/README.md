@@ -33,10 +33,17 @@ and then:
 and then:
 > git subtree pull --prefix DbGuardian/foreign_data_wrappers/jdbc_fdw jdbc_fdw main --squash 
 
-> git remote add -f supabase_wrappers https://github.com/supabase/wrappers.git
-> git subtree add --prefix DbGuardian/foreign_data_wrappers/supabase_wrappers supabase_wrappers main --squash
+Supabase original (ignore it!)
+> # git remote add -f supabase_wrappers https://github.com/supabase/wrappers.git
+> # git subtree add --prefix DbGuardian/foreign_data_wrappers/supabase_wrappers supabase_wrappers main --squash
 and then:
-> git subtree pull --prefix DbGuardian/foreign_data_wrappers/supabase_wrappers supabase_wrappers main --squash
+> # git subtree pull --prefix DbGuardian/foreign_data_wrappers/supabase_wrappers supabase_wrappers main --squash
+
+> # git remote add -f -t dymium-dev supabase_wrappers git@github.com:dymium-io/supabase-wrappers.git
+> # git subtree add --prefix DbGuardian/foreign_data_wrappers/supabase_wrappers supabase_wrappers dymium-dev --squash
+and then:
+> # git subtree pull --prefix DbGuardian/foreign_data_wrappers/supabase_wrappers supabase_wrappers dymium-dev --squash
+
 
 > git remote add -f pgsodium  https://github.com/michelp/pgsodium.git
 > git subtree add --prefix DbGuardian/foreign_data_wrappers/pgsodium pgsodium main --squash

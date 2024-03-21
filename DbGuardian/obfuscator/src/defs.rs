@@ -1,5 +1,5 @@
-use pgx::datum::Uuid;
-use pgx::prelude::*;
+use pgrx::datum::Uuid;
+use pgrx::prelude::*;
 
 #[pg_extern(name = "_ab44f4901b2ebca16067351bbd3ce6060a3e8c7d20fd6dc9ba21b49a_")]
 fn obfuscate_text(key: i32, txt: &'static str, _sz: i32, _pad: bool) -> String {

@@ -17,7 +17,8 @@ import (
 	"crypto/cipher"
 	"encoding/hex"
 
-	"DbSync/types"
+        . "DbSetup"
+	"DbSetup/types"
 )
 
 var db *sql.DB
@@ -375,6 +376,10 @@ func AESdecrypt(ciphertext []byte, keyhex string) ([]byte, error) {
 
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 	return gcm.Open(nil, nonce, ciphertext, nil)
+}
+
+func esc(str string) string {
+        return ParamEscape(str)
 }
 
 func main() {

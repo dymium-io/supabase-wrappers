@@ -9,4 +9,4 @@ mod obf_word;
 
 pub mod defs;
 
-pgx::pg_module_magic!();
+pgrx::pg_module_magic!();
