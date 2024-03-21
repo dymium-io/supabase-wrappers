@@ -53,6 +53,8 @@ func CustomerHandlers(p *mux.Router) {
 	authenticated.HandleFunc("/api/getaccesskey", dhandlers.GetAccessKeys).Methods("GET").Name("getkeyaccess")
 	authenticated.HandleFunc("/api/getpolicies", dhandlers.GetPolicies).Methods("GET").Name("getpolicies")
 	authenticated.HandleFunc("/api/savepolicies", dhandlers.SavePolicies).Methods("POST").Name("savepolicies")
+	authenticated.HandleFunc("/api/regenerateconnectorsecret", dhandlers.RegenerateConnectorSecret).Methods("POST").Name("regenerateconnectorsecret")
+
 
 	authenticated.HandleFunc("/api/addmachinetunnel", dhandlers.AddMachineTunnel).Methods("POST").Name("addmachinetunnel")
 	authenticated.HandleFunc("/api/getmachinetunnels", dhandlers.GetMachineTunnels).Methods("GET").Name("getmachinetunnels")

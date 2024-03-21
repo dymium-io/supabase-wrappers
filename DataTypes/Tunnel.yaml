@@ -63,8 +63,6 @@ Tunnel:
 AddConnectorRequest: 
   - id: ?string
   - name: string
-  - accesskey: string
-  - secret: string
   - tunnels: <|Tunnel|>
 
 GetKeySecret: 

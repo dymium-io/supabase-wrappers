@@ -41,15 +41,11 @@ export function humanReadableTunnelStatus(__a__ : TunnelStatus) : string {
 export class AddConnectorRequest {
   private '_id': string | null
   private '_name': string
-  private '_accesskey': string
-  private '_secret': string
   private '_tunnels': Array<Tunnel>
 
   constructor() {
     this['_id'] = null
     this['_name'] = ''
-    this['_accesskey'] = ''
-    this['_secret'] = ''
     this['_tunnels'] = []
   }
   get id(): string | null { return this['_id'] }
@@ -75,22 +71,6 @@ export class AddConnectorRequest {
       this['_name'] = __v__
     }
   }
-  get accesskey(): string { return this['_accesskey'] }
-  set accesskey(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_accesskey'])) {
-      setDirtyFlag()
-      this['_accesskey'] = __v__
-    }
-  }
-  get secret(): string { return this['_secret'] }
-  set secret(__a__: any) {
-    let __v__ = stringReader('')(__a__)
-    if(!_.isEqual(__v__,this['_secret'])) {
-      setDirtyFlag()
-      this['_secret'] = __v__
-    }
-  }
   get tunnels(): Array<Tunnel> { return this['_tunnels'] }
   set tunnels(__a__: any) {
     setDirtyFlag()
@@ -105,8 +85,6 @@ export class AddConnectorRequest {
     if(typeof __a__ === 'object' && __a__ != null) {
        cls.id = __a__['id'] == null ? null : __a__['id']
        cls.name = __a__['name']
-       cls.accesskey = __a__['accesskey']
-       cls.secret = __a__['secret']
        cls.tunnels = array1Reader(Tunnel.fromJson)(__a__['tunnels'])
     } else {
        doAlert(`AddConnectorRequest: an attempt to initialize from ${__a__}`)

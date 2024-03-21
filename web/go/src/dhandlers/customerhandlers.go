@@ -1435,7 +1435,7 @@ func RegenerateDatascopePassword(w http.ResponseWriter, r *http.Request) {
 	roles := r.Context().Value(authenticatedRolesKey).([]string)
 	session := r.Context().Value(authenticatedSessionKey).(string)
 	domain := r.Context().Value(authenticatedDomainKey).(string)
-	
+
 	out, err := authentication.RegenerateDatascopePassword(schema, email, groups, domain)
 	if err != nil {
 		log.ErrorUserf(schema, session, email, groups, roles, "Api RegenerateDatascopePassword, error: %s", err.Error())
@@ -2672,4 +2672,28 @@ func SetSuperAdmins(w http.ResponseWriter, r *http.Request) {
 	common.CommonNocacheHeaders(w, r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"status": "OK"}`))
+}
+
+func RegenerateConnectorSecret(w http.ResponseWriter, r *http.Request) {	
+	body, _ := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	t := types.DatascopeId{}
+	err := json.Unmarshal(body, &t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	schema := r.Context().Value(authenticatedSchemaKey).(string)
+
+	secret, err := authentication.RegenerateConnectorSecret( schema, t.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	out := types.GetKeySecret{Accesskey: t.Id, Secret: secret}
+	js, err := json.Marshal(out)
+
+	common.CommonNocacheHeaders(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }

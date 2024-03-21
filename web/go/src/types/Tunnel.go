@@ -21,8 +21,6 @@ const (
 type AddConnectorRequest struct {
    Id *string `json:"id"`
    Name string `json:"name"`
-   Accesskey string `json:"accesskey"`
-   Secret string `json:"secret"`
    Tunnels []Tunnel `json:"tunnels"`
 }
 

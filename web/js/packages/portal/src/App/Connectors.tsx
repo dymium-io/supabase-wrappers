@@ -124,7 +124,7 @@ function Downloads(props) {
 function ConnectionForm(props) {
     let regenerate = () => {
 
-        getAccessKey(props.setKey, props.setSecret, props.setSpinner, props.setAlert)
+        getAccessKey(props.id, props.setKey, props.setSecret, props.setSpinner, props.setAlert)
     }
     let displayTunnels = () => {
         let out: JSX.Element[] = []
@@ -368,14 +368,15 @@ function ConnectionForm(props) {
     )
 }
 
-let getAccessKey = (setKey: React.Dispatch<React.SetStateAction<string>>,
+let getAccessKey = (id: string, setKey: React.Dispatch<React.SetStateAction<string>>,
     setSecret: React.Dispatch<React.SetStateAction<string>>,
     setSpinner: React.Dispatch<React.SetStateAction<boolean>>,
     setAlert: React.Dispatch<React.SetStateAction<JSX.Element>>
 ) => {
     setSpinner(true)
-    http.sendToServer("GET", "/api/getaccesskey",
-        null, "",
+    let js = { id: id }
+    http.sendToServer("POST", "/api/regenerateconnectorsecret",
+        null, JSON.stringify(js),
         resp => {
             resp.json().then(js => {
                 setSpinner(false)
@@ -431,17 +432,13 @@ export function AddConnector() {
     const [alert, setAlert] = useState<JSX.Element>(<></>)
     const [showOffcanvas, setShowOffcanvas] = useState(com.isInstaller())
 
-    useEffect(() => {
-        getAccessKey(setKey, setSecret, setSpinner, setAlert)
-    }, [])
+
     const appDispatch = useAppDispatch()
     let sendConnector = () => {
         setSpinner(true)
 
         let jsbody = new tun.AddConnectorRequest()
         jsbody.name = name
-        jsbody.accesskey = key
-        jsbody.secret = secret
         jsbody.tunnels = tunnel
 
         let body = jsbody.toJson()
@@ -452,8 +449,7 @@ export function AddConnector() {
                 resp.json().then(js => {
                     if (js.status == "OK") {
                         setName("")
-                        setKey("")
-                        setSecret("")
+
                         setTunnel([tun.Tunnel.fromJson({ id: "", name: "", address: "", port: "" })])
 
                         appDispatch(setSelectedConnectorDefault(js.token))
@@ -552,7 +548,7 @@ export function AddConnector() {
                         setKey={setKey}
                         secret={secret}
                         setSecret={setSecret}
-
+                        setAlert={setAlert}
                         tunnel={tunnel}
                         setTunnel={setTunnel}
 
@@ -761,8 +757,6 @@ export function EditConnectors(props) {
         if (connector != null)
             jsbody.id = connector.id
         jsbody.name = name
-        jsbody.accesskey = key
-        jsbody.secret = secret
         jsbody.tunnels = tunnel
 
         let body = jsbody.toJson()
@@ -956,6 +950,16 @@ export function EditConnectors(props) {
         }
         return null
     }
+    let setAndUpdateSecret = (secret) => {
+        // update the dataset
+        for (let i = 0; i < conns.length; i++) {
+            if (conns[i].id === rememberedSelection) {
+                conns[i].secret = secret
+            }
+        }
+        setConns([...conns])
+        setSecret(secret)
+    }
     let displayConnector = () => {
 
         return (
@@ -968,9 +972,9 @@ export function EditConnectors(props) {
                         accesskey={key}
                         setKey={setKey}
                         secret={secret}
-                        setSecret={setSecret}
+                        setSecret={setAndUpdateSecret}
                         setSpinner={setSpinner}
-
+                        setAlert={setAlert}
                         tunnel={tunnel}
                         setTunnel={setTunnel}
                         id={rememberedSelection}

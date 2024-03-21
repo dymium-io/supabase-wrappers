@@ -176,7 +176,7 @@ func initRBAC() {
 		"getgroupsfordatascopes", "getusage", "getaccesskey", "createnewconnector",
 		"getconnectors", "updateconnector", "deleteconnector", "getpolicies", "savepolicies", "querytable",
 		"addmachinetunnel", "getmachinetunnels", "updatemachinetunnel", "deletemachinetunnel",
-		"regenmachinetunnel", "refreshmachinetunnels", "getdatascopes",
+		"regenmachinetunnel", "refreshmachinetunnels", "getdatascopes", "regenerateconnectorsecret",
 		/* "getoidcconnection", "getlogindetails", "getsuperadmins", "setoidcconnection", "setlogindetails", "setsuperadmins" */} // clean this up
 
 	usernames := []string{"getmachineclientcertificate", "getclientcertificate",
@@ -2433,16 +2433,18 @@ func CreateNewConnector(schema string, req *types.AddConnectorRequest) (string, 
 		log.Errorf("CreateNewConnector error 0: %s", err.Error())
 		return "", err
 	}
+	accesskey, _ := certificates.GenerateRandomString(12)
+	accesssecret, _ := certificates.GenerateRandomString(128)
 
 	sql := `insert into ` + schema + `.connectorauth(name, accesskey, accesssecret, accesssecretb) values($1,$2,$3, $4) returning id;`
 
-	encsycret, err := EncryptString(schema, req.Secret)
+	encsycret, err := EncryptString(schema, accesssecret)
 	if err != nil {
 		return "", err
 	}
 
 	var id string
-	row := tx.QueryRowContext(ctx, sql, req.Name, req.Accesskey, "", encsycret)
+	row := tx.QueryRowContext(ctx, sql, req.Name, accesskey, "", encsycret)
 	err = row.Scan(&id)
 	if err != nil {
 		tx.Rollback()
@@ -3075,3 +3077,14 @@ func AuthenticateAndPrepareMachineTunnel(schema, key, secret string) ([]string, 
 
 	return []string{}, "", err
 }
+
+func RegenerateConnectorSecret( schema, id string) (string, error) {
+	newsecret, _ := certificates.GenerateRandomString(128)
+	sql := `update ` + schema + `.connectorauth set accesssecretb=$1 where id=$2;`
+	enc, err := EncryptString(schema, newsecret)
+	if err != nil {
+		return "", err
+	}
+	_, err = db.Exec(sql, enc, id)
+	return newsecret, err
+} 
