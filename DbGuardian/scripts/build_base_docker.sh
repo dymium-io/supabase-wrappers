@@ -332,6 +332,7 @@ COPY /oracle_fdw /
 COPY /db2_fdw /
 COPY /mysql_fdw /
 COPY /mongo_fdw /
+COPY /tds_fdw /
 RUN mkdir /usr/local/libmongo
 COPY /mongo_lib/mongo-c-driver/lib/* /usr/local/libmongo
 COPY /mongo_lib/json-c/lib/* /usr/local/libmongo

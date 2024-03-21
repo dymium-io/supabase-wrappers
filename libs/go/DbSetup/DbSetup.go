@@ -180,12 +180,18 @@ func init() {
 		},
 	}
 	ct_options[types.CT_SqlServer] = ct_option{
-		ext:        define_rust_ext("mssql_wrapper", "mssql_fdw_handler", "mssql_fdw_validator"),
-		server_def: define_server("mssql.sql"),
+		ext:        define_ext("tds_fdw"),
+		server_def: define_server("tds.sql"),
 		table: func(remoteSchema, remoteTable string) string {
-			return fmt.Sprintf("table '[%s].[%s]'",
-				remoteSchema, remoteTable)
+			return fmt.Sprintf("schema_name '%s', table_name '%s'",
+				esc(remoteSchema), esc(remoteTable))
 		},
+		// ext:        define_rust_ext("mssql_wrapper", "mssql_fdw_handler", "mssql_fdw_validator"),
+		// server_def: define_server("mssql.sql"),
+		// table: func(remoteSchema, remoteTable string) string {
+		//	return fmt.Sprintf("table '[%s].[%s]'",
+		//		remoteSchema, remoteTable)
+		// },
 	}
 	ct_options[types.CT_MongoDB] = ct_option{
 		ext:        define_ext("mongo_fdw"),
