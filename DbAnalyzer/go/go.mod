@@ -12,7 +12,6 @@ require (
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.9
 	github.com/microsoft/go-mssqldb v1.7.0
-	github.com/sijms/go-ora/v2 v2.7.23
 	go.mongodb.org/mongo-driver v1.13.0
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e
 )
@@ -40,7 +39,7 @@ require (
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
