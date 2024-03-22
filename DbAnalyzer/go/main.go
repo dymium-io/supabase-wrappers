@@ -84,20 +84,20 @@ func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 
 	da, err := connect(&c.Connection)
 	if err != nil {
-		log.Errorf("Error connecting to %v: %v\n", c.Connection, err)
+		log.Errorf("Error connecting to %v: %v\n", c.Connection.Database, err)
 		return nil, err
 	}
 
 	switch c.Dtype {
 	case types.DT_Test:
-		log.Infof("Test connection: %v\n", c.Connection)
+		log.Infof("Test connection: %v\n", c.Connection.Database)
 		return &types.AnalyzerResponse{
 			Dtype:   types.DT_Test,
 			DbInfo:  nil,
 			TblInfo: nil,
 		}, nil
 	case types.DT_DatabaseInfo:
-		log.Infof("Get database info: %v\n", c.Connection)
+		log.Infof("Get database info: %v\n", c.Connection.Database)
 		if di, err := da.GetDbInfo(c.Connection.Database); err != nil {
 			return nil, err
 		} else {
@@ -108,7 +108,7 @@ func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 			}, nil
 		}
 	case types.DT_TableInfo:
-		log.Infof("Get table info: %v\n", c.Connection)
+		log.Infof("Get table info: %s.%s \n", c.Connection.Database, c.TableInfo)
 		if ti, err := da.GetTblInfo(c.Connection.Database, c.TableInfo); err != nil {
 			return nil, err
 		} else {
@@ -130,7 +130,7 @@ func connect(connectionParams *types.ConnectionParams) (DA, error) {
 	if con != nil {
 		if err := con.da.Ping(); err != nil {
 			cache.Pop().da.Close()
-			log.Errorf("Error pinging %v: %v\n", connectionParams, err)
+			log.Errorf("Error pinging %v: %v\n", connectionParams.Database, err)
 			return nil, err
 		} else {
 			return con.da, nil
@@ -139,7 +139,7 @@ func connect(connectionParams *types.ConnectionParams) (DA, error) {
 
 	da := dbAnalyzer(connectionParams.Typ)
 	if err := da.Connect(connectionParams); err != nil {
-		log.Errorf("Error connecting to %v: %v\n", connectionParams, err)
+		log.Errorf("Error connecting to %v: %v\n", connectionParams.Database, err)
 		return da, err
 	} else {
 		con = &conT{
