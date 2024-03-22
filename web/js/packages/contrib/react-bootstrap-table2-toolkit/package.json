@@ -44,7 +44,7 @@
   "dependencies": {
     "@babel/core": "^7.24.0",
     "file-saver": "2.0.5",
-    "postcss": "^8.4.35"
+    "postcss": "^8.4.37"
   },
   "devDependencies": {
     "@babel/cli": "^7.21.5",
