@@ -115,6 +115,7 @@ func init() {
 		          END IF;
                         END $$`
 	}
+	var _ = define_rust_ext
 
 	define_server := func(template_name string) func(server, address string, port int, database string, use_tls bool, user string, password string) (string, error) {
 		tmpl := template.Must(template.ParseFS(templateFS, "templates/"+template_name))

@@ -66,6 +66,7 @@ retval=$?
 cd $build_d
 
 cp ../entry.sh .
+cp ../sqlnet.ora .
 
 
 # creating docker
@@ -76,13 +77,26 @@ DbAnalyzer=$(docker images db-analyzer -q)
 cat <<EOF | docker build --platform linux/amd64 --compress --label "git.branch=$(git branch --show-current)" --label "git.commit=$(git rev-parse HEAD)" -t db-analyzer -f - .
 FROM public.ecr.aws/lambda/provided:al2
 
+RUN yum install libaio -y && \
+    yum clean all
+
 COPY main entry.sh /
+RUN mkdir -p /oranet
+COPY ./sqlnet.ora /oranet/
+ENV TNS_ADMIN=/oranet
 
 RUN mkdir -p /opt/oracle
-COPY ./instantclient* /opt/oracle/
-
+#COPY ./instantclient* /opt/oracle/
+COPY ${instantclient_version}/ /opt/oracle/${instantclient_version}/
 RUN echo /opt/oracle/${instantclient_version} > /etc/ld.so.conf.d/oracle-instantclient.conf && \
     /sbin/ldconfig
+
+#godror driver looks for libs in /opt/oracle/instantclient_19_8/lib directory
+RUN mkdir -p /opt/oracle/${instantclient_version}/lib && \
+    ln -s /opt/oracle/${instantclient_version}/lib*.so* /opt/oracle/${instantclient_version}/lib
+
+#RUN echo /opt/oracle/${instantclient_version} > /etc/ld.so.conf.d/oracle-instantclient.conf && \
+#    /sbin/ldconfig
 
 ENV ORACLE_HOME=/opt/oracle/${instantclient_version}
 

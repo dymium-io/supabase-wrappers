@@ -2061,7 +2061,7 @@ __metadata:
     gsap: "npm:^3.11.5"
     html-loader: "npm:^4.2.0"
     http-proxy-middleware: "npm:^2.0.6"
-    postcss: "npm:8.4.36"
+    postcss: "npm:^8.4.37"
     prop-type: "npm:^0.0.1"
     prop-types: "npm:^15.8.1"
     react: "npm:^18.2.0"
@@ -2141,7 +2141,7 @@ __metadata:
     jest-environment-jsdom: "npm:^29.5.0"
     lodash: "npm:^4.17.21"
     multiselect-react-dropdown: "npm:^2.0.22"
-    postcss: "npm:8.4.36"
+    postcss: "npm:^8.4.37"
     prop-types: "npm:^15.8.1"
     react: "npm:18.2.0"
     react-app-rewire-alias: "npm:^1.1.7"
@@ -19218,7 +19218,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:8.4.36, postcss@npm:^8.1.0, postcss@npm:^8.3.5, postcss@npm:^8.4.23, postcss@npm:^8.4.33, postcss@npm:^8.4.4":
+"postcss@npm:^7, postcss@npm:^7.0.0, postcss@npm:^7.0.1, postcss@npm:^7.0.14, postcss@npm:^7.0.17, postcss@npm:^7.0.2, postcss@npm:^7.0.26, postcss@npm:^7.0.27, postcss@npm:^7.0.32, postcss@npm:^7.0.35, postcss@npm:^7.0.5, postcss@npm:^7.0.6":
+  version: 7.0.39
+  resolution: "postcss@npm:7.0.39"
+  dependencies:
+    picocolors: "npm:^0.2.1"
+    source-map: "npm:^0.6.1"
+  checksum: 10c0/fd27ee808c0d02407582cccfad4729033e2b439d56cd45534fb39aaad308bb35a290f3b7db5f2394980e8756f9381b458a625618550808c5ff01a125f51efc53
+  languageName: node
+  linkType: hard
+
+"postcss@npm:^8.1.0, postcss@npm:^8.3.5, postcss@npm:^8.4.23, postcss@npm:^8.4.33, postcss@npm:^8.4.4":
   version: 8.4.36
   resolution: "postcss@npm:8.4.36"
   dependencies:
@@ -19229,13 +19239,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^7, postcss@npm:^7.0.0, postcss@npm:^7.0.1, postcss@npm:^7.0.14, postcss@npm:^7.0.17, postcss@npm:^7.0.2, postcss@npm:^7.0.26, postcss@npm:^7.0.27, postcss@npm:^7.0.32, postcss@npm:^7.0.35, postcss@npm:^7.0.5, postcss@npm:^7.0.6":
-  version: 7.0.39
-  resolution: "postcss@npm:7.0.39"
+"postcss@npm:^8.4.37":
+  version: 8.4.38
+  resolution: "postcss@npm:8.4.38"
   dependencies:
-    picocolors: "npm:^0.2.1"
-    source-map: "npm:^0.6.1"
-  checksum: 10c0/fd27ee808c0d02407582cccfad4729033e2b439d56cd45534fb39aaad308bb35a290f3b7db5f2394980e8756f9381b458a625618550808c5ff01a125f51efc53
+    nanoid: "npm:^3.3.7"
+    picocolors: "npm:^1.0.0"
+    source-map-js: "npm:^1.2.0"
+  checksum: 10c0/955407b8f70cf0c14acf35dab3615899a2a60a26718a63c848cf3c29f2467b0533991b985a2b994430d890bd7ec2b1963e36352b0774a19143b5f591540f7c06
   languageName: node
   linkType: hard
 
@@ -19711,7 +19722,7 @@ __metadata:
     clean-css-cli: "npm:^5.6.2"
     cssnano: "npm:^6.0.1"
     node-sass: "npm:^8.0.0"
-    postcss: "npm:8.4.36"
+    postcss: "npm:^8.4.37"
     react-transition-group: "npm:^4.2.0"
     underscore: "npm:1.13.6"
   peerDependencies:
@@ -19731,7 +19742,7 @@ __metadata:
     clean-css-cli: "npm:^5.6.2"
     cssnano: "npm:^6.0.1"
     node-sass: "npm:^8.0.0"
-    postcss: "npm:8.4.36"
+    postcss: "npm:^8.4.37"
   peerDependencies:
     prop-types: ^15.0.0
     react: ^18.2.0
@@ -19749,7 +19760,7 @@ __metadata:
     cssnano: "npm:^6.0.1"
     file-saver: "npm:2.0.5"
     node-sass: "npm:^8.0.0"
-    postcss: "npm:8.4.36"
+    postcss: "npm:^8.4.37"
   peerDependencies:
     prop-types: ^15.0.0
     react: ^18.2.0
@@ -21837,6 +21848,13 @@ __metadata:
   version: 1.1.0
   resolution: "source-map-js@npm:1.1.0"
   checksum: 10c0/d1f016efe4fcf67fd92e36da0670f2889b13a36cc453329758336450e811c61164376eb451b453b4dd4e89a760f841b0a014942d54f240af31a791829bc0e336
+  languageName: node
+  linkType: hard
+
+"source-map-js@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "source-map-js@npm:1.2.0"
+  checksum: 10c0/7e5f896ac10a3a50fe2898e5009c58ff0dc102dcb056ed27a354623a0ece8954d4b2649e1a1b2b52ef2e161d26f8859c7710350930751640e71e374fe2d321a4
   languageName: node
   linkType: hard
 

@@ -352,7 +352,7 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 		}
 		log.Debugf("Added tables: %v", database.Schemas[currentSchema].Tables)
 	}
-	log.Debugf("Got database info: %v", database)
+	log.Debugf("Got database info: %v", database.DbName)
 	return &database, nil
 }
 
@@ -426,11 +426,11 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 		} else {
 			d.isNullable = false
 		}
-		log.Infof("Got description for %s: %v", d.cName, d)
+		log.Debugf("Got description for %s: %v", d.cName, d)
 		descr = append(descr, &d)
 	}
 
-	log.Infof("Got columns description: %v", descr)
+	log.Debugf("Got columns description: %v", descr)
 
 	detectors, err := detect.Compile(tip.Rules)
 	if err != nil {
@@ -743,7 +743,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 		ti.Columns = append(ti.Columns, c)
 	}
 
-	log.Debugf("Got table info: %v", ti)
+	log.Debugf("Got table info: %v", ti.TblName)
 
 	log.Debugf("Sampling the table: %s", tip.Table)
 	if err = cl.getSample(tip.Schema, tip.Table, sample); err != nil {

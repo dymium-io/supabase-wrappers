@@ -11,6 +11,5 @@ fun main(args: Array<String>) {
 @Suppress("unused") // Referenced in application.conf
 fun Application.module() {
     configureSerialization()
-    configureMonitoring()
     configureRouting()
 }

@@ -3,8 +3,8 @@ package main
 import (
 	"database/sql"
 	"dymium.com/dymium/log"
-	_ "github.com/sijms/go-ora/v2"
-	go_ora "github.com/sijms/go-ora/v2"
+	_ "github.com/godror/godror"
+	"github.com/jmoiron/sqlx"
 
 	"fmt"
 	"strings"
@@ -28,18 +28,11 @@ func (da *OracleDB) Close() {
 
 func (da *OracleDB) Connect(c *types.ConnectionParams) error {
 	log.Infof("Connect: Address: %s, Port: %d, User: %s, Database: %s, Tls: %v", c.Address, c.Port, c.User, c.Database, c.Tls)
-	urlOptions := map[string]string{}
-	if c.Tls {
-		urlOptions["ssl"] = "true"
-		urlOptions["SSL VERIFY"] = "false"
-		//"wallet": "path to folder that contains oracle wallet",
-	} else {
-		urlOptions["ssl"] = "false"
-	}
+	// oracle clients try to encrypt the connection by default if the server supports it.
+	// so there is no need to set the sslmode to require.
 
-	oracleconn := go_ora.BuildUrl(c.Address, c.Port, c.Database, c.User, c.Password, urlOptions)
-
-	db, err := sql.Open("oracle", oracleconn)
+	oracleconn := fmt.Sprintf("%s/%s@%s:%d/%s", c.User, c.Password, c.Address, c.Port, c.Database)
+	db, err := sqlx.Open("godror", oracleconn)
 	if err != nil {
 		log.Errorf("Error connecting to Oracle: %v", err)
 		return err
@@ -49,7 +42,7 @@ func (da *OracleDB) Connect(c *types.ConnectionParams) error {
 		return err
 	}
 
-	da.db = db
+	da.db = db.DB
 	return nil
 }
 
