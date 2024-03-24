@@ -49,6 +49,6 @@
   },
   "dependencies": {
     "@babel/core": "^7.24.0",
-    "postcss": "^8.4.35"
+    "postcss": "8.4.36"
   }
 }

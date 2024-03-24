@@ -2061,7 +2061,7 @@ __metadata:
     gsap: "npm:^3.11.5"
     html-loader: "npm:^4.2.0"
     http-proxy-middleware: "npm:^2.0.6"
-    postcss: "npm:^8.4.35"
+    postcss: "npm:8.4.36"
     prop-type: "npm:^0.0.1"
     prop-types: "npm:^15.8.1"
     react: "npm:^18.2.0"
@@ -2141,7 +2141,7 @@ __metadata:
     jest-environment-jsdom: "npm:^29.5.0"
     lodash: "npm:^4.17.21"
     multiselect-react-dropdown: "npm:^2.0.22"
-    postcss: "npm:^8.4.35"
+    postcss: "npm:8.4.36"
     prop-types: "npm:^15.8.1"
     react: "npm:18.2.0"
     react-app-rewire-alias: "npm:^1.1.7"
@@ -5236,10 +5236,11 @@ __metadata:
   dependencies:
     "@types/react-redux": "npm:^7.1.33"
     "@types/redux-thunk": "npm:2.1.0"
-    browserslist: "npm:^4.23.0"
+    browserslist: "npm:4.23.0"
     follow-redirects: "npm:^1.15.5"
     http-proxy: "npm:^1.18.1"
     http-proxy-middleware: "npm:^2.0.6"
+    loader-utils: "npm:2.0.4"
     update-browserslist-db: "npm:^1.0.13"
   languageName: unknown
   linkType: soft
@@ -6791,7 +6792,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"browserslist@npm:^4.0.0, browserslist@npm:^4.12.0, browserslist@npm:^4.18.1, browserslist@npm:^4.21.10, browserslist@npm:^4.21.4, browserslist@npm:^4.21.5, browserslist@npm:^4.22.2, browserslist@npm:^4.22.3, browserslist@npm:^4.23.0, browserslist@npm:^4.6.2, browserslist@npm:^4.6.4":
+"browserslist@npm:4.23.0, browserslist@npm:^4.0.0, browserslist@npm:^4.12.0, browserslist@npm:^4.18.1, browserslist@npm:^4.21.10, browserslist@npm:^4.21.4, browserslist@npm:^4.21.5, browserslist@npm:^4.22.2, browserslist@npm:^4.22.3, browserslist@npm:^4.23.0, browserslist@npm:^4.6.2, browserslist@npm:^4.6.4":
   version: 4.23.0
   resolution: "browserslist@npm:4.23.0"
   dependencies:
@@ -15188,6 +15189,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"loader-utils@npm:2.0.4, loader-utils@npm:^2.0.0, loader-utils@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "loader-utils@npm:2.0.4"
+  dependencies:
+    big.js: "npm:^5.2.2"
+    emojis-list: "npm:^3.0.0"
+    json5: "npm:^2.1.2"
+  checksum: 10c0/d5654a77f9d339ec2a03d88221a5a695f337bf71eb8dea031b3223420bb818964ba8ed0069145c19b095f6c8b8fd386e602a3fc7ca987042bd8bb1dcc90d7100
+  languageName: node
+  linkType: hard
+
 "loader-utils@npm:^1.1.0, loader-utils@npm:^1.2.3, loader-utils@npm:^1.4.0":
   version: 1.4.2
   resolution: "loader-utils@npm:1.4.2"
@@ -15196,17 +15208,6 @@ __metadata:
     emojis-list: "npm:^3.0.0"
     json5: "npm:^1.0.1"
   checksum: 10c0/2b726088b5526f7605615e3e28043ae9bbd2453f4a85898e1151f3c39dbf7a2b65d09f3996bc588d92ac7e717ded529d3e1ea3ea42c433393be84a58234a2f53
-  languageName: node
-  linkType: hard
-
-"loader-utils@npm:^2.0.0, loader-utils@npm:^2.0.4":
-  version: 2.0.4
-  resolution: "loader-utils@npm:2.0.4"
-  dependencies:
-    big.js: "npm:^5.2.2"
-    emojis-list: "npm:^3.0.0"
-    json5: "npm:^2.1.2"
-  checksum: 10c0/d5654a77f9d339ec2a03d88221a5a695f337bf71eb8dea031b3223420bb818964ba8ed0069145c19b095f6c8b8fd386e602a3fc7ca987042bd8bb1dcc90d7100
   languageName: node
   linkType: hard
 
@@ -19217,17 +19218,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^7, postcss@npm:^7.0.0, postcss@npm:^7.0.1, postcss@npm:^7.0.14, postcss@npm:^7.0.17, postcss@npm:^7.0.2, postcss@npm:^7.0.26, postcss@npm:^7.0.27, postcss@npm:^7.0.32, postcss@npm:^7.0.35, postcss@npm:^7.0.5, postcss@npm:^7.0.6":
-  version: 7.0.39
-  resolution: "postcss@npm:7.0.39"
-  dependencies:
-    picocolors: "npm:^0.2.1"
-    source-map: "npm:^0.6.1"
-  checksum: 10c0/fd27ee808c0d02407582cccfad4729033e2b439d56cd45534fb39aaad308bb35a290f3b7db5f2394980e8756f9381b458a625618550808c5ff01a125f51efc53
-  languageName: node
-  linkType: hard
-
-"postcss@npm:^8.1.0, postcss@npm:^8.3.5, postcss@npm:^8.4.23, postcss@npm:^8.4.33, postcss@npm:^8.4.34, postcss@npm:^8.4.35, postcss@npm:^8.4.4":
+"postcss@npm:8.4.36, postcss@npm:^8.1.0, postcss@npm:^8.3.5, postcss@npm:^8.4.23, postcss@npm:^8.4.33, postcss@npm:^8.4.4":
   version: 8.4.36
   resolution: "postcss@npm:8.4.36"
   dependencies:
@@ -19235,6 +19226,16 @@ __metadata:
     picocolors: "npm:^1.0.0"
     source-map-js: "npm:^1.1.0"
   checksum: 10c0/e7c834e31d8f4e8dfd0a427df36fdc7bdc58a16e373551618e2c3ac172019eb816b24f1b4709311ebcade8d3ba31b2d75522d28ef45ecbbeb11eb01f265579fb
+  languageName: node
+  linkType: hard
+
+"postcss@npm:^7, postcss@npm:^7.0.0, postcss@npm:^7.0.1, postcss@npm:^7.0.14, postcss@npm:^7.0.17, postcss@npm:^7.0.2, postcss@npm:^7.0.26, postcss@npm:^7.0.27, postcss@npm:^7.0.32, postcss@npm:^7.0.35, postcss@npm:^7.0.5, postcss@npm:^7.0.6":
+  version: 7.0.39
+  resolution: "postcss@npm:7.0.39"
+  dependencies:
+    picocolors: "npm:^0.2.1"
+    source-map: "npm:^0.6.1"
+  checksum: 10c0/fd27ee808c0d02407582cccfad4729033e2b439d56cd45534fb39aaad308bb35a290f3b7db5f2394980e8756f9381b458a625618550808c5ff01a125f51efc53
   languageName: node
   linkType: hard
 
@@ -19710,7 +19711,7 @@ __metadata:
     clean-css-cli: "npm:^5.6.2"
     cssnano: "npm:^6.0.1"
     node-sass: "npm:^8.0.0"
-    postcss: "npm:^8.4.34"
+    postcss: "npm:8.4.36"
     react-transition-group: "npm:^4.2.0"
     underscore: "npm:1.13.6"
   peerDependencies:
@@ -19730,7 +19731,7 @@ __metadata:
     clean-css-cli: "npm:^5.6.2"
     cssnano: "npm:^6.0.1"
     node-sass: "npm:^8.0.0"
-    postcss: "npm:^8.4.35"
+    postcss: "npm:8.4.36"
   peerDependencies:
     prop-types: ^15.0.0
     react: ^18.2.0
@@ -19748,7 +19749,7 @@ __metadata:
     cssnano: "npm:^6.0.1"
     file-saver: "npm:2.0.5"
     node-sass: "npm:^8.0.0"
-    postcss: "npm:^8.4.35"
+    postcss: "npm:8.4.36"
   peerDependencies:
     prop-types: ^15.0.0
     react: ^18.2.0

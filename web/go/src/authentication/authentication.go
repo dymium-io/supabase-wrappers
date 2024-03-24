@@ -617,29 +617,11 @@ func UsernameFromEmail(email, domain string) string {
 		username = strings.Split(email, "@")[0]
 	} else {
 		username = email
+		replacer := strings.NewReplacer("@", "_")
+		username = replacer.Replace(username)
 	}
 
-	replacer := strings.NewReplacer(
-		"!", "_",
-		"#", "_",
-		"$", "_",
-		"%", "_",
-		"&", "_",
-		"'", "_",
-		".", "_",
-		"*", "_",
-		"+", "_",
-		"-", "_",
-		"/", "=",
-		"?", "_",
-		"^", "_",
-		"`", "_",
-		"{", "_",
-		"|", "_",
-		"}", "_",
-		"@", "_",
-		"~", "_")
-	username = replacer.Replace(username)
+
 
 	username = strings.ToLower(username)
 	return username
