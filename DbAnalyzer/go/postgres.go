@@ -26,7 +26,7 @@ func (da *Postgres) Close() {
 }
 
 func (da *Postgres) Connect(c *types.ConnectionParams) error {
-	log.Infof("Connect: Address: %s, Port: %d, User: %s, Database: %s, Tls: %v", c.Address, c.Port, c.User, c.Database, c.Tls)
+	log.Infof("Connect: Address: %s, Port: %d, Database: %s, Tls: %v", c.Address, c.Port, c.Database, c.Tls)
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		c.Address, c.Port, c.User, c.Password, c.Database,
 		func() string {

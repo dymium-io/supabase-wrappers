@@ -30,7 +30,7 @@ func (da *MySQL) Close() {
 }
 
 func (da *MySQL) Connect(c *types.ConnectionParams) error {
-	log.Infof("Connect: Address: %s, Port: %d, User: %s, Database: %s, Tls: %v", c.Address, c.Port, c.User, c.Database, c.Tls)
+	log.Infof("Connect: Address: %s, Port: %d, Database: %s, Tls: %v", c.Address, c.Port, c.Database, c.Tls)
 	mysqlconn := fmt.Sprintf("%s:%s@tcp(%s:%d)/?tls=%s",
 		c.User, c.Password, c.Address, c.Port,
 		func() string {

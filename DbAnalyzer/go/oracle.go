@@ -27,7 +27,7 @@ func (da *OracleDB) Close() {
 }
 
 func (da *OracleDB) Connect(c *types.ConnectionParams) error {
-	log.Infof("Connect: Address: %s, Port: %d, User: %s, Database: %s, Tls: %v", c.Address, c.Port, c.User, c.Database, c.Tls)
+	log.Infof("Connect: Address: %s, Port: %d, Database: %s, Tls: %v", c.Address, c.Port, c.Database, c.Tls)
 	// oracle clients try to encrypt the connection by default if the server supports it.
 	// so there is no need to set the sslmode to require.
 
