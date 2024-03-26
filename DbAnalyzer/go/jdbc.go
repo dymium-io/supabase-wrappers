@@ -24,6 +24,7 @@ type DbConnectDto struct {
 	User       string `json:"user"`
 	Password   string `json:"password"`
 	Columns    string `json:"columns"`
+	Tls        bool   `json:"tls"`
 }
 
 type DbConnectResponse struct {
@@ -143,6 +144,7 @@ type JdbcClient struct {
 	Properties string
 	User       string
 	Password   string
+	Tls        bool
 }
 
 // Define a map to store the connection type to string mapping for known connection types
@@ -178,6 +180,7 @@ func (cl *JdbcClient) attemptSendRequest(path string, optionalParams map[string]
 		Properties: cl.Properties, // TODO: add support for different connection types, TLS, etc.
 		User:       cl.User,
 		Password:   cl.Password,
+		Tls:        cl.Tls,
 	}
 
 	if optionalParams != nil {
@@ -253,8 +256,9 @@ func (cl *JdbcClient) Connect(c *types.ConnectionParams) error {
 	cl.Properties = "" // FIXME - add support for different connection types, TLS, etc.
 	cl.User = c.User
 	cl.Password = c.Password
+	cl.Tls = c.Tls
 
-	log.Infof("Connecting to Host:%s Port:%d DB:%s", cl.Host, cl.Port, cl.Database)
+	log.Infof("Connecting to Host:%s Port:%d DB:%s tls=%v", cl.Host, cl.Port, cl.Database, cl.Tls)
 
 	responseBytes, err := cl.sendRequest("api/dbanalyzer/dbping", nil)
 	if err != nil {
