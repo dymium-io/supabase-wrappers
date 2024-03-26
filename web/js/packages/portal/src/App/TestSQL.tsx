@@ -87,12 +87,12 @@ type HeaderCell = {
 
 function IsImage(text): string {
 
-  if (text[0] === 'G' && text[1] === 'I' && text[2] === 'F' && text[3] === '8' &&
-    text[4] === '9' && text[5] === 'a') {
+  if (text[0] === 'G'.charCodeAt(0) && text[1] === 'I'.charCodeAt(0) && text[2] === 'F'.charCodeAt(0) && text[3] === '8'.charCodeAt(0) &&
+    (text[4] === '9'.charCodeAt(0) || text[4] === '7'.charCodeAt(0) )&& text[5] === 'a'.charCodeAt(0)) {
     console.log("GIF")
     return "gif"
   }
-  if (text[0] === 211 && text[1] === 'P' && text[2] === 'N' && text[3] === 'G') {
+  if (text[0] === 137 && text[1] === 'P'.charCodeAt(0) && text[2] === 'N'.charCodeAt(0) && text[3] === 'G'.charCodeAt(0)) {
     console.log("PNG")
     return "png"
   }

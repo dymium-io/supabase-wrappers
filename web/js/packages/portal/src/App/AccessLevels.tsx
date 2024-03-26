@@ -41,7 +41,6 @@ export function SortableItem({ id, value, handling, onHandlingChange, onDelete, 
     transition,
   } = useSortable({ id });
 
-  debugger
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -301,7 +300,7 @@ export default function AccessLevels() {
         return
       }
     }
-    debugger
+ 
     actions.push(v)
     setActions([...actions])
 
@@ -325,7 +324,6 @@ export default function AccessLevels() {
   }
 
   const handleActionChange = (newHandling, id) => {
-    debugger
     const updatedActions = actions.map(action =>
       action.id === id ? { ...action, handling: newHandling } : action
     );
@@ -333,7 +331,6 @@ export default function AccessLevels() {
   };
 
   const handleActionDelete = (id) => {
-    debugger
     const filteredActions = actions.filter(action => action.id !== id);
     setActions(filteredActions);
   };
