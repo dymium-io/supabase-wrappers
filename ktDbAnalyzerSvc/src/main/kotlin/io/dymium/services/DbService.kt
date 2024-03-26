@@ -87,12 +87,12 @@ open class DbValidator(val config: ApplicationConfig) {
 
             "elasticsearch", "es" -> {
                 // Creating Elasticsearch Connection URL
-                // FIXME - for now we hard code the encryption to false
+                val protocol = if (dbInfo.tls) "https" else "http"
                 if (dbInfo.database.isNullOrEmpty()) {
-                    "jdbc:elasticsearch://${dbInfo.host}:${dbInfo.port}"
+                    "jdbc:elasticsearch://${protocol}://${dbInfo.host}:${dbInfo.port}"
                 } else {
                     // TODO: This is Elasticsearch feature in preview, can be removed in the future
-                    "jdbc:elasticsearch://${dbInfo.host}:${dbInfo.port}/?catalog=${dbInfo.database}"
+                    "jdbc:elasticsearch://${protocol}://${dbInfo.host}:${dbInfo.port}/?catalog=${dbInfo.database}"
                 }
             }
 
