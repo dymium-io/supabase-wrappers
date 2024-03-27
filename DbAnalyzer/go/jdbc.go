@@ -425,7 +425,8 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 		d.cLength = &column.ColumnSize
 		d.cScale = &column.DecimalDigits
 		isNullable_ = column.IsNullable
-		if isNullable_ == "YES" {
+		// In case of Elasticsearch, we consider all columns as nullable
+		if cl.SourceType == "elasticsearch" || cl.SourceType == "es" || isNullable_ == "YES" || isNullable_ == "yes" || isNullable_ == "Y" || isNullable_ == "y" {
 			d.isNullable = true
 		} else {
 			d.isNullable = false
