@@ -3,90 +3,16 @@ package DbSetup
 import (
 	"dymium.com/dymium/log"
 
-	"bytes"
-	"text/template"
-
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
-
-	"embed"
 
 	"database/sql"
 
 	"crypto/sha256"
 
-	"DbSetup/types"
+	"dymium.io/DbSetup/types"
 )
-
-//go:embed templates/*
-var templateFS embed.FS
-
-var obf_funcs func() []string
-var obf func(name string) (string, string)
-
-var redact_value func(t string) string
-
-func gen_redact_value_func() {
-	redactDefs := []string{`^interval                                 => '0 days'`,
-		`^(char|var|bpchar).*\((1|2)\)                            => ''`,
-		`^(char|var|text|bpchar)                                  => 'xxx'`,
-		`^(bigint|int|smallint|double|float|real|decimal|numeric) => 0`,
-		//
-		`^bool                                                    => false`,
-		`^xml                                                     => ''`,
-		`bytea                                                    => E'\x'`,
-		//
-		`^jsonb?                                                  => '{}'`,
-		`^uuid                                                    => '00000000-0000-0000-0000-000000000000'`,
-		//
-		`^timestamp.*with +time *zone                             => '2000-01-01 00:00:00 UTC'`,
-		`^timestamp                                               => '0001-01-01 00:00:00'`,
-		//
-		`^time.*with +time *zone                                  => '00:00:00 UTC'`,
-		`^time                                                    => '00:00:00'`,
-		//
-		`^date                                                    => '0001-01-01'`,
-		`^money                                                   => 0`,
-		//
-		`^point                                                   => '(0,0)'`,
-		`^line                                                    => '(0,0,0)'`,
-		//
-		`^(lseg|box|path)                                         => '((0,0), (1,1))'`,
-		`^polygon                                                 => '((0,0), (0,1), (1,0))'`,
-		//
-		`^circle                                                  => '<(0,0), 1>'`,
-		`^(inet|cidr)                                             => '0.0.0.0/0'`,
-		//
-		`^macaddr8                                                => '00:00:00:00:00:00:00:00'`,
-		`^macaddr                                                 => '00:00:00:00:00:00'`,
-		//
-		`^bit                                                     => B'0'`,
-	}
-	spl := regexp.MustCompile(` *=> *`)
-	type regexpMap struct {
-		r *regexp.Regexp
-		t string
-	}
-	redacts := make([]regexpMap, 0, len(redactDefs))
-	for _, r := range redactDefs {
-		ri := spl.Split(r, 2)
-		redacts = append(redacts,
-			regexpMap{
-				r: regexp.MustCompile(`(?i:` + ri[0] + `)`),
-				t: string(ri[1]),
-			})
-	}
-	redact_value = func(t string) string {
-		for _, ri := range redacts {
-			if ri.r.MatchString(t) {
-				return ri.t
-			}
-		}
-		return `''`
-	}
-}
 
 type ct_option struct {
 	ext        string
@@ -96,124 +22,9 @@ type ct_option struct {
 
 var ct_options map[types.ConnectionType]ct_option
 
-func init() {
-	gen_obf_func()
-	gen_redact_value_func()
+var obf func(name string) (string, string)
 
-	define_ext := func(e string) string {
-		return "CREATE EXTENSION IF NOT EXISTS " + e + " WITH SCHEMA public"
-	}
-	define_rust_ext := func(e, h, v string) string {
-		return `DO $$
-                        BEGIN
-		          IF NOT EXISTS (
-			     SELECT 1
-			     FROM pg_catalog.pg_foreign_data_wrapper
-			     WHERE fdwname = '` + e + `'
-		          ) THEN
-		             EXECUTE 'CREATE FOREIGN DATA WRAPPER ` + e + ` HANDLER ` + h + ` VALIDATOR ` + v + `;';
-		          END IF;
-                        END $$`
-	}
-	var _ = define_rust_ext
-
-	define_server := func(template_name string) func(server, address string, port int, database string, use_tls bool, user string, password string) (string, error) {
-		tmpl := template.Must(template.ParseFS(templateFS, "templates/"+template_name))
-		return func(server, address string, port int, database string, use_tls bool, user string, password string) (string, error) {
-			type server_params struct {
-				Server   string
-				Address  string
-				Port     int
-				Database string
-				Use_tls  bool
-				User     string
-				Password string
-			}
-			var buf bytes.Buffer
-			if err := tmpl.Execute(&buf, server_params{
-				Server:   esc(server),
-				Address:  esc(address),
-				Port:     port,
-				Database: esc(database),
-				Use_tls:  use_tls,
-				User:     esc(user),
-				Password: esc(password),
-			}); err != nil {
-				return "", err
-			}
-			return buf.String(), nil
-		}
-	}
-
-	ct_options = make(map[types.ConnectionType]ct_option)
-
-	ct_options[types.CT_PostgreSQL] = ct_option{
-		ext:        define_ext("postgres_fdw"),
-		server_def: define_server("postgres.sql"),
-		table: func(remoteSchema, remoteTable string) string {
-			return fmt.Sprintf("schema_name '%s', table_name '%s'",
-				esc(remoteSchema), esc(remoteTable))
-		},
-	}
-	ct_options[types.CT_MySQL] = ct_option{
-		ext:        define_ext("mysql_fdw"),
-		server_def: define_server("mysql.sql"),
-		table: func(remoteSchema, remoteTable string) string {
-			return fmt.Sprintf("dbname '%s', table_name '%s'",
-				esc(remoteSchema), esc(remoteTable))
-		},
-	}
-	ct_options[types.CT_MariaDB] = ct_options[types.CT_MySQL]
-	ct_options[types.CT_OracleDB] = ct_option{
-		ext:        define_ext("oracle_fdw"),
-		server_def: define_server("oracle.sql"),
-		table: func(remoteSchema, remoteTable string) string {
-			return fmt.Sprintf("schema '%s', table '%s'",
-				esc(remoteSchema), esc(remoteTable))
-		},
-	}
-	ct_options[types.CT_DB2] = ct_option{
-		ext:        define_ext("db2_fdw"),
-		server_def: define_server("db2.sql"),
-		table: func(remoteSchema, remoteTable string) string {
-			return fmt.Sprintf("schema '%s', table '%s'",
-				esc(remoteSchema), esc(remoteTable))
-		},
-	}
-	ct_options[types.CT_SqlServer] = ct_option{
-		ext:        define_ext("tds_fdw"),
-		server_def: define_server("tds.sql"),
-		table: func(remoteSchema, remoteTable string) string {
-			return fmt.Sprintf("schema_name '%s', table_name '%s'",
-				esc(remoteSchema), esc(remoteTable))
-		},
-		// ext:        define_rust_ext("mssql_wrapper", "mssql_fdw_handler", "mssql_fdw_validator"),
-		// server_def: define_server("mssql.sql"),
-		// table: func(remoteSchema, remoteTable string) string {
-		//	return fmt.Sprintf("table '[%s].[%s]'",
-		//		remoteSchema, remoteTable)
-		// },
-	}
-	ct_options[types.CT_MongoDB] = ct_option{
-		ext:        define_ext("mongo_fdw"),
-		server_def: define_server("mongodb.sql"),
-		table: func(remoteSchema, remoteTable string) string {
-			return fmt.Sprintf("database '%s', collection '%s'",
-				esc(remoteSchema), esc(remoteTable))
-		},
-	}
-	ct_options[types.CT_Elasticsearch] = ct_option{
-		ext:        define_ext("jdbc_fdw"),
-		server_def: define_server("es.sql"),
-		table: func(remoteSchema, remoteTable string) string {
-			if remoteSchema == "_defaultdb_" {
-				return fmt.Sprintf("table_name '%s'", esc(remoteTable))
-			}
-			return fmt.Sprintf("schema_name '%s', table_name '%s'",
-				esc(remoteSchema), esc(remoteTable))
-		},
-	}
-}
+var redact_value func(t string) string
 
 func ConfigureDatabase(db *sql.DB,
 	datascope *types.Scope,
@@ -225,11 +36,6 @@ func ConfigureDatabase(db *sql.DB,
 	log.Infof("configureDatabase: connections=%+v\n", connections)
 
 	localUser := fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(datascope.Name+"_dymium")))
-
-	connectionTypes := map[types.ConnectionType]struct{}{}
-	for k := range datascope.Connections {
-		connectionTypes[connections[datascope.Connections[k]].Database_type] = struct{}{}
-	}
 
 	type tuple struct {
 		k1 string
@@ -277,71 +83,15 @@ func ConfigureDatabase(db *sql.DB,
 		}
 	}
 
-	exec := func(sql string) error {
+	exec := func(sql string, args ...interface{}) error {
 		log.Infof(sql)
-		if _, err := tx.ExecContext(ctx, sql); err != nil {
+		if _, err := tx.ExecContext(ctx, sql, args...); err != nil {
 			return rollback(err, "["+sql+"] failed")
 		}
 		return nil
 	}
 
-	if err = exec(`CREATE EXTENSION IF NOT EXISTS supabase_vault CASCADE`); err != nil {
-		return err
-	}
-	{
-		if err := exec("GRANT USAGE ON SCHEMA vault TO " + localUser); err != nil {
-			return err
-		}
-		if err := exec(`DO $$
-				DECLARE
-                                    uname text := '` + localUser + `';
-				    tbl_name text;
-				BEGIN
-                                    EXECUTE format('GRANT USAGE ON SCHEMA vault TO %I;', uname);
-                                    EXECUTE format('GRANT EXECUTE ON FUNCTION pgsodium.crypto_aead_det_decrypt(bytea, bytea, uuid, bytea) TO %I;',uname);
-                                    CREATE EXTENSION IF NOT EXISTS wrappers WITH SCHEMA public;
-                                    EXECUTE format('GRANT SELECT, INSERT, UPDATE ON wrappers_fdw_stats TO %I;',uname);
-				    FOR tbl_name IN SELECT table_name FROM information_schema.tables WHERE table_schema = 'vault'
-				    LOOP
-					EXECUTE format('GRANT SELECT ON vault.%I TO %I;', tbl_name, uname);
-				    END LOOP;
-				END$$;`); err != nil {
-			return err
-		}
-	}
-
-	if err = exec(`
-          CREATE OR REPLACE FUNCTION insert_secret(p_name text, p_secret text) RETURNS UUID AS $$
-          DECLARE
-              v_id UUID;
-          BEGIN
-             -- Attempt to update first and capture the id
-             UPDATE vault.secrets
-             SET secret = p_secret
-             WHERE name = p_name
-             RETURNING key_id INTO v_id;
-
-             -- If the update did not affect any rows, then insert
-             IF NOT FOUND THEN
-                 INSERT INTO vault.secrets (name, secret)
-                 VALUES (p_name, p_secret)
-                 RETURNING key_id INTO v_id;
-             END IF;
-
-             -- Return the id of the affected row
-             RETURN v_id;
-         END;
-         $$
-         LANGUAGE plpgsql`); err != nil {
-		return err
-	}
-
-	for ct := range connectionTypes {
-		if err = exec(ct_options[ct].ext); err != nil {
-			return err
-		}
-	}
-
+	// This should go first: this schema is used by other initializers!
 	if createDymiumTables {
 		if err := exec("CREATE SCHEMA _dymium"); err != nil {
 			return err
@@ -354,51 +104,29 @@ func ConfigureDatabase(db *sql.DB,
 		}
 	}
 
-	if err = exec("CREATE EXTENSION IF NOT EXISTS obfuscator WITH SCHEMA _dymium"); err != nil {
+	if err = setupVault(exec, localUser); err != nil {
 		return err
 	}
-	for _, f := range obf_funcs() {
-		if err := exec("GRANT EXECUTE ON FUNCTION _dymium." + f + " TO " + localUser); err != nil {
-			return err
-		}
+	if err = setupObfuscator(exec, localUser); err != nil {
+		return err
 	}
-
-	for k := range datascope.Connections {
-		c, ok := connections[datascope.Connections[k]]
-		if !ok {
-			return rollback(fmt.Errorf("misconfiguration!"),
-				fmt.Sprintf("Connection %s is not defined", datascope.Connections[k]))
-		}
-		cred, ok := credentials[c.Id]
-		if !ok {
-			return rollback(fmt.Errorf("misconfiguration!"),
-				fmt.Sprintf("Can not find credentials for "+c.Id))
-		}
-
-		if sql, err := ct_options[c.Database_type].server_def(serverName(c.Name), c.Address, c.Port, c.Dbname, c.Use_tls, cred.User_name, cred.Password); err != nil {
-			return rollback(err, fmt.Sprintf("server_def(%q, %q, %d, %q, %v, %q, \"******\"", serverName(c.Name), c.Address, c.Port, c.Dbname, c.Use_tls, cred.User_name, cred.Password))
-		} else if _, err := tx.ExecContext(ctx, sql); err != nil {
-			return rollback(err, "["+sql+"] failed")
-		}
-
-		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.servers (server) VALUES ( $1 )", serverName(c.Name)); err != nil {
-			return rollback(err, "Registering server "+serverName(c.Name)+" failed")
-		}
+	if err = setupConnections(exec, datascope.Connections, connections, credentials); err != nil {
+		return err
 	}
 
 	for k := range shortSchemas {
 		// k is already PostgresEscaped!
-		if err := exec("CREATE SCHEMA IF NOT EXISTS " + k); err != nil {
+		if err = exec("CREATE SCHEMA IF NOT EXISTS " + k); err != nil {
 			return err
 		}
-		if err := exec("GRANT USAGE ON SCHEMA " + k + " TO " + localUser); err != nil {
+		if err = exec("GRANT USAGE ON SCHEMA " + k + " TO " + localUser); err != nil {
 			return err
 		}
-		if err := exec("ALTER DEFAULT PRIVILEGES IN SCHEMA " + k + " GRANT SELECT ON TABLES TO " + localUser); err != nil {
+		if err = exec("ALTER DEFAULT PRIVILEGES IN SCHEMA " + k + " GRANT SELECT ON TABLES TO " + localUser); err != nil {
 			return err
 		}
-		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", k); err != nil {
-			return rollback(err, "Registering schema "+k+" failed")
+		if err = exec("INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", k); err != nil {
+			return err
 		}
 	}
 	for k := range longSchemas {
@@ -412,8 +140,8 @@ func ConfigureDatabase(db *sql.DB,
 		if err := exec(fmt.Sprintf("ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT SELECT ON TABLES TO %s", kk, localUser)); err != nil {
 			return err
 		}
-		if _, err := tx.ExecContext(ctx, "INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", kk); err != nil {
-			return rollback(err, "Registering schema "+kk+" failed")
+		if err := exec("INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", kk); err != nil {
+			return err
 		}
 	}
 
@@ -541,81 +269,6 @@ func ConfigureDatabase(db *sql.DB,
 	return nil
 }
 
-func esc(str string) string {
-	return ParamEscape(str)
-}
-
 func serverName(str string) string {
 	return str + "_server"
-}
-
-func findDuplicates[T any](items []T, getName func(T) string) []bool {
-	nameCount := make(map[string]int)
-	lowered := make([]string, len(items))
-
-	for k, item := range items {
-		name := getName(item)
-		lowered[k] = strings.ToLower(name)
-		nameCount[lowered[k]]++
-	}
-
-	result := make([]bool, len(items))
-	for k := range result {
-		result[k] = nameCount[lowered[k]] > 1
-	}
-
-	return result
-}
-
-func gen_obf_func() {
-	on := func(n string) string {
-		return fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(n)))
-	}
-	type oT struct {
-		n string
-		k int
-	}
-	lst := []oT{
-		{
-			n: "obfuscate_text",
-			k: 0x226193b1,
-		},
-		{
-			n: "obfuscate_text_array",
-			k: 0xf8bfced0,
-		},
-		{
-			n: "obfuscate_uuid",
-			k: 0x4b0a02b,
-		},
-		{
-			n: "obfuscate_uuid_array",
-			k: 0xced64e86,
-		},
-	}
-	type obfT struct {
-		n string
-		k string
-	}
-	obfS := make(map[string]obfT, len(lst))
-	for _, o := range lst {
-		obfS[o.n] = obfT{
-			n: on(o.n),
-			k: fmt.Sprintf("x'%x'::int", o.k),
-		}
-	}
-	obf = func(name string) (string, string) {
-		o, ok := obfS[name]
-		if !ok {
-			panic(fmt.Sprintf("function [obf] is called with wrong argument [%s]", name))
-		}
-		return o.n, o.k
-	}
-	obf_funcs = func() []string {
-		r := make([]string, 0, len(lst))
-		for _, o := range lst {
-			r = append(r, obfS[o.n].n)
-		}
-		return r
-	}
 }
