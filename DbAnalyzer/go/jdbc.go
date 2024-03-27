@@ -506,8 +506,16 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			}
 		case "BLOB", "BINARY", "VARBINARY":
 			possibleActions = allowable
-			t = "bytea"
-			sample[k] = dtk(false)
+			//Currently, we don't support BLOB, BINARY, VARBINARY (for Elasticsearch)
+			if cl.SourceType == "elasticsearch" || cl.SourceType == "es" {
+				t = "bytea"
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
+			} else {
+				t = "bytea"
+				sample[k] = dtk(false)
+			}
 		case "BOOLEAN":
 			t = "boolean"
 			possibleActions = allowable
