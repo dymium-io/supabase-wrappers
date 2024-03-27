@@ -45,11 +45,11 @@ func (da *MySQL) Connect(c *types.ConnectionParams) error {
 
 	db, err := sql.Open("mysql", mysqlconn)
 	if err != nil {
-		log.Errorf("Error connecting to %v: %v\n", c, err)
+		log.Errorf("Error connecting to %s: %v\n", c.Database, err)
 		return err
 	}
 	if err := db.Ping(); err != nil {
-		log.Errorf("Error pinging to %v: %v\n", c, err)
+		log.Errorf("Error pinging to %s: %v\n", c.Database, err)
 		return err
 	}
 
