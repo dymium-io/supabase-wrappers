@@ -37,38 +37,6 @@ func ConfigureDatabase(db *sql.DB,
 
 	localUser := fmt.Sprintf(`_%x_`, sha256.Sum224([]byte(datascope.Name+"_dymium")))
 
-	type tuple struct {
-		k1 string
-		k2 string
-	}
-	shortEntries := make(map[tuple]int)
-	longSchemas := map[tuple]struct{}{}
-	for k := range datascope.Schemas {
-		s := &datascope.Schemas[k]
-		for m := range s.Tables {
-			t := s.Tables[m]
-			se := tuple{k1: PostgresEscape(s.Name), k2: PostgresEscape(t.Name)}
-			shortEntries[se]++
-			c := connections[t.Connection].Name
-			longSchemas[tuple{k1: c, k2: s.Name}] = struct{}{}
-		}
-	}
-	{
-		toDel := make([]tuple, 0, len(longSchemas))
-		for se, n := range shortEntries {
-			if n > 0 {
-				toDel = append(toDel, se)
-			}
-		}
-		for _, se := range toDel {
-			delete(shortEntries, se)
-		}
-	}
-	shortSchemas := map[string]struct{}{}
-	for se := range shortEntries {
-		shortSchemas[se.k1] = struct{}{}
-	}
-
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
@@ -114,152 +82,118 @@ func ConfigureDatabase(db *sql.DB,
 		return err
 	}
 
-	for k := range shortSchemas {
-		// k is already PostgresEscaped!
-		if err = exec("CREATE SCHEMA IF NOT EXISTS " + k); err != nil {
+	tv := createTableViews(*datascope, connections)
+
+	for _, s := range tv.schemas {
+		if err = exec("CREATE SCHEMA IF NOT EXISTS " + s); err != nil {
 			return err
 		}
-		if err = exec("GRANT USAGE ON SCHEMA " + k + " TO " + localUser); err != nil {
+		if err = exec("GRANT USAGE ON SCHEMA " + s + " TO " + localUser); err != nil {
 			return err
 		}
-		if err = exec("ALTER DEFAULT PRIVILEGES IN SCHEMA " + k + " GRANT SELECT ON TABLES TO " + localUser); err != nil {
+		if err = exec("ALTER DEFAULT PRIVILEGES IN SCHEMA " + s + " GRANT SELECT ON TABLES TO " + localUser); err != nil {
 			return err
 		}
-		if err = exec("INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", k); err != nil {
-			return err
-		}
-	}
-	for k := range longSchemas {
-		kk := PostgresEscape(k.k1 + "_" + k.k2)
-		if err := exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", kk)); err != nil {
-			return err
-		}
-		if err := exec(fmt.Sprintf("GRANT USAGE ON SCHEMA %s TO %s", kk, localUser)); err != nil {
-			return err
-		}
-		if err := exec(fmt.Sprintf("ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT SELECT ON TABLES TO %s", kk, localUser)); err != nil {
-			return err
-		}
-		if err := exec("INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", kk); err != nil {
+		if err = exec("INSERT INTO _dymium.schemas (\"schema\") VALUES ( $1 )", s); err != nil {
 			return err
 		}
 	}
 
-	for k := range datascope.Schemas {
-		s := &datascope.Schemas[k]
-		for m := range s.Tables {
-			t := &s.Tables[m]
-			con := connections[t.Connection]
-			hiddenTblName := fmt.Sprintf("_dymium._%x_", sha256.Sum224([]byte(datascope.Name+s.Name+t.Name)))
-			hiddenTblCols, viewDef := make([]string, 0, len(t.Columns)), make([]string, 0, len(t.Columns))
-			isDuplicate := findDuplicates(t.Columns, func(c types.Column) string { return c.Name })
-			for k := range t.Columns {
-				pesc := PostgresEscape
-				if isDuplicate[k] {
-					pesc = LiteralEscape
-				}
-				c := &t.Columns[k]
-				{
-					t := c.Typ
-					if c.Semantics == "UNSUPPORTED" {
-						t = "bytea"
-					}
-
-					v := LiteralEscape(c.Name) + ` ` + t
-					if !c.IsNullable {
-						v += " NOT NULL"
-					}
-					hiddenTblCols = append(hiddenTblCols, "  "+v)
-				}
-				switch c.Action {
-				case types.DH_Block:
-				case types.DH_Redact:
-					if c.IsNullable {
-						viewDef = append(viewDef, "CAST(NULL AS "+c.Typ+") AS "+pesc(c.Name))
-					} else if strings.HasSuffix(c.Typ, "[]") {
-						viewDef = append(viewDef, "CAST('{}' AS "+c.Typ+") AS "+pesc(c.Name))
-					} else {
-						viewDef = append(viewDef, "CAST("+redact_value(c.Typ)+" AS "+c.Typ+") AS "+pesc(c.Name))
-					}
-				case types.DH_Obfuscate:
-					var v string
-					if strings.HasSuffix(c.Typ, "[]") {
-						switch {
-						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
-							n, k := obf("obfuscate_text_array")
-							v = fmt.Sprintf(`_dymium.%s(%s,%s,0,false) AS %s`,
-								n, k, LiteralEscape(c.Name), pesc(c.Name))
-						case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
-							n, k := obf("obfuscate_text_array")
-							v = fmt.Sprintf(`_dymium.%s(%s,%s,0,true) AS %s`,
-								n, k, LiteralEscape(c.Name), pesc(c.Name))
-						case strings.HasPrefix(c.Typ, "uuid"):
-							n, k := obf("obfuscate_uuid_array")
-							v = fmt.Sprintf(`_dymium.%s(%s,%s) AS %s`,
-								n, k, LiteralEscape(c.Name), pesc(c.Name))
-						default:
-							panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
-						}
-					} else {
-						switch {
-						case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
-							n, k := obf("obfuscate_text")
-							v = fmt.Sprintf(`_dymium.%s(%s,%s,0,false) AS %s`,
-								n, k, LiteralEscape(c.Name), pesc(c.Name))
-						case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
-							n, k := obf("obfuscate_text")
-							v = fmt.Sprintf(`_dymium.%s(%s,%s,0,true) AS %s`,
-								n, k, LiteralEscape(c.Name), pesc(c.Name))
-						case strings.HasPrefix(c.Typ, "uuid"):
-							n, k := obf("obfuscate_uuid")
-							v = fmt.Sprintf(`_dymium.%s(%s,%s) AS %s`,
-								n, k, LiteralEscape(c.Name), pesc(c.Name))
-						default:
-							panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
-						}
-					}
-					viewDef = append(viewDef, v)
-				case types.DH_Allow:
-					viewDef = append(viewDef, LiteralEscape(c.Name)+` AS `+pesc(c.Name))
-				}
+	for k := range tv.tables {
+		t := &tv.tables[k]
+		con := connections[t.connection]
+		hiddenTblCols, viewDef := make([]string, 0, len(t.columns)), make([]string, 0, len(t.columns))
+		for k := range t.columns {
+			c := &t.columns[k]
+			hName := c.Name
+			if hName[0] != '"' {
+				hName = LiteralEscape(hName)
 			}
-			//con := connections[t.Connection]
-			var schemaname string
-			if con.Database_type == types.CT_MongoDB {
-				// in case of MongoDB, schemaname is dbname
-				schemaname = con.Dbname
-			} else {
-				schemaname = s.Name
+			{
+				t := c.Typ
+				if c.Semantics == "UNSUPPORTED" {
+					t = "bytea"
+				}
+
+				v := hName + " " + t
+				if !c.IsNullable {
+					v += " NOT NULL"
+				}
+				hiddenTblCols = append(hiddenTblCols, "  "+v)
 			}
-			opts := ct_options[con.Database_type]
+			switch c.Action {
+			case types.DH_Block:
+			case types.DH_Redact:
+				if c.IsNullable {
+					viewDef = append(viewDef, "CAST(NULL AS "+c.Typ+") AS "+c.Name)
+				} else if strings.HasSuffix(c.Typ, "[]") {
+					viewDef = append(viewDef, "CAST('{}' AS "+c.Typ+") AS "+c.Name)
+				} else {
+					viewDef = append(viewDef, "CAST("+redact_value(c.Typ)+" AS "+c.Typ+") AS "+c.Name)
+				}
+			case types.DH_Obfuscate:
+				var v string
+				if strings.HasSuffix(c.Typ, "[]") {
+					switch {
+					case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
+						n, k := obf("obfuscate_text_array")
+						v = fmt.Sprintf(`_dymium.%s(%s,%s,0,false) AS %s`,
+							n, k, hName, c.Name)
+					case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
+						n, k := obf("obfuscate_text_array")
+						v = fmt.Sprintf(`_dymium.%s(%s,%s,0,true) AS %s`,
+							n, k, hName, c.Name)
+					case strings.HasPrefix(c.Typ, "uuid"):
+						n, k := obf("obfuscate_uuid_array")
+						v = fmt.Sprintf(`_dymium.%s(%s,%s) AS %s`,
+							n, k, hName, c.Name)
+					default:
+						panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
+					}
+				} else {
+					switch {
+					case strings.HasPrefix(c.Typ, "var") || strings.HasPrefix(c.Typ, "text"):
+						n, k := obf("obfuscate_text")
+						v = fmt.Sprintf(`_dymium.%s(%s,%s,0,false) AS %s`,
+							n, k, hName, c.Name)
+					case strings.HasPrefix(c.Typ, "char") || strings.HasPrefix(c.Typ, "bpchar"):
+						n, k := obf("obfuscate_text")
+						v = fmt.Sprintf(`_dymium.%s(%s,%s,0,true) AS %s`,
+							n, k, hName, c.Name)
+					case strings.HasPrefix(c.Typ, "uuid"):
+						n, k := obf("obfuscate_uuid")
+						v = fmt.Sprintf(`_dymium.%s(%s,%s) AS %s`,
+							n, k, hName, c.Name)
+					default:
+						panic(fmt.Sprintf("Unsupported obfuscation for [%s]", c.Typ))
+					}
+				}
+				viewDef = append(viewDef, v)
+			case types.DH_Allow:
+				viewDef = append(viewDef, hName+` AS `+c.Name)
+			}
+		}
 
-			hiddenTbl := "CREATE FOREIGN TABLE " + hiddenTblName + " (\n" +
-				strings.Join(hiddenTblCols, ",\n") +
-				"\n) SERVER " + serverName(con.Name) + " OPTIONS(" + opts.table(schemaname, t.Name) + ");\n"
-			view :=
-				fmt.Sprintf("CREATE VIEW %%s.%s AS SELECT %s FROM %s;\n",
-					PostgresEscape(t.Name),
-					strings.Join(viewDef, ", "),
-					hiddenTblName)
+		opts := ct_options[con.Database_type]
 
-			if err := exec(hiddenTbl); err != nil {
+		hiddenTbl := "CREATE FOREIGN TABLE " + t.hiddenTableName + " (\n" +
+			strings.Join(hiddenTblCols, ",\n") +
+			"\n) SERVER " + serverName(con.Name) + " OPTIONS(" + opts.table(t.remoteSchema, t.remoteName) + ");\n"
+		view :=
+			fmt.Sprintf("CREATE VIEW %%s.%%s AS SELECT %s FROM %s;\n",
+				strings.Join(viewDef, ", "),
+				t.hiddenTableName)
+
+		if err := exec(hiddenTbl); err != nil {
+			return err
+		}
+
+		for _, v := range t.views {
+			if err := exec(fmt.Sprintf(view, v.schema, v.name)); err != nil {
 				return err
 			}
-
-			schs := []string{con.Name + "_" + s.Name}
-			if _, ok := shortEntries[tuple{k1: PostgresEscape(s.Name), k2: PostgresEscape(t.Name)}]; ok {
-				if s.Name == "public" {
-					schs = append(schs, "public", con.Name)
-				} else {
-					schs = append(schs, s.Name)
-				}
-			}
-			for _, sch := range schs {
-				if err := exec(fmt.Sprintf(view, PostgresEscape(sch))); err != nil {
-					return err
-				}
-			}
 		}
+
 	}
 
 	if err := tx.Commit(); err != nil {
