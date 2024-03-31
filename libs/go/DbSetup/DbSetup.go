@@ -72,9 +72,12 @@ func ConfigureDatabase(db *sql.DB,
 		}
 	}
 
-	if err = setupVault(exec, localUser); err != nil {
-		return err
-	}
+	/*
+		-- temporary disable supabase-related stuff --
+		if err = setupVault(exec, localUser); err != nil {
+			return err
+		}
+	*/
 	if err = setupObfuscator(exec, localUser); err != nil {
 		return err
 	}
