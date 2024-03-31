@@ -1,0 +1,62 @@
+FROM ubuntu/postgres
+
+RUN apt update &&                \
+  apt upgrade -y &&              \
+  apt install -y ca-certificates \
+    libmariadb3 libmariadb-dev   \
+    libmysqlclient21             \
+    freetds-bin                  \
+    ksh unzip                    \
+    openjdk-8-jdk                \
+    libsodium-dev                \
+    libaio1 &&                   \
+  ln -s /usr/lib/x86_64-linux-gnu/libmysqlclient.so.21 /usr/lib/x86_64-linux-gnu/libmysqlclient.so && \
+  mkdir -p /opt/oracle
+
+
+COPY @instantclient_version@/ /opt/oracle/@instantclient_version@/
+RUN echo /opt/oracle/@instantclient_version@ > /etc/ld.so.conf.d/oracle-instantclient.conf && \
+    ldconfig
+
+RUN mkdir -p /var/lib/postgresql/db2rtcl
+COPY /db2 /var/lib/postgresql/db2rtcl
+
+USER postgres
+WORKDIR /var/lib/postgresql
+RUN (cd /var/lib/postgresql/db2rtcl/rtcl;   ./db2_install -y -f sysreq)
+
+USER root
+WORKDIR /
+
+ENV CLASSPATH="/var/lib/postgresql/sqllib/java/db2java.zip:/var/lib/postgresql/sqllib/function:/var/lib/postgresql/sqllib/java/db2jcc_license_cu.jar:/var/lib/postgresql/sqllib/tools/clpplus.jar:/var/lib/postgresql/sqllib/tools/jline-0.9.93.jar:/var/lib/postgresql/sqllib/java/db2jcc4.jar:/var/lib/postgresql/sqllib/java/db2jcc_license_cisuz.jar:."
+ENV DB2DIR="/var/lib/postgresql/sqllib"
+ENV DB2INSTANCE="postgres"
+ENV DB2LIB="/var/lib/postgresql/sqllib/lib"
+ENV DB2_HOME="/var/lib/postgresql/sqllib"
+ENV DB2_NET_CLIENT_PATH=""
+ENV IBM_DB_DIR="/var/lib/postgresql/sqllib"
+ENV IBM_DB_HOME="/var/lib/postgresql/sqllib"
+ENV IBM_DB_INCLUDE="/var/lib/postgresql/sqllib/include"
+ENV IBM_DB_LIB="/var/lib/postgresql/sqllib/lib"
+ENV INSTHOME="/var/lib/postgresql"
+ENV INST_DIR="/var/lib/postgresql/sqllib"
+ENV LD_LIBRARY_PATH="/lib64:/usr/lib64:/lib/x86_64-linux-gnu:/var/lib/postgresql/sqllib/lib64:/var/lib/postgresql/sqllib/lib64/gskit:/var/lib/postgresql/sqllib/lib32:/usr/local/libmongo"
+
+ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+#ENV PATH="$PATH:/usr/lib/jvm/java-8-openjdk-amd64/bin"
+RUN ln -s /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64/server/libjvm.so /usr/lib64/libjvm.so
+
+COPY /postgres_fdw /
+COPY /oracle_fdw /
+COPY /db2_fdw /
+COPY /mysql_fdw /
+COPY /mongo_fdw /
+COPY /tds_fdw /
+RUN mkdir /usr/local/libmongo
+COPY /mongo_lib/mongo-c-driver/lib/* /usr/local/libmongo
+COPY /mongo_lib/json-c/lib/* /usr/local/libmongo
+COPY /jdbc_fdw /
+COPY /pgsodium /
+COPY /vault /
+COPY /supabase_wrappers /
+COPY /obfuscator /
