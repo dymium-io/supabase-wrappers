@@ -11,8 +11,8 @@ import (
 
 	"crypto/sha256"
 
-        . "DbSetup"
-	"DbSetup/types"
+        . "dymium.io/DbSetup"
+	"dymium.io/DbSetup/types"
 )
 
 func doUpdate(

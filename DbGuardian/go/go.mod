@@ -4,7 +4,7 @@ go 1.20
 
 replace aws => ../../libs/go/aws
 
-replace DbSetup => ../../libs/go/DbSetup
+replace dymium.io/DbSetup => ../../libs/go/DbSetup
 
 require (
 	aws v0.0.0-00010101000000-000000000000
@@ -13,7 +13,7 @@ require (
 	github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
 )
 
-require DbSetup v0.0.0-00010101000000-000000000000
+require dymium.io/DbSetup v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/apex/log v1.9.0 // indirect

@@ -12,8 +12,8 @@ import (
 	"crypto/sha256"
 	b64 "encoding/base64"
 
-        . "DbSetup"
-	"DbSetup/types"
+        . "dymium.io/DbSetup"
+	"dymium.io/DbSetup/types"
 )
 
 func sqlTest(

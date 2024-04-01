@@ -17,8 +17,8 @@ import (
 	"crypto/cipher"
 	"encoding/hex"
 
-        . "DbSetup"
-	"DbSetup/types"
+        . "dymium.io/DbSetup"
+	"dymium.io/DbSetup/types"
 )
 
 var db *sql.DB

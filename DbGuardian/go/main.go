@@ -15,8 +15,9 @@ import (
 	"dymium.com/dymium/log"
 
 	"aws"
-        . "DbSetup"
-	"DbSetup/types"
+
+	. "dymium.io/DbSetup"
+	"dymium.io/DbSetup/types"
 )
 
 func main() {
@@ -141,5 +142,5 @@ func getCustomerData() (*types.CustomerData, error) {
 }
 
 func esc(str string) string {
-        return ParamEscape(str)
+	return ParamEscape(str)
 }
