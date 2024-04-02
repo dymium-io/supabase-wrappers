@@ -7,14 +7,14 @@ import (
 )
 
 func setupConnections(exec func(string, ...interface{}) error,
-	gdbConnections []string,
+	gdbConnections []types.External_connection,
 	connections map[string]types.Connection,
 	credentials map[string]types.Credential,
 ) error {
 	var err error
 	connectionTypes := map[types.ConnectionType]struct{}{}
-	for _, k := range gdbConnections {
-		connectionTypes[connections[k].Database_type] = struct{}{}
+	for _, c := range gdbConnections {
+		connectionTypes[connections[c.Connection_id].Database_type] = struct{}{}
 	}
 
 	for ct := range connectionTypes {
@@ -23,10 +23,10 @@ func setupConnections(exec func(string, ...interface{}) error,
 		}
 	}
 
-	for _, k := range gdbConnections {
-		c, ok := connections[k]
+	for _, con := range gdbConnections {
+		c, ok := connections[con.Connection_id]
 		if !ok {
-			return fmt.Errorf("Connection %s is not defined", k)
+			return fmt.Errorf("Connection %s is not defined", con.Connection_id)
 		}
 		cred, ok := credentials[c.Id]
 		if !ok {

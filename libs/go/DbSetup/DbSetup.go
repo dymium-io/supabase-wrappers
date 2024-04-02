@@ -81,7 +81,7 @@ func ConfigureDatabase(db *sql.DB,
 	if err = setupObfuscator(exec, localUser); err != nil {
 		return err
 	}
-	if err = setupConnections(exec, datascope.Connections, connections, credentials); err != nil {
+	if err = setupConnections(exec, datascope.External_connections, connections, credentials); err != nil {
 		return err
 	}
 

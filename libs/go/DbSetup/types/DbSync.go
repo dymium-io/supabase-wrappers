@@ -36,6 +36,11 @@ type CustomerData struct {
    Datascopes []Scope `json:"datascopes"`
 }
 
+type External_connection struct {
+   Connection_id string `json:"connection_id"`
+   Schemas []Schema `json:"schemas"`
+}
+
 type Schema struct {
    Name string `json:"name"`
    Tables []Table `json:"tables"`
@@ -43,12 +48,10 @@ type Schema struct {
 
 type Scope struct {
    Name string `json:"name"`
-   Connections []string `json:"connections"`
-   Schemas []Schema `json:"schemas"`
+   External_connections []External_connection `json:"external_connections"`
 }
 
 type Table struct {
    Name string `json:"name"`
-   Connection string `json:"connection"`
    Columns []Column `json:"columns"`
 }

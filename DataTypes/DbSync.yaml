@@ -22,7 +22,10 @@ connection:
 
 scope:
   - name: string
-  - connections: <| string |>
+  - external_connections: <| external_connection |>
+
+external_connection:
+  - connection_id: string
   - schemas: <| schema |>
 
 schema:
@@ -31,7 +34,6 @@ schema:
 
 table:
   - name: string
-  - connection: string
   - columns: <| column |>
 
 column:
