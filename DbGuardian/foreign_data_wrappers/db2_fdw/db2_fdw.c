@@ -2669,9 +2669,10 @@ foreign_join_ok (PlannerInfo * root, RelOptInfo * joinrel, JoinType jointype, Re
    * We need capability to track relid chain through join tree to support N-way join.
    */
   tabname = "?";
-  foreach (lc, joinrel->reltarget->exprs) {
+  foreach (lc, root->parse->targetList) {
+    TargetEntry *tle = (TargetEntry *) lfirst (lc);
     int i;
-    Var *var = (Var *) lfirst (lc);
+    Var *var = (Var *) tle->expr;
     struct db2Column *col = NULL;
     struct db2Column *newcol;
     int used_flag = 0;
