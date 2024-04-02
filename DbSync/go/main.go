@@ -6,10 +6,10 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 
 	"database/sql"
+
 	_ "github.com/lib/pq"
 
 	"fmt"
-	"github.com/aclements/go-gg/generic/slice"
 
 	"golang.org/x/exp/maps"
 
@@ -17,7 +17,7 @@ import (
 	"crypto/cipher"
 	"encoding/hex"
 
-        . "dymium.io/DbSetup"
+	. "dymium.io/DbSetup"
 	"dymium.io/DbSetup/types"
 )
 
@@ -191,148 +191,72 @@ func getDatascopes(db *sql.DB, infoSchema string, infoDatascope *string) (*[]typ
                                LEFT JOIN %s.tables t on t.datascope_id = d.id
                                LEFT JOIN %s.connections c on c.id = t.connection_id
                                %s
-                               ORDER BY d.name, t.schem, t.tabl, t.connection_id, t."position"`,
+                               ORDER BY d.name, t.connection_id, t.schem, t.tabl, t."position"`,
 		infoSchema, infoSchema, infoSchema, infoDatascope_))
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	datascopes := []types.Scope{}
-	var d *types.Scope
-	var s *types.Schema
-	var t *types.Table
+	var currentDatascope *types.Scope
+	var currentConnection *types.External_connection
+	var currentSchema *types.Schema
+	var currentTable *types.Table
+
+	datascopes := make([]types.Scope, 0)
 	for rows.Next() {
-		var dscope string
-		var con, schem, tblName *string
-		var colName, colTyp, colSemantics *string
-		var colIsNullable *bool
-		var colAction *types.DataHandling
-		err = rows.Scan(&dscope, &con, &schem, &tblName,
-			&colName, &colTyp, &colIsNullable, &colSemantics, &colAction)
+		var dName string
+		var cID, sName, tName, colName, typ, semantics *string
+		var action *types.DataHandling
+		var isNullable *bool
+		err := rows.Scan(&dName, &cID, &sName, &tName, &colName, &typ, &isNullable, &semantics, &action)
 		if err != nil {
 			return nil, err
 		}
-		if d == nil || dscope != d.Name {
-			var connections []string
-			var schemas []types.Schema
-			if con != nil {
-				connections = []string{*con}
-				if schem != nil {
-					var tables []types.Table
-					if tblName != nil {
-						tables = []types.Table{
-							{
-								Name:       *tblName,
-								Connection: *con,
-								Columns: []types.Column{
-									{
-										Name:       *colName,
-										Typ:        *colTyp,
-										IsNullable: *colIsNullable,
-										Semantics:  *colSemantics,
-										Action:     *colAction,
-									},
-								},
-							},
-						}
-					} else {
-						tables = []types.Table{}
-					}
-					schemas = []types.Schema{
-						{
-							Name:   *schem,
-							Tables: tables,
-						},
-					}
-				} else {
-					schemas = []types.Schema{}
-				}
-			} else {
-				connections = []string{}
-				schemas = []types.Schema{}
-			}
-			datascopes = append(datascopes, types.Scope{
-				Name:        dscope,
-				Connections: connections,
-				Schemas:     schemas,
-			})
-			d = &datascopes[len(datascopes)-1]
-			if len(d.Schemas) > 0 {
-				s = &d.Schemas[0]
-				if len(s.Tables) > 0 {
-					t = &s.Tables[0]
-				} else {
-					t = nil
-				}
-			} else {
-				s = nil
-				t = nil
-			}
-		} else if con == nil {
-		} else if schem == nil ||
-			tblName == nil ||
-			colName == nil ||
-			colTyp == nil ||
-			colIsNullable == nil ||
-			colSemantics == nil ||
-			colAction == nil {
-			d.Connections = append(d.Connections, *con)
-		} else if s == nil || *schem != s.Name {
-			d.Schemas = append(d.Schemas, types.Schema{
-				Name: *schem,
-				Tables: []types.Table{
-					{
-						Name:       *tblName,
-						Connection: *con,
-						Columns: []types.Column{
-							{
-								Name:       *colName,
-								Typ:        *colTyp,
-								IsNullable: *colIsNullable,
-								Semantics:  *colSemantics,
-								Action:     *colAction,
-							},
-						},
-					},
-				},
-			})
-			d.Connections = append(d.Connections, *con)
-			s = &d.Schemas[len(d.Schemas)-1]
-			t = &s.Tables[0]
-		} else if tblName == nil {
-		} else if t == nil || *tblName != t.Name || *con != t.Connection {
-			s.Tables = append(s.Tables, types.Table{
-				Name:       *tblName,
-				Connection: *con,
-				Columns: []types.Column{
-					{
-						Name:       *colName,
-						Typ:        *colTyp,
-						IsNullable: *colIsNullable,
-						Semantics:  *colSemantics,
-						Action:     *colAction,
-					},
-				},
-			})
-			d.Connections = append(d.Connections, *con)
-			t = &s.Tables[len(s.Tables)-1]
-		} else {
-			t.Columns = append(t.Columns, types.Column{
-				Name:       *colName,
-				Typ:        *colTyp,
-				IsNullable: *colIsNullable,
-				Semantics:  *colSemantics,
-				Action:     *colAction,
-			})
+
+		if cID == nil || sName == nil || tName == nil || colName == nil || typ == nil || semantics == nil || action == nil || isNullable == nil {
+			fmt.Printf("cid=%v sname=%v tname=%v colName=%v typ=%v semantics=%v action=%v isNullable=%v\n",
+				cID, sName, tName, colName, typ, semantics, action, isNullable)
+			continue
 		}
+
+		if currentDatascope == nil || currentDatascope.Name != dName {
+			datascopes = append(datascopes, types.Scope{Name: dName})
+			currentDatascope = &datascopes[len(datascopes)-1]
+			currentConnection = nil // Reset since we are in a new datascope
+		}
+
+		if currentConnection == nil || currentConnection.Connection_id != *cID {
+			currentDatascope.External_connections = append(currentDatascope.External_connections,
+				types.External_connection{Connection_id: *cID})
+			currentConnection = &currentDatascope.External_connections[len(currentDatascope.External_connections)-1]
+			currentSchema = nil // Reset since we are in a new connection
+		}
+
+		if currentSchema == nil || currentSchema.Name != *sName {
+			currentConnection.Schemas = append(currentConnection.Schemas, types.Schema{Name: *sName})
+			currentSchema = &currentConnection.Schemas[len(currentConnection.Schemas)-1]
+			currentTable = nil // Reset since we are in a new schema
+		}
+
+		if currentTable == nil || currentTable.Name != *tName {
+			currentSchema.Tables = append(currentSchema.Tables, types.Table{Name: *tName})
+			currentTable = &currentSchema.Tables[len(currentSchema.Tables)-1]
+		}
+
+		currentTable.Columns = append(currentTable.Columns, types.Column{
+			Name:       *colName,
+			Typ:        *typ,
+			IsNullable: *isNullable,
+			Semantics:  *semantics,
+			Action:     *action,
+		})
 	}
 
-	for k := range datascopes {
-		d := &datascopes[k]
-		slice.Sort(d.Connections)
-		d.Connections = slice.Nub(d.Connections).([]string)
+	if err = rows.Err(); err != nil {
+		return nil, err
 	}
+
 	log.Infof("Retrieved datascopes")
 	return &datascopes, nil
 }
@@ -379,7 +303,7 @@ func AESdecrypt(ciphertext []byte, keyhex string) ([]byte, error) {
 }
 
 func esc(str string) string {
-        return ParamEscape(str)
+	return ParamEscape(str)
 }
 
 func main() {
