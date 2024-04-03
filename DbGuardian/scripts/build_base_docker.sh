@@ -2,6 +2,7 @@
 
 set -e
 
+program_name="$0"
 script_d=$PWD/$(dirname $0)
 setup_d=${script_d}/../../setup
 build_d=$script_d/BLD/bld
@@ -39,7 +40,7 @@ main() {
         vault)    build_fdw vault ;;
         obfuscator) build_obfuscator ;;
         *)
-            echo "Usage: $0 [ postgres | oracle | tds | db2 | mysql | supabase | mongo | jdbc | obfuscator | pgsodium | vault ]"
+            echo "Usage: $program_name [ finalize | postgres | oracle | tds | db2 | mysql | supabase | mongo | jdbc | obfuscator | pgsodium | vault ]"
             exit 0
             ;;
     esac
