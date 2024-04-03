@@ -2551,7 +2551,7 @@ foreign_join_ok (PlannerInfo * root, RelOptInfo * joinrel, JoinType jointype, Re
   char *tabname;		/* for warning messages */
 
   /* we only support pushing down INNER joins */
-  if (jointype != JOIN_INNER)
+  if (true || jointype != JOIN_INNER) // temporary disable inner join push down
     return false;
 
   fdwState = (struct DB2FdwState *) joinrel->fdw_private;
