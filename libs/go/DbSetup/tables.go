@@ -61,6 +61,10 @@ func createTableViews(datascope types.Scope, connections map[string]types.Connec
 			} else {
 				sn = PostgresEscape(s.Name)
 			}
+			if sn[0] != '"' {
+				// transform to Postgres format
+				sn = strings.ToLower(sn)
+			}
 			cname := combineWithConn(connections[ec.Connection_id].Name, sn)
 			schemas = append(schemas, cname)
 			snames := []string{
@@ -99,9 +103,6 @@ func createTableViews(datascope types.Scope, connections map[string]types.Connec
 						name:   PostgresEscape(t.Name),
 					}
 					if ksn > 0 {
-						if tblMap[sn] == nil {
-							tblMap[sn] = make([]pair[int, int], 0)
-						}
 						tblMap[sn] = append(tblMap[sn], pair[int, int]{fst: ind, snd: ksn})
 					}
 				}
