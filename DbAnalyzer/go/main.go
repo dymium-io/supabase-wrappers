@@ -108,7 +108,7 @@ func LambdaHandler(c types.AnalyzerRequest) (*types.AnalyzerResponse, error) {
 			}, nil
 		}
 	case types.DT_TableInfo:
-		log.Infof("Get table info: %s.%s \n", c.Connection.Database, c.TableInfo)
+		log.Infof("Get table info: %s.%s \n", c.Connection.Database, c.TableInfo.Table)
 		if ti, err := da.GetTblInfo(c.Connection.Database, c.TableInfo); err != nil {
 			return nil, err
 		} else {

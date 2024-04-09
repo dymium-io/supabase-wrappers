@@ -104,12 +104,11 @@ type cTypeData struct {
 }
 
 func getDocSchema(colmap *map[string]*cTypeData, prefix string, doc bson.M) error {
-	log.Infof("getDocSchema")
 	for k, v := range doc {
 		var d cTypeData
 		d.isNullable = true
 
-		//		fmt.Println("key:", k, "value:", v, "type:", fmt.Sprintf("%T", v))
+		//log.Infof("key: %s value: %s type: %s", k, v, fmt.Sprintf("%T", v))
 		if k == "_id" {
 			// only _id cannot be nullable
 			d.isNullable = false
@@ -134,16 +133,27 @@ func getDocSchema(colmap *map[string]*cTypeData, prefix string, doc bson.M) erro
 			}
 		default:
 			d.cName = k
-			d.cTyp = fmt.Sprintf("%T", v)
+			if v == nil {
+				d.cTyp = ""
+			} else {
+				d.cTyp = fmt.Sprintf("%T", v)
+			}
 		}
 		if (*colmap)[k] == nil {
 			(*colmap)[k] = &d
 		} else {
-			if (*colmap)[k].cTyp == "<nil>" && d.cTyp != "<nil>" {
+			if (*colmap)[k].cTyp == "" && d.cTyp != "" {
+				(*colmap)[k] = &d
+			} else if (*colmap)[k].cTyp == "" && d.cTyp == "ARRAY" && (*colmap)[k].eTyp == "" && d.eTyp != "" {
 				(*colmap)[k].cTyp = d.cTyp
-			} else if (*colmap)[k].cTyp != "<nil>" && d.cTyp == "<nil>" {
+				(*colmap)[k].eTyp = d.eTyp
+			} else if (*colmap)[k].cTyp != "" && d.cTyp == "" {
 				// do nothing - we already have a type
-			} else if (*colmap)[k].cTyp != "<nil>" && d.cTyp == "<nil>" && (*colmap)[k].cTyp != d.cTyp {
+			} else if (*colmap)[k].cTyp != "" && d.cTyp != "" && (*colmap)[k].cTyp != d.cTyp {
+
+			} else if (*colmap)[k].cTyp != "" && d.cTyp == "" {
+				// do nothing - we already have a type
+			} else if (*colmap)[k].cTyp != "" && d.cTyp != "" && (*colmap)[k].cTyp != d.cTyp {
 				// TODO: how to handle this?
 				// for now we keep the first type we found
 				log.Warnf("inconsistent type for %s, %s vs %s\n", k, (*colmap)[k].cTyp, d.cTyp)
@@ -188,7 +198,6 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 	}
 	descr := make([]cTypeData, 0, len(descrMap))
 	for _, v := range descrMap {
-		log.Infof("%+v\n", *v)
 		descr = append(descr, *v)
 	}
 
@@ -289,7 +298,7 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 				sample[k] = dtk(true)
 			default:
 				possibleActions = blocked
-				if d.cTyp == "<nil>" {
+				if d.eTyp == "<nil>" || d.eTyp == "" {
 					t = "UNKNOWN" + "[]"
 				} else {
 					t = d.eTyp + "[]"
@@ -298,7 +307,8 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 				sample[k] = dtk(false, sem)
 			}
 		default:
-			if d.cTyp == "<nil>" {
+			log.Infof("unsupported type: %s\n", d.cTyp)
+			if d.cTyp == "<nil>" || d.cTyp == "" {
 				t = "UNKNOWN"
 			} else {
 				t = d.cTyp
