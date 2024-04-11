@@ -161,7 +161,7 @@ function ConnectionForm(props) {
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    {props.dbtype !== 'MySQL' && props.dbtype !== 'MariaDB' &&
+                    {props.dbtype !== 'MySQL' && props.dbtype !== 'MariaDB' && props.dbtype !== 'MongoDB' &&
                         <Form.Group className="mb-3" controlId="dbname">
                             <Form.Label>{tooltip('Database name',
                                 <div className="d-block">

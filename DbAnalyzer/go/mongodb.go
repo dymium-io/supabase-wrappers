@@ -53,42 +53,53 @@ func (cl *MongoClient) Connect(c *types.ConnectionParams) error {
 }
 
 func (cl *MongoClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) {
-	log.Infof("Fetching database info for %s", dbName)
-	isSystem := false
-	switch dbName {
-	case "admin", "config", "local":
-		isSystem = true
-	default:
-		isSystem = false
+	dbList, err := cl.mcl.ListDatabases(context.TODO(), bson.D{})
+	if err != nil {
+		log.Errorf("cannot fetch database list, error: [%+v]", err)
+		return nil, err
 	}
 
 	database := types.DatabaseInfoData{
 		DbName:  dbName,
 		Schemas: []types.Schema{},
 	}
-	// MongoDB does not have schemas, so we will use the database name as the schema name
-	// and the collection name as the table name
-	curSchema := 0
-	database.Schemas = append(database.Schemas, types.Schema{
-		Name:     dbName,
-		IsSystem: isSystem,
-		Tables:   []types.Table{},
-	})
 
-	db := cl.mcl.Database(dbName)
-	collectionNames, err := db.ListCollectionNames(context.TODO(), bson.D{})
-	if err != nil {
-		log.Errorf("cannot fetch collection list for %s, error: [%+v]", dbName, err)
-		return nil, err
+	isSystem := false
+	for _, db := range dbList.Databases {
+		log.Infof("Fetching database info for %s", db.Name)
+		isSystem = false
+		switch db.Name {
+		case "admin", "config", "local":
+			isSystem = true
+		default:
+			isSystem = false
+		}
+		database.Schemas = append(database.Schemas, types.Schema{
+			Name:     db.Name,
+			IsSystem: isSystem,
+			Tables:   []types.Table{},
+		})
 	}
 
-	for _, collectionName := range collectionNames {
-		isSystemCollection := strings.HasPrefix(collectionName, "system.")
-		database.Schemas[curSchema].Tables = append(database.Schemas[curSchema].Tables,
-			types.Table{
-				Name:     collectionName,
-				IsSystem: isSystemCollection,
-			})
+	for curSchema, schema := range database.Schemas {
+		if schema.IsSystem {
+			continue
+		}
+		db := cl.mcl.Database(schema.Name)
+		collectionNames, err := db.ListCollectionNames(context.TODO(), bson.D{})
+		if err != nil {
+			log.Errorf("cannot fetch collection list for %s, error: [%+v]", schema.Name, err)
+			return nil, err
+		}
+
+		for _, collectionName := range collectionNames {
+			isSystemCollection := strings.HasPrefix(collectionName, "system.")
+			database.Schemas[curSchema].Tables = append(database.Schemas[curSchema].Tables,
+				types.Table{
+					Name:     collectionName,
+					IsSystem: isSystemCollection,
+				})
+		}
 	}
 
 	return &database, nil
