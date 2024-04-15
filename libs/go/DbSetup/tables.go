@@ -80,7 +80,7 @@ func createTableViews(datascope types.Scope, connections map[string]types.Connec
 			remoteSchema := s.Name
 			switch connections[ec.Connection_id].Database_type {
 			case types.CT_MongoDB:
-				remoteSchema = connections[ec.Connection_id].Dbname
+				remoteSchema = s.Name //connections[ec.Connection_id].Dbname
 			}
 			for kt := range s.Tables {
 				t := &s.Tables[kt]
