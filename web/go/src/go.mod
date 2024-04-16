@@ -12,12 +12,12 @@ require (
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/stretchr/testify v1.8.2
 	github.com/victorspringer/http-cache v0.0.0-20240130140836-2c4f8454e6e2
-	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
-	golang.org/x/net v0.22.0
+	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
+	golang.org/x/net v0.24.0
 )
 
 require (
-	github.com/aws/aws-sdk-go v1.50.36
+	github.com/aws/aws-sdk-go v1.51.20
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-http-utils/fresh v0.0.0-20161124030543-7231e26a4b27 // indirect
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a // indirect
@@ -36,7 +36,7 @@ require (
 )
 
 require (
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/smartystreets/go-aws-auth v0.0.0-20180515143844-0c1422d1fdb9 // indirect

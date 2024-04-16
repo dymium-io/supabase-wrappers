@@ -439,7 +439,24 @@ func CreateNewTenant(schema string) error {
 		updateStatus(schema, out)
 		return err
 	}
-
+	out = append(out, "Launching Terraform...")
+	updateStatus(schema, out)
+	// define inline type with fields:  region, name, action  - all strings
+	type Request struct {
+		Region string `json:"region"`
+		Name   string `json:"name"`
+		Action string `json:"action"`
+	}
+	rq := Request{Region: "us-west-2", Name: schema, Action: "create"}
+	snc, _ := json.Marshal(rq)
+	_, err = Invoke("user-signup", nil, snc)
+	if err != nil {
+		log.Errorf("Invoke error: %s", err.Error())
+		out = append(out, "Error: "+err.Error())
+		updateStatus(schema, out)
+		return err		
+	}
+	
 	out = append(out, "Success!")
 	updateStatus(schema, out)
 	sql := `update global.invitations set progress='Completed' where id=$1;`

@@ -4,21 +4,24 @@ package authentication
 
 import (
 	"bytes"
-	"dymium.com/dymium/gotypes"
-	"dymium.com/dymium/log"
-	"dymium.com/dymium/types"
-	"dymium.com/dymium/certificates"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/golang-jwt/jwt"
 	"html/template"
 	"net/url"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
+
+	"dymium.com/dymium/certificates"
+	"dymium.com/dymium/gotypes"
+	"dymium.com/dymium/log"
+	"dymium.com/dymium/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/golang-jwt/jwt"
 )
 
 func generateIntivationJWT(name, email, id string) (string, error) {
@@ -28,8 +31,8 @@ func generateIntivationJWT(name, email, id string) (string, error) {
 
 	claim := &gotypes.InvitationClaims{
 		// TODO
-		Name:  name,
-		Email: email,
+		Name:         name,
+		Email:        email,
 		Invitationid: id,
 		StandardClaims: jwt.StandardClaims{
 			// In JWT, the expiry time is expressed as unix milliseconds
@@ -82,7 +85,7 @@ func CreateNewCustomer(customer types.Customer) error {
 		"--database", dbname,
 		"--apply")
 
-		fmt.Printf("password: %s\n", dbpassword)
+	fmt.Printf("password: %s\n", dbpassword)
 	fmt.Printf("Run %s in dir: %s, port: %s\n", mallard, where, dbport)
 	fmt.Printf("args: %v\n", cmd.Args)
 	cmd.Dir = where
@@ -171,10 +174,31 @@ func DeleteCustomer(id string, schema string) error {
 	err := cmd.Run()
 	if err != nil {
 		return errors.New(fmt.Sprintf("%s, mallard output: %s", err.Error(), stderr.String()))
-	} else {
+	}
+	// remove certificates, secrets, etc
+	DeleteSecret(strings.ToUpper(schema) + "_KEY")
+	DeleteSecret("TUNNEL/" + strings.ToUpper(schema) + "/CERTIFICATE")
+	DeleteSecret("TUNNEL/" + strings.ToUpper(schema) + "/CERTIFICATE_KEY_PASSWORD")
+	DeleteSecret("GUARDIANS/" + strings.ToUpper(schema) + "/DYMIUM_PASSWORD")
+	DeleteSecret("GUARDIANS/" + strings.ToUpper(schema) + "/ADMIN_PASSWORD")
+
+	// need to add cleanup for auth0 here
+
+	// define inline type with fields:  region, name, action  - all strings
+	type Request struct {
+		Region string `json:"region"`
+		Name   string `json:"name"`
+		Action string `json:"action"`
+	}
+	rq := Request{Region: "us-west-2", Name: schema, Action: "delete"}
+	snc, _ := json.Marshal(rq)
+	_, err = Invoke("user-signup", nil, snc)
+	if err != nil {
+		log.Errorf("Invoke error: %s", err.Error())
 		return err
 	}
 
+	return nil
 }
 
 func UpdateCustomer(customer types.Customer) error {
@@ -230,7 +254,7 @@ func sendEmailSESHtml(to, subject, htmlBody string) error {
 	return err
 }
 
-func InviteCustomerById(id, email, contactName string ) error {
+func InviteCustomerById(id, email, contactName string) error {
 
 	// create a JWT with the time, id and email
 	jwt, err := generateIntivationJWT(contactName, email, id)
@@ -329,8 +353,8 @@ func ProcessInvitation(token string) (string, string, error) {
 		return "", "", err
 	}
 	// create a new token with the signer role, and redirect to the GUI portal
-	newtoken, err := GeneratePortalJWT("/avatar.png", "", claim.Name, claim.Email, []string{}, []string{gotypes.RoleInitialSigner}, 
-	"", 600, claim.Invitationid, "")
+	newtoken, err := GeneratePortalJWT("/avatar.png", "", claim.Name, claim.Email, []string{}, []string{gotypes.RoleInitialSigner},
+		"", 600, claim.Invitationid, "")
 
 	nonce, _ := certificates.GenerateRandomString(32)
 	return `<html>
@@ -356,7 +380,7 @@ func PostInvitationJson(body, session string) error {
 	return nil
 }
 
-func GetInvitationJson(session string) ( []byte, error) {
+func GetInvitationJson(session string) ([]byte, error) {
 	sql := `select config from global.invitations where id=$1;`
 	var config []byte
 	err := db.QueryRow(sql, session).Scan(&config)

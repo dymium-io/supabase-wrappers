@@ -103,7 +103,12 @@ func CreateSecret(name, secret string) error {
 
 	return err
 }
-
+func DeleteSecret(name string) error {
+	// Delete the secret
+	_, err := smClient.DeleteSecret(&secretsmanager.DeleteSecretInput{
+		SecretId: awssdk.String(name) })
+	return err
+}
 func GetSecret(name string) (string, error) {
 	// Get the secret
 	result, err := smClient.GetSecretValue(&secretsmanager.GetSecretValueInput{
