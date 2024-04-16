@@ -183,7 +183,22 @@ func DeleteCustomer(id string, schema string) error {
 	DeleteSecret("GUARDIANS/" + strings.ToUpper(schema) + "/ADMIN_PASSWORD")
 
 	// need to add cleanup for auth0 here
-
+	access_token, err := getToken()
+	if err != nil {
+		log.Errorf("ClearResetTenantFromInvite/getToken error: %s", err.Error())
+		return err
+	}
+	err = deleteConnection(access_token, schema)
+	if err != nil {
+		log.Errorf("deleteConnection error: %s", err.Error())
+		//return err
+	} else {
+		err = deleteOrganization(access_token, schema)
+		if err != nil {
+			log.Errorf("deleteOrganization error: %s", err.Error())
+			//return err
+		}		
+	}
 	// define inline type with fields:  region, name, action  - all strings
 	type Request struct {
 		Region string `json:"region"`
@@ -195,7 +210,7 @@ func DeleteCustomer(id string, schema string) error {
 	_, err = Invoke("user-signup", nil, snc)
 	if err != nil {
 		log.Errorf("Invoke error: %s", err.Error())
-		return err
+		//return err
 	}
 
 	return nil
