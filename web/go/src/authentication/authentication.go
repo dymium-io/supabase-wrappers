@@ -804,7 +804,7 @@ func GetDatascopesForGroups(schema string, email string, groups []string, domain
 		log.Debugf("GetDatascopesForGroups create new user record")
 		password = generatePassword(10)
 		passwordb, _ = EncryptString(schema, password)
-		sqlName := `insert into ` + schema + `.users (username,passwordb,password)  values($1, $2, '');`
+		sqlName := `insert into ` + schema + `.users (username,passwordb)  values($1, $2);`
 		_, err = db.Exec(sqlName, username, passwordb)
 
 	}

@@ -15,3 +15,9 @@ CREATE TABLE users (
 -- requires: ["customer/users"],
 -- description: "Add passwordb field to hold encrypted password";
 ALTER TABLE users ADD COLUMN passwordb bytea NOT NULL DEFAULT '\x';
+
+-- #!migration
+-- name: "customer/users-remove-old-password",
+-- requires: ["customer/users-change-password"],
+-- description: "Remove legacy password field ";
+ALTER TABLE users DROP COLUMN password;
