@@ -5237,7 +5237,7 @@ __metadata:
     "@types/react-redux": "npm:^7.1.33"
     "@types/redux-thunk": "npm:2.1.0"
     browserslist: "npm:4.23.0"
-    follow-redirects: "npm:^1.15.5"
+    follow-redirects: "npm:^1.15.6"
     http-proxy: "npm:^1.18.1"
     http-proxy-middleware: "npm:^2.0.6"
     loader-utils: "npm:2.0.4"
