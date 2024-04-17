@@ -701,8 +701,6 @@ func GetInvitations() ([]byte, error) {
 				Status: status}
 			ret = append(ret, i)
 		}
-	} else {
-		return []byte{}, err
 	}
 
 	// convert to json

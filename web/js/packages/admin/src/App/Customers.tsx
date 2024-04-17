@@ -828,7 +828,9 @@ function Customers() {
                 null, "",
                 resp => {
                     resp.json().then(_js => {
-                        setInvitations(_js)
+                        if(_js != null) {
+                            setInvitations(_js)
+                        }
                         setSpinner(false)
                     })
                 },
