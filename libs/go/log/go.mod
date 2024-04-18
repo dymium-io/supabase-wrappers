@@ -11,7 +11,7 @@ replace github.com/tj/go-elastic => ../go-elastic
 replace github.com/tj/go-elastic/batch v0.0.0-00010101000000-000000000000 => ../go-elastic/batch
 
 require (
-	github.com/aws/aws-sdk-go v1.48.6
+	github.com/aws/aws-sdk-go v1.51.23
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/fastuuid v1.2.0

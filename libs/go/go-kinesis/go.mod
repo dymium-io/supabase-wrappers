@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/apex/log v1.9.0
-	github.com/aws/aws-sdk-go v1.48.6
+	github.com/aws/aws-sdk-go v1.51.23
 	github.com/jpillora/backoff v1.0.0
 )
 
