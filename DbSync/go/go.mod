@@ -7,14 +7,14 @@ require (
 	dymium.com/dymium/log v0.0.0-00010101000000-000000000000
 	dymium.io/DbSetup v0.0.0-00010101000000-000000000000
 	github.com/aclements/go-gg v0.0.0-20170323211221-abd1f791f5ee
-	github.com/aws/aws-lambda-go v1.41.0
+	github.com/aws/aws-lambda-go v1.47.0
 	github.com/lib/pq v1.10.9
-	golang.org/x/exp v0.0.0-20231127185646-65229373498e
+	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
 )
 
 require (
 	github.com/apex/log v1.9.0 // indirect
-	github.com/aws/aws-sdk-go v1.48.7 // indirect
+	github.com/aws/aws-sdk-go v1.51.23 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

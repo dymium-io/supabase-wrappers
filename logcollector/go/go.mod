@@ -22,7 +22,7 @@ require (
 )
 
 require (
-	github.com/aws/aws-sdk-go v1.48.8 // indirect
+	github.com/aws/aws-sdk-go v1.51.23 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

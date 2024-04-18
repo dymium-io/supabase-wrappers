@@ -8,12 +8,12 @@ require (
 	dymium.com/meshconnector/selfupdate v0.0.0-00010101000000-000000000000
 	dymium.com/server/protocol v0.0.0-00010101000000-000000000000
 	github.com/blang/semver/v4 v4.0.0
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 )
 
 require (
 	github.com/apex/log v1.9.0 // indirect
-	github.com/aws/aws-sdk-go v1.48.6 // indirect
+	github.com/aws/aws-sdk-go v1.51.23 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

@@ -19,7 +19,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/gorilla/mux v1.8.1
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.19.0 // indirect
 )
 
 replace dymium.com/server/protocol => ../../protocol

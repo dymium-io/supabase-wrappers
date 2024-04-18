@@ -20,6 +20,6 @@ require (
 	github.com/blang/semver/v4 v4.0.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/mux v1.8.1
-	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	golang.org/x/sys v0.15.0
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
+	golang.org/x/sys v0.19.0
 )
