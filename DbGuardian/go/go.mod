@@ -23,6 +23,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rogpeppe/fastuuid v1.2.0 // indirect
 	github.com/smartystreets/go-aws-auth v0.0.0-20180515143844-0c1422d1fdb9 // indirect
+	golang.org/x/net v0.24.0 // indirect
 )
 
 replace github.com/apex/log => ../../libs/go/log

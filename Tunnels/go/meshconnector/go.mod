@@ -12,7 +12,7 @@ require (
 )
 
 require (
-	github.com/apex/log v1.9.0 // indirect
+	github.com/apex/log v0.0.0-00010101000000-000000000000 // indirect
 	github.com/aws/aws-sdk-go v1.51.23 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
@@ -20,6 +20,7 @@ require (
 	github.com/rogpeppe/fastuuid v1.2.0 // indirect
 	github.com/smartystreets/go-aws-auth v0.0.0-20180515143844-0c1422d1fdb9 // indirect
 	github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
+	golang.org/x/text v0.14.0 // indirect
 )
 
 replace dymium.com/meshconnector/ca => ../ca

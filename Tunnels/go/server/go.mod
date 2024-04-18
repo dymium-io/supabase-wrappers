@@ -31,13 +31,12 @@ require (
 	github.com/google/pprof v0.0.0-20240416155748-26353dc0451f // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/fastuuid v1.2.0 // indirect
 	github.com/smartystreets/go-aws-auth v0.0.0-20180515143844-0c1422d1fdb9 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
-	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

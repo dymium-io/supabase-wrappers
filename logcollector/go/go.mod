@@ -29,4 +29,5 @@ require (
 	github.com/rogpeppe/fastuuid v1.2.0 // indirect
 	github.com/smartystreets/go-aws-auth v0.0.0-20180515143844-0c1422d1fdb9 // indirect
 	github.com/tj/go-kinesis v0.0.0-20171128231115-08b17f58cb1b // indirect
+	golang.org/x/net v0.24.0 // indirect
 )

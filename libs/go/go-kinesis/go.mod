@@ -11,6 +11,7 @@ require (
 require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	golang.org/x/net v0.24.0 // indirect
 )
 
 replace github.com/apex/log => ../../../libs/go/log
