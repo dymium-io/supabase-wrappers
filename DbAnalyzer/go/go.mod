@@ -28,6 +28,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rogpeppe/fastuuid v1.2.0 // indirect
