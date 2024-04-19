@@ -4,7 +4,7 @@ import AuthenticatedApp from './App/AuthenticatedApp'
 import Error404 from "./Error404"
 import Logout from "./Logout"
 import Error from "./Error"
-import Invitation from "./Invitation"
+//import Invitation from "./Invitation"
 import Sticky from "./App/Sticky"
 import Signup, {IdP} from "./App/Signup"
 import Dashboard from "./App/Dashboard"
@@ -54,7 +54,9 @@ function App() {
           </Route>
           <Route  path="/app/logout" element={<Logout/>} />
           <Route path="/app/error" element={<Error />} />
+          {/*
           <Route path="/login" element={<Invitation />} />
+           */}
           <Route path="*" element={<Error404 />} />
         </Routes>
       </BrowserRouter>
