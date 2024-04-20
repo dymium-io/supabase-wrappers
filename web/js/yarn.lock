@@ -2132,6 +2132,7 @@ __metadata:
     bootstrap: "npm:5.2.3"
     build: "npm:^0.1.4"
     customize-cra: "npm:^1.0.0"
+    dompurify: "npm:^3.1.0"
     gsap: "npm:^3.11.5"
     html-loader: "npm:^4.2.0"
     html-react-parser: "npm:^3.0.15"
@@ -9161,6 +9162,13 @@ __metadata:
   dependencies:
     domelementtype: "npm:^2.2.0"
   checksum: 10c0/5c199c7468cb052a8b5ab80b13528f0db3d794c64fc050ba793b574e158e67c93f8336e87fd81e9d5ee43b0e04aea4d8b93ed7be4899cb726a1601b3ba18538b
+  languageName: node
+  linkType: hard
+
+"dompurify@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "dompurify@npm:3.1.0"
+  checksum: 10c0/8adbcc6de954bd0486ae033489c6b52f5aece356963734b82b6d28f9f6ba79a846c4d23085679c0423e81fd8ac8f804dc8c2dfcc0e03e86db2cf0da3e33ad481
   languageName: node
   linkType: hard
 
