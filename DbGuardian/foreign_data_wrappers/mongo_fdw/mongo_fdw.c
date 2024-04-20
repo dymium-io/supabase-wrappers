@@ -2273,8 +2273,10 @@ fill_tuple_slot(const BSON *bsonDocument, const char *bsonDocumentKey,
 			compatibleTypes = column_types_compatible(bsonType, columnTypeId);
 
 		/* If types are incompatible, leave this column null */
-		if (!compatibleTypes)
-			continue;
+		if (!compatibleTypes && columnTypeId != TEXTOID) {
+        elog(WARNING, "column types are incompatible for column %s", bsonFullKey);
+        continue;
+    }
 
 		if (columnMapping != NULL)
 			attnum = columnMapping->columnIndex;
