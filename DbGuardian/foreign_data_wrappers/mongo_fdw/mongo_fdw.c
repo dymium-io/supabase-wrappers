@@ -1383,7 +1383,6 @@ mongoIterateForeignScan(ForeignScanState *node)
 
 		fill_tuple_slot(bsonDocument, bsonDocumentKey, columnMappingHash,
 						columnValues, columnNulls, fmstate->relType);
-
 		ExecStoreVirtualTuple(tupleSlot);
 	}
 
@@ -2131,165 +2130,156 @@ column_mapping_hash(Oid foreignTableId, List *columnList, List *colNameList,
  */
 static void
 fill_tuple_slot(const BSON *bsonDocument, const char *bsonDocumentKey,
-				HTAB *columnMappingHash, Datum *columnValues,
-				bool *columnNulls, uint32 relType)
-{
-	ColumnMapping *columnMapping;
-	bool		handleFound = false;
-	void	   *hashKey;
-	BSON_ITERATOR bsonIterator = {NULL, 0};
+                HTAB *columnMappingHash, Datum *columnValues,
+                bool *columnNulls, uint32 relType) {
+  ColumnMapping *columnMapping;
+  bool handleFound = false;
+  void *hashKey;
+  BSON_ITERATOR bsonIterator = {NULL, 0};
 
-	if (bsonIterInit(&bsonIterator, (BSON *) bsonDocument) == false)
-		elog(ERROR, "failed to initialize BSON iterator");
+  if (bsonIterInit(&bsonIterator, (BSON *) bsonDocument) == false)
+    elog(ERROR, "failed to initialize BSON iterator");
 
-	hashKey = "__doc";
-	columnMapping = (ColumnMapping *) hash_search(columnMappingHash, hashKey,
-												  HASH_FIND, &handleFound);
+  hashKey = "__doc";
+  columnMapping = (ColumnMapping *) hash_search(columnMappingHash, hashKey,
+                                                HASH_FIND, &handleFound);
 
-	if (columnMapping != NULL && handleFound == true &&
-		columnValues[columnMapping->columnIndex] == 0)
-	{
-		JsonLexContext *lex;
-		text	   *result;
-		Datum		columnValue;
-		char	   *str;
+  if (columnMapping != NULL && handleFound == true &&
+      columnValues[columnMapping->columnIndex] == 0) {
+    JsonLexContext *lex;
+    text *result;
+    Datum columnValue;
+    char *str;
 
-		str = bsonAsJson(bsonDocument);
-		result = cstring_to_text_with_len(str, strlen(str));
-		lex = makeJsonLexContext(result, false);
-		pg_parse_json(lex, &nullSemAction);
-		columnValue = PointerGetDatum(result);
+    str = bsonAsJson(bsonDocument);
+    result = cstring_to_text_with_len(str, strlen(str));
+    lex = makeJsonLexContext(result, false);
+    pg_parse_json(lex, &nullSemAction);
+    columnValue = PointerGetDatum(result);
 
-		switch (columnMapping->columnTypeId)
-		{
-			case BOOLOID:
-			case INT2OID:
-			case INT4OID:
-			case INT8OID:
-			case BOXOID:
-			case BYTEAOID:
-			case CHAROID:
-			case VARCHAROID:
-			case NAMEOID:
-			case JSONOID:
-			case XMLOID:
-			case POINTOID:
-			case LSEGOID:
-			case LINEOID:
-			case UUIDOID:
-			case LSNOID:
-			case TEXTOID:
-			case CASHOID:
-			case DATEOID:
-			case MACADDROID:
-			case TIMESTAMPOID:
-			case TIMESTAMPTZOID:
-			case BPCHAROID:
-				columnValue = PointerGetDatum(result);
-				break;
-			case JSONBOID:
-				columnValue = DirectFunctionCall1(jsonb_in,
-												  PointerGetDatum(str));
-				break;
-			default:
-				ereport(ERROR,
-						(errcode(ERRCODE_FDW_INVALID_DATA_TYPE),
-						 errmsg("unsupported type for column __doc"),
-						 errhint("Column type: %u",
-								 (uint32) columnMapping->columnTypeId)));
-				break;
-		}
+    switch (columnMapping->columnTypeId) {
+      case BOOLOID:
+      case INT2OID:
+      case INT4OID:
+      case INT8OID:
+      case BOXOID:
+      case BYTEAOID:
+      case CHAROID:
+      case VARCHAROID:
+      case NAMEOID:
+      case JSONOID:
+      case XMLOID:
+      case POINTOID:
+      case LSEGOID:
+      case LINEOID:
+      case UUIDOID:
+      case LSNOID:
+      case TEXTOID:
+      case CASHOID:
+      case DATEOID:
+      case MACADDROID:
+      case TIMESTAMPOID:
+      case TIMESTAMPTZOID:
+      case BPCHAROID:
+        columnValue = PointerGetDatum(result);
+        break;
+      case JSONBOID:
+        columnValue = DirectFunctionCall1(jsonb_in,
+                                          PointerGetDatum(str));
+        break;
+      default:
+        ereport(ERROR,
+                (errcode(ERRCODE_FDW_INVALID_DATA_TYPE),
+                        errmsg("unsupported type for column __doc"),
+                        errhint("Column type: %u",
+                                (uint32) columnMapping->columnTypeId)));
+        break;
+    }
 
-		columnValues[columnMapping->columnIndex] = columnValue;
-		columnNulls[columnMapping->columnIndex] = false;
+    columnValues[columnMapping->columnIndex] = columnValue;
+    columnNulls[columnMapping->columnIndex] = false;
 
-		return;
-	}
+    return;
+  }
 
-	while (bsonIterNext(&bsonIterator))
-	{
-		const char *bsonKey = bsonIterKey(&bsonIterator);
-		BSON_TYPE	bsonType = bsonIterType(&bsonIterator);
-		Oid			columnTypeId = InvalidOid;
-		Oid			columnArrayTypeId = InvalidOid;
-		bool		compatibleTypes = false;
-		const char *bsonFullKey;
-		int32		attnum;
-		bool		is_agg = false;
+  while (bsonIterNext(&bsonIterator)) {
+    const char *bsonKey = bsonIterKey(&bsonIterator);
+    BSON_TYPE bsonType = bsonIterType(&bsonIterator);
+    Oid columnTypeId = InvalidOid;
+    Oid columnArrayTypeId = InvalidOid;
+    bool compatibleTypes = false;
+    const char *bsonFullKey;
+    int32 attnum;
+    bool is_agg = false;
 
-		if (!strncmp(bsonKey, "AGG_RESULT_KEY", 5) && bsonType == BSON_TYPE_INT32)
-			is_agg = true;
+    if (!strncmp(bsonKey, "AGG_RESULT_KEY", 5) && bsonType == BSON_TYPE_INT32)
+      is_agg = true;
 
-		columnMapping = NULL;
-		if (bsonDocumentKey != NULL)
-		{
-			/*
-			 * For fields in nested BSON objects, we use fully qualified field
-			 * name to check the column mapping.
-			 */
-			StringInfo	bsonFullKeyString = makeStringInfo();
+    columnMapping = NULL;
+    if (bsonDocumentKey != NULL) {
+      /*
+       * For fields in nested BSON objects, we use fully qualified field
+       * name to check the column mapping.
+       */
+      StringInfo bsonFullKeyString = makeStringInfo();
 
-			appendStringInfo(bsonFullKeyString, "%s.%s", bsonDocumentKey,
-							 bsonKey);
-			bsonFullKey = bsonFullKeyString->data;
-		}
-		else
-			bsonFullKey = bsonKey;
+      appendStringInfo(bsonFullKeyString, "%s.%s", bsonDocumentKey,
+                       bsonKey);
+      bsonFullKey = bsonFullKeyString->data;
+    } else
+      bsonFullKey = bsonKey;
 
-		/* Look up the corresponding column for this bson key */
-		hashKey = (void *) bsonFullKey;
-		columnMapping = (ColumnMapping *) hash_search(columnMappingHash,
-													  hashKey,
-													  HASH_FIND,
-													  &handleFound);
-		if (columnMapping != NULL)
-		{
-			columnTypeId = columnMapping->columnTypeId;
-			columnArrayTypeId = columnMapping->columnArrayTypeId;
-		}
+    /* Look up the corresponding column for this bson key */
+    hashKey = (void *) bsonFullKey;
+    columnMapping = (ColumnMapping *) hash_search(columnMappingHash,
+                                                  hashKey,
+                                                  HASH_FIND,
+                                                  &handleFound);
+    if (columnMapping != NULL) {
+      columnTypeId = columnMapping->columnTypeId;
+      columnArrayTypeId = columnMapping->columnArrayTypeId;
+    }
 
-		/* Recurse into nested objects */
-		if (bsonType == BSON_TYPE_DOCUMENT)
-		{
-			if (columnTypeId != JSONOID)
-			{
-				BSON		subObject;
+    /* Recurse into nested objects */
+    if (bsonType == BSON_TYPE_DOCUMENT) {
+      if (columnTypeId != JSONOID) {
+        BSON subObject;
 
-				bsonIterSubObject(&bsonIterator, &subObject);
-				fill_tuple_slot(&subObject, bsonFullKey, columnMappingHash,
-								columnValues, columnNulls, relType);
-				continue;
-			}
-		}
+        bsonIterSubObject(&bsonIterator, &subObject);
+        fill_tuple_slot(&subObject, bsonFullKey, columnMappingHash,
+                        columnValues, columnNulls, relType);
+        continue;
+      }
+    }
 
-		/* If no corresponding column or null BSON value, continue */
-		if (!is_agg && (columnMapping == NULL || bsonType == BSON_TYPE_NULL))
-			continue;
+    /* If no corresponding column or null BSON value, continue */
+    if (!is_agg && (columnMapping == NULL || bsonType == BSON_TYPE_NULL))
+      continue;
 
-		/* Check if columns have compatible types */
-		if ((OidIsValid(columnArrayTypeId) && bsonType == BSON_TYPE_ARRAY))
-			compatibleTypes = true;
-		else
-			compatibleTypes = column_types_compatible(bsonType, columnTypeId);
+    /* Check if columns have compatible types */
+    if ((OidIsValid(columnArrayTypeId) && bsonType == BSON_TYPE_ARRAY))
+      compatibleTypes = true;
+    else
+      compatibleTypes = column_types_compatible(bsonType, columnTypeId);
 
-		/* If types are incompatible, leave this column null */
-		if (!compatibleTypes && columnTypeId != TEXTOID) {
-        elog(WARNING, "column types are incompatible for column %s", bsonFullKey);
+    /* If types are incompatible, leave this column null */
+    if (!compatibleTypes && columnTypeId != TEXTOID && columnTypeId != JSONOID) {
         continue;
     }
 
-		if (columnMapping != NULL)
-			attnum = columnMapping->columnIndex;
+    if (columnMapping != NULL)
+      attnum = columnMapping->columnIndex;
 
-		/* Fill in corresponding column value and null flag */
-		if (OidIsValid(columnArrayTypeId))
-			columnValues[attnum] = column_value_array(&bsonIterator,
-													  columnArrayTypeId);
-		else
-			columnValues[attnum] = column_value(&bsonIterator, columnTypeId,
-												columnMapping->columnTypeMod);
-		columnNulls[attnum] = false;
-	}
+    /* Fill in corresponding column value and null flag */
+    if (OidIsValid(columnArrayTypeId)) {
+      columnValues[attnum] = column_value_array(&bsonIterator,
+                                                columnArrayTypeId);
+    } else {
+      columnValues[attnum] = column_value(&bsonIterator, columnTypeId,
+                                          columnMapping->columnTypeMod);
+    }
+    columnNulls[attnum] = false;
+  }
 }
 
 /*
@@ -2456,6 +2446,98 @@ column_value_array(BSON_ITERATOR *bsonIterator, Oid valueTypeId)
 	pfree(columnValueArray);
 
 	return columnValueDatum;
+}
+
+static Datum
+column_value_to_json(BSON_ITERATOR *bsonIterator, BSON_TYPE bson_type,
+                     int32 columnTypeMod) {
+  Datum columnValue;
+  JsonLexContext *lex;
+  text *result;
+  StringInfo buffer = makeStringInfo();
+  const char *bsonKey = bsonIterKey(bsonIterator);
+
+  switch (bson_type) {
+    case BSON_TYPE_INT32: {
+      int16 value = (int16) bsonIterInt32(bsonIterator);
+      result = cstring_to_text(DatumGetCString(DirectFunctionCall1(int2out, Int16GetDatum(value))));
+      lex = makeJsonLexContext(result, false);
+      pg_parse_json(lex, &nullSemAction);
+      columnValue = PointerGetDatum(result);
+    }
+      break;
+    case BSON_TYPE_INT64: {
+      int64 value = bsonIterInt64(bsonIterator);
+      result = cstring_to_text(DatumGetCString(DirectFunctionCall1(int8out, Int64GetDatum(value))));
+      lex = makeJsonLexContext(result, false);
+      pg_parse_json(lex, &nullSemAction);
+      columnValue = PointerGetDatum(result);
+    }
+      break;
+    case BSON_TYPE_DOUBLE: {
+      float4 value = (float4) bsonIterDouble(bsonIterator);
+      result = cstring_to_text(DatumGetCString(DirectFunctionCall1(float4out, Float4GetDatum(value))));
+      lex = makeJsonLexContext(result, false);
+      pg_parse_json(lex, &nullSemAction);
+      columnValue = PointerGetDatum(result);
+    }
+      break;
+    case BSON_TYPE_BOOL: {
+      bool value = bsonIterBool(bsonIterator);
+      columnValue = BoolGetDatum(value);
+    }
+      break;
+    case BSON_TYPE_DATE_TIME: {
+      int64 valueMillis = bsonIterDate(bsonIterator);
+      int64 timestamp = (valueMillis * 1000L) - POSTGRES_TO_UNIX_EPOCH_USECS;
+      result = cstring_to_text(DatumGetCString(DirectFunctionCall1(timestamptz_out, TimestampTzGetDatum(timestamp))));
+      lex = makeJsonLexContext(result, false);
+      pg_parse_json(lex, &nullSemAction);
+      columnValue = PointerGetDatum(result);
+    }
+      break;
+    case BSON_TYPE_TIMESTAMP: {
+      int64 valueMillis = bsonIterDate(bsonIterator);
+      int64 timestamp = (valueMillis * 1000L) - POSTGRES_TO_UNIX_EPOCH_USECS;
+      result = cstring_to_text(DatumGetCString(DirectFunctionCall1(timestamp_out, TimestampGetDatum(timestamp))));
+      lex = makeJsonLexContext(result, false);
+      pg_parse_json(lex, &nullSemAction);
+      columnValue = PointerGetDatum(result);
+    }
+      break;
+    case BSON_TYPE_UTF8: {
+      const char *value = bsonIterString(bsonIterator);
+      columnValue = CStringGetTextDatum(value);
+    }
+      break;
+    case BSON_TYPE_OID: {
+      char value[NAMEDATALEN];
+      Datum valueDatum = 0;
+      bson_oid_t *bsonObjectId = (bson_oid_t *) bsonIterOid(bsonIterator);
+      bson_oid_to_string(bsonObjectId, value);
+      valueDatum = CStringGetDatum(value);
+      columnValue = DirectFunctionCall3(namein, valueDatum,
+                                        ObjectIdGetDatum(InvalidOid),
+                                        Int32GetDatum(columnTypeMod));
+    }
+      break;
+
+      // TODO: currently unsupported types
+    case BSON_TYPE_BINDATA:
+    case BSON_TYPE_SYMBOL:
+    case BSON_TYPE_UNDEFINED:
+    case BSON_TYPE_REGEX:
+    case BSON_TYPE_CODE:
+    case BSON_TYPE_CODEWSCOPE:
+    default:
+      ereport(ERROR,
+              (errcode(ERRCODE_FDW_INVALID_DATA_TYPE),
+                      errmsg("cannot convert BSON type to column type"),
+                      errhint("BSON type: %u", (uint32) bson_type)));
+      break;
+  }
+
+  return columnValue;
 }
 
 /*
@@ -2625,23 +2707,24 @@ column_value(BSON_ITERATOR *bsonIterator, Oid columnTypeId,
 
 				BSON_TYPE	type = BSON_ITER_TYPE(bsonIterator);
 
-				if (type != BSON_TYPE_ARRAY && type != BSON_TYPE_DOCUMENT)
-					ereport(ERROR,
-							(errmsg("cannot convert to json")));
+				if (type != BSON_TYPE_ARRAY && type != BSON_TYPE_DOCUMENT) {
+            columnValue = column_value_to_json(bsonIterator, type, columnTypeMod);
+        } else {
 
 #ifdef META_DRIVER
-				/* Convert BSON to JSON value */
-				bsonToJsonStringValue(buffer, bsonIterator,
-									  BSON_TYPE_ARRAY == type);
+            /* Convert BSON to JSON value */
+            bsonToJsonStringValue(buffer, bsonIterator,
+                        BSON_TYPE_ARRAY == type);
 #else
-				/* Convert BSON to JSON value */
-				bson_to_json_string(buffer, *bsonIterator,
-									BSON_TYPE_ARRAY == type);
+            /* Convert BSON to JSON value */
+            bson_to_json_string(buffer, *bsonIterator,
+                                BSON_TYPE_ARRAY == type);
 #endif
-				result = cstring_to_text_with_len(buffer->data, buffer->len);
-				lex = makeJsonLexContext(result, false);
-				pg_parse_json(lex, &nullSemAction);
-				columnValue = PointerGetDatum(result);
+            result = cstring_to_text_with_len(buffer->data, buffer->len);
+            lex = makeJsonLexContext(result, false);
+            pg_parse_json(lex, &nullSemAction);
+            columnValue = PointerGetDatum(result);
+        }
 			}
 			break;
 		default:
