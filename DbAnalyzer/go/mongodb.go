@@ -145,10 +145,12 @@ func getDocSchema(colmap *map[string]*cTypeData, prefix string, doc bson.M) erro
 		default:
 			d.cName = k
 			if v == nil {
-				d.cTyp = ""
+				// we set the type to "JSON" (uppercase) as default type if we have a nil value
+				d.cTyp = "JSON"
 			} else {
 				d.cTyp = fmt.Sprintf("%T", v)
 			}
+			log.Infof("Set for key: %s value: %s type: %s", k, fmt.Sprintf("%v", v), d.cTyp)
 		}
 		if (*colmap)[k] == nil {
 			(*colmap)[k] = &d
@@ -160,14 +162,20 @@ func getDocSchema(colmap *map[string]*cTypeData, prefix string, doc bson.M) erro
 				(*colmap)[k].eTyp = d.eTyp
 			} else if (*colmap)[k].cTyp != "" && d.cTyp == "" {
 				// do nothing - we already have a type
-			} else if (*colmap)[k].cTyp != "" && d.cTyp != "" && (*colmap)[k].cTyp != d.cTyp {
-
 			} else if (*colmap)[k].cTyp != "" && d.cTyp == "" {
 				// do nothing - we already have a type
 			} else if (*colmap)[k].cTyp != "" && d.cTyp != "" && (*colmap)[k].cTyp != d.cTyp {
-				// TODO: how to handle this?
-				// for now we keep the first type we found
-				log.Warnf("inconsistent type for %s, %s vs %s\n", k, (*colmap)[k].cTyp, d.cTyp)
+				if (*colmap)[k].cTyp == "JSON" {
+					// we set the type to "JSON" (uppercase) as default type if we have a nil value
+					// when we get a non-nil value, we set the type to the actual type
+					log.Warnf("inconsistent type for %s, %s vs %s", k, (*colmap)[k].cTyp, d.cTyp)
+					(*colmap)[k].cTyp = d.cTyp
+				} else {
+					log.Warnf("inconsistent type for %s, %s vs %s", k, (*colmap)[k].cTyp, d.cTyp)
+					// set to default type "json" (lowercase) if types are different for the same key
+					(*colmap)[k].cTyp = "json"
+
+				}
 			}
 		}
 	}
@@ -274,7 +282,7 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 			t = "timestamp"
 			possibleActions = allowable
 			sample[k] = dtk(true)
-		case "bson.m", "primitive.m":
+		case "bson.m", "primitive.m", "json":
 			possibleActions = allowable
 			t = "json"
 			sample[k] = dtk(true)
@@ -303,7 +311,7 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 				t = "timestamp[]"
 				possibleActions = allowable
 				sample[k] = dtk(true)
-			case "bson.m", "primitive.m":
+			case "bson.m", "primitive.m", "json":
 				possibleActions = allowable
 				t = "json[]"
 				sample[k] = dtk(true)
@@ -318,7 +326,7 @@ func (cl *MongoClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*t
 				sample[k] = dtk(false, sem)
 			}
 		default:
-			log.Infof("unsupported type: %s\n", d.cTyp)
+			log.Infof("unsupported type: %s", d.cTyp)
 			if d.cTyp == "<nil>" || d.cTyp == "" {
 				t = "UNKNOWN"
 			} else {
