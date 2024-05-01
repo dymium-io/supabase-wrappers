@@ -5463,7 +5463,7 @@ void db2Debug2 (const char *message, ...)
 char cBuffer [4000];
 va_list arg_marker;
 va_start (arg_marker, message);
-vsprintf (cBuffer, message, arg_marker);
+vsnprintf (cBuffer, (sizeof cBuffer) - 1, message, arg_marker);
 elog (DEBUG2, "%s", cBuffer);
 va_end   (arg_marker);
 }
@@ -5473,7 +5473,7 @@ void db2Debug3 (const char *message, ...)
 char cBuffer [4000];
 va_list arg_marker;
 va_start (arg_marker, message);
-vsprintf (cBuffer, message, arg_marker);
+vsnprintf (cBuffer, (sizeof cBuffer) - 1, message, arg_marker);
 elog (DEBUG3, "%s", cBuffer);
 va_end   (arg_marker);
 }
@@ -5482,7 +5482,7 @@ void db2Debug4 (const char *message, ...)
 char cBuffer [4000];
 va_list arg_marker;
 va_start (arg_marker, message);
-vsprintf (cBuffer, message, arg_marker);
+vsnprintf (cBuffer, (sizeof cBuffer) - 1, message, arg_marker);
 elog (DEBUG4, "%s", cBuffer);
 va_end   (arg_marker);
 }
@@ -5491,7 +5491,7 @@ void db2Debug5 (const char *message, ...)
 char cBuffer [4000];
 va_list arg_marker;
 va_start (arg_marker, message);
-vsprintf (cBuffer, message, arg_marker);
+vsnprintf (cBuffer, (sizeof cBuffer) - 1, message, arg_marker);
 elog (DEBUG5, "%s", cBuffer);
 va_end   (arg_marker);
 }
