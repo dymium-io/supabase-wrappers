@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 script_d=$PWD/$(dirname $0)
 build_d=${script_d}/BLD

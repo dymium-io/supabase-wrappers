@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 LOG_LEVEL=Debug
 HEALTHPORT=10101

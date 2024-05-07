@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 cabal build
 mkdir -p /tmp/installdir/usr/local/bin
 cp dist/build/mallard/mallard /tmp/installdir/usr/local/bin/mallard

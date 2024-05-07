@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export LOG_LEVEL=Error
 export PORTAL=https://portal.dymium.local:3001/

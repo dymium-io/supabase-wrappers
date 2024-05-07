@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 SERVER_PORT=9099
 AWS_LAMBDAS='{ "DbAnalyzer": "localhost:9080",

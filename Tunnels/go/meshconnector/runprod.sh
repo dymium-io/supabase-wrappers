@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export LOG_LEVEL=Debug
 export PORTAL=https://portal.dymium.io/

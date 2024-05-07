@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Root of the git repository
 repo_root=$(git rev-parse --show-toplevel)

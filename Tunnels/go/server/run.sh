@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export LOCAL_SEARCH=
 #export PASSPHRASE=''

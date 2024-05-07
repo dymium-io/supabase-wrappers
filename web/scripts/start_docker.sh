@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 [ -z "$(hash yq 2>&1)" ] || {
     echo "Please install 'yq' utility:"

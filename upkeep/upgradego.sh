@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 cd ../Tunnels/go/client/
 go get -u ./...
 cd ../server

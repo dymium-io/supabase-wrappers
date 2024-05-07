@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 yarn install
 cd packages/contrib/react-bootstrap-table-next
 yarn install

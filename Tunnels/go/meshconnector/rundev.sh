@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export LOG_LEVEL=Debug
 export HEALTHPORT=10101

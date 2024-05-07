@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 LOG_LEVEL=Info
 PORTAL=https://portal.dymium.local:3001/

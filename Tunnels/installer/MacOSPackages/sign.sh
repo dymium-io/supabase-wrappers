@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 productsign --sign "Developer ID Installer: Dymium Inc (RC7F4R4R28)" ./build/DymiumInstaller.pkg ./DymiumInstaller.pkg
 retval=$?
