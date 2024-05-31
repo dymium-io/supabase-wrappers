@@ -2,6 +2,7 @@ package DbSetup
 
 import (
 	"dymium.com/dymium/log"
+	"net/url"
 
 	"context"
 	"fmt"
@@ -52,7 +53,7 @@ func ConfigureDatabase(db *sql.DB,
 	}
 
 	exec := func(sql string, args ...interface{}) error {
-		log.Infof(sql)
+		log.Infof("SQL exec: %s", sql)
 		if _, err := tx.ExecContext(ctx, sql, args...); err != nil {
 			return rollback(err, "["+sql+"] failed")
 		}
@@ -72,12 +73,12 @@ func ConfigureDatabase(db *sql.DB,
 		}
 	}
 
-	/*
-		-- temporary disable supabase-related stuff --
-		if err = setupVault(exec, localUser); err != nil {
-			return err
-		}
-	*/
+	log.Infof("Setting up vault")
+	if err = setupVault(exec, localUser); err != nil {
+		log.Errorf("Error setting up vault: %v\n", err)
+		return err
+	}
+
 	if err = setupObfuscator(exec, localUser); err != nil {
 		return err
 	}
@@ -179,9 +180,23 @@ func ConfigureDatabase(db *sql.DB,
 
 		opts := ct_options[con.Database_type]
 
-		hiddenTbl := "CREATE FOREIGN TABLE " + t.hiddenTableName + " (\n" +
-			strings.Join(hiddenTblCols, ",\n") +
-			"\n) SERVER " + serverName(con.Name) + " OPTIONS(" + opts.table(t.remoteSchema, t.remoteName) + ");\n"
+		var hiddenTbl string
+
+		if con.Database_type == types.CT_S3 {
+			remoteName := fmt.Sprintf("%s/%s", PathEscapeExceptSlash(strings.Trim(t.remoteSchema, "/")),
+				PathEscapeExceptSlash(strings.Trim(t.remoteName, "/")))
+			if t.remoteSchema == "/" {
+				remoteName = PathEscapeExceptSlash(strings.Trim(t.remoteName, "/"))
+			}
+			hiddenTbl = "CREATE FOREIGN TABLE " + t.hiddenTableName + " (\n" +
+				strings.Join(hiddenTblCols, ",\n") +
+				"\n) SERVER " + serverName(con.Name) + " OPTIONS(" + opts.table(con.Dbname, remoteName) + ");\n"
+
+		} else {
+			hiddenTbl = "CREATE FOREIGN TABLE " + t.hiddenTableName + " (\n" +
+				strings.Join(hiddenTblCols, ",\n") +
+				"\n) SERVER " + serverName(con.Name) + " OPTIONS(" + opts.table(t.remoteSchema, t.remoteName) + ");\n"
+		}
 		view :=
 			fmt.Sprintf("CREATE VIEW %%s.%%s AS SELECT %s FROM %s;\n",
 				strings.Join(viewDef, ", "),
@@ -208,4 +223,12 @@ func ConfigureDatabase(db *sql.DB,
 
 func serverName(str string) string {
 	return str + "_server"
+}
+
+func PathEscapeExceptSlash(s string) string {
+	splitPath := strings.Split(s, "/")
+	for i := range splitPath {
+		splitPath[i] = url.PathEscape(splitPath[i])
+	}
+	return strings.Join(splitPath, "/")
 }

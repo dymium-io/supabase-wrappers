@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"strings"
 	"text/template"
 
 	"dymium.io/DbSetup/types"
@@ -124,6 +125,24 @@ func init() {
 			}
 			return fmt.Sprintf("schema_name '%s', table_name '%s'",
 				esc(remoteSchema), esc(remoteTable))
+		},
+	}
+	ct_options[types.CT_S3] = ct_option{
+		ext:        define_rust_ext("s3_wrapper", "s3_fdw_handler", "s3_fdw_validator"),
+		server_def: define_server("s3.sql"),
+		table: func(remoteSchema, remoteTable string) string {
+			//uri 's3://bucket/s3_table.csv',
+			//    format 'csv',
+			//    has_header 'true'
+			uri := fmt.Sprintf("s3://%s/%s", remoteSchema, remoteTable)
+			if strings.HasSuffix(remoteTable, ".csv") {
+				return fmt.Sprintf("uri '%s', format 'csv', has_header 'true'", uri)
+			}
+			if strings.HasSuffix(remoteTable, ".json") {
+				return fmt.Sprintf("uri '%s', format 'jsonl'", uri)
+			}
+			// Parquet is the default - TODO: should be throw an error here or it's checked before?
+			return fmt.Sprintf("uri '%s', format 'parquet'", uri)
 		},
 	}
 }

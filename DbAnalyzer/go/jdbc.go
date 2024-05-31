@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -150,6 +151,7 @@ type JdbcClient struct {
 // Define a map to store the connection type to string mapping for known connection types
 var connTypesURL = map[types.ConnectionType]string{
 	types.CT_Elasticsearch: "elasticsearch",
+	types.CT_S3:            "s3",
 }
 
 func (cl *JdbcClient) sendRequest(path string, optionalParams map[string]string) ([]byte, error) {
@@ -253,7 +255,12 @@ func (cl *JdbcClient) Connect(c *types.ConnectionParams) error {
 	cl.Host = c.Address
 	cl.Port = c.Port
 	cl.Database = c.Database
-	cl.Properties = "" // FIXME - add support for different connection types, TLS, etc.
+	if cl.SourceType == "s3" {
+		// TODO: make aws zone configurable
+		cl.Properties = "us-west-2"
+	} else {
+		cl.Properties = "" // FIXME - add support for different connection types, TLS, etc.
+	}
 	cl.User = c.User
 	cl.Password = c.Password
 	cl.Tls = c.Tls
@@ -327,11 +334,17 @@ func (cl *JdbcClient) GetDbInfo(dbName string) (*types.DatabaseInfoData, error) 
 
 	for currentSchema, schema := range database.Schemas {
 		reqURL := fmt.Sprintf("api/dbanalyzer/dbtables")
-		if schema.Name != "_defaultdb_" {
-			reqURL = fmt.Sprintf("%s/%s", reqURL, schema.Name)
+
+		sch := schema.Name
+		if cl.SourceType == "s3" {
+			sch = url.PathEscape(schema.Name)
 		}
 
-		log.Debugf("Getting tables for schema: %s", schema.Name)
+		if schema.Name != "_defaultdb_" && schema.Name != "/" {
+			reqURL = fmt.Sprintf("%s/%s", reqURL, sch)
+		}
+
+		log.Infof("Getting tables for schema: %s", sch)
 		responseBytes, err := cl.sendRequest(reqURL, nil)
 		if err != nil {
 			log.Errorf("Error getting table info: %s", err)
@@ -373,11 +386,26 @@ func (cl *JdbcClient) isSystemTable(table string) bool {
 func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*types.TableInfoData, error) {
 	log.Infof("Getting columns for table: %s", tip.Table)
 
-	reqURL := fmt.Sprintf("api/dbanalyzer/dbcolumns")
-	if tip.Schema != "" && tip.Schema != "_defaultdb_" {
-		reqURL = fmt.Sprintf("%s/%s", reqURL, tip.Schema)
+	sch := tip.Schema
+	tbl := tip.Table
+	if cl.SourceType == "s3" {
+		if tip.Schema == "" || tip.Schema == "/" {
+			sch = ""
+		} else {
+			sch = url.PathEscape(tip.Schema)
+		}
+		tbl = url.PathEscape(tip.Table)
 	}
-	reqURL = fmt.Sprintf("%s/%s", reqURL, tip.Table)
+
+	reqURL := fmt.Sprintf("api/dbanalyzer/dbcolumns")
+	if tip.Schema != "" && tip.Schema != "_defaultdb_" && tip.Schema != "/" {
+		reqURL = fmt.Sprintf("%s/%s", reqURL, sch)
+	}
+
+	reqURL = fmt.Sprintf("%s/%s", reqURL, tbl)
+	if cl.SourceType == "s3" {
+		reqURL = fmt.Sprintf("%s?samplesize=%d", reqURL, detect.SampleSize)
+	}
 
 	responseBytes, err := cl.sendRequest(reqURL, nil)
 	if err != nil {
@@ -404,6 +432,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 		isNullable      bool
 		dflt            *string
 		cTyp            string
+		cTypName        string
 		cLength, cScale *int
 	}
 
@@ -422,11 +451,12 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 		d.pos = column.OrdinalPosition
 		d.cName = column.ColumnName
 		d.cTyp = column.DataTypeStr
+		d.cTypName = column.TypeName
 		d.cLength = &column.ColumnSize
 		d.cScale = &column.DecimalDigits
 		isNullable_ = column.IsNullable
 		// In case of Elasticsearch, we consider all columns as nullable
-		if cl.SourceType == "elasticsearch" || cl.SourceType == "es" || isNullable_ == "YES" || isNullable_ == "yes" || isNullable_ == "Y" || isNullable_ == "y" {
+		if cl.SourceType == "s3" || cl.SourceType == "elasticsearch" || cl.SourceType == "es" || isNullable_ == "YES" || isNullable_ == "yes" || isNullable_ == "Y" || isNullable_ == "y" {
 			d.isNullable = true
 		} else {
 			d.isNullable = false
@@ -464,285 +494,297 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 				Semantics:   s,
 			}
 		}
-		switch d.cTyp {
-		case "ARRAY":
-			// FIXME: we need to get the element type
-			t = d.cTyp
-			possibleActions = blocked
-			sem = utils.Unsupported
-			sample[k] = dtk(false, sem)
-		case "BIGINT":
-			t = "bigint"
-			possibleActions = allowable
+		log.Debugf("Processing column %s, type %s", d.cName, d.cTyp)
+		if cl.SourceType == "s3" && (strings.HasSuffix(tbl, ".csv") || strings.HasSuffix(tbl, ".json") || strings.HasSuffix(tbl, ".jsonl")) {
+			// TODO: currently fdw for S3 supports mapping for csv and json fields to text only
+			t = "text"
+			possibleActions = obfuscatable
 			sample[k] = dtk(true)
-		case "DECIMAL":
-			if d.cLength != nil && *d.cLength != 0 {
-				if d.cScale != nil && *d.cScale >= 0 {
-					t = fmt.Sprintf("decimal(%d,%d)", *d.cLength, *d.cScale)
-				} else {
-					t = fmt.Sprintf("decimal(%d)", *d.cLength)
-				}
-			} else {
-				t = "numeric"
-			}
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "NUMERIC":
-			if d.cLength != nil && *d.cLength != 0 {
-				if d.cScale != nil && *d.cScale >= 0 {
-					t = fmt.Sprintf("numeric(%d,%d)", *d.cLength, *d.cScale)
-				} else {
-					t = fmt.Sprintf("numeric(%d)", *d.cLength)
-				}
-			} else {
-				t = "numeric"
-			}
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "BIT":
-			if d.cLength != nil && *d.cLength != 0 {
-				t = fmt.Sprintf("bit(%d)", *d.cLength)
-			} else {
-				t = "bit"
-			}
-		case "BLOB", "BINARY", "VARBINARY":
-			possibleActions = allowable
-			//Currently, we don't support BLOB, BINARY, VARBINARY (for Elasticsearch)
-			if cl.SourceType == "elasticsearch" || cl.SourceType == "es" {
-				t = "bytea"
+		} else {
+			switch strings.ToUpper(d.cTyp) {
+			case "ARRAY":
+				// FIXME: we need to get the element type
+				t = d.cTyp
 				possibleActions = blocked
 				sem = utils.Unsupported
 				sample[k] = dtk(false, sem)
-			} else {
+			case "BIGINT", "INT64TYPE", "INT64":
+				t = "bigint"
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "DECIMAL":
+				if d.cLength != nil && *d.cLength != 0 {
+					if d.cScale != nil && *d.cScale >= 0 {
+						t = fmt.Sprintf("decimal(%d,%d)", *d.cLength, *d.cScale)
+					} else {
+						t = fmt.Sprintf("decimal(%d)", *d.cLength)
+					}
+				} else {
+					t = "numeric"
+				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "NUMERIC", "FLOAT64TYPE", "FLOAT64":
+				if d.cLength != nil && *d.cLength != 0 {
+					if d.cScale != nil && *d.cScale >= 0 {
+						t = fmt.Sprintf("numeric(%d,%d)", *d.cLength, *d.cScale)
+					} else {
+						t = fmt.Sprintf("numeric(%d)", *d.cLength)
+					}
+				} else {
+					t = "numeric"
+				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "BIT":
+				if d.cLength != nil && *d.cLength != 0 {
+					t = fmt.Sprintf("bit(%d)", *d.cLength)
+				} else {
+					t = "bit"
+				}
+			case "BLOB", "BINARY", "VARBINARY":
+				possibleActions = allowable
+				//Currently, we don't support BLOB, BINARY, VARBINARY (for Elasticsearch)
+				if cl.SourceType == "elasticsearch" || cl.SourceType == "es" {
+					t = "bytea"
+					possibleActions = blocked
+					sem = utils.Unsupported
+					sample[k] = dtk(false, sem)
+				} else {
+					if d.cTypName == "STRING" {
+						t = "text"
+						sample[k] = dtk(true)
+					} else {
+						t = "bytea"
+						sample[k] = dtk(false)
+					}
+				}
+			case "BOOLEAN", "BOOLEANTYPE":
+				t = "boolean"
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "CHAR", "INT8TYPE", "INT8":
+				if d.cLength != nil && *d.cLength > 0 {
+					possibleActions = obfuscatable
+					t = fmt.Sprintf("character(%d)", *d.cLength)
+				} else {
+					possibleActions = allowable
+					t = "bpchar"
+				}
+				sample[k] = dtk(true)
+			case "CLOB":
+				t = "text"
+				possibleActions = obfuscatable
+				sample[k] = dtk(false)
+			case "DATALINK":
+				//Identifies the generic SQL type DATALINK.
+				// TODO: check if this is correct
+				t = d.cTyp
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
+			case "DATE", "DATE64TYPE", "DATE64":
+				t = "date"
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "DISTINCT":
+				//Identifies the generic SQL type DISTINCT.
+				// TODO: check if this is correct
+				t = d.cTyp
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
+			case "DOUBLE", "NUMBER":
+				t = "double precision"
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "FLOAT", "REAL", "FLOAT32TYPE", "FLOAT32":
+				if d.cLength != nil && *d.cLength > 6 {
+					t = "double precision"
+				} else {
+					t = "float"
+				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "INTEGER", "INT32TYPE", "INT32":
+				t = "integer"
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "JAVA_OBJECT":
+				//Indicates that the SQL type is database-specific and gets mapped
+				//to a Java object that can be accessed via the methods getObject and setObject.
+				// TODO: check if this is correct
+				t = d.cTyp
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
+			case "LONGNVARCHAR":
+				//Identifies the generic SQL type LONGNVARCHAR.
+				if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
+					t = "varchar"
+					//t = fmt.Sprintf("varchar(%d)", *d.cLength)
+				} else {
+					t = "text"
+				}
+				possibleActions = obfuscatable
+				sample[k] = dtk(true)
+			case "LONGVARBINARY":
+				//Identifies the generic SQL type LONGVARBINARY.
+				// TODO: check if this is correct
+				possibleActions = allowable
 				t = "bytea"
 				sample[k] = dtk(false)
-			}
-		case "BOOLEAN":
-			t = "boolean"
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "CHAR":
-			if d.cLength != nil && *d.cLength > 0 {
+			case "LONGVARCHAR":
+				//Identifies the generic SQL type LONGVARCHAR.
+				if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
+					//t = fmt.Sprintf("varchar(%d)", *d.cLength)
+					t = "varchar"
+				} else {
+					t = "text"
+				}
 				possibleActions = obfuscatable
-				t = fmt.Sprintf("character(%d)", *d.cLength)
-			} else {
-				possibleActions = allowable
-				t = "bpchar"
-			}
-			sample[k] = dtk(true)
-		case "CLOB":
-			t = "text"
-			possibleActions = obfuscatable
-			sample[k] = dtk(false)
-		case "DATALINK":
-			//Identifies the generic SQL type DATALINK.
-			// TODO: check if this is correct
-			t = d.cTyp
-			possibleActions = blocked
-			sem = utils.Unsupported
-			sample[k] = dtk(false, sem)
-		case "DATE":
-			t = "date"
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "DISTINCT":
-			//Identifies the generic SQL type DISTINCT.
-			// TODO: check if this is correct
-			t = d.cTyp
-			possibleActions = blocked
-			sem = utils.Unsupported
-			sample[k] = dtk(false, sem)
-		case "DOUBLE":
-			t = "double precision"
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "FLOAT", "REAL":
-			if d.cLength != nil && *d.cLength > 6 {
-				t = "double precision"
-			} else {
-				t = "float"
-			}
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "INTEGER":
-			t = "integer"
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "JAVA_OBJECT":
-			//Indicates that the SQL type is database-specific and gets mapped
-			//to a Java object that can be accessed via the methods getObject and setObject.
-			// TODO: check if this is correct
-			t = d.cTyp
-			possibleActions = blocked
-			sem = utils.Unsupported
-			sample[k] = dtk(false, sem)
-		case "LONGNVARCHAR":
-			//Identifies the generic SQL type LONGNVARCHAR.
-			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
-				t = "varchar"
-				//t = fmt.Sprintf("varchar(%d)", *d.cLength)
-			} else {
-				t = "text"
-			}
-			possibleActions = obfuscatable
-			sample[k] = dtk(true)
-		case "LONGVARBINARY":
-			//Identifies the generic SQL type LONGVARBINARY.
-			// TODO: check if this is correct
-			possibleActions = allowable
-			t = "bytea"
-			sample[k] = dtk(false)
-		case "LONGVARCHAR":
-			//Identifies the generic SQL type LONGVARCHAR.
-			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
-				//t = fmt.Sprintf("varchar(%d)", *d.cLength)
-				t = "varchar"
-			} else {
-				t = "text"
-			}
-			possibleActions = obfuscatable
-			sample[k] = dtk(true)
-		case "NCHAR":
-			//Identifies the generic SQL type NCHAR.
-			// TODO: check if this is correct
-			if d.cLength != nil && *d.cLength > 0 {
+				sample[k] = dtk(true)
+			case "NCHAR":
+				//Identifies the generic SQL type NCHAR.
+				// TODO: check if this is correct
+				if d.cLength != nil && *d.cLength > 0 {
+					possibleActions = obfuscatable
+					t = fmt.Sprintf("character(%d)", *d.cLength)
+				} else {
+					possibleActions = allowable
+					t = "bpchar"
+				}
+				sample[k] = dtk(true)
+			case "NCLOB":
+				//Identifies the generic SQL type NCLOB.
+				// TODO: check if this is correct
+				if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
+					t = "varchar"
+					//t = fmt.Sprintf("varchar(%d)", *d.cLength)
+				} else {
+					t = "text"
+				}
 				possibleActions = obfuscatable
-				t = fmt.Sprintf("character(%d)", *d.cLength)
-			} else {
+				sample[k] = dtk(true)
+			case "NULL":
+				//Identifies the generic SQL value NULL.
+				// TODO: check if this is correct
+				t = d.cTyp
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
+			case "NVARCHAR", "STRING", "JSON", "BYTEARRAYTYPE", "BYTEARRAY":
+				//Identifies the generic SQL type NVARCHAR.
+				// TODO: check if this is correct
+				if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
+					t = "varchar"
+					//t = fmt.Sprintf("varchar(%d)", *d.cLength)
+				} else {
+					t = "text"
+				}
+				possibleActions = obfuscatable
+				sample[k] = dtk(true)
+			case "OTHER", "NONE":
+				//Indicates that the SQL type is database-specific and gets mapped to a Java object that can be accessed via the methods getObject and setObject.
+				// TODO: check if this is correct
+				t = d.cTyp
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
+			case "REF":
+				//Identifies the generic SQL type REF.
+				// TODO: check if this is correct
+				t = d.cTyp
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
+			case "REF_CURSOR":
+				//Identifies the generic SQL type REF_CURSOR.
+				// TODO: check if this is correct
+				t = d.cTyp
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
+			case "ROWID":
+				//Identifies the SQL type ROWID.
+				// TODO: check if this is correct
+				t = d.cTyp
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
+			case "SMALLINT", "INT16TYPE", "INT16":
+				t = "smallint"
 				possibleActions = allowable
-				t = "bpchar"
-			}
-			sample[k] = dtk(true)
-		case "NCLOB":
-			//Identifies the generic SQL type NCLOB.
-			// TODO: check if this is correct
-			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
-				t = "varchar"
-				//t = fmt.Sprintf("varchar(%d)", *d.cLength)
-			} else {
-				t = "text"
-			}
-			possibleActions = obfuscatable
-			sample[k] = dtk(true)
-		case "NULL":
-			//Identifies the generic SQL value NULL.
-			// TODO: check if this is correct
-			t = d.cTyp
-			possibleActions = blocked
-			sem = utils.Unsupported
-			sample[k] = dtk(false, sem)
-		case "NVARCHAR":
-			//Identifies the generic SQL type NVARCHAR.
-			// TODO: check if this is correct
-			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
-				t = "varchar"
-				//t = fmt.Sprintf("varchar(%d)", *d.cLength)
-			} else {
-				t = "text"
-			}
-			possibleActions = obfuscatable
-			sample[k] = dtk(true)
-		case "OTHER":
-			//Indicates that the SQL type is database-specific and gets mapped to a Java object that can be accessed via the methods getObject and setObject.
-			// TODO: check if this is correct
-			t = d.cTyp
-			possibleActions = blocked
-			sem = utils.Unsupported
-			sample[k] = dtk(false, sem)
-		case "REF":
-			//Identifies the generic SQL type REF.
-			// TODO: check if this is correct
-			t = d.cTyp
-			possibleActions = blocked
-			sem = utils.Unsupported
-			sample[k] = dtk(false, sem)
-		case "REF_CURSOR":
-			//Identifies the generic SQL type REF_CURSOR.
-			// TODO: check if this is correct
-			t = d.cTyp
-			possibleActions = blocked
-			sem = utils.Unsupported
-			sample[k] = dtk(false, sem)
-		case "ROWID":
-			//Identifies the SQL type ROWID.
-			// TODO: check if this is correct
-			t = d.cTyp
-			possibleActions = blocked
-			sem = utils.Unsupported
-			sample[k] = dtk(false, sem)
-		case "SMALLINT":
-			t = "smallint"
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "SQLXML":
-			t = "xml"
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "STRUCT":
-			//Identifies the generic SQL type STRUCT.
-			// TODO: check if this is correct
-			t = d.cTyp
-			possibleActions = blocked
-			sem = utils.Unsupported
-			sample[k] = dtk(false, sem)
-		case "TIME":
-			switch {
-			case d.cScale == nil:
-				t = "time"
-			case *d.cScale == 0:
-				t = "time"
-			case *d.cScale > 6:
-				t = "time (6) without time zone"
+				sample[k] = dtk(true)
+			case "SQLXML":
+				t = "xml"
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "STRUCT":
+				//Identifies the generic SQL type STRUCT.
+				// TODO: check if this is correct
+				t = d.cTyp
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
+			case "TIME":
+				switch {
+				case d.cScale == nil:
+					t = "time"
+				case *d.cScale == 0:
+					t = "time"
+				case *d.cScale > 6:
+					t = "time (6) without time zone"
+				default:
+					t = fmt.Sprintf("time (%d) without time zone", *d.cScale)
+				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "TIME_WITH_TIMEZONE":
+				if d.cLength != nil && *d.cLength > 0 && *d.cLength < 6 {
+					t = fmt.Sprintf("time(%d) with time zone", *d.cLength)
+				} else {
+					t = "time with time zone"
+				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "TIMESTAMP_WITH_TIMEZONE":
+				if d.cLength != nil && *d.cLength > 0 && *d.cLength < 6 {
+					t = fmt.Sprintf("timestamp(%d) with time zone", *d.cLength)
+				} else {
+					t = "timestamp with time zone"
+				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "TIMESTAMP", "TIMESTAMPNANOSECONDTYPE", "TIMESTAMPNANOSECOND":
+				if d.cScale != nil && *d.cScale > 0 {
+					t = fmt.Sprintf("timestamp (%d) with time zone", *d.cScale)
+				} else {
+					t = "timestamp"
+				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "TINYINT":
+				// TODO: check if this is correct
+				t = "smallint"
+				possibleActions = allowable
+				sample[k] = dtk(true)
+			case "VARCHAR":
+				if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
+					t = "varchar"
+					//t = fmt.Sprintf("varchar(%d)", *d.cLength)
+				} else {
+					t = "text"
+				}
+				possibleActions = obfuscatable
+				sample[k] = dtk(true)
 			default:
-				t = fmt.Sprintf("time (%d) without time zone", *d.cScale)
+				t = d.cTyp
+				possibleActions = blocked
+				sem = utils.Unsupported
+				sample[k] = dtk(false, sem)
 			}
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "TIME_WITH_TIMEZONE":
-			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 6 {
-				t = fmt.Sprintf("time(%d) with time zone", *d.cLength)
-			} else {
-				t = "time with time zone"
-			}
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "TIMESTAMP_WITH_TIMEZONE":
-			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 6 {
-				t = fmt.Sprintf("timestamp(%d) with time zone", *d.cLength)
-			} else {
-				t = "timestamp with time zone"
-			}
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "TIMESTAMP":
-			if d.cScale != nil && *d.cScale > 0 {
-				t = fmt.Sprintf("timestamp (%d) with time zone", *d.cScale)
-			} else {
-				t = "timestamp"
-			}
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "TINYINT":
-			// TODO: check if this is correct
-			t = "smallint"
-			possibleActions = allowable
-			sample[k] = dtk(true)
-		case "VARCHAR":
-			if d.cLength != nil && *d.cLength > 0 && *d.cLength < 65536 {
-				t = "varchar"
-				//t = fmt.Sprintf("varchar(%d)", *d.cLength)
-			} else {
-				t = "text"
-			}
-			possibleActions = obfuscatable
-			sample[k] = dtk(true)
-		default:
-			t = d.cTyp
-			possibleActions = blocked
-			sem = utils.Unsupported
-			sample[k] = dtk(false, sem)
 		}
-
 		c := types.Column{
 			Name:            d.cName,
 			Position:        d.pos,
@@ -759,7 +801,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 	log.Debugf("Got table info: %v", ti.TblName)
 
 	log.Debugf("Sampling the table: %s", tip.Table)
-	if err = cl.getSample(tip.Schema, tip.Table, sample); err != nil {
+	if err = cl.getSample(sch, tbl, sample); err != nil {
 		log.Errorf("Error getting sample: %s", err)
 		return nil, err
 	}

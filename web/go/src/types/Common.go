@@ -15,6 +15,7 @@ const (
   CPT_DB2_50000 ConnectionPortsType = "DB2_50000"
   CPT_MongoDB_27017 ConnectionPortsType = "MongoDB_27017"
   CPT_Elasticsearch_9200 ConnectionPortsType = "Elasticsearch_9200"
+  CPT_S3_443 ConnectionPortsType = "S3_443"
 )
 
 type ConnectionType string
@@ -27,6 +28,7 @@ const (
   CT_DB2 ConnectionType = "DB2"
   CT_MongoDB ConnectionType = "MongoDB"
   CT_Elasticsearch ConnectionType = "Elasticsearch"
+  CT_S3 ConnectionType = "S3"
 )
 
 type DataHandling string

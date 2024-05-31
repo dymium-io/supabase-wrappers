@@ -1027,3 +1027,68 @@ Content-Type: application/json
   "password": "0yw2MvF9iUGMvDzF54IeCqmD"
 }
 ###
+
+// S3
+POST http://localhost:8888/api/dbanalyzer/dbping
+Content-Type: application/json
+
+{
+  "dbType": "s3",
+  "host": "s3.amazonaws.com",
+  "database": "dymium-dev-ghostdb-test",
+  "properties": "us-west-2",
+  "user": "",
+  "password": ""
+}
+###
+
+POST http://localhost:8080/api/dbanalyzer/dbschemas
+Content-Type: application/json
+
+{
+  "dbType": "s3",
+  "host": "s3.amazonaws.com",
+  "database": "dymium-dev-ghostdb-test",
+  "properties": "us-west-2",
+  "user": "",
+  "password": ""
+}
+###
+
+POST http://localhost:8080/api/dbanalyzer/dbtabtypes
+Content-Type: application/json
+
+{
+  "dbType": "s3",
+  "host": "s3.amazonaws.com",
+  "database": "dymium-dev-ghostdb-test",
+  "properties": "us-west-2",
+  "user": "",
+  "password": ""
+}
+###
+
+POST http://localhost:8080/api/dbanalyzer/dbtables/adventureworks
+Content-Type: application/json
+
+{
+  "dbType": "s3",
+  "host": "s3.amazonaws.com",
+  "database": "dymium-dev-ghostdb-test",
+  "properties": "us-west-2",
+  "user": "",
+  "password": ""
+}
+###
+
+POST http://localhost:8080/api/dbanalyzer/dbcolumns/adventureworks/employee
+Content-Type: application/json
+
+{
+  "dbType": "s3",
+  "host": "s3.amazonaws.com",
+  "database": "dymium-dev-ghostdb-test",
+  "properties": "us-west-2",
+  "user": "",
+  "password": ""
+}

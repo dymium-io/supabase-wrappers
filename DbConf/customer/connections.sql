@@ -84,3 +84,9 @@ ALTER TYPE source_type ADD VALUE 'MongoDB';
 -- description: "Add Elasticsearch to source_type ENUM",
 -- requires: ["customer/connections-source-type"];
 ALTER TYPE source_type ADD VALUE 'Elasticsearch';
+
+-- #!migration
+-- name: "customer/connections-source-type-add-S3",
+-- description: "Add Elasticsearch to source_type ENUM",
+-- requires: ["customer/connections-source-type"];
+ALTER TYPE source_type ADD VALUE 'S3';

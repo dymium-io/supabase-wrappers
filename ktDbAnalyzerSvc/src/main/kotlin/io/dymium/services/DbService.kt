@@ -33,7 +33,7 @@ private val logger = KotlinLogging.logger {}
  * @property config The application configuration object.
  */
 open class DbValidator(val config: ApplicationConfig) {
-    fun validateRequestDbInfo(dbInfo: DbConnectDto): Result<DbConnectDto, DbAnalyzerError> {
+    open fun validateRequestDbInfo(dbInfo: DbConnectDto): Result<DbConnectDto, DbAnalyzerError> {
         return when {
             //TODO validate dbType - is known
             dbInfo.host.isNullOrEmpty() -> {
@@ -70,7 +70,7 @@ open class DbValidator(val config: ApplicationConfig) {
         }
     }
 
-    fun getConnectionURL(dbInfo: DbConnectDto): String {
+    open fun getConnectionURL(dbInfo: DbConnectDto): String {
         // TODO: Other ways to connect to DB: API key, SSL/TLS, etc. as well as dbType is known
         return when (dbInfo.dbType) {
             "sqlserver" -> {
@@ -105,7 +105,7 @@ open class DbValidator(val config: ApplicationConfig) {
         }
     }
 
-    fun handleError(errorMessage: String): Err<DbAnalyzerError> {
+    open fun handleError(errorMessage: String): Err<DbAnalyzerError> {
         val error = DbAnalyzerError.BadRequest(errorMessage)
         logError(error)
         return Err(error)
@@ -158,10 +158,110 @@ class ExtendedDbValidator(config: ApplicationConfig) : DbValidator(config) {
     }
 }
 
-class DbService(config: ApplicationConfig) {
+
+class DbService(config: ApplicationConfig) : IDbService {
+
+    private val jdbcService = DbServiceJDBC(config)
+    private val s3Service = S3Service(config)
+
+    private fun logError(error: DbAnalyzerError) {
+        when (error) {
+            is DbAnalyzerError.BadRequest -> {
+                logger.error { "Bad Request: ${error.message}" }
+            }
+
+            is DbAnalyzerError.NotFound -> {
+                logger.error { "Not Found: ${error.message}" }
+            }
+
+            is DbAnalyzerError.Unauthorized -> {
+                logger.error { "Unauthorized: ${error.message}" }
+            }
+
+            is DbAnalyzerError.Forbidden -> {
+                logger.error { "Forbidden: ${error.message}" }
+            }
+        }
+    }
+
+    private fun handleError(errorMessage: String): Err<DbAnalyzerError> {
+        val error = DbAnalyzerError.BadRequest(errorMessage)
+        logError(error)
+        return Err(error)
+    }
+
+    private fun getService(dbInfo: DbConnectDto): Result<IDbService, DbAnalyzerError> {
+        return when (dbInfo.dbType) {
+            "postgresql", "oracle", "mysql", "elasticsearch", "db2", "sqlserver", "mariadb" -> Ok(jdbcService)
+            "s3" -> Ok(s3Service)
+            else -> Err(DbAnalyzerError.BadRequest("Invalid dbType: ${dbInfo.dbType}"))
+        }
+    }
+
+    override fun dbPing(dbInfo: DbConnectDto): Result<DbConnectResponse, DbAnalyzerError> {
+        return getService(dbInfo)
+            .mapBoth(
+                success = { it.dbPing(dbInfo) },
+                failure = { handleError(it.message) }
+            )
+    }
+
+    override fun dbSchemas(dbInfo: DbConnectDto): Result<DbSchemasResponse, DbAnalyzerError> {
+        return getService(dbInfo)
+            .mapBoth(
+                success = { it.dbSchemas(dbInfo) },
+                failure = { handleError(it.message) }
+            )
+    }
+
+    override fun dbTabTypes(dbInfo: DbConnectDto): Result<DbTabTypesResponse, DbAnalyzerError> {
+        return getService(dbInfo)
+            .mapBoth(
+                success = { it.dbTabTypes(dbInfo) },
+                failure = { handleError(it.message) }
+            )
+    }
+
+    override fun dbSample(
+        dbInfo: DbConnectDto,
+        dbschema: String?,
+        table: String?,
+        sampleSize: Int?
+    ): Result<DbSampleResponse, DbAnalyzerError> {
+        return getService(dbInfo)
+            .mapBoth(
+                success = { it.dbSample(dbInfo, dbschema, table, sampleSize) },
+                failure = { handleError(it.message) }
+            )
+    }
+
+    override fun dbTabList(dbInfo: DbConnectDto, schema: String?): Result<DbTabListResponse, DbAnalyzerError> {
+        return getService(dbInfo)
+            .mapBoth(
+                success = { it.dbTabList(dbInfo, schema) },
+                failure = { handleError(it.message) }
+            )
+    }
+
+    override fun dbColList(
+        dbInfo: DbConnectDto,
+        schema: String?,
+        tabname: String?,
+        sampleSize: Int?
+    ): Result<DbColListResponse, DbAnalyzerError> {
+        return getService(dbInfo)
+            .mapBoth(
+                success = {it.dbColList(dbInfo, schema, tabname, sampleSize)},
+                failure = { handleError(it.message) }
+            )
+    }
+
+}
+
+class DbServiceJDBC(config: ApplicationConfig) : IDbService {
+    private val SUCCESS_RESPONSE = "Ok"
 
     private val validator = ExtendedDbValidator(config)
-    private val SUCCESS_RESPONSE = "Ok"
 
     private fun <T, S, E> handleRequest(
         dbInfo: DbConnectDto,
@@ -173,7 +273,7 @@ class DbService(config: ApplicationConfig) {
     private fun getDatabaseMessage(it: java.sql.Connection) =
         "Database Name: ${it.metaData.databaseProductName} (${it.metaData.databaseProductVersion})"
 
-    fun dbPing(dbInfo: DbConnectDto): Result<DbConnectResponse, DbAnalyzerError> {
+    override fun dbPing(dbInfo: DbConnectDto): Result<DbConnectResponse, DbAnalyzerError> {
         return handleRequest(dbInfo) {
             val msg = getDatabaseMessage(it)
             logger.debug { "DB Connection: ${validator.getConnectionURL(dbInfo)} - $msg" }
@@ -181,7 +281,7 @@ class DbService(config: ApplicationConfig) {
         }
     }
 
-    fun dbSchemas(dbInfo: DbConnectDto): Result<DbSchemasResponse, DbAnalyzerError> {
+    override fun dbSchemas(dbInfo: DbConnectDto): Result<DbSchemasResponse, DbAnalyzerError> {
         return handleRequest(dbInfo) {
             val msg = getDatabaseMessage(it)
             val schemas = mutableListOf<String>()
@@ -196,7 +296,7 @@ class DbService(config: ApplicationConfig) {
         }
     }
 
-    fun dbTabTypes(dbInfo: DbConnectDto): Result<DbTabTypesResponse, DbAnalyzerError> {
+    override fun dbTabTypes(dbInfo: DbConnectDto): Result<DbTabTypesResponse, DbAnalyzerError> {
         return handleRequest(dbInfo) {
             val msg = getDatabaseMessage(it)
             //Get a list of table types
@@ -222,7 +322,7 @@ class DbService(config: ApplicationConfig) {
         return gson.toJson(row).let { Json.parseToJsonElement(it) }.jsonObject
     }
 
-    fun dbSample(
+    override fun dbSample(
         dbInfo: DbConnectDto,
         dbschema: String?,
         table: String?,
@@ -315,7 +415,7 @@ class DbService(config: ApplicationConfig) {
     }
 
 
-    fun dbTabList(dbInfo: DbConnectDto, schema: String?): Result<DbTabListResponse, DbAnalyzerError> {
+    override fun dbTabList(dbInfo: DbConnectDto, schema: String?): Result<DbTabListResponse, DbAnalyzerError> {
         if (schema.isNullOrEmpty() && dbInfo.dbType !in listOf("elasticsearch", "es")) {
             return validator.handleError("schema is required")
         }
@@ -375,10 +475,11 @@ class DbService(config: ApplicationConfig) {
         return DbTabListResponse("Ok", message, tables)
     }
 
-    fun dbColList(
+    override fun dbColList(
         dbInfo: DbConnectDto,
         schema: String?,
-        tabname: String?
+        tabname: String?,
+        sampleSize: Int?
     ): Result<DbColListResponse, DbAnalyzerError> {
         validateParameters(schema, tabname, dbInfo.dbType)?.let { error ->
             return validator.handleError(error.message)

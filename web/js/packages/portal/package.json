@@ -27,11 +27,12 @@
     "beautiful-react-hooks": "^4.3.0",
     "bootstrap": "5.2.3",
     "build": "^0.1.4",
-    "dompurify": "^3.1.0",
+    "dompurify": "^3.1.4",
     "gsap": "^3.11.5",
     "html-react-parser": "^3.0.15",
     "http-proxy-middleware": "^2.0.6",
     "jest-environment-jsdom": "^29.5.0",
+    "jsdom": "^24.0.0",
     "lodash": "^4.17.21",
     "multiselect-react-dropdown": "^2.0.22",
     "postcss": "^8.4.37",
@@ -58,7 +59,7 @@
     "uuid": "^9.0.0",
     "web-vitals": "^3.3.1",
     "webpack": "^5.90.3",
-    "yarn": "^1.22.21"
+    "yarn": "^1.22.22"
   },
   "scripts": {
     "start": "HTTPS=true DANGEROUSLY_DISABLE_HOST_CHECK=true SSL_CRT_FILE=../../../devcerts/dymium.crt SSL_KEY_FILE=../../../devcerts/dymium.key HOST=portal.dymium.local PORT=3001 react-app-rewired  start",

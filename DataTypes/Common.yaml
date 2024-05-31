@@ -10,6 +10,7 @@ ConnectionType:
   - DB2        <*> IBM DB2 Database
   - MongoDB    <*> MongoDB Database
   - Elasticsearch <*> Elasticsearch Database
+  - S3 <*> S3 (Parquet, CSV, JSON)
 
 ConnectionPortsType:
   - PostgreSQL_5432
@@ -20,6 +21,7 @@ ConnectionPortsType:
   - DB2_50000
   - MongoDB_27017
   - Elasticsearch_9200
+  - S3_443
 
 GroupMapping:
   - id: ?string

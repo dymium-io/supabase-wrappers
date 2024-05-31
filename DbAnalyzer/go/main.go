@@ -27,7 +27,7 @@ func dbAnalyzer(dt types.ConnectionType) DA {
 		da = &DB2{}
 	case types.CT_MongoDB:
 		da = &MongoClient{}
-	case types.CT_Elasticsearch:
+	case types.CT_Elasticsearch, types.CT_S3:
 		host := os.Getenv("DASVC_HOST")
 		if host == "" {
 			host = "localhost"

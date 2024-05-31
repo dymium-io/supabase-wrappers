@@ -12,6 +12,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.pipeline.*
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 private const val ENDPOINT = "api/dbanalyzer" // Endpoint
 
@@ -79,13 +81,25 @@ fun Application.DbAnalyzerRoutes() {
                         failure = { handleRequestError(it) }
                     )
             }
+            post("/dbtables/{schema}/") {
+                logger.debug { "POST dbTables /$ENDPOINT/dbtables/{schema}" }
+
+                val schema = call.parameters["schema"] + "/" // put back end slash for s3
+                val dto = call.receive<DbConnectDto>()
+                dbService.dbTabList(dto,schema)
+                    .mapBoth(
+                        success = { call.respond(HttpStatusCode.OK, it) },
+                        failure = { handleRequestError(it) }
+                    )
+            }
             // Get List of Columns for given Table for data sources without schema (ex. Elasticsearch) --> POST /api/dbanalyzer/dbcolumns/{table}
             post("/dbcolumns/{table}") {
-                logger.debug { "POST dbColumns /$ENDPOINT/dbcolumns/{schema}/{table}" }
+                logger.debug { "POST dbColumns /$ENDPOINT/dbcolumns/{table}" }
 
                 val table = call.parameters["table"]
+                val sampleSize = call.request.queryParameters["samplesize"]?.toInt()
                 val dto = call.receive<DbConnectDto>()
-                dbService.dbColList(dto,null,table)
+                dbService.dbColList(dto,null,table, sampleSize)
                     .mapBoth(
                         success = { call.respond(HttpStatusCode.OK, it) },
                         failure = { handleRequestError(it) }
@@ -97,8 +111,9 @@ fun Application.DbAnalyzerRoutes() {
 
                 val schema = call.parameters["schema"]
                 val table = call.parameters["table"]
+                val sampleSize = call.request.queryParameters["samplesize"]?.toInt()
                 val dto = call.receive<DbConnectDto>()
-                dbService.dbColList(dto,schema,table)
+                dbService.dbColList(dto, schema, table, sampleSize)
                     .mapBoth(
                         success = { call.respond(HttpStatusCode.OK, it) },
                         failure = { handleRequestError(it) }

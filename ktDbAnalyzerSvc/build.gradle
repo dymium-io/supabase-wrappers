@@ -1,3 +1,4 @@
+
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.9.10'
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.10'
@@ -17,6 +18,14 @@ applicationDefaultJvmArgs = ["-Dio.ktor.development=$isDevelopment"]
 
 repositories {
     mavenCentral()
+
+    maven {
+        url = uri("https://jitpack.io")
+    }
+}
+
+tasks.shadowJar {
+    setProperty("zip64", true)
 }
 
 dependencies {
@@ -48,10 +57,21 @@ dependencies {
     implementation 'io.github.oshai:kotlin-logging-jvm:5.0.1'
     implementation("com.michael-bull.kotlin-result:kotlin-result:1.1.18")
 
-    //implementation("io.insert-koin:koin-ktor:$koin_ktor_version") // Koit for Ktor
-    //implementation("io.insert-koin:koin-logger-slf4j:$koin_ktor_version") // Koin Logger
-    //implementation("io.insert-koin:koin-annotations:$koin_ksp_version") // Koin Annotations for KSP
-    //ksp("io.insert-koin:koin-ksp-compiler:$koin_ksp_version") // Koin KSP Compiler for KSP
+
+    implementation("software.amazon.awssdk:s3:2.25.55")
+
+    implementation("log4j:log4j:1.2.17")
+    // Apache Commons Logging
+    implementation("commons-logging:commons-logging:1.2")
+
+    implementation("org.apache.hadoop:hadoop-aws:3.3.6")
+    implementation("org.apache.parquet:parquet-hadoop:1.12.3")
+    implementation("org.apache.hadoop:hadoop-common:3.3.6")
+    implementation("org.apache.spark:spark-core_2.13:3.5.1")
+    implementation("org.apache.spark:spark-sql_2.13:3.5.1")
+
+    implementation("com.github.saasquatch:json-schema-inferrer:0.2.1")
+    implementation("commons-validator:commons-validator:1.8.0")
 
 
     testImplementation "io.ktor:ktor-server-tests-jvm"
