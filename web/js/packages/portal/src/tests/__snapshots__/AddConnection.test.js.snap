@@ -190,6 +190,11 @@ exports[`add-connection 1`] = `
               >
                 Elasticsearch Database
               </option>
+              <option
+                value="S3"
+              >
+                S3 (Parquet, CSV, JSON)
+              </option>
             </select>
             <div
               className="valid-feedback"
