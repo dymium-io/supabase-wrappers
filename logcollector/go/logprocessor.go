@@ -152,8 +152,6 @@ var reStatements = []*regexp.Regexp{
 	regexp.MustCompile(`((?i)statement:[\s\r\n]+CREATE[\s\r\n]+USER[\s\r\n]+MAPPING[\s\r\n]+FOR[\s\r\n]+.*[\s\r\n]+SERVER[\s\r\n]+.*[\s\r\n]+OPTIONS[\s\r\n]+\(.*password\s+['"])(\S+)((?s)['"].*\).*$)`),
 	regexp.MustCompile(`((?i)statement:[\s\r\n]+CREATE[\s\r\n]+USER[\s\r\n]+.*[\s\r\n]+PASSWORD[\s\r\n]+['"])(\S+)((?s)['"].*$)`),
 	regexp.MustCompile(`((?i)statement:[\s\r\n]+ALTER[\s\r\n]+USER[\s\r\n]+.*?WITH[\s\r\n]+.*PASSWORD[\s\r\n]+['"])(\S+)((?s)['"].*$)`),
-	regexp.MustCompile(`((?i)^SELECT insert_secret\('vault_access_key_id',')([^\']+)(.*$)`),
-	regexp.MustCompile(`((?i)^SELECT insert_secret\('vault_secret_key_id',')([^\']+)(.*$)`),
 }
 
 // ObfuscatePasswords replaces passwords in the message with the string "********"

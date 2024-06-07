@@ -57,21 +57,6 @@ func TestObfuscatePasswords(t *testing.T) {
 			want: "statement: ALTER USER edison WITH PASSWORD '********'",
 		},
 		{
-			name: "Obfuscate AWS access key  in 'insert_secret' statement",
-			args: args{
-				msg: "SELECT insert_secret('vault_access_key_id','KEY') INTO key_id;",
-			},
-			want: "SELECT insert_secret('vault_access_key_id','********') INTO key_id;",
-		},
-		{
-			name: "Obfuscate AWS secret key  in 'insert_secret' statement",
-			args: args{
-				msg: "SELECT insert_secret('vault_secret_key_id','PASSWORD') INTO key_id;",
-			},
-			want: "SELECT insert_secret('vault_secret_key_id','********') INTO key_id;",
-		},
-
-		{
 			name: "Do not obfuscate passwords in other statements",
 			args: args{
 				msg: "statement: CREATE FOREIGN TABLE Person.Password (\n  " +
