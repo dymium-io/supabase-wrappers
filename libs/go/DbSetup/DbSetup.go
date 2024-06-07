@@ -68,7 +68,7 @@ func ConfigureDatabase(db *sql.DB,
 	}
 
 	exec := func(sql string, args ...interface{}) error {
-		log.Infof("SQL exec: %s", ObfuscatePasswords(sql))
+		log.Debugf("SQL exec: %s", ObfuscatePasswords(sql))
 		if _, err := tx.ExecContext(ctx, sql, args...); err != nil {
 			return rollback(err, "["+sql+"] failed")
 		}
