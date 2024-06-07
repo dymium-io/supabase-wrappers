@@ -524,7 +524,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 				}
 				possibleActions = allowable
 				sample[k] = dtk(true)
-			case "NUMERIC", "FLOAT64TYPE", "FLOAT64":
+			case "NUMERIC":
 				if d.cLength != nil && *d.cLength != 0 {
 					if d.cScale != nil && *d.cScale >= 0 {
 						t = fmt.Sprintf("numeric(%d,%d)", *d.cLength, *d.cScale)
@@ -551,12 +551,18 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 					sem = utils.Unsupported
 					sample[k] = dtk(false, sem)
 				} else {
-					if d.cTypName == "STRING" {
+					if cl.SourceType == "s3" {
 						t = "text"
+						possibleActions = obfuscatable
 						sample[k] = dtk(true)
 					} else {
-						t = "bytea"
-						sample[k] = dtk(false)
+						if d.cTypName == "STRING" {
+							t = "text"
+							sample[k] = dtk(true)
+						} else {
+							t = "bytea"
+							sample[k] = dtk(false)
+						}
 					}
 				}
 			case "BOOLEAN", "BOOLEANTYPE":
@@ -594,7 +600,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 				possibleActions = blocked
 				sem = utils.Unsupported
 				sample[k] = dtk(false, sem)
-			case "DOUBLE", "NUMBER":
+			case "DOUBLE", "NUMBER", "FLOAT64TYPE", "FLOAT64":
 				t = "double precision"
 				possibleActions = allowable
 				sample[k] = dtk(true)
@@ -602,7 +608,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 				if d.cLength != nil && *d.cLength > 6 {
 					t = "double precision"
 				} else {
-					t = "float"
+					t = "float4"
 				}
 				possibleActions = allowable
 				sample[k] = dtk(true)
