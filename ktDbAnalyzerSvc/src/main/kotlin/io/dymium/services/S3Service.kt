@@ -294,7 +294,12 @@ class S3Service(config: ApplicationConfig) : IDbService {
     }
 
     object SparkContextHolder {
-        val conf by lazy { SparkConf().setAppName("App").setMaster("local[2]") }
+        val conf by lazy {
+            SparkConf()
+                .setAppName("App")
+                .setMaster("local[2]")
+                .set("spark.sql.legacy.parquet.nanosAsLong", "true")
+        }
         val sc by lazy { JavaSparkContext(conf) }
     }
 
@@ -321,6 +326,7 @@ class S3Service(config: ApplicationConfig) : IDbService {
         sc.hadoopConfiguration().set("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         sc.hadoopConfiguration().set("com.amazonaws.services.s3.enableV4", "true")
         sc.hadoopConfiguration().set("fs.s3a.endpoint", "s3.amazonaws.com")
+
         val sqlContext = SQLContext(sc)
 
         val fileName = if (dbschema.isNullOrEmpty() || dbschema.equals("/")) table else {

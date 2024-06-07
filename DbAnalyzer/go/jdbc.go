@@ -509,9 +509,15 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 				sem = utils.Unsupported
 				sample[k] = dtk(false, sem)
 			case "BIGINT", "INT64TYPE", "INT64":
-				t = "bigint"
-				possibleActions = allowable
-				sample[k] = dtk(true)
+				if cl.SourceType == "s3" && strings.HasPrefix(d.cTypName, "TIMESTAMP") {
+					t = "timestamp"
+					possibleActions = allowable
+					sample[k] = dtk(true)
+				} else {
+					t = "bigint"
+					possibleActions = allowable
+					sample[k] = dtk(true)
+				}
 			case "DECIMAL":
 				if d.cLength != nil && *d.cLength != 0 {
 					if d.cScale != nil && *d.cScale >= 0 {
@@ -613,9 +619,15 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 				possibleActions = allowable
 				sample[k] = dtk(true)
 			case "INTEGER", "INT32TYPE", "INT32":
-				t = "integer"
-				possibleActions = allowable
-				sample[k] = dtk(true)
+				if cl.SourceType == "s3" && d.cTypName == "DATE" {
+					t = "date"
+					possibleActions = allowable
+					sample[k] = dtk(true)
+				} else {
+					t = "integer"
+					possibleActions = allowable
+					sample[k] = dtk(true)
+				}
 			case "JAVA_OBJECT":
 				//Indicates that the SQL type is database-specific and gets mapped
 				//to a Java object that can be accessed via the methods getObject and setObject.
