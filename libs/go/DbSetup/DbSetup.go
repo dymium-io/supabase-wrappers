@@ -3,6 +3,7 @@ package DbSetup
 import (
 	"dymium.com/dymium/log"
 	"net/url"
+	"regexp"
 
 	"context"
 	"fmt"
@@ -26,6 +27,20 @@ var ct_options map[types.ConnectionType]ct_option
 var obf func(name string) (string, string)
 
 var redact_value func(t string) string
+
+// ObfuscatePasswords replaces passwords in the message with the string "********"
+// This regexp matches statemets for S3/vault
+// TODO add more statements when more fdw will be using the vault - similar to logprocessor.go/ObfuscatePasswords function
+func ObfuscatePasswords(msg string) string {
+	// Create regular expressions
+	rKey := regexp.MustCompile(`(insert_secret\('vault_access_key_id',')([^']+)(')`)
+	rPassword := regexp.MustCompile(`(insert_secret\('vault_secret_key_id',')([^']+)(')`)
+
+	result := rKey.ReplaceAllString(msg, "${1}"+"********"+"${3}")
+	result = rPassword.ReplaceAllString(result, "${1}"+"********"+"${3}")
+
+	return result
+}
 
 func ConfigureDatabase(db *sql.DB,
 	datascope *types.Scope,
@@ -53,7 +68,7 @@ func ConfigureDatabase(db *sql.DB,
 	}
 
 	exec := func(sql string, args ...interface{}) error {
-		log.Infof("SQL exec: %s", sql)
+		log.Infof("SQL exec: %s", ObfuscatePasswords(sql))
 		if _, err := tx.ExecContext(ctx, sql, args...); err != nil {
 			return rollback(err, "["+sql+"] failed")
 		}
