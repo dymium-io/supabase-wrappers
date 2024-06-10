@@ -57,6 +57,20 @@ func TestObfuscatePasswords(t *testing.T) {
 			want: "statement: ALTER USER edison WITH PASSWORD '********'",
 		},
 		{
+			name: "Obfuscate AWS access key in insert_vault statement",
+			args: args{
+				msg: "statement: SELECT insert_secret('vault_access_key_id','KEY') INTO key_id;\nSELECT '",
+			},
+			want: "statement: SELECT insert_secret('vault_access_key_id','********') INTO key_id;\nSELECT '",
+		},
+		{
+			name: "Obfuscate AWS secret key in insert_vault statement",
+			args: args{
+				msg: "statement: SELECT insert_secret('vault_secret_key_id','KEY') INTO secret_key_id;\nSELECT '",
+			},
+			want: "statement: SELECT insert_secret('vault_secret_key_id','********') INTO secret_key_id;\nSELECT '",
+		},
+		{
 			name: "Do not obfuscate passwords in other statements",
 			args: args{
 				msg: "statement: CREATE FOREIGN TABLE Person.Password (\n  " +
@@ -79,7 +93,7 @@ func TestObfuscatePasswords(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ObfuscatePasswords(tt.args.msg); got != tt.want {
-				t.Errorf("ObfuscatePasswords() = %v, want %v", got, tt.want)
+				t.Errorf("got %v, want %v", got, tt.want)
 			}
 		})
 	}

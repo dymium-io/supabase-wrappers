@@ -254,13 +254,23 @@ func (cl *JdbcClient) Connect(c *types.ConnectionParams) error {
 	cl.SourceType = srcType
 	cl.Host = c.Address
 	cl.Port = c.Port
-	cl.Database = c.Database
+	var dbName = c.Database
+	var props = ""
 	if cl.SourceType == "s3" {
-		// TODO: make aws zone configurable
-		cl.Properties = "us-west-2"
-	} else {
-		cl.Properties = "" // FIXME - add support for different connection types, TLS, etc.
+		// S3 connection string is in the form of "region/dbname"
+		// The region is optional, if not provided, it defaults to "us-west-2"
+		//TODO: add separate parameter for region in UI
+		params := strings.Split(c.Database, "/")
+		if len(params) == 2 {
+			log.Infof("S3 region: %s, DB name: %s", params[0], params[1])
+			props = params[0]
+			dbName = params[1]
+		} else {
+			props = "us-west-2"
+		}
 	}
+	cl.Database = dbName
+	cl.Properties = props
 	cl.User = c.User
 	cl.Password = c.Password
 	cl.Tls = c.Tls
@@ -509,7 +519,11 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 				sem = utils.Unsupported
 				sample[k] = dtk(false, sem)
 			case "BIGINT", "INT64TYPE", "INT64":
-				t = "bigint"
+				if cl.SourceType == "s3" && strings.HasPrefix(d.cTypName, "TIMESTAMP") {
+					t = "timestamp"
+				} else {
+					t = "bigint"
+				}
 				possibleActions = allowable
 				sample[k] = dtk(true)
 			case "DECIMAL":
@@ -524,7 +538,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 				}
 				possibleActions = allowable
 				sample[k] = dtk(true)
-			case "NUMERIC", "FLOAT64TYPE", "FLOAT64":
+			case "NUMERIC":
 				if d.cLength != nil && *d.cLength != 0 {
 					if d.cScale != nil && *d.cScale >= 0 {
 						t = fmt.Sprintf("numeric(%d,%d)", *d.cLength, *d.cScale)
@@ -551,12 +565,18 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 					sem = utils.Unsupported
 					sample[k] = dtk(false, sem)
 				} else {
-					if d.cTypName == "STRING" {
+					if cl.SourceType == "s3" {
 						t = "text"
+						possibleActions = obfuscatable
 						sample[k] = dtk(true)
 					} else {
-						t = "bytea"
-						sample[k] = dtk(false)
+						if d.cTypName == "STRING" {
+							t = "text"
+							sample[k] = dtk(true)
+						} else {
+							t = "bytea"
+							sample[k] = dtk(false)
+						}
 					}
 				}
 			case "BOOLEAN", "BOOLEANTYPE":
@@ -594,7 +614,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 				possibleActions = blocked
 				sem = utils.Unsupported
 				sample[k] = dtk(false, sem)
-			case "DOUBLE", "NUMBER":
+			case "DOUBLE", "NUMBER", "FLOAT64TYPE", "FLOAT64":
 				t = "double precision"
 				possibleActions = allowable
 				sample[k] = dtk(true)
@@ -602,14 +622,20 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 				if d.cLength != nil && *d.cLength > 6 {
 					t = "double precision"
 				} else {
-					t = "float"
+					t = "float4"
 				}
 				possibleActions = allowable
 				sample[k] = dtk(true)
 			case "INTEGER", "INT32TYPE", "INT32":
-				t = "integer"
-				possibleActions = allowable
-				sample[k] = dtk(true)
+				if cl.SourceType == "s3" && d.cTypName == "DATE" {
+					t = "date"
+					possibleActions = allowable
+					sample[k] = dtk(true)
+				} else {
+					t = "integer"
+					possibleActions = allowable
+					sample[k] = dtk(true)
+				}
 			case "JAVA_OBJECT":
 				//Indicates that the SQL type is database-specific and gets mapped
 				//to a Java object that can be accessed via the methods getObject and setObject.

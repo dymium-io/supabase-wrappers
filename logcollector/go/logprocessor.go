@@ -152,6 +152,8 @@ var reStatements = []*regexp.Regexp{
 	regexp.MustCompile(`((?i)statement:[\s\r\n]+CREATE[\s\r\n]+USER[\s\r\n]+MAPPING[\s\r\n]+FOR[\s\r\n]+.*[\s\r\n]+SERVER[\s\r\n]+.*[\s\r\n]+OPTIONS[\s\r\n]+\(.*password\s+['"])(\S+)((?s)['"].*\).*$)`),
 	regexp.MustCompile(`((?i)statement:[\s\r\n]+CREATE[\s\r\n]+USER[\s\r\n]+.*[\s\r\n]+PASSWORD[\s\r\n]+['"])(\S+)((?s)['"].*$)`),
 	regexp.MustCompile(`((?i)statement:[\s\r\n]+ALTER[\s\r\n]+USER[\s\r\n]+.*?WITH[\s\r\n]+.*PASSWORD[\s\r\n]+['"])(\S+)((?s)['"].*$)`),
+	regexp.MustCompile(`((?i)\s*insert_secret\s*\(\s*'vault_access_key_id'\s*,\s*')(.*?)('\s*\)\s* INTO \s*key_id\s*)`),
+	regexp.MustCompile(`((?i)\s*insert_secret\s*\(\s*'vault_secret_key_id'\s*,\s*')(.*?)('\s*\)\s* INTO \s*secret_key_id\s*)`),
 }
 
 // ObfuscatePasswords replaces passwords in the message with the string "********"
@@ -159,7 +161,6 @@ func ObfuscatePasswords(msg string) string {
 	for _, re := range reStatements {
 		if re.MatchString(msg) {
 			msg = re.ReplaceAllString(msg, "$1********$3")
-			break
 		}
 	}
 	return msg

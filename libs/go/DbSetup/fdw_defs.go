@@ -31,14 +31,15 @@ func init() {
 	}
 	var _ = define_rust_ext
 
-	define_server := func(template_name string) func(server, address string, port int, database string, use_tls bool, user string, password string) (string, error) {
+	define_server := func(template_name string) func(server, address string, port int, database string, s3Region string, use_tls bool, user string, password string) (string, error) {
 		tmpl := template.Must(template.ParseFS(templateFS, "templates/"+template_name))
-		return func(server, address string, port int, database string, use_tls bool, user string, password string) (string, error) {
+		return func(server, address string, port int, database string, s3Region string, use_tls bool, user string, password string) (string, error) {
 			type server_params struct {
 				Server   string
 				Address  string
 				Port     int
 				Database string
+				S3Region string
 				Use_tls  bool
 				User     string
 				Password string
@@ -49,6 +50,7 @@ func init() {
 				Address:  esc(address),
 				Port:     port,
 				Database: esc(database),
+				S3Region: esc(s3Region),
 				Use_tls:  use_tls,
 				User:     esc(user),
 				Password: esc(password),
@@ -134,6 +136,11 @@ func init() {
 			//uri 's3://bucket/s3_table.csv',
 			//    format 'csv',
 			//    has_header 'true'
+			params := strings.Split(remoteSchema, "/")
+			if len(params) == 2 {
+				_ = params[0]
+				remoteSchema = params[1]
+			}
 			uri := fmt.Sprintf("s3://%s/%s", remoteSchema, remoteTable)
 			if strings.HasSuffix(remoteTable, ".csv") {
 				return fmt.Sprintf("uri '%s', format 'csv', has_header 'true'", uri)
