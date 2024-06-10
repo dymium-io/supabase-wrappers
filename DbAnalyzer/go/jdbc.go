@@ -265,6 +265,8 @@ func (cl *JdbcClient) Connect(c *types.ConnectionParams) error {
 			log.Infof("S3 region: %s, DB name: %s", params[0], params[1])
 			props = params[0]
 			dbName = params[1]
+		} else {
+			props = "us-west-2"
 		}
 	}
 	cl.Database = dbName
