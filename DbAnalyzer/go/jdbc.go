@@ -254,13 +254,21 @@ func (cl *JdbcClient) Connect(c *types.ConnectionParams) error {
 	cl.SourceType = srcType
 	cl.Host = c.Address
 	cl.Port = c.Port
-	cl.Database = c.Database
+	var dbName = c.Database
+	var props = ""
 	if cl.SourceType == "s3" {
-		// TODO: make aws zone configurable
-		cl.Properties = "us-west-2"
-	} else {
-		cl.Properties = "" // FIXME - add support for different connection types, TLS, etc.
+		// S3 connection string is in the form of "region/dbname"
+		// The region is optional, if not provided, it defaults to "us-west-2"
+		//TODO: add separate parameter for region in UI
+		params := strings.Split(c.Database, "/")
+		if len(params) == 2 {
+			log.Infof("S3 region: %s, DB name: %s", params[0], params[1])
+			props = params[0]
+			dbName = params[1]
+		}
 	}
+	cl.Database = dbName
+	cl.Properties = props
 	cl.User = c.User
 	cl.Password = c.Password
 	cl.Tls = c.Tls

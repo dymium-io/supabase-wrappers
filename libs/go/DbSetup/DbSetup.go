@@ -18,7 +18,7 @@ import (
 
 type ct_option struct {
 	ext        string
-	server_def func(server, address string, port int, database string, use_tls bool, user string, password string) (string, error)
+	server_def func(server, address string, port int, database string, s3region string, use_tls bool, user string, password string) (string, error)
 	table      func(remoteSchema, remoteTable string) string
 }
 
@@ -68,7 +68,7 @@ func ConfigureDatabase(db *sql.DB,
 	}
 
 	exec := func(sql string, args ...interface{}) error {
-		log.Debugf("SQL exec: %s", ObfuscatePasswords(sql))
+		log.Infof("SQL exec: %s", ObfuscatePasswords(sql))
 		if _, err := tx.ExecContext(ctx, sql, args...); err != nil {
 			return rollback(err, "["+sql+"] failed")
 		}
