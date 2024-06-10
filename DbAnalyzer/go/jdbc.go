@@ -521,13 +521,11 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			case "BIGINT", "INT64TYPE", "INT64":
 				if cl.SourceType == "s3" && strings.HasPrefix(d.cTypName, "TIMESTAMP") {
 					t = "timestamp"
-					possibleActions = allowable
-					sample[k] = dtk(true)
 				} else {
 					t = "bigint"
-					possibleActions = allowable
-					sample[k] = dtk(true)
 				}
+				possibleActions = allowable
+				sample[k] = dtk(true)
 			case "DECIMAL":
 				if d.cLength != nil && *d.cLength != 0 {
 					if d.cScale != nil && *d.cScale >= 0 {
