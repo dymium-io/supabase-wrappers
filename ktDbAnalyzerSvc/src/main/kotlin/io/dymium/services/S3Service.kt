@@ -297,6 +297,8 @@ class S3Service(config: ApplicationConfig) : IDbService {
         val conf by lazy {
             SparkConf()
                 .setAppName("App")
+                .set("spark.driver.port", "4040-4050")
+                .set("spark.driver.host", "localhost")
                 .setMaster("local[2]")
                 .set("spark.sql.legacy.parquet.nanosAsLong", "true")
         }
