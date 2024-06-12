@@ -464,9 +464,9 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 		d.cTypName = column.TypeName
 		d.cLength = &column.ColumnSize
 		d.cScale = &column.DecimalDigits
-		isNullable_ = column.IsNullable
+		isNullable_ = strings.ToLower(column.IsNullable)
 		// In case of Elasticsearch, we consider all columns as nullable
-		if cl.SourceType == "s3" || cl.SourceType == "elasticsearch" || cl.SourceType == "es" || isNullable_ == "YES" || isNullable_ == "yes" || isNullable_ == "Y" || isNullable_ == "y" {
+		if (cl.SourceType == "s3" || cl.SourceType == "elasticsearch" || cl.SourceType == "es") && (isNullable_ == "yes" || isNullable_ == "y" || isNullable_ == "true") {
 			d.isNullable = true
 		} else {
 			d.isNullable = false
@@ -497,6 +497,7 @@ func (cl *JdbcClient) GetTblInfo(dbName string, tip *types.TableInfoParams) (*ty
 			if len(sem) == 1 {
 				s = sem[0]
 			}
+			log.Debugf("Processing column %s, type %s, isNullable %v", d.cName, d.cTyp, d.isNullable)
 			return detect.Sample{
 				IsSamplable: isSamplable,
 				IsNullable:  d.isNullable,
