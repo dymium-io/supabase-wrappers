@@ -4,21 +4,16 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.github.michaelbull.result.*
+import com.google.gson.JsonNull
 import dymium.io.dto.*
 import io.dymium.errors.DbAnalyzerError
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.config.*
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.s3a.S3AFileSystem
-import org.apache.log4j.Level
-import org.apache.log4j.LogManager
-import org.apache.log4j.Logger
 import org.apache.parquet.hadoop.ParquetFileReader
 import org.apache.parquet.hadoop.metadata.ParquetMetadata
 import org.apache.parquet.hadoop.util.HadoopInputFile
-import org.apache.spark.SparkConf
-import org.apache.spark.api.java.JavaSparkContext
-import org.apache.spark.sql.SQLContext
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
@@ -28,9 +23,22 @@ import java.nio.charset.StandardCharsets
 import java.time.DayOfWeek
 import java.time.Month
 import com.saasquatch.jsonschemainferrer.*
-import kotlinx.serialization.json.*
-import java.net.URLEncoder
-import java.util.Collections.emptyIterator
+import com.google.gson.JsonObject
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.apache.parquet.hadoop.ParquetReader
+import java.nio.file.Files
+import org.apache.avro.generic.GenericRecord
+import org.apache.parquet.avro.AvroParquetReader
+import org.apache.hadoop.fs.Path
+import software.amazon.awssdk.core.sync.ResponseTransformer
+import java.nio.charset.Charset
+import com.google.gson.*
+import java.nio.ByteBuffer
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 private val logger = KotlinLogging.logger {}
@@ -141,7 +149,7 @@ class S3Service(config: ApplicationConfig) : IDbService {
         return handleRequest(dbInfo) {
             val msg = it.headBucket { it.bucket(dbInfo.database) }
             logger.debug { "S3 Connection:  $msg" }
-            Ok(DbConnectResponse(SUCCESS_RESPONSE, "Bucket ${dbInfo.database} exests."))
+            Ok(DbConnectResponse(SUCCESS_RESPONSE, "Bucket ${dbInfo.database} exists."))
         }
     }
 
@@ -211,7 +219,7 @@ class S3Service(config: ApplicationConfig) : IDbService {
         val fileName = if (schema.isNullOrEmpty() || schema.equals("/")) tabname else {
             if (schema.endsWith("/")) "$schema$tabname" else "$schema/$tabname"
         }
-        val rows = mutableListOf<JsonObject>()
+        val rows = mutableListOf<JsonElement>()
 
         return try {
             val s3 = createS3Client(dbInfo)
@@ -239,7 +247,7 @@ class S3Service(config: ApplicationConfig) : IDbService {
                                     put(key, value)
                                 }
                             }
-                            rows.add(jsonObject)
+                            rows.add(Json.parseToJsonElement(jsonObject.toString()))
                         }
                     }
                 }
@@ -263,7 +271,7 @@ class S3Service(config: ApplicationConfig) : IDbService {
         val fileName = if (schema.isNullOrEmpty() || schema.equals("/")) tabname else {
             if (schema.endsWith("/")) "$schema$tabname" else "$schema/$tabname"
         }
-        val rows = mutableListOf<JsonObject>()
+        val rows = mutableListOf<JsonElement>()
 
         return try {
             val s3 = createS3Client(dbInfo)
@@ -282,7 +290,7 @@ class S3Service(config: ApplicationConfig) : IDbService {
                     lines.take(size)
                 }.let { lines ->
                     lines.map {
-                        Json.parseToJsonElement(it).jsonObject
+                        Json.parseToJsonElement(it)
                     }.let {
                         rows.addAll(it)
                     }
@@ -293,17 +301,6 @@ class S3Service(config: ApplicationConfig) : IDbService {
         }
     }
 
-    object SparkContextHolder {
-        val conf by lazy {
-            SparkConf()
-                .setAppName("App")
-                .set("spark.driver.port", "4040-4050")
-                .set("spark.driver.host", "localhost")
-                .setMaster("local[2]")
-                .set("spark.sql.legacy.parquet.nanosAsLong", "true")
-        }
-        val sc by lazy { JavaSparkContext(conf) }
-    }
 
     private fun getParquetSample(
         dbInfo: DbConnectDto,
@@ -312,43 +309,80 @@ class S3Service(config: ApplicationConfig) : IDbService {
         sampleSize: Int?
     ): Result<DbSampleResponse, DbAnalyzerError> {
         validator.validateRequestDbInfo(dbInfo).mapError { return Err(DbAnalyzerError.BadRequest(it.message)) }
-        // Make use of the globally initialized SparkContext
-        val sc = SparkContextHolder.sc
-        // Set log level to INFO
-        sc.setLogLevel("INFO")
-        // Set Hadoop's logger to INFO
-        Logger.getLogger("org.apache").level = Level.INFO
-        val jettyLogger = LogManager.getLogger("org.sparkproject.jetty")
-        jettyLogger.level = Level.INFO
-        val rootLogger = LogManager.getRootLogger()
-        rootLogger.level = Level.INFO
-
-        sc.hadoopConfiguration().set("fs.s3a.access.key", dbInfo.user)
-        sc.hadoopConfiguration().set("fs.s3a.secret.key", dbInfo.password)
-        sc.hadoopConfiguration().set("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        sc.hadoopConfiguration().set("com.amazonaws.services.s3.enableV4", "true")
-        sc.hadoopConfiguration().set("fs.s3a.endpoint", "s3.amazonaws.com")
-
-        val sqlContext = SQLContext(sc)
 
         val fileName = if (dbschema.isNullOrEmpty() || dbschema.equals("/")) table else {
             if (dbschema.endsWith("/")) "$dbschema$table" else "$dbschema/$table"
         }
 
-        // Construct the S3 path
-        val s3Path = "s3a://${dbInfo.database}/$fileName"
-        // Step 2: Load the Parquet file into a DataFrame
-        val df = sqlContext.read().parquet(s3Path)
+        val s3 = createS3Client(dbInfo)
+        val getObjectRequest = GetObjectRequest.builder()
+            .bucket(dbInfo.database)
+            .key(fileName)
+            .build()
 
-        // Step 3: Take the desired number of samples from the DataFrame and print
-        val rows = sampleSize?.let { df.takeAsList(it) }
-        val samples = mutableListOf<JsonObject>()
-        if (rows != null) {
-            for (row in rows) {
-                samples.add(Json.parseToJsonElement((row.json())).jsonObject)
+        val outputFile = Files.createTempFile(null, ".parquet")
+        //s3.getObject(getObjectRequest, ResponseTransformer.toFile(outputFile))
+        val inputStream = s3.getObject(getObjectRequest, ResponseTransformer.toInputStream())
+        val objectBytes = inputStream.readAllBytes()
+
+        Files.write(outputFile, objectBytes)
+        val rows = mutableListOf<JsonElement>()
+        var rowNumber = 0
+
+        // setup Reader
+        val reader: ParquetReader<GenericRecord> = AvroParquetReader.builder<GenericRecord>(Path(outputFile.toString())).build()
+
+        try {
+            var record: GenericRecord?
+            while (rowNumber < sampleSize!!) {
+                record = reader.read()
+                if (record == null) {
+                    break
+                }
+
+                // Process the records as per your requirement,
+                // genericRecord will have all the fields of your Schema
+                val jsonObject = JsonObject()
+                val charset = Charset.forName("UTF-8")
+                val dateFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
+
+                record.schema.fields.forEach { field ->
+                    val value = record.get(field.pos())
+                    field.run {
+                        when (value) {
+                            is ByteBuffer -> {
+                                val strValue = charset.decode(value).toString()
+                                jsonObject.addProperty(name(), strValue)
+                            }
+                            is Boolean -> jsonObject.addProperty(name(), value)
+                            is Number -> jsonObject.addProperty(name(), value)
+                            is String -> jsonObject.addProperty(name(), value)
+                            is Date -> jsonObject.addProperty(name(), dateFormatter.format(value))
+                            is JsonElement -> jsonObject.add(name(),JsonParser.parseString( value.toString()))
+                            is Array<*> -> jsonObject.add(name(), value.let { array ->
+                                JsonArray().apply { array.forEach { add(it.toString()) } }
+                            })
+                            is List<*> -> jsonObject.add(name(), value.let { list ->
+                                JsonArray().apply { list.forEach { add(it.toString()) } }
+                            })
+                            null -> jsonObject.add(name(), JsonNull.INSTANCE)
+                            else -> jsonObject.addProperty(name(), value.toString())
+                        }
+                    }
+                }
+                rows.add(Json.parseToJsonElement(jsonObject.toString()))
+                rowNumber++
             }
+        } finally {
+            reader.close()
+            // Delete file after reading
+            Files.deleteIfExists(outputFile)
         }
-        return Ok(DbSampleResponse(SUCCESS_RESPONSE, "Sample data", samples))
+
+        // You might consider returning rows (parsed data) in the DbSampleResponse
+        return Ok(DbSampleResponse(SUCCESS_RESPONSE, "Sample data", rows))
     }
 
     override fun dbTabList(dbInfo: DbConnectDto, schema: String?): Result<DbTabListResponse, DbAnalyzerError> {
