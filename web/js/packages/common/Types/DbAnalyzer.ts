@@ -3,7 +3,7 @@
 
 import _ from 'lodash'
 
-import * as Common_52182865 from './Common.ts'
+import * as Common_52182865 from './Common'
 
 export let dirtyFlag = false
 function doAlert(s) { console.log(s) }

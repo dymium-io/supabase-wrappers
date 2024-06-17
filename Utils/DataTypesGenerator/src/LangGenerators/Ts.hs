@@ -105,7 +105,7 @@ genModule
         importString em = T.concat ["import * as ",lName," from ",jsString rPath,"\n"]
           where
             lName = mNameMapper em
-            rPath = T.pack . (</> (T.unpack (fst $ modulesPaths em) <.> "ts")) .joinPath $
+            rPath = T.pack . (</> T.unpack (fst $ modulesPaths em)) .joinPath $
               case C.calcRelativePath (snd . modulesPaths $ mName') (snd $ modulesPaths em) of
                 r@("..":_) -> r
                 r          -> "." : r
