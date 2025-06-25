@@ -1,112 +1,45 @@
-use crate::fdw::cognito_fdw::cognito_client::rows_iterator::RowsIterator;
-use crate::fdw::cognito_fdw::cognito_client::CognitoClientError;
-
 use std::env;
+use std::sync::Arc;
 
-use aws_sdk_cognitoidentityprovider::config::BehaviorVersion;
-use aws_sdk_cognitoidentityprovider::Client;
+use aws_sdk_cognitoidentityprovider::{config::BehaviorVersion, Client};
 
 use crate::stats;
 use pgrx::pg_sys;
 use std::collections::HashMap;
 use supabase_wrappers::prelude::*;
 
-use pgrx::pg_sys::panic::ErrorReport;
-use pgrx::PgSqlErrorCode;
-use thiserror::Error;
+use super::cognito_client::rows_iterator::RowsIterator;
+use super::{CognitoFdwError, CognitoFdwResult};
 
 #[wrappers_fdw(
-    version = "0.1.1",
+    version = "0.1.4",
     author = "Joel",
     website = "https://github.com/supabase/wrappers/tree/main/wrappers/src/fdw/cognito_fdw",
     error_type = "CognitoFdwError"
 )]
 pub(crate) struct CognitoFdw {
-    // row counter
+    rt: Arc<Runtime>,
     client: aws_sdk_cognitoidentityprovider::Client,
     user_pool_id: String,
     rows_iterator: Option<RowsIterator>,
 }
-
-#[derive(Error, Debug)]
-enum CognitoFdwError {
-    #[error("{0}")]
-    CognitoClientError(#[from] CognitoClientError),
-
-    #[error("{0}")]
-    CreateRuntimeError(#[from] CreateRuntimeError),
-
-    #[error("parse url failed: {0}")]
-    UrlParseError(#[from] url::ParseError),
-
-    #[error("request failed: {0}")]
-    RequestError(#[from] reqwest::Error),
-
-    #[error("request middleware failed: {0}")]
-    RequestMiddlewareError(#[from] reqwest_middleware::Error),
-    #[error("invalid json response: {0}")]
-    SerdeError(#[from] serde_json::Error),
-
-    #[error("{0}")]
-    OptionsError(#[from] OptionsError),
-
-    #[error("{0}")]
-    NumericConversionError(#[from] pgrx::numeric::Error),
-
-    #[error("no secret found in vault with id {0}")]
-    SecretNotFound(String),
-
-    #[error("both `api_key` and `api_secret_key` options must be set")]
-    ApiKeyAndSecretKeySet,
-
-    #[error("exactly one of `aws_secret_access_key` or `api_key_id` options must be set")]
-    SetOneOfSecretKeyAndApiKeyIdSet,
-}
-
-impl From<CognitoFdwError> for ErrorReport {
-    fn from(value: CognitoFdwError) -> Self {
-        match value {
-            CognitoFdwError::CreateRuntimeError(e) => e.into(),
-            CognitoFdwError::OptionsError(e) => e.into(),
-            CognitoFdwError::CognitoClientError(e) => e.into(),
-            CognitoFdwError::SecretNotFound(_) => {
-                ErrorReport::new(PgSqlErrorCode::ERRCODE_FDW_ERROR, format!("{value}"), "")
-            }
-            _ => ErrorReport::new(PgSqlErrorCode::ERRCODE_FDW_ERROR, format!("{value}"), ""),
-        }
-    }
-}
-
-type CognitoFdwResult<T> = Result<T, CognitoFdwError>;
 
 impl CognitoFdw {
     const FDW_NAME: &'static str = "CognitoFdw";
 }
 
 impl ForeignDataWrapper<CognitoFdwError> for CognitoFdw {
-    // 'options' is the key-value pairs defined in `CREATE SERVER` SQL, for example,
-    //
-    // create server my_cognito_server
-    //   foreign data wrapper wrappers_cognito
-    //   options (
-    //     foo 'bar'
-    // );
-    // 'options' passed here will be a hashmap { 'foo' -> 'bar' }.
-    //
-    // You can do any initalization in this new() function, like saving connection
-    // info or API url in an variable, but don't do any heavy works like making a
-    // database connection or API call.
+    fn new(server: ForeignServer) -> Result<Self, CognitoFdwError> {
+        let user_pool_id = require_option("user_pool_id", &server.options)?.to_string();
+        let aws_region = require_option("region", &server.options)?.to_string();
 
-    fn new(options: &HashMap<String, String>) -> Result<Self, CognitoFdwError> {
-        let user_pool_id = require_option("user_pool_id", options)?.to_string();
-        let aws_region = require_option("region", options)?.to_string();
-
-        let aws_access_key_id = require_option("aws_access_key_id", options)?.to_string();
+        let aws_access_key_id = require_option("aws_access_key_id", &server.options)?.to_string();
         let aws_secret_access_key =
-            if let Some(aws_secret_access_key) = options.get("aws_secret_access_key") {
+            if let Some(aws_secret_access_key) = server.options.get("aws_secret_access_key") {
                 aws_secret_access_key.clone()
             } else {
-                let aws_secret_access_key = options
+                let aws_secret_access_key = server
+                    .options
                     .get("api_key_id")
                     .expect("`api_key_id` must be set if `aws_secret_access_key` is not");
                 get_vault_secret(aws_secret_access_key).ok_or(CognitoFdwError::SecretNotFound(
@@ -122,7 +55,7 @@ impl ForeignDataWrapper<CognitoFdwError> for CognitoFdw {
             let config = aws_config::load_defaults(BehaviorVersion::latest()).await;
 
             let mut builder = config.to_builder();
-            if let Some(endpoint_url) = options.get("endpoint_url") {
+            if let Some(endpoint_url) = server.options.get("endpoint_url") {
                 if !endpoint_url.is_empty() {
                     builder.set_endpoint_url(Some(endpoint_url.clone()));
                 }
@@ -133,7 +66,9 @@ impl ForeignDataWrapper<CognitoFdwError> for CognitoFdw {
         });
 
         stats::inc_stats(Self::FDW_NAME, stats::Metric::CreateTimes, 1);
+
         Ok(Self {
+            rt: Arc::new(rt),
             client,
             user_pool_id,
             rows_iterator: None,
@@ -148,12 +83,11 @@ impl ForeignDataWrapper<CognitoFdwError> for CognitoFdw {
         _limit: &Option<Limit>,
         _options: &HashMap<String, String>,
     ) -> CognitoFdwResult<()> {
-        let cognito_client = &self.client;
-        let user_pool_id = self.user_pool_id.to_string();
         self.rows_iterator = Some(RowsIterator::new(
+            self.rt.clone(),
             columns.to_vec(),
-            user_pool_id,
-            cognito_client.clone(),
+            self.user_pool_id.clone(),
+            self.client.clone(),
         ));
 
         Ok(())
@@ -175,6 +109,25 @@ impl ForeignDataWrapper<CognitoFdwError> for CognitoFdw {
 
     fn end_scan(&mut self) -> CognitoFdwResult<()> {
         Ok(())
+    }
+
+    fn import_foreign_schema(
+        &mut self,
+        stmt: ImportForeignSchemaStmt,
+    ) -> CognitoFdwResult<Vec<String>> {
+        Ok(vec![format!(
+            r#"create foreign table if not exists users (
+                username text,
+                email text,
+                status text,
+                enabled boolean,
+                created_at timestamp,
+                updated_at timestamp,
+                attributes jsonb
+            )
+            server {} options (object 'users')"#,
+            stmt.server_name
+        )])
     }
 
     fn validator(

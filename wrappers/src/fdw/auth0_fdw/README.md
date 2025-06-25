@@ -70,15 +70,18 @@ create foreign table auth0 (
 
 ```sql
 wrappers=# select * from auth0;
-               user_id               |        created_at
--------------------------------------+--------------------------
- google-oauth2|101232059018005339936 | 2023-05-16T07:41:08.028Z
-(1 row)
+
+created_at     | 2023-11-22T09:52:17.326Z
+email          | myname@supabase.io
+email_verified | t
+identities     | [{"user_id": "<my_user_id>", "isSocial": false, "provider": "auth0", "connection": "Username-Password-Authentication"}]
+
 ```
 
 ## Changelog
 
 | Version | Date       | Notes                                                |
 | ------- | ---------- | ---------------------------------------------------- |
+| 0.1.2   | 2024-09-23 | Make User object fields nullable                     |
 | 0.1.1   | 2023-09-20 | Error reporting refactoring                          |
 | 0.1.0   | 2022-11-30 | Initial version                                      |

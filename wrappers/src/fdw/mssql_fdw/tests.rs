@@ -34,6 +34,8 @@ mod tests {
                     r#"CREATE TABLE users (
                         id bigint,
                         name varchar(30),
+                        amount numeric(18,2),
+                        is_admin bit,
                         dt datetime2
                     )"#,
                     &[],
@@ -46,9 +48,9 @@ mod tests {
             client
                 .execute(
                     r#"
-                    INSERT INTO users(id, name, dt) VALUES (42, 'foo', '2023-12-28');
-                    INSERT INTO users(id, name, dt) VALUES (43, 'bar', '2023-12-27');
-                    INSERT INTO users(id, name, dt) VALUES (44, 'baz', '2023-12-26');
+                    INSERT INTO users(id, name, amount, is_admin, dt) VALUES (42, 'foo', 12.34, 0, '2023-12-28');
+                    INSERT INTO users(id, name, amount, is_admin, dt) VALUES (43, 'bar', 0.0, 1, '2023-12-27');
+                    INSERT INTO users(id, name, amount, is_admin, dt) VALUES (44, 'baz', 42.0, 0, '2023-12-26');
                     "#,
                     &[],
                 )
@@ -79,6 +81,8 @@ mod tests {
                   CREATE FOREIGN TABLE mssql_users (
                     id bigint,
                     name text,
+                    amount numeric(18,2),
+                    is_admin boolean,
                     dt timestamp
                   )
                   SERVER mssql_server
@@ -107,11 +111,22 @@ mod tests {
             .unwrap();
 
             let results = c
-                .select("SELECT name FROM mssql_users WHERE id = 42", None, None)
+                .select(
+                    "SELECT name, amount FROM mssql_users WHERE id = 42",
+                    None,
+                    None,
+                )
                 .unwrap()
-                .filter_map(|r| r.get_by_name::<&str, _>("name").unwrap())
+                .filter_map(|r| {
+                    r.get_by_name::<&str, _>("name")
+                        .unwrap()
+                        .zip(r.get_by_name::<pgrx::Numeric<18, 2>, _>("amount").unwrap())
+                })
                 .collect::<Vec<_>>();
-            assert_eq!(results, vec!["foo"]);
+            assert_eq!(
+                results,
+                vec![("foo", pgrx::Numeric::try_from(12.34).unwrap())]
+            );
 
             let results = c
                 .select("SELECT name FROM mssql_users ORDER BY id DESC", None, None)
@@ -133,6 +148,28 @@ mod tests {
 
             let results = c
                 .select(
+                    "SELECT name FROM mssql_users WHERE name like 'ba%' ORDER BY id",
+                    None,
+                    None,
+                )
+                .unwrap()
+                .filter_map(|r| r.get_by_name::<&str, _>("name").unwrap())
+                .collect::<Vec<_>>();
+            assert_eq!(results, vec!["bar", "baz"]);
+
+            let results = c
+                .select(
+                    "SELECT name FROM mssql_users WHERE name not like 'ba%'",
+                    None,
+                    None,
+                )
+                .unwrap()
+                .filter_map(|r| r.get_by_name::<&str, _>("name").unwrap())
+                .collect::<Vec<_>>();
+            assert_eq!(results, vec!["foo"]);
+
+            let results = c
+                .select(
                     "SELECT name FROM mssql_users_cust_sql ORDER BY id",
                     None,
                     None,
@@ -141,6 +178,25 @@ mod tests {
                 .filter_map(|r| r.get_by_name::<&str, _>("name").unwrap())
                 .collect::<Vec<_>>();
             assert_eq!(results, vec!["foo", "bar"]);
+
+            let results = c
+                .select(
+                    "SELECT name FROM mssql_users WHERE is_admin is true",
+                    None,
+                    None,
+                )
+                .unwrap()
+                .filter_map(|r| r.get_by_name::<&str, _>("name").unwrap())
+                .collect::<Vec<_>>();
+            assert_eq!(results, vec!["bar"]);
         });
+
+        let result = std::panic::catch_unwind(|| {
+            Spi::connect(|c| {
+                c.select("SELECT name FROM mssql_users LIMIT 2 OFFSET 1", None, None)
+                    .is_err()
+            })
+        });
+        assert!(result.is_err());
     }
 }

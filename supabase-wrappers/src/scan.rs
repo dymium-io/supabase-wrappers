@@ -55,7 +55,7 @@ struct FdwState<E: Into<ErrorReport>, W: ForeignDataWrapper<E>> {
 impl<E: Into<ErrorReport>, W: ForeignDataWrapper<E>> FdwState<E, W> {
     unsafe fn new(foreigntableid: Oid, tmp_ctx: PgMemoryContexts) -> Self {
         Self {
-            instance: instance::create_fdw_instance(foreigntableid),
+            instance: instance::create_fdw_instance_from_table_id(foreigntableid),
             quals: Vec::new(),
             tgts: Vec::new(),
             sorts: Vec::new(),
@@ -185,6 +185,8 @@ pub(super) extern "C" fn get_foreign_paths<E: Into<ErrorReport>, W: ForeignDataW
             ptr::null_mut(), // no pathkeys
             ptr::null_mut(), // no outer rel either
             ptr::null_mut(), // no extra plan
+            #[cfg(feature = "pg17")]
+            ptr::null_mut(), // no restrict info
             ptr::null_mut(), // no fdw_private data
         );
         pg_sys::add_path(baserel, &mut ((*path).path));

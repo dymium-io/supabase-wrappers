@@ -1,7 +1,7 @@
 use crate::stats;
 use pgrx::{
     pg_sys,
-    prelude::{AnyNumeric, Date, Timestamp},
+    prelude::{AnyNumeric, Date, Timestamp, TimestampWithTimeZone},
 };
 use reqwest::{
     self,
@@ -75,6 +75,10 @@ fn json_value_to_cell(tgt_col: &Column, v: &JsonValue) -> LogflareFdwResult<Cell
             .as_str()
             .and_then(|s| Timestamp::from_str(s).ok())
             .map(Cell::Timestamp),
+        pg_sys::TIMESTAMPTZOID => v
+            .as_str()
+            .and_then(|s| TimestampWithTimeZone::from_str(s).ok())
+            .map(Cell::Timestamptz),
         _ => {
             return Err(LogflareFdwError::UnsupportedColumnType(
                 tgt_col.name.clone(),
@@ -118,6 +122,9 @@ impl LogflareFdw {
                         Cell::String(s) => s.clone(),
                         Cell::Date(d) => d.to_string().as_str().trim_matches('\'').to_owned(),
                         Cell::Timestamp(t) => t.to_string().as_str().trim_matches('\'').to_owned(),
+                        Cell::Timestamptz(t) => {
+                            t.to_string().as_str().trim_matches('\'').to_owned()
+                        }
                         _ => cell.to_string(),
                     };
                     url.query_pairs_mut().append_pair(param_name, &value);
@@ -186,8 +193,9 @@ impl LogflareFdw {
 }
 
 impl ForeignDataWrapper<LogflareFdwError> for LogflareFdw {
-    fn new(options: &HashMap<String, String>) -> LogflareFdwResult<Self> {
-        let base_url = options
+    fn new(server: ForeignServer) -> LogflareFdwResult<Self> {
+        let base_url = server
+            .options
             .get("api_url")
             .map(|t| t.to_owned())
             .map(|s| {
@@ -198,10 +206,10 @@ impl ForeignDataWrapper<LogflareFdwError> for LogflareFdw {
                 }
             })
             .unwrap_or_else(|| LogflareFdw::BASE_URL.to_string());
-        let client = match options.get("api_key") {
+        let client = match server.options.get("api_key") {
             Some(api_key) => Some(create_client(api_key)),
             None => {
-                let key_id = require_option("api_key_id", options)?;
+                let key_id = require_option("api_key_id", &server.options)?;
                 get_vault_secret(key_id).map(|api_key| create_client(&api_key))
             }
         }

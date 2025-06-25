@@ -10,6 +10,9 @@ use supabase_wrappers::prelude::{CreateRuntimeError, OptionsError};
 
 #[derive(Error, Debug)]
 enum MssqlFdwError {
+    #[error("syntax error: {0}")]
+    SyntaxError(String),
+
     #[error("column '{0}' data type is not supported")]
     UnsupportedColumnType(String),
 
@@ -18,6 +21,9 @@ enum MssqlFdwError {
 
     #[error("{0}")]
     TiberiusError(#[from] tiberius::error::Error),
+
+    #[error("{0}")]
+    PgrxNumericError(#[from] pgrx::datum::numeric_support::error::Error),
 
     #[error("{0}")]
     CreateRuntimeError(#[from] CreateRuntimeError),

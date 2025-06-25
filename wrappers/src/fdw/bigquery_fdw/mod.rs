@@ -1,9 +1,8 @@
 #![allow(clippy::module_inception)]
 
 use gcp_bigquery_client::error::BQError;
-use gcp_bigquery_client::model::field_type::FieldType;
 use pgrx::pg_sys::panic::ErrorReport;
-use pgrx::{DateTimeConversionError, PgSqlErrorCode};
+use pgrx::{prelude::DateTimeConversionError, PgSqlErrorCode};
 use supabase_wrappers::prelude::{CreateRuntimeError, OptionsError};
 use thiserror::Error;
 
@@ -21,8 +20,8 @@ enum BigQueryFdwError {
     #[error("big query error: {0}")]
     BigQueryError(#[from] BQError),
 
-    #[error("field type {0:?} not supported")]
-    UnsupportedFieldType(FieldType),
+    #[error("field {0} type not supported")]
+    UnsupportedFieldType(String),
 
     #[error("{0}")]
     NumericConversionError(#[from] pgrx::numeric::Error),

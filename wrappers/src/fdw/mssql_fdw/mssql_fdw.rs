@@ -1,6 +1,6 @@
 use crate::stats;
 use num_traits::cast::ToPrimitive;
-use pgrx::{to_timestamp, PgBuiltInOids, PgOid};
+use pgrx::{prelude::to_timestamp, PgBuiltInOids, PgOid};
 use std::collections::HashMap;
 use tiberius::{
     numeric::Decimal,
@@ -55,8 +55,9 @@ fn field_to_cell(src_row: &tiberius::Row, tgt_col: &Column) -> MssqlFdwResult<Op
         }
         PgOid::BuiltIn(PgBuiltInOids::NUMERICOID) => src_row
             .try_get::<Decimal, &str>(col_name)?
-            .and_then(|v| v.to_i128())
-            .map(pgrx::AnyNumeric::from)
+            .and_then(|v| v.to_f64())
+            .map(pgrx::AnyNumeric::try_from)
+            .transpose()?
             .map(Cell::Numeric),
         PgOid::BuiltIn(PgBuiltInOids::TEXTOID) => src_row
             .try_get::<&str, &str>(col_name)?
@@ -72,13 +73,19 @@ fn field_to_cell(src_row: &tiberius::Row, tgt_col: &Column) -> MssqlFdwResult<Op
                 let epoch = NaiveDate::from_ymd_opt(1970, 1, 1).unwrap();
                 let seconds_from_epoch = v.signed_duration_since(epoch).num_seconds();
                 let ts = to_timestamp(seconds_from_epoch as f64);
-                Cell::Date(pgrx::Date::from(ts))
+                Cell::Date(pgrx::prelude::Date::from(ts))
             })
         }
         PgOid::BuiltIn(PgBuiltInOids::TIMESTAMPOID) => {
             src_row.try_get::<NaiveDateTime, &str>(col_name)?.map(|v| {
-                let ts = to_timestamp(v.timestamp() as f64);
+                let ts = to_timestamp(v.and_utc().timestamp() as f64);
                 Cell::Timestamp(ts.to_utc())
+            })
+        }
+        PgOid::BuiltIn(PgBuiltInOids::TIMESTAMPTZOID) => {
+            src_row.try_get::<NaiveDateTime, &str>(col_name)?.map(|v| {
+                let ts = to_timestamp(v.and_utc().timestamp() as f64);
+                Cell::Timestamptz(ts)
             })
         }
         PgOid::BuiltIn(PgBuiltInOids::BYTEAOID) => src_row
@@ -96,8 +103,20 @@ fn field_to_cell(src_row: &tiberius::Row, tgt_col: &Column) -> MssqlFdwResult<Op
     Ok(ret)
 }
 
+struct MssqlCellFormatter {}
+
+impl CellFormatter for MssqlCellFormatter {
+    fn fmt_cell(&mut self, cell: &Cell) -> String {
+        match cell {
+            // format boolean type to 0 or 1
+            Cell::Bool(v) => format!("{}", *v as u8),
+            _ => format!("{}", cell),
+        }
+    }
+}
+
 #[wrappers_fdw(
-    version = "0.1.0",
+    version = "0.1.3",
     author = "Supabase",
     website = "https://github.com/supabase/wrappers/tree/main/wrappers/src/fdw/mssql_fdw",
     error_type = "MssqlFdwError"
@@ -137,6 +156,12 @@ impl MssqlFdw {
             // from remote, so we calculate the real limit and only use it without
             // pushing down offset.
             if let Some(limit) = limit {
+                //if sorts.is_empty() {
+                //    return Err(MssqlFdwError::SyntaxError(
+                //        "'limit' must be with 'order by' clause".to_string(),
+                //    ));
+                //}
+                //
                 let real_limit = limit.offset + limit.count;
                 // original, moved here from the end
                 //sql.push_str(&format!(
@@ -155,7 +180,21 @@ impl MssqlFdw {
         if !quals.is_empty() {
             let cond = quals
                 .iter()
-                .map(|q| q.deparse())
+                .map(|q| {
+                    let oper = q.operator.as_str();
+                    let mut fmt = MssqlCellFormatter {};
+                    if let Value::Cell(cell) = &q.value {
+                        // deparse boolean test qual, e.g. "bool_col is true" => "bool_col = 1"
+                        if let Cell::Bool(_) = cell {
+                            if oper == "is" {
+                                return format!("{} = {}", q.field, fmt.fmt_cell(cell));
+                            } else if oper == "is not" {
+                                return format!("{} <> {}", q.field, fmt.fmt_cell(cell));
+                            }
+                        }
+                    }
+                    q.deparse_with_fmt(&mut fmt)
+                })
                 .collect::<Vec<String>>()
                 .join(" and ");
 
@@ -188,12 +227,12 @@ impl MssqlFdw {
 }
 
 impl ForeignDataWrapper<MssqlFdwError> for MssqlFdw {
-    fn new(options: &HashMap<String, String>) -> MssqlFdwResult<Self> {
+    fn new(server: ForeignServer) -> MssqlFdwResult<Self> {
         let rt = create_async_runtime()?;
-        let conn_str = match options.get("conn_string") {
+        let conn_str = match server.options.get("conn_string") {
             Some(conn_str) => conn_str.to_owned(),
             None => {
-                let conn_str_id = require_option("conn_string_id", options)?;
+                let conn_str_id = require_option("conn_string_id", &server.options)?;
                 get_vault_secret(conn_str_id).unwrap_or_default()
             }
         };

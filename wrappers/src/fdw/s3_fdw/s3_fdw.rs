@@ -25,7 +25,7 @@ enum Parser {
 }
 
 #[wrappers_fdw(
-    version = "0.1.3",
+    version = "0.1.4",
     author = "Supabase",
     website = "https://github.com/supabase/wrappers/tree/main/wrappers/src/fdw/s3_fdw",
     error_type = "S3FdwError"
@@ -112,7 +112,7 @@ impl S3Fdw {
 }
 
 impl ForeignDataWrapper<S3FdwError> for S3Fdw {
-    fn new(options: &HashMap<String, String>) -> S3FdwResult<Self> {
+    fn new(server: ForeignServer) -> S3FdwResult<Self> {
         // cannot use create_async_runtime() as the runtime needs to be created
         // for multiple threads
         let rt = tokio::runtime::Runtime::new()
@@ -128,27 +128,27 @@ impl ForeignDataWrapper<S3FdwError> for S3Fdw {
         };
 
         // get is_mock flag
-        let is_mock: bool = options.get("is_mock") == Some(&"true".to_string());
+        let is_mock: bool = server.options.get("is_mock") == Some(&"true".to_string());
 
         // get credentials
         let creds = if is_mock {
             // LocalStack uses hardcoded credentials
             Some(("test".to_string(), "test".to_string()))
         } else {
-            match options.get("vault_access_key_id") {
+            match server.options.get("vault_access_key_id") {
                 Some(vault_access_key_id) => {
                     // if using credentials stored in Vault
                     let vault_secret_access_key =
-                        require_option("vault_secret_access_key", options)?;
+                        require_option("vault_secret_access_key", &server.options)?;
                     get_vault_secret(vault_access_key_id)
                         .zip(get_vault_secret(vault_secret_access_key))
                 }
                 None => {
                     // if using credentials directly specified
                     let aws_access_key_id =
-                        require_option("aws_access_key_id", options)?.to_string();
+                        require_option("aws_access_key_id", &server.options)?.to_string();
                     let aws_secret_access_key =
-                        require_option("aws_secret_access_key", options)?.to_string();
+                        require_option("aws_secret_access_key", &server.options)?.to_string();
                     Some((aws_access_key_id, aws_secret_access_key))
                 }
             }
@@ -163,7 +163,8 @@ impl ForeignDataWrapper<S3FdwError> for S3Fdw {
         let region = if is_mock {
             default_region
         } else {
-            options
+            server
+                .options
                 .get("aws_region")
                 .map(|t| t.to_owned())
                 .unwrap_or(default_region)
@@ -173,21 +174,45 @@ impl ForeignDataWrapper<S3FdwError> for S3Fdw {
         env::set_var("AWS_ACCESS_KEY_ID", creds.0);
         env::set_var("AWS_SECRET_ACCESS_KEY", creds.1);
         env::set_var("AWS_REGION", region);
-        let config = ret
-            .rt
-            .block_on(aws_config::load_defaults(BehaviorVersion::latest()));
+
+        let mut config_loader = aws_config::defaults(BehaviorVersion::latest());
+
+        // endpoint_url not supported as env var in rust https://github.com/awslabs/aws-sdk-rust/issues/932
+        if let Some(endpoint_url) = server.options.get("endpoint_url") {
+            if endpoint_url.ends_with('/') {
+                config_loader = config_loader.endpoint_url(endpoint_url);
+            } else {
+                config_loader = config_loader.endpoint_url(format!("{}/", endpoint_url));
+            };
+        }
+
+        // get path_style_url flag
+        //
+        // path style has been deprecated, but other s3-compatible services are
+        // still using it.
+        //
+        // Examples:
+        // path_style: https://s3.amazonaws.com/bucket/image.png
+        // virtual-hosted style: https://bucket.s3.amazonaws.com/image.png
+        //
+        // ref: https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html
+        let path_style_url: bool =
+            server.options.get("path_style_url") == Some(&"true".to_string());
+
+        let config = ret.rt.block_on(config_loader.load());
 
         stats::inc_stats(Self::FDW_NAME, stats::Metric::CreateTimes, 1);
 
         // create S3 client
+        let mut s3_config_builder = s3::config::Builder::from(&config);
         let client = if is_mock {
-            let mut s3_config_builder = s3::config::Builder::from(&config);
             s3_config_builder = s3_config_builder
                 .endpoint_url("http://localhost:4566/")
                 .force_path_style(true);
             s3::Client::from_conf(s3_config_builder.build())
         } else {
-            s3::Client::new(&config)
+            s3_config_builder = s3_config_builder.force_path_style(path_style_url);
+            s3::Client::from_conf(s3_config_builder.build())
         };
         ret.client = Some(client);
 

@@ -1,11 +1,11 @@
 use crate::stats;
 #[allow(deprecated)]
-use chrono::{Date, DateTime, Datelike, NaiveDate, NaiveDateTime, Utc};
-use chrono_tz::Tz;
+use chrono::{DateTime, Datelike, NaiveDate, NaiveDateTime, Utc};
 use clickhouse_rs::{types, types::Block, types::SqlType, ClientHandle, Pool};
-use pgrx::to_timestamp;
+use pgrx::prelude::to_timestamp;
 use regex::{Captures, Regex};
 use std::collections::HashMap;
+use uuid::Uuid;
 
 use supabase_wrappers::prelude::*;
 
@@ -56,9 +56,9 @@ fn field_to_cell(row: &types::Row<types::Complex>, i: usize) -> ClickHouseFdwRes
             Ok(Some(Cell::String(value)))
         }
         SqlType::Date => {
-            #[allow(deprecated)]
-            let value = row.get::<Date<_>, usize>(i)?;
-            let dt = pgrx::Date::new(value.year(), value.month() as u8, value.day() as u8)?;
+            let value = row.get::<NaiveDate, usize>(i)?;
+            let dt =
+                pgrx::prelude::Date::new(value.year(), value.month() as u8, value.day() as u8)?;
             Ok(Some(Cell::Date(dt)))
         }
         SqlType::DateTime(_) => {
@@ -66,6 +66,75 @@ fn field_to_cell(row: &types::Row<types::Complex>, i: usize) -> ClickHouseFdwRes
             let ts = to_timestamp(value.timestamp() as f64);
             Ok(Some(Cell::Timestamp(ts.to_utc())))
         }
+        SqlType::Uuid => {
+            let value = row.get::<Uuid, usize>(i)?;
+            Ok(Some(Cell::Uuid(pgrx::Uuid::from_bytes(*value.as_bytes()))))
+        }
+        SqlType::Nullable(v) => match v {
+            SqlType::UInt8 => {
+                let value = row.get::<Option<u8>, usize>(i)?;
+                Ok(value.map(|t| Cell::Bool(t != 0)))
+            }
+            SqlType::Int16 => {
+                let value = row.get::<Option<i16>, usize>(i)?;
+                Ok(value.map(Cell::I16))
+            }
+            SqlType::UInt16 => {
+                let value = row.get::<Option<u16>, usize>(i)?;
+                Ok(value.map(|t| Cell::I32(t as _)))
+            }
+            SqlType::Int32 => {
+                let value = row.get::<Option<i32>, usize>(i)?;
+                Ok(value.map(Cell::I32))
+            }
+            SqlType::UInt32 => {
+                let value = row.get::<Option<u32>, usize>(i)?;
+                Ok(value.map(|t| Cell::I64(t as _)))
+            }
+            SqlType::Float32 => {
+                let value = row.get::<Option<f32>, usize>(i)?;
+                Ok(value.map(Cell::F32))
+            }
+            SqlType::Float64 => {
+                let value = row.get::<Option<f64>, usize>(i)?;
+                Ok(value.map(Cell::F64))
+            }
+            SqlType::UInt64 => {
+                let value = row.get::<Option<u64>, usize>(i)?;
+                Ok(value.map(|t| Cell::I64(t as _)))
+            }
+            SqlType::Int64 => {
+                let value = row.get::<Option<i64>, usize>(i)?;
+                Ok(value.map(Cell::I64))
+            }
+            SqlType::String => {
+                let value = row.get::<Option<String>, usize>(i)?;
+                Ok(value.map(Cell::String))
+            }
+            SqlType::Date => {
+                let value = row.get::<Option<NaiveDate>, usize>(i)?;
+                Ok(value
+                    .map(|t| pgrx::prelude::Date::new(t.year(), t.month() as u8, t.day() as u8))
+                    .transpose()?
+                    .map(Cell::Date))
+            }
+            SqlType::DateTime(_) => {
+                let value = row.get::<Option<DateTime<_>>, usize>(i)?;
+                Ok(value.map(|t| {
+                    let ts = to_timestamp(t.timestamp() as f64);
+                    Cell::Timestamp(ts.to_utc())
+                }))
+            }
+            SqlType::Uuid => {
+                let value = row.get::<Option<Uuid>, usize>(i)?;
+                Ok(value
+                    .map(|t| pgrx::Uuid::from_bytes(*t.as_bytes()))
+                    .map(Cell::Uuid))
+            }
+            _ => Err(ClickHouseFdwError::UnsupportedColumnType(
+                sql_type.to_string().into(),
+            )),
+        },
         _ => Err(ClickHouseFdwError::UnsupportedColumnType(
             sql_type.to_string().into(),
         )),
@@ -73,7 +142,7 @@ fn field_to_cell(row: &types::Row<types::Complex>, i: usize) -> ClickHouseFdwRes
 }
 
 #[wrappers_fdw(
-    version = "0.1.3",
+    version = "0.1.6",
     author = "Supabase",
     website = "https://github.com/supabase/wrappers/tree/main/wrappers/src/fdw/clickhouse_fdw",
     error_type = "ClickHouseFdwError"
@@ -201,12 +270,12 @@ impl ClickHouseFdw {
 }
 
 impl ForeignDataWrapper<ClickHouseFdwError> for ClickHouseFdw {
-    fn new(options: &HashMap<String, String>) -> ClickHouseFdwResult<Self> {
+    fn new(server: ForeignServer) -> ClickHouseFdwResult<Self> {
         let rt = create_async_runtime()?;
-        let conn_str = match options.get("conn_string") {
+        let conn_str = match server.options.get("conn_string") {
             Some(conn_str) => conn_str.to_owned(),
             None => {
-                let conn_str_id = require_option("conn_string_id", options)?;
+                let conn_str_id = require_option("conn_string_id", &server.options)?;
                 get_vault_secret(conn_str_id).unwrap_or_default()
             }
         };
@@ -283,9 +352,6 @@ impl ForeignDataWrapper<ClickHouseFdwError> for ClickHouseFdw {
                         .unwrap();
                     let cell = field_to_cell(&src_row, i)?;
                     let col_name = src_row.name(i).unwrap();
-                    if cell.as_ref().is_none() {
-                        return Ok(None);
-                    }
                     row.push(col_name, cell);
                 }
                 self.row_idx += 1;
@@ -310,33 +376,98 @@ impl ForeignDataWrapper<ClickHouseFdwError> for ClickHouseFdw {
 
     fn insert(&mut self, src: &Row) -> ClickHouseFdwResult<()> {
         if let Some(ref mut client) = self.client {
+            // use a dummy query to probe column types
+            let sql = format!("select * from {} where false", self.table);
+            let probe = self.rt.block_on(client.query(&sql).fetch_all())?;
+
+            // add row to block
             let mut row = Vec::new();
             for (col_name, cell) in src.iter() {
                 let col_name = col_name.to_owned();
-                if let Some(cell) = cell {
-                    match cell {
-                        Cell::Bool(v) => row.push((col_name, types::Value::from(*v))),
-                        Cell::F64(v) => row.push((col_name, types::Value::from(*v))),
-                        Cell::I64(v) => row.push((col_name, types::Value::from(*v))),
-                        Cell::String(v) => row.push((col_name, types::Value::from(v.as_str()))),
+                let tgt_col = probe.get_column(col_name.as_ref())?;
+                let is_nullable = matches!(tgt_col.sql_type(), SqlType::Nullable(_));
+
+                let value = cell
+                    .as_ref()
+                    .map(|c| match c {
+                        Cell::Bool(v) => {
+                            let val = if is_nullable {
+                                types::Value::from(Some(*v))
+                            } else {
+                                types::Value::from(*v)
+                            };
+                            Ok(val)
+                        }
+                        Cell::F64(v) => {
+                            let val = if is_nullable {
+                                types::Value::from(Some(*v))
+                            } else {
+                                types::Value::from(*v)
+                            };
+                            Ok(val)
+                        }
+                        Cell::I64(v) => {
+                            let val = if is_nullable {
+                                types::Value::from(Some(*v))
+                            } else {
+                                types::Value::from(*v)
+                            };
+                            Ok(val)
+                        }
+                        Cell::String(v) => {
+                            let s = v.as_str();
+                            let val = if is_nullable {
+                                types::Value::from(Some(s))
+                            } else {
+                                types::Value::from(s)
+                            };
+                            Ok(val)
+                        }
                         Cell::Date(_) => {
-                            let s = cell.to_string().replace('\'', "");
+                            let s = c.to_string().replace('\'', "");
                             let tm = NaiveDate::parse_from_str(&s, "%Y-%m-%d")?;
-                            let epoch = NaiveDate::from_ymd_opt(1970, 1, 1).unwrap();
-                            let duration = tm - epoch;
-                            let dt = types::Value::Date(duration.num_days() as u16, Tz::UTC);
-                            row.push((col_name, dt));
+                            let val = if is_nullable {
+                                types::Value::from(Some(tm))
+                            } else {
+                                let epoch = NaiveDate::from_ymd_opt(1970, 1, 1).unwrap();
+                                let duration = tm - epoch;
+                                let dt = duration.num_days() as u16;
+                                types::Value::Date(dt)
+                            };
+                            Ok(val)
                         }
                         Cell::Timestamp(_) => {
-                            let s = cell.to_string().replace('\'', "");
-                            let tm = NaiveDateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S")?;
-                            let tm: DateTime<Utc> = DateTime::from_naive_utc_and_offset(tm, Utc);
-                            row.push((col_name, types::Value::from(tm)));
+                            let s = c.to_string().replace('\'', "");
+                            let naive_tm = NaiveDateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S")
+                                .or_else(|_| {
+                                NaiveDateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S%.6f")
+                            })?;
+                            let tm: DateTime<Utc> =
+                                DateTime::from_naive_utc_and_offset(naive_tm, Utc);
+                            let val = if is_nullable {
+                                types::Value::Nullable(either::Either::Right(Box::new(tm.into())))
+                            } else {
+                                types::Value::from(tm)
+                            };
+                            Ok(val)
                         }
-                        _ => {
-                            return Err(ClickHouseFdwError::UnsupportedColumnType(cell.to_string()))
+                        Cell::Uuid(v) => {
+                            let uuid = Uuid::try_parse(&v.to_string())?;
+                            let val = if is_nullable {
+                                types::Value::Nullable(either::Either::Right(Box::new(
+                                    types::Value::Uuid(*uuid.as_bytes()),
+                                )))
+                            } else {
+                                types::Value::from(uuid)
+                            };
+                            Ok(val)
                         }
-                    }
+                        _ => Err(ClickHouseFdwError::UnsupportedColumnType(c.to_string())),
+                    })
+                    .transpose()?;
+
+                if let Some(v) = value {
+                    row.push((col_name, v));
                 }
             }
             let mut block = Block::new();
@@ -356,7 +487,10 @@ impl ForeignDataWrapper<ClickHouseFdwError> for ClickHouseFdw {
                     continue;
                 }
                 if let Some(cell) = cell {
-                    sets.push(format!("{} = {}", col, cell));
+                    match cell {
+                        Cell::Uuid(_) => sets.push(format!("{} = '{}'", col, cell)),
+                        _ => sets.push(format!("{} = {}", col, cell)),
+                    }
                 } else {
                     sets.push(format!("{} = null", col));
                 }

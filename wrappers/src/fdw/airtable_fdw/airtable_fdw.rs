@@ -28,7 +28,7 @@ fn create_client(api_key: &str) -> Result<ClientWithMiddleware, AirtableFdwError
 }
 
 #[wrappers_fdw(
-    version = "0.1.3",
+    version = "0.1.4",
     author = "Ankur Goyal",
     website = "https://github.com/supabase/wrappers/tree/main/wrappers/src/fdw/airtable_fdw",
     error_type = "AirtableFdwError"
@@ -90,16 +90,17 @@ impl AirtableFdw {
 
 // TODO Add support for INSERT, UPDATE, DELETE
 impl ForeignDataWrapper<AirtableFdwError> for AirtableFdw {
-    fn new(options: &HashMap<String, String>) -> AirtableFdwResult<Self> {
-        let base_url = options
+    fn new(server: ForeignServer) -> AirtableFdwResult<Self> {
+        let base_url = server
+            .options
             .get("api_url")
             .map(|t| t.to_owned())
             .unwrap_or_else(|| "https://api.airtable.com/v0".to_string());
 
-        let client = match options.get("api_key") {
+        let client = match server.options.get("api_key") {
             Some(api_key) => Some(create_client(api_key)?),
             None => {
-                let key_id = require_option("api_key_id", options)?;
+                let key_id = require_option("api_key_id", &server.options)?;
                 if let Some(api_key) = get_vault_secret(key_id) {
                     Some(create_client(&api_key)?)
                 } else {
